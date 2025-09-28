@@ -1,0 +1,340 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User authentication and management
+model User {
+  id       String @id @default(cuid())
+  email    String @unique
+  name     String?
+  image    String?
+
+  // OAuth providers
+  provider String?
+  providerId String?
+
+  // Organization relationship
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  role          UserRole      @default(MEMBER)
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLogin DateTime?
+
+  // Relationships
+  sessions       Session[]
+  accounts       Account[]
+  fundingMatches FundingMatch[]
+  introductions  Introduction[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// Core organization types
+enum OrganizationType {
+  COMPANY
+  INSTITUTE
+  UNIVERSITY
+}
+
+enum BusinessStructure {
+  CORPORATION  // 법인
+  SOLE_PROPRIETORSHIP  // 개인사업자
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+// Organizations (Companies, Research Institutes, Universities)
+model Organization {
+  id   String           @id @default(cuid())
+  name String
+  nameEn String?
+
+  // Organization classification
+  type OrganizationType
+  businessStructure BusinessStructure?
+
+  // Korean business registration
+  businessRegistrationNumber String? @unique // 사업자등록번호 (encrypted)
+  verificationStatus VerificationStatus @default(PENDING)
+  verificationDate DateTime?
+
+  // Contact information
+  address String?
+  phone String?
+  website String?
+
+  // Metadata (flexible JSON for org-specific fields)
+  metadata Json?
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isActive Boolean @default(true)
+
+  // Relationships
+  users User[]
+  fundingMatches FundingMatch[]
+  introductions Introduction[]
+  collaborations Collaboration[]
+
+  @@map("organizations")
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+// NTIS Commissioning Agencies
+model Agency {
+  id String @id @default(cuid())
+  code String @unique // 'nrf', 'iitp', etc.
+  name String
+  nameEn String?
+  ministry String
+  website String
+
+  // Scraping configuration
+  tier Int // 1-4 (scraping frequency tier)
+  isActive Boolean @default(true)
+
+  // Scraping metrics
+  lastSuccessfulScrape DateTime?
+  totalAnnouncements Int @default(0)
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  fundingPrograms FundingProgram[]
+  scrapingMetrics ScrapingMetric[]
+
+  @@map("agencies")
+}
+
+// Funding programs from government agencies
+model FundingProgram {
+  id String @id @default(cuid())
+  agencyId String
+  agency Agency @relation(fields: [agencyId], references: [id])
+
+  // Program details
+  title String
+  titleEn String?
+  announcementNumber String?
+  category String?
+
+  // Eligibility and requirements
+  eligibilityCriteria Json // Structured criteria data
+  targetOrganizations OrganizationType[]
+  trlRange String? // Technology Readiness Level range
+
+  // Budget and timeline
+  budgetMin BigInt?
+  budgetMax BigInt?
+  announcementDate DateTime?
+  deadline DateTime?
+
+  // URLs and metadata
+  sourceUrl String?
+  contentHash String? // For change detection
+
+  // Classification
+  programType String?
+  urgencyLevel String? @default("normal")
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  scrapedAt DateTime?
+  isActive Boolean @default(true)
+
+  // Relationships
+  fundingMatches FundingMatch[]
+
+  @@map("funding_programs")
+}
+
+// Funding matches between organizations and programs
+model FundingMatch {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  programId String
+  program FundingProgram @relation(fields: [programId], references: [id])
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  // Match details
+  matchScore Int // 0-100
+  explanation String? // Why this match was made
+  eligibilityStatus String @default("pending") // passed, failed, pending
+
+  // User interaction
+  isViewed Boolean @default(false)
+  isFavorited Boolean @default(false)
+  userFeedback String? // User rating of match quality
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, programId])
+  @@map("funding_matches")
+}
+
+// Partner discovery and introductions
+model Introduction {
+  id String @id @default(cuid())
+
+  requesterId String
+  requester User @relation(fields: [requesterId], references: [id])
+
+  targetOrganizationId String
+  targetOrganization Organization @relation(fields: [targetOrganizationId], references: [id])
+
+  // Introduction details
+  message String
+  response String?
+  status IntroductionStatus @default(PENDING)
+
+  // SLA tracking
+  slaDeadline DateTime // 72-hour response SLA
+  respondedAt DateTime?
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("introductions")
+}
+
+enum IntroductionStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COMPLETED
+}
+
+// Collaboration workspaces
+model Collaboration {
+  id String @id @default(cuid())
+  name String
+  description String?
+
+  // Participating organizations
+  organizations Organization[]
+
+  // Project details
+  projectType String?
+  status CollaborationStatus @default(ACTIVE)
+
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("collaborations")
+}
+
+enum CollaborationStatus {
+  PLANNING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+// Scraping performance metrics
+model ScrapingMetric {
+  id String @id @default(cuid())
+  agencyId String
+  agency Agency @relation(fields: [agencyId], references: [id])
+
+  date DateTime @default(now())
+
+  // Performance data
+  totalScrapes Int
+  successfulScrapes Int
+  failedScrapes Int
+  newAnnouncements Int
+  updatedAnnouncements Int
+
+  // Timing
+  avgResponseTimeMs Int?
+  totalDurationMs Int?
+
+  // Error tracking
+  errors Json?
+
+  @@map("scraping_metrics")
+}
+
+// Activity logging for audit trail
+model ActivityLog {
+  id String @id @default(cuid())
+
+  userId String?
+  actionType String
+  entityType String
+  entityId String?
+
+  // Request details
+  ipAddress String?
+  userAgent String?
+
+  // State changes
+  beforeState Json?
+  afterState Json?
+
+  timestamp DateTime @default(now())
+
+  @@map("activity_logs")
+}
