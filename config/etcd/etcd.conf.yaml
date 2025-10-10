@@ -1,0 +1,42 @@
+# etcd Configuration for Patroni - Connect Platform
+# High Availability Infrastructure - Week 2
+# Purpose: Distributed consensus for automated PostgreSQL failover
+
+# Basic settings
+name: 'etcd1'
+data-dir: '/opt/homebrew/var/etcd/data'
+
+# Client communication (used by Patroni)
+listen-client-urls: 'http://localhost:2379'
+advertise-client-urls: 'http://localhost:2379'
+
+# Peer communication (for multi-node clusters)
+listen-peer-urls: 'http://localhost:2380'
+initial-advertise-peer-urls: 'http://localhost:2380'
+
+# Cluster configuration
+initial-cluster: 'etcd1=http://localhost:2380'
+initial-cluster-state: 'new'
+initial-cluster-token: 'connect-etcd-cluster'
+
+# Logging
+log-level: 'info'
+logger: 'zap'
+log-outputs: ['/opt/homebrew/var/etcd/etcd.log']
+
+# Performance tuning
+# Snapshot settings (for data persistence)
+snapshot-count: 10000
+max-snapshots: 5
+max-wals: 5
+
+# Heartbeat and election timeouts
+heartbeat-interval: 100
+election-timeout: 1000
+
+# Auto compaction (keep 1 hour of history)
+auto-compaction-mode: 'periodic'
+auto-compaction-retention: '1h'
+
+# Quota (2GB backend size limit)
+quota-backend-bytes: 2147483648

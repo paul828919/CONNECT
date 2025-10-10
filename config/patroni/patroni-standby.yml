@@ -1,0 +1,61 @@
+# Patroni Configuration - Standby Node
+# Connect Platform - Automated PostgreSQL Failover
+# Purpose: Manage standby PostgreSQL instance with automatic failover
+
+scope: connect-cluster
+namespace: /db/
+name: postgresql2
+
+# REST API for cluster coordination (different port)
+restapi:
+  listen: 127.0.0.1:8009
+  connect_address: 127.0.0.1:8009
+
+# etcd3 configuration (modern API)
+etcd3:
+  host: 127.0.0.1:2379
+  protocol: http
+
+# PostgreSQL configuration
+postgresql:
+  listen: 127.0.0.1:5433
+  connect_address: 127.0.0.1:5433
+  data_dir: /opt/homebrew/var/postgresql@15-standby
+  bin_dir: /opt/homebrew/opt/postgresql@15/bin
+  pgpass: /tmp/pgpass-standby
+
+  authentication:
+    replication:
+      username: replicator
+      password: e125550f26e26116da2599458a64a513f6a132af76d999ee7f798cbed22674ce
+    superuser:
+      username: postgres
+      password: postgres
+    rewind:
+      username: replicator
+      password: e125550f26e26116da2599458a64a513f6a132af76d999ee7f798cbed22674ce
+
+  # PostgreSQL-specific parameters
+  parameters:
+    unix_socket_directories: '/tmp'
+    port: 5433
+
+  # Callbacks for lifecycle events
+  create_replica_methods:
+    - basebackup
+  basebackup:
+    checkpoint: 'fast'
+    max-rate: '100M'
+
+# Node tags (for failover decisions)
+tags:
+  nofailover: false      # Allow this node to be promoted
+  noloadbalance: false   # Allow read queries
+  clonefrom: true        # Allow cloning from this node
+  nosync: false          # Allow synchronous replication
+
+# Watchdog (optional - for split-brain prevention)
+# watchdog:
+#   mode: required
+#   device: /dev/watchdog
+#   safety_margin: 5
