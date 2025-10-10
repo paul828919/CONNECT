@@ -1,0 +1,19 @@
+# Development Redis Services
+version: '3.8'
+
+services:
+  redis-cache:
+    image: redis:7-alpine
+    container_name: connect_dev_redis_cache
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+
+  redis-queue:
+    image: redis:7-alpine
+    container_name: connect_dev_redis_queue
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes
+    restart: unless-stopped

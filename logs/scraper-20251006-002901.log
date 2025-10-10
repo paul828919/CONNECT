@@ -1,0 +1,352 @@
+
+> connect-platform@1.0.0 scraper
+> tsx lib/scraping/index.ts
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🤖 Connect Platform - Scraping Service
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 Starting scraping scheduler...
+✓ Scraping scheduler started successfully
+  - Normal mode: 9 AM, 3 PM KST (2x daily)
+  - Peak season (Jan-Mar): 9 AM, 12 PM, 3 PM, 6 PM KST (4x daily)
+  - Current mode: NORMAL (2x)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📧 Starting Email Notification Cron Jobs
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Deadline reminder cron started (daily at 8:00 AM KST)
+✓ Weekly digest cron started (Sundays at 8:00 AM KST)
+
+✅ All email cron jobs started successfully
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Scraping worker started (max concurrency: 2)
+✓ Monitoring Redis queue: localhost:6380
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Scraping service is ready
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[2025-10-05T15:35:01.325Z] [IITP] ✓ Starting scrape job 1...
+[2025-10-05T15:35:01.329Z] [KEIT] ✓ Starting scrape job 2...
+[2025-10-05T15:35:01.656Z] [IITP] ❌ Scraping failed: page.evaluateOnNewDocument is not a function
+[2025-10-05T15:35:01.657Z] [KEIT] ❌ Scraping failed: page.evaluateOnNewDocument is not a function
+[2025-10-05T15:35:01.686Z] [IITP] ❌ Job 1 failed: 
+Invalid `prisma.scrapingLog.create()` invocation:
+
+{
+  data: {
+    agencyId: "IITP",
+    success: false,
+    programsFound: 0,
+    programsNew: 0,
+    programsUpdated: 0,
+    errorMessage: "page.evaluateOnNewDocument is not a function",
+    ~~~~~~~~~~~~
+    startedAt: new Date("2025-10-05T15:35:01.320Z"),
+    completedAt: new Date("2025-10-05T15:35:01.673Z"),
+    duration: 353,
+?   id?: String,
+?   error?: String | Null,
+?   errorDetails?: NullableJsonNullValueInput | Json,
+?   statusCode?: Int | Null,
+?   userAgent?: String | Null,
+?   rateLimit?: Boolean
+  }
+}
+
+Unknown argument `errorMessage`. Available options are marked with ?.
+[2025-10-05T15:35:01.687Z] [KEIT] ❌ Job 2 failed: 
+Invalid `prisma.scrapingLog.create()` invocation:
+
+{
+  data: {
+    agencyId: "KEIT",
+    success: false,
+    programsFound: 0,
+    programsNew: 0,
+    programsUpdated: 0,
+    errorMessage: "page.evaluateOnNewDocument is not a function",
+    ~~~~~~~~~~~~
+    startedAt: new Date("2025-10-05T15:35:01.323Z"),
+    completedAt: new Date("2025-10-05T15:35:01.674Z"),
+    duration: 351,
+?   id?: String,
+?   error?: String | Null,
+?   errorDetails?: NullableJsonNullValueInput | Json,
+?   statusCode?: Int | Null,
+?   userAgent?: String | Null,
+?   rateLimit?: Boolean
+  }
+}
+
+Unknown argument `errorMessage`. Available options are marked with ?.
+[2025-10-05T15:35:01.687Z] [TIPA] ✓ Starting scrape job 3...
+[2025-10-05T15:35:01.688Z] [KIMST] ✓ Starting scrape job 4...
+[2025-10-05T15:35:01.767Z] [KIMST] ❌ Scraping failed: page.evaluateOnNewDocument is not a function
+[2025-10-05T15:35:01.771Z] [TIPA] ❌ Scraping failed: page.evaluateOnNewDocument is not a function
+[2025-10-05T15:35:01.797Z] [TIPA] ❌ Job 3 failed: 
+Invalid `prisma.scrapingLog.create()` invocation:
+
+{
+  data: {
+    agencyId: "TIPA",
+    success: false,
+    programsFound: 0,
+    programsNew: 0,
+    programsUpdated: 0,
+    errorMessage: "page.evaluateOnNewDocument is not a function",
+    ~~~~~~~~~~~~
+    startedAt: new Date("2025-10-05T15:35:01.323Z"),
+    completedAt: new Date("2025-10-05T15:35:01.795Z"),
+    duration: 472,
+?   id?: String,
+?   error?: String | Null,
+?   errorDetails?: NullableJsonNullValueInput | Json,
+?   statusCode?: Int | Null,
+?   userAgent?: String | Null,
+?   rateLimit?: Boolean
+  }
+}
+
+Unknown argument `errorMessage`. Available options are marked with ?.
+[2025-10-05T15:35:01.797Z] [KIMST] ❌ Job 4 failed: 
+Invalid `prisma.scrapingLog.create()` invocation:
+
+{
+  data: {
+    agencyId: "KIMST",
+    success: false,
+    programsFound: 0,
+    programsNew: 0,
+    programsUpdated: 0,
+    errorMessage: "page.evaluateOnNewDocument is not a function",
+    ~~~~~~~~~~~~
+    startedAt: new Date("2025-10-05T15:35:01.324Z"),
+    completedAt: new Date("2025-10-05T15:35:01.795Z"),
+    duration: 471,
+?   id?: String,
+?   error?: String | Null,
+?   errorDetails?: NullableJsonNullValueInput | Json,
+?   statusCode?: Int | Null,
+?   userAgent?: String | Null,
+?   rateLimit?: Boolean
+  }
+}
+
+Unknown argument `errorMessage`. Available options are marked with ?.
+[2025-10-05T15:35:06.739Z] [IITP] ✓ Starting scrape job 1...
+[2025-10-05T15:35:06.740Z] [KEIT] ✓ Starting scrape job 2...
+[2025-10-05T15:35:06.844Z] [KEIT] ❌ Scraping failed: page.evaluateOnNewDocument is not a function
+[2025-10-05T15:35:06.844Z] [IITP] ❌ Scraping failed: page.evaluateOnNewDocument is not a function
+[2025-10-05T15:35:06.878Z] [IITP] ❌ Job 1 failed: 
+Invalid `prisma.scrapingLog.create()` invocation:
+
+{
+  data: {
+    agencyId: "IITP",
+    success: false,
+    programsFound: 0,
+    programsNew: 0,
+    programsUpdated: 0,
+    errorMessage: "page.evaluateOnNewDocument is not a function",
+    ~~~~~~~~~~~~
+    startedAt: new Date("2025-10-05T15:35:01.320Z"),
+    completedAt: new Date("2025-10-05T15:35:06.876Z"),
+    duration: 5556,
+?   id?: String,
+?   error?: String | Null,
+?   errorDetails?: NullableJsonNullValueInput | Json,
+?   statusCode?: Int | Null,
+?   userAgent?: String | Null,
+?   rateLimit?: Boolean
+  }
+}
+
+Unknown argument `errorMessage`. Available options are marked with ?.
+[2025-10-05T15:35:06.878Z] [KEIT] ❌ Job 2 failed: 
+Invalid `prisma.scrapingLog.create()` invocation:
+
+{
+  data: {
+    agencyId: "KEIT",
+    success: false,
+    programsFound: 0,
+    programsNew: 0,
+    programsUpdated: 0,
+    errorMessage: "page.evaluateOnNewDocument is not a function",
+    ~~~~~~~~~~~~
+    startedAt: new Date("2025-10-05T15:35:01.323Z"),
+    completedAt: new Date("2025-10-05T15:35:06.877Z"),
+    duration: 5554,
+?   id?: String,
+?   error?: String | Null,
+?   errorDetails?: NullableJsonNullValueInput | Json,
+?   statusCode?: Int | Null,
+?   userAgent?: String | Null,
+?   rateLimit?: Boolean
+  }
+}
+
+Unknown argument `errorMessage`. Available options are marked with ?.
+[2025-10-05T15:35:06.878Z] [TIPA] ✓ Starting scrape job 3...
+[2025-10-05T15:35:06.879Z] [KIMST] ✓ Starting scrape job 4...
+[2025-10-05T15:35:06.959Z] [TIPA] ❌ Scraping failed: page.evaluateOnNewDocument is not a function
+[2025-10-05T15:35:06.961Z] [KIMST] ❌ Scraping failed: page.evaluateOnNewDocument is not a function
+[2025-10-05T15:35:06.990Z] [TIPA] ❌ Job 3 failed: 
+Invalid `prisma.scrapingLog.create()` invocation:
+
+{
+  data: {
+    agencyId: "TIPA",
+    success: false,
+    programsFound: 0,
+    programsNew: 0,
+    programsUpdated: 0,
+    errorMessage: "page.evaluateOnNewDocument is not a function",
+    ~~~~~~~~~~~~
+    startedAt: new Date("2025-10-05T15:35:01.323Z"),
+    completedAt: new Date("2025-10-05T15:35:06.988Z"),
+    duration: 5665,
+?   id?: String,
+?   error?: String | Null,
+?   errorDetails?: NullableJsonNullValueInput | Json,
+?   statusCode?: Int | Null,
+?   userAgent?: String | Null,
+?   rateLimit?: Boolean
+  }
+}
+
+Unknown argument `errorMessage`. Available options are marked with ?.
+[2025-10-05T15:35:06.990Z] [KIMST] ❌ Job 4 failed: 
+Invalid `prisma.scrapingLog.create()` invocation:
+
+{
+  data: {
+    agencyId: "KIMST",
+    success: false,
+    programsFound: 0,
+    programsNew: 0,
+    programsUpdated: 0,
+    errorMessage: "page.evaluateOnNewDocument is not a function",
+    ~~~~~~~~~~~~
+    startedAt: new Date("2025-10-05T15:35:01.324Z"),
+    completedAt: new Date("2025-10-05T15:35:06.988Z"),
+    duration: 5664,
+?   id?: String,
+?   error?: String | Null,
+?   errorDetails?: NullableJsonNullValueInput | Json,
+?   statusCode?: Int | Null,
+?   userAgent?: String | Null,
+?   rateLimit?: Boolean
+  }
+}
+
+Unknown argument `errorMessage`. Available options are marked with ?.
+[2025-10-05T15:35:16.922Z] [IITP] ✓ Starting scrape job 1...
+[2025-10-05T15:35:16.923Z] [KEIT] ✓ Starting scrape job 2...
+[2025-10-05T15:35:17.027Z] [KEIT] ❌ Scraping failed: page.evaluateOnNewDocument is not a function
+[2025-10-05T15:35:17.031Z] [IITP] ❌ Scraping failed: page.evaluateOnNewDocument is not a function
+[2025-10-05T15:35:17.061Z] [KEIT] ❌ Job 2 failed: 
+Invalid `prisma.scrapingLog.create()` invocation:
+
+{
+  data: {
+    agencyId: "KEIT",
+    success: false,
+    programsFound: 0,
+    programsNew: 0,
+    programsUpdated: 0,
+    errorMessage: "page.evaluateOnNewDocument is not a function",
+    ~~~~~~~~~~~~
+    startedAt: new Date("2025-10-05T15:35:01.323Z"),
+    completedAt: new Date("2025-10-05T15:35:17.054Z"),
+    duration: 15731,
+?   id?: String,
+?   error?: String | Null,
+?   errorDetails?: NullableJsonNullValueInput | Json,
+?   statusCode?: Int | Null,
+?   userAgent?: String | Null,
+?   rateLimit?: Boolean
+  }
+}
+
+Unknown argument `errorMessage`. Available options are marked with ?.
+[2025-10-05T15:35:17.061Z] [IITP] ❌ Job 1 failed: 
+Invalid `prisma.scrapingLog.create()` invocation:
+
+{
+  data: {
+    agencyId: "IITP",
+    success: false,
+    programsFound: 0,
+    programsNew: 0,
+    programsUpdated: 0,
+    errorMessage: "page.evaluateOnNewDocument is not a function",
+    ~~~~~~~~~~~~
+    startedAt: new Date("2025-10-05T15:35:01.320Z"),
+    completedAt: new Date("2025-10-05T15:35:17.055Z"),
+    duration: 15735,
+?   id?: String,
+?   error?: String | Null,
+?   errorDetails?: NullableJsonNullValueInput | Json,
+?   statusCode?: Int | Null,
+?   userAgent?: String | Null,
+?   rateLimit?: Boolean
+  }
+}
+
+Unknown argument `errorMessage`. Available options are marked with ?.
+[2025-10-05T15:35:17.061Z] [TIPA] ✓ Starting scrape job 3...
+[2025-10-05T15:35:17.061Z] [KIMST] ✓ Starting scrape job 4...
+[2025-10-05T15:35:17.140Z] [TIPA] ❌ Scraping failed: page.evaluateOnNewDocument is not a function
+[2025-10-05T15:35:17.143Z] [KIMST] ❌ Scraping failed: page.evaluateOnNewDocument is not a function
+[2025-10-05T15:35:17.171Z] [TIPA] ❌ Job 3 failed: 
+Invalid `prisma.scrapingLog.create()` invocation:
+
+{
+  data: {
+    agencyId: "TIPA",
+    success: false,
+    programsFound: 0,
+    programsNew: 0,
+    programsUpdated: 0,
+    errorMessage: "page.evaluateOnNewDocument is not a function",
+    ~~~~~~~~~~~~
+    startedAt: new Date("2025-10-05T15:35:01.323Z"),
+    completedAt: new Date("2025-10-05T15:35:17.167Z"),
+    duration: 15844,
+?   id?: String,
+?   error?: String | Null,
+?   errorDetails?: NullableJsonNullValueInput | Json,
+?   statusCode?: Int | Null,
+?   userAgent?: String | Null,
+?   rateLimit?: Boolean
+  }
+}
+
+Unknown argument `errorMessage`. Available options are marked with ?.
+[2025-10-05T15:35:17.171Z] [KIMST] ❌ Job 4 failed: 
+Invalid `prisma.scrapingLog.create()` invocation:
+
+{
+  data: {
+    agencyId: "KIMST",
+    success: false,
+    programsFound: 0,
+    programsNew: 0,
+    programsUpdated: 0,
+    errorMessage: "page.evaluateOnNewDocument is not a function",
+    ~~~~~~~~~~~~
+    startedAt: new Date("2025-10-05T15:35:01.324Z"),
+    completedAt: new Date("2025-10-05T15:35:17.167Z"),
+    duration: 15843,
+?   id?: String,
+?   error?: String | Null,
+?   errorDetails?: NullableJsonNullValueInput | Json,
+?   statusCode?: Int | Null,
+?   userAgent?: String | Null,
+?   rateLimit?: Boolean
+  }
+}
+
+Unknown argument `errorMessage`. Available options are marked with ?.
+📴 SIGTERM received, shutting down gracefully...

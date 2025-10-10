@@ -1,0 +1,28 @@
+
+> connect-platform@1.0.0 scraper
+> tsx lib/scraping/index.ts
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🤖 Connect Platform - Scraping Service
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 Starting scraping scheduler...
+✓ Scraping scheduler started successfully
+  - Normal mode: 9 AM, 3 PM KST (2x daily)
+  - Peak season (Jan-Mar): 9 AM, 12 PM, 3 PM, 6 PM KST (4x daily)
+  - Current mode: NORMAL (2x)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📧 Starting Email Notification Cron Jobs
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Deadline reminder cron started (daily at 8:00 AM KST)
+✓ Weekly digest cron started (Sundays at 8:00 AM KST)
+
+✅ All email cron jobs started successfully
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Scraping worker started (max concurrency: 2)
+✓ Monitoring Redis queue: localhost:6380
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Scraping service is ready
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📴 SIGTERM received, shutting down gracefully...
