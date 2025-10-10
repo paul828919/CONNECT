@@ -1,0 +1,5 @@
+; PgBouncer User List
+; Format: "username" "password_hash"
+; Generate hash: echo -n "passwordconnect" | md5
+
+"connect" "md528c81d2b3212f3fd7531a5987e752bcd"

@@ -1,0 +1,411 @@
+# Connect Platform - Production Docker Compose Configuration
+# Optimized for i9-12900K (16 cores, 128GB RAM)
+
+version: '3.8'
+
+networks:
+  connect_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_cache_data:
+    driver: local
+  redis_queue_data:
+    driver: local
+
+services:
+  # ============================================
+  # Application Instance 1
+  # ============================================
+  app1:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      args:
+        NODE_ENV: production
+    container_name: connect_app1
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      INSTANCE_ID: app1
+
+      # Database
+      DATABASE_URL: postgresql://connect:${DB_PASSWORD}@postgres:5432/connect?schema=public&pool_timeout=30&connection_limit=50
+
+      # Redis
+      REDIS_CACHE_URL: redis://redis-cache:6379/0
+      REDIS_QUEUE_URL: redis://redis-queue:6380/0
+
+      # Auth
+      JWT_SECRET: ${JWT_SECRET}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+
+      # OAuth Providers
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
+
+      # Payments
+      TOSS_CLIENT_KEY: ${TOSS_CLIENT_KEY}
+      TOSS_SECRET_KEY: ${TOSS_SECRET_KEY}
+
+      # Encryption (PIPA Compliance)
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+
+      # Monitoring
+      SENTRY_DSN: ${SENTRY_DSN}
+
+      # Node.js optimization
+      NODE_OPTIONS: "--max-old-space-size=8192"
+      UV_THREADPOOL_SIZE: 16
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs/app1:/app/logs
+    networks:
+      connect_net:
+        ipv4_address: 172.25.0.21
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 10G
+        reservations:
+          cpus: '2'
+          memory: 4G
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis-cache:
+        condition: service_healthy
+      redis-queue:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://172.25.0.21:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================
+  # Application Instance 2
+  # ============================================
+  app2:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      args:
+        NODE_ENV: production
+    container_name: connect_app2
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      INSTANCE_ID: app2
+      DATABASE_URL: postgresql://connect:${DB_PASSWORD}@postgres:5432/connect?schema=public&pool_timeout=30&connection_limit=50
+      REDIS_CACHE_URL: redis://redis-cache:6379/0
+      REDIS_QUEUE_URL: redis://redis-queue:6380/0
+      JWT_SECRET: ${JWT_SECRET}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
+      TOSS_CLIENT_KEY: ${TOSS_CLIENT_KEY}
+      TOSS_SECRET_KEY: ${TOSS_SECRET_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SENTRY_DSN: ${SENTRY_DSN}
+      NODE_OPTIONS: "--max-old-space-size=8192"
+      UV_THREADPOOL_SIZE: 16
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs/app2:/app/logs
+    networks:
+      connect_net:
+        ipv4_address: 172.25.0.22
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 10G
+        reservations:
+          cpus: '2'
+          memory: 4G
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis-cache:
+        condition: service_healthy
+      redis-queue:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://172.25.0.22:3002/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================
+  # Primary Database
+  # ============================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: connect_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: connect
+      POSTGRES_USER: connect
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=ko_KR.UTF-8"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    command: >
+      postgres
+      -c max_connections=200
+      -c shared_buffers=8GB
+      -c effective_cache_size=20GB
+      -c maintenance_work_mem=2GB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=32MB
+      -c min_wal_size=2GB
+      -c max_wal_size=8GB
+      -c max_worker_processes=4
+      -c max_parallel_workers_per_gather=2
+      -c max_parallel_workers=4
+      -c max_parallel_maintenance_workers=2
+      -c wal_level=replica
+      -c archive_mode=on
+      -c archive_command='test ! -f /archive/%f && cp %p /archive/%f'
+      -c logging_collector=on
+      -c log_directory=/var/log/postgresql
+      -c log_filename=postgresql-%Y-%m-%d.log
+      -c log_min_duration_statement=1000
+      -c log_line_prefix='%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups/postgres:/archive
+      - ./logs/postgres:/var/log/postgresql
+      - ./config/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      connect_net:
+        ipv4_address: 172.25.0.40
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 32G
+        reservations:
+          cpus: '2'
+          memory: 16G
+    shm_size: 2G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U connect -d connect"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # ============================================
+  # Cache Layer (Redis)
+  # ============================================
+  redis-cache:
+    image: redis:7-alpine
+    container_name: connect_redis_cache
+    restart: unless-stopped
+    command: >
+      redis-server
+      --maxmemory 11gb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+      --tcp-backlog 511
+      --timeout 0
+      --tcp-keepalive 300
+      --daemonize no
+      --loglevel notice
+    volumes:
+      - redis_cache_data:/data
+    networks:
+      connect_net:
+        ipv4_address: 172.25.0.50
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 12G
+        reservations:
+          cpus: '1'
+          memory: 6G
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ============================================
+  # Queue Layer (Redis)
+  # ============================================
+  redis-queue:
+    image: redis:7-alpine
+    container_name: connect_redis_queue
+    restart: unless-stopped
+    command: >
+      redis-server
+      --maxmemory 2gb
+      --maxmemory-policy noeviction
+      --save 60 1000
+      --appendonly yes
+      --appendfsync everysec
+      --auto-aof-rewrite-percentage 100
+      --auto-aof-rewrite-min-size 64mb
+      --tcp-backlog 511
+      --timeout 0
+      --tcp-keepalive 300
+    volumes:
+      - redis_queue_data:/data
+    networks:
+      connect_net:
+        ipv4_address: 172.25.0.51
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 3G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ============================================
+  # Background Worker (Scraping)
+  # ============================================
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile.scraper
+    container_name: connect_scraper
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://connect:${DB_PASSWORD}@postgres:5432/connect?schema=public
+      REDIS_QUEUE_URL: redis://redis-queue:6380/0
+
+      # Scraping configuration
+      SCRAPER_CONCURRENCY: 2
+      SCRAPER_TIMEOUT: 30000
+      SCRAPER_USER_AGENT: Mozilla/5.0 (compatible; ConnectBot/1.0; +https://connect.kr)
+
+      # Agency URLs
+      IITP_URL: https://www.iitp.kr
+      KEIT_URL: https://www.keit.re.kr
+      TIPA_URL: https://www.tipa.or.kr
+      KIMST_URL: https://www.kimst.re.kr
+
+      # Rate limiting
+      RATE_LIMIT_PER_MINUTE: 10
+    volumes:
+      - ./logs/scraper:/app/logs
+      - ./data/scraper:/app/data
+    networks:
+      connect_net:
+        ipv4_address: 172.25.0.60
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis-queue:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================
+  # Monitoring (Grafana)
+  # ============================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: connect_grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_SERVER_ROOT_URL: http://localhost:3100
+      GF_INSTALL_PLUGINS: redis-datasource
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    networks:
+      connect_net:
+        ipv4_address: 172.25.0.70
+    ports:
+      - "3100:3000"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
