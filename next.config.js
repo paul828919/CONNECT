@@ -34,7 +34,10 @@ const nextConfig = {
   }),
 
   experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
+    serverComponentsExternalPackages: [
+      '@prisma/client',
+      'bcryptjs',
+    ],
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
 
@@ -101,6 +104,12 @@ const nextConfig = {
 
   // Webpack optimizations
   webpack: (config, { isServer, webpack, dev }) => {
+    // Fix webpack global object for server-side
+    if (isServer) {
+      // Use 'this' (works in both Node and browser) instead of 'self'
+      config.output.globalObject = 'this';
+    }
+
     // Fixes for native modules
     if (!isServer) {
       config.resolve.fallback = {
@@ -112,8 +121,8 @@ const nextConfig = {
       };
     }
 
-    // Performance optimizations (production only)
-    if (!dev) {
+    // Performance optimizations (production client builds only)
+    if (!dev && !isServer) {
       config.optimization = {
         ...config.optimization,
         moduleIds: 'deterministic',
