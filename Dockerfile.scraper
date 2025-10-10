@@ -1,0 +1,40 @@
+# ===========================================
+# Connect Platform - Scraper Dockerfile
+# Playwright-enabled scraping service
+# ===========================================
+
+FROM mcr.microsoft.com/playwright:v1.40.0-focal
+
+WORKDIR /app
+
+# Install Node.js 20
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install dependencies (including Playwright)
+RUN npm ci --only=production
+
+# Copy application code
+COPY lib/scraping ./lib/scraping
+COPY prisma ./prisma
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Create non-root user
+RUN useradd --system --uid 1001 scraper && \
+    mkdir -p /app/logs /app/data && \
+    chown -R scraper:scraper /app
+
+# Switch to non-root user
+USER scraper
+
+# Environment
+ENV NODE_ENV=production
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
+
+# Start scraper worker
+CMD ["node", "lib/scraping/worker.js"]

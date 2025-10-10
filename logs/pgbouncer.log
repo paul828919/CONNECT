@@ -1,0 +1,594 @@
+2025-10-09 15:40:49.712 KST [13210] LOG kernel file descriptor limit: 1048575 (hard: -1); max_client_conn: 1000, max expected fd use: 1112
+2025-10-09 15:40:49.713 KST [13210] LOG listening on 127.0.0.1:6432
+2025-10-09 15:40:49.713 KST [13210] LOG listening on unix:/tmp/.s.PGSQL.6432
+2025-10-09 15:40:49.713 KST [13210] LOG process up: PgBouncer 1.24.1, libevent 2.1.12-stable (kqueue), adns: evdns2, tls: OpenSSL 3.5.2 5 Aug 2025
+2025-10-09 15:41:06.130 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:55061 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:41:06.131 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:55063 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:41:38.499 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:55072 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:41:38.501 KST [13210] LOG S-0xb81494010: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:55073)
+2025-10-09 15:41:38.503 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:55072 closing because: client close request (age=0s)
+2025-10-09 15:41:49.714 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 1 B/s, out 2 B/s, xact 383 us, query 383 us, wait 2114 us
+2025-10-09 15:42:07.494 KST [13210] LOG C-0xb81448010: pgbouncer/connect@127.0.0.1:55138 login attempt: db=pgbouncer user=connect tls=no replication=no
+2025-10-09 15:42:07.494 KST [13210] LOG C-0xb81448010: pgbouncer/connect@127.0.0.1:55138 closing because: not allowed (age=0s)
+2025-10-09 15:42:07.494 KST [13210] WARNING C-0xb81448010: pgbouncer/connect@127.0.0.1:55138 pooler error: not allowed
+2025-10-09 15:42:43.217 KST [13210] LOG C-0xb81448010: connect_standby/connect@127.0.0.1:55192 login attempt: db=connect_standby user=connect tls=no replication=no
+2025-10-09 15:42:43.218 KST [13210] LOG S-0xb814942d0: connect_standby/connect@127.0.0.1:5433 new connection to server (from 127.0.0.1:55193)
+2025-10-09 15:42:43.219 KST [13210] LOG C-0xb81448010: connect_standby/connect@127.0.0.1:55192 closing because: client close request (age=0s)
+2025-10-09 15:42:49.714 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 1 B/s, out 2 B/s, xact 359 us, query 359 us, wait 1409 us
+2025-10-09 15:43:03.135 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:55315 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:43:03.165 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:55315 closing because: client unexpected eof (age=0s)
+2025-10-09 15:43:44.155 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:55430 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:43:44.165 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:55430 closing because: client close request (age=0s)
+2025-10-09 15:43:49.714 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 184 B/s, out 994 B/s, xact 833 us, query 712 us, wait 10 us
+2025-10-09 15:44:08.399 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:55538 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.404 KST [13210] LOG C-0xb81448590: connect/connect@127.0.0.1:55550 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.404 KST [13210] LOG C-0xb814482d0: connect/connect@127.0.0.1:55548 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.404 KST [13210] LOG C-0xb81448850: connect/connect@127.0.0.1:55549 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.404 KST [13210] LOG C-0xb81448b10: connect/connect@127.0.0.1:55551 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.404 KST [13210] LOG C-0xb81449090: connect/connect@127.0.0.1:55553 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.404 KST [13210] LOG C-0xb81448dd0: connect/connect@127.0.0.1:55552 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.404 KST [13210] LOG C-0xb81449350: connect/connect@127.0.0.1:55554 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.404 KST [13210] LOG C-0xb81449610: connect/connect@127.0.0.1:55556 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.404 KST [13210] LOG C-0xb814498d0: connect/connect@127.0.0.1:55557 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.404 KST [13210] LOG S-0xb81494590: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:55558)
+2025-10-09 15:44:08.406 KST [13210] LOG S-0xb81494850: connect/connect@[::1]:5432 new connection to server (from [::1]:55559)
+2025-10-09 15:44:08.407 KST [13210] LOG S-0xb81494b10: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:55560)
+2025-10-09 15:44:08.409 KST [13210] LOG S-0xb81494dd0: connect/connect@[::1]:5432 new connection to server (from [::1]:55561)
+2025-10-09 15:44:08.411 KST [13210] LOG C-0xb81449b90: connect/connect@127.0.0.1:55563 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.411 KST [13210] LOG S-0xb81495090: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:55564)
+2025-10-09 15:44:08.411 KST [13210] LOG C-0xb81449e50: connect/connect@127.0.0.1:55567 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.411 KST [13210] LOG C-0xb8144a110: connect/connect@127.0.0.1:55568 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.412 KST [13210] LOG C-0xb8144a3d0: connect/connect@127.0.0.1:55570 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.412 KST [13210] LOG C-0xb8144a690: connect/connect@127.0.0.1:55572 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.413 KST [13210] LOG C-0xb8144a950: connect/connect@127.0.0.1:55580 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.413 KST [13210] LOG C-0xb8144ac10: connect/connect@127.0.0.1:55581 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.413 KST [13210] LOG C-0xb8144b450: connect/connect@127.0.0.1:55584 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.413 KST [13210] LOG C-0xb8144aed0: connect/connect@127.0.0.1:55582 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.413 KST [13210] LOG C-0xb8144b190: connect/connect@127.0.0.1:55583 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.413 KST [13210] LOG C-0xb8144b710: connect/connect@127.0.0.1:55585 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.413 KST [13210] LOG C-0xb8144b9d0: connect/connect@127.0.0.1:55587 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.413 KST [13210] LOG C-0xb8144bc90: connect/connect@127.0.0.1:55589 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.413 KST [13210] LOG C-0xb8144bf50: connect/connect@127.0.0.1:55590 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.413 KST [13210] LOG S-0xb81495350: connect/connect@[::1]:5432 new connection to server (from [::1]:55592)
+2025-10-09 15:44:08.414 KST [13210] LOG C-0xb8144c210: connect/connect@127.0.0.1:55593 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.414 KST [13210] LOG C-0xb8144c4d0: connect/connect@127.0.0.1:55595 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.415 KST [13210] LOG C-0xb8144c790: connect/connect@127.0.0.1:55602 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.415 KST [13210] LOG C-0xb8144ca50: connect/connect@127.0.0.1:55603 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.415 KST [13210] LOG C-0xb8144cd10: connect/connect@127.0.0.1:55604 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.415 KST [13210] LOG C-0xb8144cfd0: connect/connect@127.0.0.1:55605 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.415 KST [13210] LOG C-0xb8144d290: connect/connect@127.0.0.1:55607 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.415 KST [13210] LOG C-0xb8144d550: connect/connect@127.0.0.1:55608 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.415 KST [13210] LOG C-0xb8144d810: connect/connect@127.0.0.1:55614 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144dad0: connect/connect@127.0.0.1:55627 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG S-0xb81495610: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:55644)
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144dd90: connect/connect@127.0.0.1:55628 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144e050: connect/connect@127.0.0.1:55629 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144e310: connect/connect@127.0.0.1:55630 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144e5d0: connect/connect@127.0.0.1:55631 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144e890: connect/connect@127.0.0.1:55632 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144ee10: connect/connect@127.0.0.1:55634 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144eb50: connect/connect@127.0.0.1:55633 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144f0d0: connect/connect@127.0.0.1:55635 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144f390: connect/connect@127.0.0.1:55636 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144f650: connect/connect@127.0.0.1:55637 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144fbd0: connect/connect@127.0.0.1:55639 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144fe90: connect/connect@127.0.0.1:55640 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb8144f910: connect/connect@127.0.0.1:55638 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb81450150: connect/connect@127.0.0.1:55641 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb81450410: connect/connect@127.0.0.1:55642 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.416 KST [13210] LOG C-0xb814506d0: connect/connect@127.0.0.1:55643 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:44:08.417 KST [13210] LOG S-0xb814958d0: connect/connect@[::1]:5432 new connection to server (from [::1]:55645)
+2025-10-09 15:44:08.419 KST [13210] LOG S-0xb81495b90: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:55646)
+2025-10-09 15:44:08.421 KST [13210] LOG S-0xb81495e50: connect/connect@[::1]:5432 new connection to server (from [::1]:55647)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb81449090: connect/connect@127.0.0.1:55553 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144c210: connect/connect@127.0.0.1:55593 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb81448dd0: connect/connect@127.0.0.1:55552 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144c4d0: connect/connect@127.0.0.1:55595 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb814498d0: connect/connect@127.0.0.1:55557 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144ac10: connect/connect@127.0.0.1:55581 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144a690: connect/connect@127.0.0.1:55572 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb81449350: connect/connect@127.0.0.1:55554 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144c790: connect/connect@127.0.0.1:55602 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb81449610: connect/connect@127.0.0.1:55556 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144b450: connect/connect@127.0.0.1:55584 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144e5d0: connect/connect@127.0.0.1:55631 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb814482d0: connect/connect@127.0.0.1:55548 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144ee10: connect/connect@127.0.0.1:55634 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144aed0: connect/connect@127.0.0.1:55582 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144cfd0: connect/connect@127.0.0.1:55605 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144dd90: connect/connect@127.0.0.1:55628 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb81448b10: connect/connect@127.0.0.1:55551 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144f0d0: connect/connect@127.0.0.1:55635 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144a950: connect/connect@127.0.0.1:55580 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144ca50: connect/connect@127.0.0.1:55603 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144d550: connect/connect@127.0.0.1:55608 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144b710: connect/connect@127.0.0.1:55585 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144dad0: connect/connect@127.0.0.1:55627 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144b190: connect/connect@127.0.0.1:55583 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144e310: connect/connect@127.0.0.1:55630 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144bc90: connect/connect@127.0.0.1:55589 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144f910: connect/connect@127.0.0.1:55638 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb81448850: connect/connect@127.0.0.1:55549 closing because: client close request (age=0s)
+2025-10-09 15:44:08.431 KST [13210] LOG C-0xb8144b9d0: connect/connect@127.0.0.1:55587 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb8144f390: connect/connect@127.0.0.1:55636 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb8144fe90: connect/connect@127.0.0.1:55640 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb8144d290: connect/connect@127.0.0.1:55607 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb8144eb50: connect/connect@127.0.0.1:55633 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb81450150: connect/connect@127.0.0.1:55641 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb8144cd10: connect/connect@127.0.0.1:55604 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb81450410: connect/connect@127.0.0.1:55642 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb81449b90: connect/connect@127.0.0.1:55563 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb8144f650: connect/connect@127.0.0.1:55637 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb8144e050: connect/connect@127.0.0.1:55629 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb814506d0: connect/connect@127.0.0.1:55643 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb81448590: connect/connect@127.0.0.1:55550 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb8144a110: connect/connect@127.0.0.1:55568 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb8144fbd0: connect/connect@127.0.0.1:55639 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb81449e50: connect/connect@127.0.0.1:55567 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:55538 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb8144a3d0: connect/connect@127.0.0.1:55570 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb8144bf50: connect/connect@127.0.0.1:55590 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb8144e890: connect/connect@127.0.0.1:55632 closing because: client close request (age=0s)
+2025-10-09 15:44:08.432 KST [13210] LOG C-0xb8144d810: connect/connect@127.0.0.1:55614 closing because: client close request (age=0s)
+2025-10-09 15:44:49.714 KST [13210] LOG stats: 1 xacts/s, 6 queries/s, 1 client parses/s, 1 server parses/s, 1 binds/s, in 218 B/s, out 340 B/s, xact 2122 us, query 557 us, wait 1195 us
+2025-10-09 15:45:49.714 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 15:46:49.714 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 15:47:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 15:48:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 15:49:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 15:50:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 15:51:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 15:52:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 15:53:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 15:54:08.712 KST [13210] LOG S-0xb81495b90: connect/connect@127.0.0.1:5432 closing because: server idle timeout (age=600s)
+2025-10-09 15:54:08.713 KST [13210] LOG S-0xb81494b10: connect/connect@127.0.0.1:5432 closing because: server idle timeout (age=600s)
+2025-10-09 15:54:08.713 KST [13210] LOG S-0xb81495610: connect/connect@127.0.0.1:5432 closing because: server idle timeout (age=600s)
+2025-10-09 15:54:08.713 KST [13210] LOG S-0xb81494590: connect/connect@127.0.0.1:5432 closing because: server idle timeout (age=600s)
+2025-10-09 15:54:08.713 KST [13210] LOG S-0xb81494850: connect/connect@[::1]:5432 closing because: server idle timeout (age=600s)
+2025-10-09 15:54:08.713 KST [13210] LOG S-0xb814958d0: connect/connect@[::1]:5432 closing because: server idle timeout (age=600s)
+2025-10-09 15:54:21.337 KST [13210] LOG C-0xb8144d810: connect/connect@127.0.0.1:56239 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:54:22.907 KST [13210] LOG C-0xb8144d810: connect/connect@127.0.0.1:56241 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:54:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 15:55:06.581 KST [13210] LOG C-0xb8144d810: connect/connect@127.0.0.1:56414 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:55:08.033 KST [13210] LOG C-0xb8144d810: connect/connect@127.0.0.1:56416 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:55:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 15:55:54.665 KST [13210] LOG C-0xb8144d810: connect/connect@127.0.0.1:56631 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:55:54.666 KST [13210] LOG C-0xb8144d810: connect/connect@127.0.0.1:56631 closing because: client close request (age=0s)
+2025-10-09 15:56:18.045 KST [13210] LOG C-0xb8144d810: connect/connect@127.0.0.1:56724 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:18.050 KST [13210] LOG C-0xb8144e890: connect/connect@127.0.0.1:56726 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:18.050 KST [13210] LOG C-0xb8144bf50: connect/connect@127.0.0.1:56728 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:18.051 KST [13210] LOG C-0xb8144a3d0: connect/connect@127.0.0.1:56736 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:18.051 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:56737 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:18.051 KST [13210] LOG C-0xb81449e50: connect/connect@127.0.0.1:56738 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:18.051 KST [13210] LOG C-0xb8144fbd0: connect/connect@127.0.0.1:56739 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:18.051 KST [13210] LOG C-0xb8144a110: connect/connect@127.0.0.1:56740 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:18.051 KST [13210] LOG C-0xb81448590: connect/connect@127.0.0.1:56741 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:18.051 KST [13210] LOG C-0xb814506d0: connect/connect@127.0.0.1:56742 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:18.052 KST [13210] LOG S-0xb814958d0: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:56743)
+2025-10-09 15:56:18.056 KST [13210] LOG C-0xb8144fbd0: connect/connect@127.0.0.1:56739 closing because: client unexpected eof (age=0s)
+2025-10-09 15:56:18.056 KST [13210] LOG C-0xb8144a110: connect/connect@127.0.0.1:56740 closing because: client unexpected eof (age=0s)
+2025-10-09 15:56:18.056 KST [13210] LOG C-0xb81449e50: connect/connect@127.0.0.1:56738 closing because: client unexpected eof (age=0s)
+2025-10-09 15:56:18.056 KST [13210] LOG C-0xb8144e890: connect/connect@127.0.0.1:56726 closing because: client unexpected eof (age=0s)
+2025-10-09 15:56:18.056 KST [13210] LOG C-0xb8144a3d0: connect/connect@127.0.0.1:56736 closing because: client unexpected eof (age=0s)
+2025-10-09 15:56:18.056 KST [13210] LOG C-0xb81448590: connect/connect@127.0.0.1:56741 closing because: client unexpected eof (age=0s)
+2025-10-09 15:56:18.056 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:56737 closing because: client unexpected eof (age=0s)
+2025-10-09 15:56:18.056 KST [13210] LOG C-0xb814506d0: connect/connect@127.0.0.1:56742 closing because: client unexpected eof (age=0s)
+2025-10-09 15:56:18.056 KST [13210] LOG C-0xb8144bf50: connect/connect@127.0.0.1:56728 closing because: client unexpected eof (age=0s)
+2025-10-09 15:56:18.056 KST [13210] LOG C-0xb8144d810: connect/connect@127.0.0.1:56724 closing because: client unexpected eof (age=0s)
+2025-10-09 15:56:22.166 KST [13210] LOG C-0xb8144d810: connect/connect@127.0.0.1:56779 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.170 KST [13210] LOG C-0xb8144bf50: connect/connect@127.0.0.1:56781 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.171 KST [13210] LOG C-0xb814506d0: connect/connect@127.0.0.1:56786 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.171 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:56787 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.171 KST [13210] LOG C-0xb81448590: connect/connect@127.0.0.1:56788 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.171 KST [13210] LOG C-0xb8144a3d0: connect/connect@127.0.0.1:56789 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.171 KST [13210] LOG C-0xb8144e890: connect/connect@127.0.0.1:56794 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.171 KST [13210] LOG C-0xb8144fbd0: connect/connect@127.0.0.1:56797 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.171 KST [13210] LOG C-0xb8144a110: connect/connect@127.0.0.1:56796 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.171 KST [13210] LOG C-0xb81449e50: connect/connect@127.0.0.1:56795 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.172 KST [13210] LOG S-0xb81494850: connect/connect@[::1]:5432 new connection to server (from [::1]:56798)
+2025-10-09 15:56:22.174 KST [13210] LOG S-0xb81494590: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:56799)
+2025-10-09 15:56:22.175 KST [13210] LOG S-0xb81495610: connect/connect@[::1]:5432 new connection to server (from [::1]:56800)
+2025-10-09 15:56:22.178 KST [13210] LOG C-0xb8144e050: connect/connect@127.0.0.1:56802 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.178 KST [13210] LOG C-0xb81449b90: connect/connect@127.0.0.1:56806 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.178 KST [13210] LOG C-0xb8144f650: connect/connect@127.0.0.1:56805 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.178 KST [13210] LOG C-0xb81450410: connect/connect@127.0.0.1:56808 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.179 KST [13210] LOG C-0xb8144cd10: connect/connect@127.0.0.1:56811 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.179 KST [13210] LOG C-0xb81450150: connect/connect@127.0.0.1:56812 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.179 KST [13210] LOG C-0xb8144d290: connect/connect@127.0.0.1:56819 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.179 KST [13210] LOG C-0xb8144eb50: connect/connect@127.0.0.1:56818 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.179 KST [13210] LOG C-0xb8144f390: connect/connect@127.0.0.1:56821 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.179 KST [13210] LOG C-0xb8144fe90: connect/connect@127.0.0.1:56820 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.179 KST [13210] LOG C-0xb8144b9d0: connect/connect@127.0.0.1:56822 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.179 KST [13210] LOG C-0xb81448850: connect/connect@127.0.0.1:56826 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.180 KST [13210] LOG C-0xb8144f910: connect/connect@127.0.0.1:56827 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.180 KST [13210] LOG C-0xb8144bc90: connect/connect@127.0.0.1:56828 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.180 KST [13210] LOG C-0xb8144e310: connect/connect@127.0.0.1:56833 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.180 KST [13210] LOG C-0xb8144b190: connect/connect@127.0.0.1:56835 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.181 KST [13210] LOG S-0xb81494b10: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:56867)
+2025-10-09 15:56:22.181 KST [13210] LOG C-0xb8144dad0: connect/connect@127.0.0.1:56839 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.181 KST [13210] LOG C-0xb8144b710: connect/connect@127.0.0.1:56845 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.181 KST [13210] LOG C-0xb8144d550: connect/connect@127.0.0.1:56846 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.181 KST [13210] LOG C-0xb8144ca50: connect/connect@127.0.0.1:56848 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.181 KST [13210] LOG C-0xb8144a950: connect/connect@127.0.0.1:56849 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.181 KST [13210] LOG C-0xb8144f0d0: connect/connect@127.0.0.1:56850 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.181 KST [13210] LOG C-0xb81448b10: connect/connect@127.0.0.1:56854 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.181 KST [13210] LOG C-0xb8144dd90: connect/connect@127.0.0.1:56855 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.181 KST [13210] LOG C-0xb8144cfd0: connect/connect@127.0.0.1:56858 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb8144aed0: connect/connect@127.0.0.1:56859 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb8144ee10: connect/connect@127.0.0.1:56861 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb814482d0: connect/connect@127.0.0.1:56869 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb8144e5d0: connect/connect@127.0.0.1:56870 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb8144b450: connect/connect@127.0.0.1:56871 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb81449610: connect/connect@127.0.0.1:56872 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb8144c790: connect/connect@127.0.0.1:56873 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb81449350: connect/connect@127.0.0.1:56874 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb814498d0: connect/connect@127.0.0.1:56877 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb8144ac10: connect/connect@127.0.0.1:56876 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb8144a690: connect/connect@127.0.0.1:56875 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb8144c4d0: connect/connect@127.0.0.1:56878 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb81448dd0: connect/connect@127.0.0.1:56879 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb81449090: connect/connect@127.0.0.1:56881 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.182 KST [13210] LOG C-0xb8144c210: connect/connect@127.0.0.1:56880 login attempt: db=connect user=connect tls=no replication=no
+2025-10-09 15:56:22.183 KST [13210] LOG S-0xb81495b90: connect/connect@[::1]:5432 new connection to server (from [::1]:56882)
+2025-10-09 15:56:22.185 KST [13210] LOG S-0xb81496110: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:56883)
+2025-10-09 15:56:22.186 KST [13210] LOG S-0xb814963d0: connect/connect@[::1]:5432 new connection to server (from [::1]:56884)
+2025-10-09 15:56:22.188 KST [13210] LOG S-0xb81496690: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:56885)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb81450410: connect/connect@127.0.0.1:56808 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144f0d0: connect/connect@127.0.0.1:56850 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb81448b10: connect/connect@127.0.0.1:56854 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb81448010: connect/connect@127.0.0.1:56787 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144a110: connect/connect@127.0.0.1:56796 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144cfd0: connect/connect@127.0.0.1:56858 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb81450150: connect/connect@127.0.0.1:56812 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb81449e50: connect/connect@127.0.0.1:56795 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144fbd0: connect/connect@127.0.0.1:56797 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144dd90: connect/connect@127.0.0.1:56855 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144cd10: connect/connect@127.0.0.1:56811 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb81448590: connect/connect@127.0.0.1:56788 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb81449b90: connect/connect@127.0.0.1:56806 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144a3d0: connect/connect@127.0.0.1:56789 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144e050: connect/connect@127.0.0.1:56802 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144bf50: connect/connect@127.0.0.1:56781 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144ee10: connect/connect@127.0.0.1:56861 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144eb50: connect/connect@127.0.0.1:56818 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144e890: connect/connect@127.0.0.1:56794 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144f650: connect/connect@127.0.0.1:56805 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb814506d0: connect/connect@127.0.0.1:56786 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb81449350: connect/connect@127.0.0.1:56874 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144d810: connect/connect@127.0.0.1:56779 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144d290: connect/connect@127.0.0.1:56819 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144ac10: connect/connect@127.0.0.1:56876 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144e310: connect/connect@127.0.0.1:56833 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144b710: connect/connect@127.0.0.1:56845 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb81449610: connect/connect@127.0.0.1:56872 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144aed0: connect/connect@127.0.0.1:56859 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144ca50: connect/connect@127.0.0.1:56848 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144fe90: connect/connect@127.0.0.1:56820 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144b190: connect/connect@127.0.0.1:56835 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb814498d0: connect/connect@127.0.0.1:56877 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144e5d0: connect/connect@127.0.0.1:56870 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144b450: connect/connect@127.0.0.1:56871 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144d550: connect/connect@127.0.0.1:56846 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144f390: connect/connect@127.0.0.1:56821 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144c4d0: connect/connect@127.0.0.1:56878 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144dad0: connect/connect@127.0.0.1:56839 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb814482d0: connect/connect@127.0.0.1:56869 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144b9d0: connect/connect@127.0.0.1:56822 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144a950: connect/connect@127.0.0.1:56849 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb81448dd0: connect/connect@127.0.0.1:56879 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb81449090: connect/connect@127.0.0.1:56881 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144f910: connect/connect@127.0.0.1:56827 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144c790: connect/connect@127.0.0.1:56873 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144bc90: connect/connect@127.0.0.1:56828 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144a690: connect/connect@127.0.0.1:56875 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb8144c210: connect/connect@127.0.0.1:56880 closing because: client close request (age=0s)
+2025-10-09 15:56:22.198 KST [13210] LOG C-0xb81448850: connect/connect@127.0.0.1:56826 closing because: client close request (age=0s)
+2025-10-09 15:56:49.713 KST [13210] LOG stats: 2 xacts/s, 7 queries/s, 1 client parses/s, 1 server parses/s, 1 binds/s, in 261 B/s, out 410 B/s, xact 2030 us, query 508 us, wait 835 us
+2025-10-09 15:57:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 15:58:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 15:59:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 16:00:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 16:01:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 16:02:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 16:03:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 16:04:49.713 KST [13210] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-09 16:05:27.965 KST [13210] WARNING S-0xb81495b90: connect/connect@[::1]:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.965 KST [13210] WARNING S-0xb814963d0: connect/connect@[::1]:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.965 KST [13210] WARNING S-0xb81494b10: connect/connect@127.0.0.1:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.965 KST [13210] WARNING S-0xb81495610: connect/connect@[::1]:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.965 KST [13210] WARNING S-0xb81494850: connect/connect@[::1]:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.965 KST [13210] WARNING S-0xb81494590: connect/connect@127.0.0.1:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.965 KST [13210] WARNING S-0xb81495e50: connect/connect@[::1]:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.965 KST [13210] WARNING S-0xb814958d0: connect/connect@127.0.0.1:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.966 KST [13210] WARNING S-0xb81495350: connect/connect@[::1]:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.966 KST [13210] WARNING S-0xb81495090: connect/connect@127.0.0.1:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.966 KST [13210] WARNING S-0xb81494dd0: connect/connect@[::1]:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.966 KST [13210] WARNING S-0xb814942d0: connect_standby/connect@127.0.0.1:5433 got packet 'E' from server when not linked
+2025-10-09 16:05:27.966 KST [13210] WARNING S-0xb81494010: connect/connect@127.0.0.1:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.966 KST [13210] WARNING S-0xb81496690: connect/connect@127.0.0.1:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.966 KST [13210] WARNING S-0xb81496110: connect/connect@127.0.0.1:5432 got packet 'E' from server when not linked
+2025-10-09 16:05:27.966 KST [13210] LOG S-0xb81495b90: connect/connect@[::1]:5432 closing because: server conn crashed? (age=545s)
+2025-10-09 16:05:27.966 KST [13210] LOG S-0xb81494b10: connect/connect@127.0.0.1:5432 closing because: server conn crashed? (age=545s)
+2025-10-09 16:05:27.966 KST [13210] LOG S-0xb81495610: connect/connect@[::1]:5432 closing because: server conn crashed? (age=545s)
+2025-10-09 16:05:27.966 KST [13210] LOG S-0xb81494850: connect/connect@[::1]:5432 closing because: server conn crashed? (age=545s)
+2025-10-09 16:05:27.966 KST [13210] LOG S-0xb81494590: connect/connect@127.0.0.1:5432 closing because: server conn crashed? (age=545s)
+2025-10-09 16:05:27.966 KST [13210] LOG S-0xb81495e50: connect/connect@[::1]:5432 closing because: server conn crashed? (age=1279s)
+2025-10-09 16:05:27.966 KST [13210] LOG S-0xb814958d0: connect/connect@127.0.0.1:5432 closing because: server conn crashed? (age=549s)
+2025-10-09 16:05:27.966 KST [13210] LOG S-0xb81495350: connect/connect@[::1]:5432 closing because: server conn crashed? (age=1279s)
+2025-10-09 16:05:27.966 KST [13210] LOG S-0xb81495090: connect/connect@127.0.0.1:5432 closing because: server conn crashed? (age=1279s)
+2025-10-09 16:05:27.966 KST [13210] LOG S-0xb81494dd0: connect/connect@[::1]:5432 closing because: server conn crashed? (age=1279s)
+2025-10-09 16:05:27.966 KST [13210] LOG S-0xb814942d0: connect_standby/connect@127.0.0.1:5433 closing because: server conn crashed? (age=1364s)
+2025-10-09 16:05:27.966 KST [13210] LOG S-0xb81494010: connect/connect@127.0.0.1:5432 closing because: server conn crashed? (age=1429s)
+2025-10-09 16:05:27.967 KST [13210] LOG S-0xb81496690: connect/connect@127.0.0.1:5432 closing because: server conn crashed? (age=545s)
+2025-10-09 16:05:27.967 KST [13210] LOG S-0xb81496110: connect/connect@127.0.0.1:5432 closing because: server conn crashed? (age=545s)
+2025-10-09 16:05:27.969 KST [13210] LOG S-0xb814963d0: connect/connect@[::1]:5432 closing because: server conn crashed? (age=545s)
+2025-10-10 17:28:42.297 KST [80058] LOG stale pidfile, removing
+2025-10-10 17:28:42.298 KST [80060] LOG kernel file descriptor limit: 1048575 (hard: -1); max_client_conn: 1000, max expected fd use: 1112
+2025-10-10 17:28:42.298 KST [80060] LOG listening on 127.0.0.1:6432
+2025-10-10 17:28:42.299 KST [80060] LOG listening on unix:/tmp/.s.PGSQL.6432
+2025-10-10 17:28:42.299 KST [80060] LOG process up: PgBouncer 1.24.1, libevent 2.1.12-stable (kqueue), adns: evdns2, tls: OpenSSL 3.6.0 1 Oct 2025
+2025-10-10 17:29:42.299 KST [80060] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:30:42.299 KST [80060] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:31:42.299 KST [80060] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:32:42.299 KST [80060] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:33:42.299 KST [80060] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:34:42.299 KST [80060] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:35:42.299 KST [80060] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:36:42.299 KST [80060] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:37:42.299 KST [80060] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:38:42.299 KST [80060] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:39:13.120 KST [80060] LOG C-0x767448010: connect/connect@127.0.0.1:53845 login attempt: db=connect user=connect tls=no replication=no
+2025-10-10 17:39:13.122 KST [80060] LOG S-0x767494010: connect/connect@127.0.0.1:5432 closing because: connect failed (age=0s)
+2025-10-10 17:39:28.298 KST [80060] LOG S-0x767494010: connect/connect@127.0.0.1:5432 closing because: connect failed (age=0s)
+2025-10-10 17:39:37.734 KST [80060] LOG C-0x7674482d0: connect/connect@127.0.0.1:53895 login attempt: db=connect user=connect tls=no replication=no
+2025-10-10 17:39:42.299 KST [80060] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:39:43.632 KST [80060] LOG S-0x767494010: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:53909)
+2025-10-10 17:39:43.647 KST [80060] LOG C-0x767448010: connect/connect@127.0.0.1:53845 closing because: client unexpected eof (age=30s)
+2025-10-10 17:39:43.647 KST [80060] LOG C-0x7674482d0: connect/connect@127.0.0.1:53895 closing because: client unexpected eof (age=5s)
+2025-10-10 17:39:48.279 KST [80060] LOG got SIGTERM, shutting down, waiting for all clients disconnect
+2025-10-10 17:39:48.299 KST [80060] LOG client connections dropped, exiting
+2025-10-10 17:39:50.291 KST [81252] LOG kernel file descriptor limit: 1048575 (hard: -1); max_client_conn: 1000, max expected fd use: 1112
+2025-10-10 17:39:50.293 KST [81252] LOG listening on 127.0.0.1:6432
+2025-10-10 17:39:50.293 KST [81252] LOG listening on unix:/tmp/.s.PGSQL.6432
+2025-10-10 17:39:50.293 KST [81252] LOG process up: PgBouncer 1.24.1, libevent 2.1.12-stable (kqueue), adns: evdns2, tls: OpenSSL 3.6.0 1 Oct 2025
+2025-10-10 17:39:56.343 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:53940 login attempt: db=connect user=connect tls=no replication=no
+2025-10-10 17:39:56.344 KST [81252] LOG S-0xb1f494010: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:53941)
+2025-10-10 17:39:56.354 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:53940 closing because: client unexpected eof (age=0s)
+2025-10-10 17:40:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 1 B/s, xact 2006 us, query 2006 us, wait 3676 us
+2025-10-10 17:41:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:42:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:43:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:44:39.414 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:54101 login attempt: db=connect user=connect tls=no replication=no
+2025-10-10 17:44:39.456 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:54101 closing because: client close request (age=0s)
+2025-10-10 17:44:50.293 KST [81252] LOG stats: 0 xacts/s, 1 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 485 B/s, out 294 B/s, xact 2546 us, query 237 us, wait 210 us
+2025-10-10 17:44:57.971 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:54129 login attempt: db=connect user=connect tls=no replication=no
+2025-10-10 17:44:57.981 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:54129 closing because: client unexpected eof (age=0s)
+2025-10-10 17:45:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 12 B/s, out 8 B/s, xact 1892 us, query 526 us, wait 0 us
+2025-10-10 17:46:03.475 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:54174 login attempt: db=connect user=connect tls=no replication=no
+2025-10-10 17:46:03.482 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:54174 closing because: client close request (age=0s)
+2025-10-10 17:46:38.903 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:54224 login attempt: db=connect user=connect tls=no replication=no
+2025-10-10 17:46:38.929 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:54224 closing because: client close request (age=0s)
+2025-10-10 17:46:48.646 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:54244 login attempt: db=connect user=connect tls=no replication=no
+2025-10-10 17:46:48.651 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:54244 closing because: client unexpected eof (age=0s)
+2025-10-10 17:46:50.293 KST [81252] LOG stats: 0 xacts/s, 1 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 389 B/s, out 466 B/s, xact 749 us, query 105 us, wait 11 us
+2025-10-10 17:46:54.449 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:54252 login attempt: db=connect user=connect tls=no replication=no
+2025-10-10 17:46:54.626 KST [81252] LOG S-0xb1f4942d0: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:54354)
+2025-10-10 17:46:54.959 KST [81252] LOG S-0xb1f494590: connect/connect@[::1]:5432 closing because: connect failed (age=0s)
+2025-10-10 17:47:10.293 KST [81252] LOG S-0xb1f494590: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:54436)
+2025-10-10 17:47:10.627 KST [81252] LOG S-0xb1f494850: connect/connect@[::1]:5432 closing because: connect failed (age=0s)
+2025-10-10 17:47:10.732 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:54252 closing because: client unexpected eof (age=16s)
+2025-10-10 17:47:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 180 B/s, out 444 B/s, xact 4042 us, query 531 us, wait 0 us
+2025-10-10 17:48:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:49:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:50:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:51:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:52:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:53:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:54:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:55:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:56:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:57:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:58:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 17:59:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:00:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:01:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:02:26.135 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:55326 login attempt: db=connect user=connect tls=no replication=no
+2025-10-10 18:02:26.292 KST [81252] LOG S-0xb1f494850: connect/connect@127.0.0.1:5432 new connection to server (from 127.0.0.1:55428)
+2025-10-10 18:02:26.626 KST [81252] LOG S-0xb1f494b10: connect/connect@[::1]:5432 closing because: connect failed (age=0s)
+2025-10-10 18:02:41.461 KST [81252] LOG C-0xb1f448010: connect/connect@127.0.0.1:55326 closing because: client unexpected eof (age=15s)
+2025-10-10 18:02:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 180 B/s, out 444 B/s, xact 3186 us, query 369 us, wait 28 us
+2025-10-10 18:03:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:04:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:05:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:06:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:07:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:08:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:09:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:10:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:11:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:12:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:13:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:14:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:15:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:16:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:17:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:18:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:19:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:20:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:21:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:22:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:23:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:24:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:25:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:26:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:27:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:28:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:29:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:30:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:31:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:32:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:33:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:34:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:35:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:36:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:37:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:38:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:39:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:39:56.623 KST [81252] LOG S-0xb1f494010: connect/connect@127.0.0.1:5432 closing because: server lifetime over (age=3600s)
+2025-10-10 18:40:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:41:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:42:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:43:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:44:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:45:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:46:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:46:54.956 KST [81252] LOG S-0xb1f4942d0: connect/connect@127.0.0.1:5432 closing because: server lifetime over (age=3600s)
+2025-10-10 18:47:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:48:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:49:19.289 KST [81252] LOG S-0xb1f494590: connect/connect@127.0.0.1:5432 closing because: server lifetime over (age=3728s)
+2025-10-10 18:49:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:50:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:51:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:52:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:53:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:54:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:55:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:56:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:57:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:58:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 18:59:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:00:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:01:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:02:26.622 KST [81252] LOG S-0xb1f494850: connect/connect@127.0.0.1:5432 closing because: server lifetime over (age=3600s)
+2025-10-10 19:02:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:03:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:04:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:05:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:06:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:07:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:08:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:09:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:10:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:11:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:12:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:13:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:14:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:15:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:16:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:17:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:18:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:19:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:20:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:21:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:22:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:23:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:24:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:25:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:26:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:27:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:28:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:29:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:30:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:31:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:32:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:33:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:34:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:35:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:36:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:37:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:38:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:39:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:40:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:41:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:42:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:43:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:44:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:45:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:46:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:47:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:48:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:49:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:50:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:51:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:52:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:53:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:54:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:55:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:56:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:57:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:58:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 19:59:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:00:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:01:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:02:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:03:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:04:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:05:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:06:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:07:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:08:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:09:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:10:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:11:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:12:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:13:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:14:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:15:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:16:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:17:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:18:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:19:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:20:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:21:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:22:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:23:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:24:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:25:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:26:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:27:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:28:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:29:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:30:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:31:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:32:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:33:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:34:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:35:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:36:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:37:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:38:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:39:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:40:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:41:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:42:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:43:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:44:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:45:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:46:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:47:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:48:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:49:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:50:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:51:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:52:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:53:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:54:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:55:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:56:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:57:50.294 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:58:50.294 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 20:59:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:00:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:01:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:02:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:03:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:04:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:05:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:06:50.292 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:07:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:08:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:09:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:10:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:11:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:12:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us
+2025-10-10 21:13:50.293 KST [81252] LOG stats: 0 xacts/s, 0 queries/s, 0 client parses/s, 0 server parses/s, 0 binds/s, in 0 B/s, out 0 B/s, xact 0 us, query 0 us, wait 0 us

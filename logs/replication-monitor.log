@@ -1,0 +1,21 @@
+========================================
+PostgreSQL Replication Status
+========================================
+Timestamp: Thu Oct  9 15:31:30 KST 2025
+
+Primary Server Replication Status:
+ application_name |   state   | sync_state | pending_bytes | write_lag_bytes | flush_lag_bytes | replay_lag_bytes | write_lag | flush_lag | replay_lag 
+------------------+-----------+------------+---------------+-----------------+-----------------+------------------+-----------+-----------+------------
+ walreceiver      | streaming | async      |             0 |               0 |               0 |                0 |           |           | 
+(1 row)
+
+
+Standby Server Status:
+ is_standby | receive_lsn | replay_lsn | replay_lag_bytes 
+------------+-------------+------------+------------------
+ t          | 0/8085B20   | 0/8085B20  |                0
+(1 row)
+
+
+✅ Replication lag: 0 bytes (within threshold)
+========================================
