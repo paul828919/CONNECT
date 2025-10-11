@@ -110,7 +110,7 @@ export async function sendQAChat(request: QAChatRequest): Promise<QAChatResponse
   try {
     const aiResponse = await sendAIRequest({
       system,
-      messages,
+      messages: messages as Array<{ role: 'user' | 'assistant'; content: string }>,
       maxTokens: QA_CHAT_MAX_TOKENS,
       temperature: QA_CHAT_TEMPERATURE,
       retries: 3,

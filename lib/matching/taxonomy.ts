@@ -351,8 +351,8 @@ export function findIndustrySector(keyword: string): string | null {
 
     // Check sub-sector keywords
     for (const subSector of Object.values(sector.subSectors)) {
-      const subKeywords = subSector.keywords.map(k => normalizeKoreanKeyword(k));
-      if (subKeywords.some(k => normalized.includes(k) || k.includes(normalized))) {
+      const subKeywords = subSector.keywords.map((k: string) => normalizeKoreanKeyword(k));
+      if (subKeywords.some((k: string) => normalized.includes(k) || k.includes(normalized))) {
         return sectorKey;
       }
     }
@@ -371,8 +371,8 @@ export function findSubSector(
 
   for (const [sectorKey, sector] of Object.entries(INDUSTRY_TAXONOMY)) {
     for (const [subSectorKey, subSector] of Object.entries(sector.subSectors)) {
-      const subKeywords = subSector.keywords.map(k => normalizeKoreanKeyword(k));
-      if (subKeywords.some(k => normalized.includes(k) || k.includes(normalized))) {
+      const subKeywords = subSector.keywords.map((k: string) => normalizeKoreanKeyword(k));
+      if (subKeywords.some((k: string) => normalized.includes(k) || k.includes(normalized))) {
         return { sector: sectorKey, subSector: subSectorKey };
       }
     }

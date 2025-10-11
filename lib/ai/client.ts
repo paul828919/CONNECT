@@ -380,11 +380,12 @@ export async function sendAIRequest(options: AIRequestOptions): Promise<AIRespon
   }
 
   let lastError: Error | null = null;
+  let startTime = Date.now();
 
   // Retry loop with exponential backoff
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const startTime = Date.now();
+      startTime = Date.now();
 
       const anthropicClient = getAnthropicClient();
       const response = await anthropicClient.messages.create({
@@ -404,15 +405,18 @@ export async function sendAIRequest(options: AIRequestOptions): Promise<AIRespon
         throw new Error('Streaming not yet implemented in this wrapper. Use non-streaming mode.');
       }
 
+      // Type assertion: we know response is Message (not Stream) after stream check
+      const message = response as Anthropic.Message;
+
       // Extract text content
-      const content = response.content
-        .filter((block) => block.type === 'text')
-        .map((block) => (block as any).text)
+      const content = message.content
+        .filter((block: any) => block.type === 'text')
+        .map((block: any) => ('text' in block ? block.text : ''))
         .join('\n');
 
       // Track usage and cost
-      const inputTokens = response.usage.input_tokens;
-      const outputTokens = response.usage.output_tokens;
+      const inputTokens = message.usage.input_tokens;
+      const outputTokens = message.usage.output_tokens;
       const cost = await trackCost(inputTokens, outputTokens);
 
       // Log to database for persistent tracking
@@ -460,7 +464,7 @@ export async function sendAIRequest(options: AIRequestOptions): Promise<AIRespon
           inputTokens,
           outputTokens,
           cost: `₩${cost.toFixed(2)}`,
-          stopReason: response.stop_reason,
+          stopReason: message.stop_reason,
           cacheHit,
         });
       }
@@ -472,8 +476,8 @@ export async function sendAIRequest(options: AIRequestOptions): Promise<AIRespon
           outputTokens,
         },
         cost,
-        model: response.model,
-        stopReason: response.stop_reason || 'unknown',
+        model: message.model,
+        stopReason: message.stop_reason || 'unknown',
       };
     } catch (error: any) {
       lastError = error;

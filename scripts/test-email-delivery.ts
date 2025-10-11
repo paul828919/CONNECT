@@ -41,23 +41,23 @@ async function testEmailDelivery() {
     console.log('\n📊 Step 2: Preparing test data...');
 
     // Find a user (or use first user)
-    const user = await prisma.user.findFirst({
+    const user = await prisma.users.findFirst({
       include: {
-        organization: true,
+        organizations: true,
       },
     });
 
-    if (!user || !user.organization) {
+    if (!user || !user.organizations) {
       console.log('   ⚠️  No user found. Creating test user...');
       throw new Error('No test user found. Please run database seed first: npm run db:seed');
     }
 
     console.log('   User:', user.name);
     console.log('   Email:', user.email);
-    console.log('   Organization:', user.organization.name);
+    console.log('   Organization:', user.organizations.name);
 
     // Find funding programs
-    const programs = await prisma.fundingProgram.findMany({
+    const programs = await prisma.funding_programs.findMany({
       take: 3,
       orderBy: { deadline: 'asc' },
     });
@@ -71,23 +71,21 @@ async function testEmailDelivery() {
     // Step 3: Test New Match Notification
     console.log('\n📧 Step 3: Sending New Match Notification...');
     try {
-      await sendNewMatchNotification(
-        user.id,
-        programs[0].id,
-        85, // High match score
-        {
-          industryScore: 25,
-          trlScore: 20,
-          typeScore: 20,
-          experienceScore: 12,
-          deadlineScore: 8,
+      // Create test match first
+      const testMatch = await prisma.funding_matches.create({
+        data: {
+          organizationId: user.organizationId!,
+          programId: programs[0].id,
+          score: 85,
+          explanation: [
+            '귀하의 기술 분야와 프로그램 키워드가 정확히 일치합니다.',
+            '기술성숙도(TRL)가 프로그램 요구사항에 완벽히 부합합니다.',
+            '지원 마감일이 2주 이내입니다. 서둘러 준비하세요.',
+          ],
         },
-        [
-          '귀하의 기술 분야와 프로그램 키워드가 정확히 일치합니다.',
-          '기술성숙도(TRL)가 프로그램 요구사항에 완벽히 부합합니다.',
-          '지원 마감일이 2주 이내입니다. 서둘러 준비하세요.',
-        ]
-      );
+      });
+
+      await sendNewMatchNotification(user.id, [testMatch.id]);
       console.log('   ✅ New match notification sent!');
     } catch (error: any) {
       console.log('   ❌ Failed:', error.message);
@@ -97,7 +95,17 @@ async function testEmailDelivery() {
     // Step 4: Test Deadline Reminder
     console.log('\n⏰ Step 4: Sending Deadline Reminder...');
     try {
-      await sendDeadlineReminder(user.id, programs.slice(0, 2).map(p => p.id));
+      // Create test match for deadline reminder
+      const deadlineMatch = await prisma.funding_matches.create({
+        data: {
+          organizationId: user.organizationId!,
+          programId: programs[1].id,
+          score: 75,
+          explanation: ['테스트 데드라인 알림입니다.'],
+        },
+      });
+
+      await sendDeadlineReminder(user.id, deadlineMatch.id, 7);
       console.log('   ✅ Deadline reminder sent!');
     } catch (error: any) {
       console.log('   ❌ Failed:', error.message);
@@ -110,33 +118,27 @@ async function testEmailDelivery() {
       // Create mock matches for digest
       const mockMatches = await Promise.all(
         programs.slice(0, 3).map(async (program) => {
-          const match = await prisma.fundingMatch.findFirst({
+          const match = await prisma.funding_matches.findFirst({
             where: {
               organizationId: user.organizationId!,
               programId: program.id,
             },
             include: {
-              program: true,
+              funding_programs: true,
             },
           });
 
           // If no match exists, create one
           if (!match) {
-            return await prisma.fundingMatch.create({
+            return await prisma.funding_matches.create({
               data: {
                 organizationId: user.organizationId!,
                 programId: program.id,
-                totalScore: 75,
-                industryScore: 20,
-                trlScore: 15,
-                typeScore: 20,
-                experienceScore: 12,
-                deadlineScore: 8,
-                explanation: '테스트 매칭입니다.',
-                matchedAt: new Date(),
+                score: 75,
+                explanation: ['테스트 매칭입니다.'],
               },
               include: {
-                program: true,
+                funding_programs: true,
               },
             });
           }

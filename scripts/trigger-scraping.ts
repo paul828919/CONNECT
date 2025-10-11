@@ -25,8 +25,8 @@ async function triggerScraping() {
   const jobs = [];
 
   for (const agency of agencies) {
-    const config = scrapingConfig[agency];
-    
+    const config = scrapingConfig[agency as keyof typeof scrapingConfig];
+
     console.log(`📋 Queuing ${agency.toUpperCase()}...`);
     
     // Build full URL from baseUrl + listingPath

@@ -19,7 +19,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 async function debugAgency(agencyId: string) {
-  const config = scrapingConfig[agencyId];
+  const config = scrapingConfig[agencyId as keyof typeof scrapingConfig];
   if (!config) {
     console.error(`❌ Agency '${agencyId}' not found in config`);
     return;

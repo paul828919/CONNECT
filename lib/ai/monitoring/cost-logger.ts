@@ -7,8 +7,8 @@
 
 import { PrismaClient, AIServiceType } from '@prisma/client';
 import { nanoid } from 'nanoid';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 export interface CostLogEntry {
   serviceType: AIServiceType;
@@ -30,7 +30,7 @@ export interface CostLogEntry {
  */
 export async function logAICost(entry: CostLogEntry): Promise<void> {
   try {
-    await prisma.ai_cost_logs.create({
+    await db.ai_cost_logs.create({
       data: {
         id: nanoid(),
         serviceType: entry.serviceType,
@@ -81,7 +81,7 @@ export async function getCostStats(startDate: Date, endDate: Date): Promise<{
     averageDuration: number;
   }>;
 }> {
-  const logs = await prisma.ai_cost_logs.findMany({
+  const logs = await db.ai_cost_logs.findMany({
     where: {
       createdAt: {
         gte: startDate,
@@ -98,7 +98,7 @@ export async function getCostStats(startDate: Date, endDate: Date): Promise<{
       cacheHitRate: 0,
       averageCost: 0,
       averageDuration: 0,
-      byService: {} as any,
+      byService: {} as Record<AIServiceType, { count: number; cost: number; averageDuration: number }>,
     };
   }
 
@@ -108,7 +108,7 @@ export async function getCostStats(startDate: Date, endDate: Date): Promise<{
   const totalDuration = logs.reduce((sum, log) => sum + log.duration, 0);
 
   // Group by service type
-  const byService: Record<string, any> = {};
+  const byService: Record<string, { count: number; cost: number; totalDuration: number; averageDuration?: number }> = {};
   for (const log of logs) {
     if (!byService[log.serviceType]) {
       byService[log.serviceType] = {
@@ -122,11 +122,14 @@ export async function getCostStats(startDate: Date, endDate: Date): Promise<{
     byService[log.serviceType].totalDuration += log.duration;
   }
 
-  // Calculate averages per service
+  // Calculate averages per service and convert to final type
+  const finalByService: Record<string, { count: number; cost: number; averageDuration: number }> = {};
   for (const service in byService) {
-    byService[service].averageDuration =
-      byService[service].totalDuration / byService[service].count;
-    delete byService[service].totalDuration;
+    finalByService[service] = {
+      count: byService[service].count,
+      cost: byService[service].cost,
+      averageDuration: byService[service].totalDuration / byService[service].count,
+    };
   }
 
   return {
@@ -136,7 +139,7 @@ export async function getCostStats(startDate: Date, endDate: Date): Promise<{
     cacheHitRate: (cacheHitCount / logs.length) * 100,
     averageCost: totalCost / logs.length,
     averageDuration: totalDuration / logs.length,
-    byService,
+    byService: finalByService as Record<AIServiceType, { count: number; cost: number; averageDuration: number }>,
   };
 }
 
@@ -153,7 +156,7 @@ export async function getDailyCostBreakdown(days: number): Promise<Array<{
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
-  const logs = await prisma.ai_cost_logs.findMany({
+  const logs = await db.ai_cost_logs.findMany({
     where: {
       createdAt: {
         gte: startDate,
@@ -165,7 +168,7 @@ export async function getDailyCostBreakdown(days: number): Promise<Array<{
   });
 
   // Group by date
-  const byDate: Record<string, any> = {};
+  const byDate: Record<string, { totalCost: number; totalRequests: number; matchExplanationCost: number; qaChatCost: number }> = {};
   for (const log of logs) {
     const date = log.createdAt.toISOString().split('T')[0];
     if (!byDate[date]) {
@@ -208,7 +211,7 @@ export async function getTopUsersByCost(
   userName?: string;
   userEmail?: string;
 }>> {
-  const logs = await prisma.ai_cost_logs.findMany({
+  const logs = await db.ai_cost_logs.findMany({
     where: {
       createdAt: {
         gte: startDate,
@@ -229,7 +232,15 @@ export async function getTopUsersByCost(
   });
 
   // Group by user
-  const byUser: Record<string, any> = {};
+  interface UserCost {
+    userId: string;
+    totalCost: number;
+    totalRequests: number;
+    userName?: string;
+    userEmail?: string;
+  }
+
+  const byUser: Record<string, UserCost> = {};
   for (const log of logs) {
     if (!log.userId) continue;
     if (!byUser[log.userId]) {
@@ -237,8 +248,8 @@ export async function getTopUsersByCost(
         userId: log.userId,
         totalCost: 0,
         totalRequests: 0,
-        userName: log.users?.name,
-        userEmail: log.users?.email,
+        userName: log.users?.name ?? undefined,
+        userEmail: log.users?.email ?? undefined,
       };
     }
     byUser[log.userId].totalCost += log.costKRW;
@@ -247,7 +258,7 @@ export async function getTopUsersByCost(
 
   // Convert to array, sort, and limit
   return Object.values(byUser)
-    .sort((a: any, b: any) => b.totalCost - a.totalCost)
+    .sort((a, b) => b.totalCost - a.totalCost)
     .slice(0, limit);
 }
 
@@ -258,7 +269,7 @@ export async function cleanupOldLogs(): Promise<number> {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - 90);
 
-  const result = await prisma.ai_cost_logs.deleteMany({
+  const result = await db.ai_cost_logs.deleteMany({
     where: {
       createdAt: {
         lt: cutoffDate,

@@ -7,7 +7,8 @@
 
 import { Worker, Job } from 'bullmq';
 import { chromium, Browser, Page } from 'playwright';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
+import { AgencyId } from '@prisma/client';
 import {
   RateLimiter,
   generateProgramHash,
@@ -18,7 +19,6 @@ import { scrapingConfig, AgencyConfig } from './config';
 import { sendNewMatchNotification } from '../email/notifications';
 import { parseProgramDetails } from './parsers';
 
-const prisma = new PrismaClient();
 
 // Job data interface
 interface ScrapingJobData {
@@ -115,7 +115,7 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
           });
 
           // Check if program already exists
-          const existingProgram = await prisma.fundingProgram.findFirst({
+          const existingProgram = await db.funding_programs.findFirst({
             where: { contentHash },
           });
 
@@ -131,19 +131,19 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
             );
 
             // Convert targetType string to array format for Prisma
-            const targetTypeArray = 
-              details.targetType === 'BOTH' 
-                ? ['COMPANY', 'RESEARCH_INSTITUTE']
+            const targetTypeArray =
+              details.targetType === 'BOTH'
+                ? ['COMPANY' as const, 'RESEARCH_INSTITUTE' as const]
                 : details.targetType === 'COMPANY'
-                ? ['COMPANY']
+                ? ['COMPANY' as const]
                 : details.targetType === 'RESEARCH_INSTITUTE'
-                ? ['RESEARCH_INSTITUTE']
-                : ['COMPANY', 'RESEARCH_INSTITUTE']; // Default to BOTH
+                ? ['RESEARCH_INSTITUTE' as const]
+                : ['COMPANY' as const, 'RESEARCH_INSTITUTE' as const]; // Default to BOTH
 
             // Create new program
-            const newProgram = await prisma.fundingProgram.create({
+            const newProgram = await db.funding_programs.create({
               data: {
-                agencyId: agency.toUpperCase(),
+                agencyId: agency.toUpperCase() as AgencyId,
                 title: announcement.title,
                 description: details.description || null,
                 announcementUrl: announcement.link,
@@ -152,7 +152,7 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
                 targetType: targetTypeArray,
                 minTrl: details.minTRL || null,
                 maxTrl: details.maxTRL || null,
-                eligibilityCriteria: details.eligibilityCriteria || null,
+                eligibilityCriteria: details.eligibilityCriteria || undefined,
                 contentHash,
                 scrapedAt: new Date(),
                 scrapingSource: announcement.link, // ✅ SET scrapingSource for identifying real scraped programs
@@ -173,7 +173,7 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
             );
           } else {
             // Existing program - update scrapedAt
-            await prisma.fundingProgram.update({
+            await db.funding_programs.update({
               where: { id: existingProgram.id },
               data: { scrapedAt: new Date() },
             });
@@ -196,9 +196,9 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
       const completedAt = new Date();
       const startedAt = new Date(job.timestamp); // Job start time
 
-      await prisma.scrapingLog.create({
+      await db.scraping_logs.create({
         data: {
-          agencyId: agency.toUpperCase() as any,
+          agencyId: agency.toUpperCase() as AgencyId,
           success: true,
           programsFound: announcements.length,
           programsNew,
@@ -233,9 +233,9 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
       const completedAt = new Date();
       const startedAt = new Date(job.timestamp);
 
-      await prisma.scrapingLog.create({
+      await db.scraping_logs.create({
         data: {
-          agencyId: agency.toUpperCase() as any,
+          agencyId: agency.toUpperCase() as AgencyId,
           success: false,
           programsFound: 0,
           programsNew: 0,
@@ -337,13 +337,13 @@ async function fetchProgramDetails(
 async function sendMatchNotifications(programId: string): Promise<void> {
   try {
     // Get all matches for this program with score >= 70
-    const highScoreMatches = await prisma.fundingMatch.findMany({
+    const highScoreMatches = await db.funding_matches.findMany({
       where: {
         programId,
         score: { gte: 70 }, // Only high-score matches
       },
       include: {
-        organization: {
+        organizations: {
           include: {
             users: {
               select: { id: true },
@@ -357,7 +357,7 @@ async function sendMatchNotifications(programId: string): Promise<void> {
     const matchesByUser = new Map<string, string[]>();
 
     for (const match of highScoreMatches) {
-      for (const user of match.organization.users) {
+      for (const user of match.organizations.users) {
         if (!matchesByUser.has(user.id)) {
           matchesByUser.set(user.id, []);
         }
@@ -383,11 +383,11 @@ async function sendMatchNotifications(programId: string): Promise<void> {
  */
 async function calculateMatchesForProgram(programId: string): Promise<void> {
   // Get all active organizations
-  const organizations = await prisma.organization.findMany({
+  const organizations = await db.organizations.findMany({
     where: { status: 'ACTIVE' },
   });
 
-  const program = await prisma.fundingProgram.findUnique({
+  const program = await db.funding_programs.findUnique({
     where: { id: programId },
   });
 
@@ -400,8 +400,8 @@ async function calculateMatchesForProgram(programId: string): Promise<void> {
 
     // Target type matching (40 points)
     if (
-      program.targetType === 'BOTH' ||
-      program.targetType === org.type
+      (program.targetType.includes('COMPANY' as any) && program.targetType.includes('RESEARCH_INSTITUTE' as any)) ||
+      program.targetType.includes(org.type)
     ) {
       score += 40;
       explanation.push('조직 유형이 적합합니다');
@@ -421,7 +421,7 @@ async function calculateMatchesForProgram(programId: string): Promise<void> {
 
     // Only create match if score >= 60
     if (score >= 60) {
-      await prisma.fundingMatch.upsert({
+      await db.funding_matches.upsert({
         where: {
           organizationId_programId: {
             organizationId: org.id,
@@ -433,7 +433,6 @@ async function calculateMatchesForProgram(programId: string): Promise<void> {
           programId: program.id,
           score,
           explanation,
-          status: 'ACTIVE',
         },
         update: {
           score,

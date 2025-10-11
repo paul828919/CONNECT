@@ -225,7 +225,7 @@ async function testQAChat(authToken: string): Promise<TestResult> {
         const startTime = Date.now();
 
         try {
-          const response = await fetch(`${CONFIG.BASE_URL}/api/chat`, {
+          const response: Response = await fetch(`${CONFIG.BASE_URL}/api/chat`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -238,7 +238,7 @@ async function testQAChat(authToken: string): Promise<TestResult> {
           });
 
           const duration = Date.now() - startTime;
-          const data = await response.json();
+          const data: any = await response.json();
 
           if (response.ok) {
             successCount++;

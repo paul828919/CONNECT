@@ -7,9 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,
@@ -24,7 +23,7 @@ export async function GET(
     const organizationId = params.id;
 
     // Fetch organization with public information only
-    const organization = await prisma.organization.findUnique({
+    const organization = await db.organizations.findUnique({
       where: { id: organizationId },
       select: {
         id: true,
@@ -60,9 +59,7 @@ export async function GET(
         // Relations (counts only, for privacy)
         _count: {
           select: {
-            matches: true,
-            leadConsortiums: true,
-            consortiumMemberships: true,
+            funding_matches: true,
           },
         },
       },
@@ -76,7 +73,7 @@ export async function GET(
     }
 
     // Check if organization profile is visible (active and completed)
-    const fullOrg = await prisma.organization.findUnique({
+    const fullOrg = await db.organizations.findUnique({
       where: { id: organizationId },
       select: { status: true, profileCompleted: true },
     });
