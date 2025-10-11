@@ -3,12 +3,16 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Building2, GraduationCap, Microscope, CheckCircle2, TrendingUp, Users, Award, Shield, Zap, Ship } from 'lucide-react';
+import BetaBanner from './components/BetaBanner';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen">
+      {/* Beta Banner */}
+      <BetaBanner />
+
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
+      <nav className="fixed top-[52px] left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-0.5">
             <Image
@@ -30,7 +34,7 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 bg-gradient-to-b from-blue-50/50 to-white">
+      <section className="pt-40 pb-20 px-4 bg-gradient-to-b from-blue-50/50 to-white">
         <div className="container mx-auto max-w-6xl">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
@@ -393,6 +397,26 @@ export default function HomePage() {
       {/* User Expectations - Production Safe (replaces fake testimonials) */}
       <section className="py-20 px-4 bg-gray-50">
         <div className="container mx-auto max-w-6xl">
+          {/* Beta Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16 max-w-4xl mx-auto">
+            <div className="text-center p-6 bg-white rounded-xl shadow-md border border-gray-100">
+              <div className="text-4xl font-bold text-blue-600 mb-2">50</div>
+              <div className="text-sm text-gray-600">Beta Users</div>
+            </div>
+            <div className="text-center p-6 bg-white rounded-xl shadow-md border border-gray-100">
+              <div className="text-4xl font-bold text-green-600 mb-2">200-500</div>
+              <div className="text-sm text-gray-600">Active Programs</div>
+            </div>
+            <div className="text-center p-6 bg-white rounded-xl shadow-md border border-gray-100">
+              <div className="text-4xl font-bold text-purple-600 mb-2">4</div>
+              <div className="text-sm text-gray-600">Major Agencies</div>
+            </div>
+            <div className="text-center p-6 bg-white rounded-xl shadow-md border border-gray-100">
+              <div className="text-4xl font-bold text-orange-600 mb-2">38%</div>
+              <div className="text-sm text-gray-600">Avg Match Quality</div>
+            </div>
+          </div>
+
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Connect가 제공하는 가치
