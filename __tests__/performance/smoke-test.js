@@ -48,22 +48,32 @@ function textSummary(data, options) {
   const indent = options.indent || '';
   const enableColors = options.enableColors || false;
 
+  // Safely access nested properties with fallback values
+  const safeValue = (value, decimals = 2) => {
+    return (value !== undefined && value !== null) ? value.toFixed(decimals) : 'N/A';
+  };
+
+  const httpReqs = data.metrics?.http_reqs?.values || {};
+  const httpDuration = data.metrics?.http_req_duration?.values || {};
+  const httpFailed = data.metrics?.http_req_failed?.values || {};
+  const checks = data.metrics?.checks?.values || {};
+
   let summary = `
 ${indent}Smoke Test Summary
 ${indent}==================
 ${indent}
-${indent}Total Requests: ${data.metrics.http_reqs.values.count}
-${indent}Request Rate:   ${data.metrics.http_reqs.values.rate.toFixed(2)} req/s
+${indent}Total Requests: ${httpReqs.count || 0}
+${indent}Request Rate:   ${safeValue(httpReqs.rate)} req/s
 ${indent}
 ${indent}Response Times:
-${indent}  P50: ${data.metrics.http_req_duration.values['p(50)'].toFixed(2)}ms
-${indent}  P95: ${data.metrics.http_req_duration.values['p(95)'].toFixed(2)}ms
-${indent}  P99: ${data.metrics.http_req_duration.values['p(99)'].toFixed(2)}ms
-${indent}  Max: ${data.metrics.http_req_duration.values.max.toFixed(2)}ms
+${indent}  P50: ${safeValue(httpDuration['p(50)'])}ms
+${indent}  P95: ${safeValue(httpDuration['p(95)'])}ms
+${indent}  P99: ${safeValue(httpDuration['p(99)'])}ms
+${indent}  Max: ${safeValue(httpDuration.max)}ms
 ${indent}
-${indent}Success Rate: ${((1 - data.metrics.http_req_failed.values.rate) * 100).toFixed(2)}%
+${indent}Success Rate: ${httpFailed.rate !== undefined ? ((1 - httpFailed.rate) * 100).toFixed(2) : 'N/A'}%
 ${indent}
-${indent}Checks Passed: ${data.metrics.checks.values.passes}/${data.metrics.checks.values.passes + data.metrics.checks.values.fails}
+${indent}Checks Passed: ${checks.passes || 0}/${(checks.passes || 0) + (checks.fails || 0)}
   `;
 
   return summary;
