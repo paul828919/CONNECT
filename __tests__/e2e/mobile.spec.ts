@@ -1,22 +1,21 @@
 /**
  * E2E Tests for Connect Platform Mobile Responsiveness
  * Tests mobile experience on iPhone and Android devices
- * Run with: PLAYWRIGHT_BASE_URL=https://connectplt.kr npx playwright test mobile.spec.ts --project="Mobile Chrome"
+ * Run with: PLAYWRIGHT_BASE_URL=https://connectplt.kr npx playwright test mobile.spec.ts --project="Mobile Safari - iPhone 12"
+ * Or: npx playwright test mobile.spec.ts --project="Mobile Chrome - Pixel 5"
  */
-import { test, expect, devices } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || process.env.BASE_URL || 'http://localhost:3000';
 
-test.describe('Mobile Experience - iPhone 12', () => {
-  test.use({ ...devices['iPhone 12'] });
-
+test.describe('Mobile Experience', () => {
   test('should display mobile-friendly navigation', async ({ page }) => {
     await page.goto(`${BASE_URL}/`);
 
-    // Check viewport size
+    // Check viewport size is mobile (configured via project)
     const viewportSize = page.viewportSize();
-    expect(viewportSize?.width).toBe(390); // iPhone 12 width
-    expect(viewportSize?.height).toBe(844); // iPhone 12 height
+    expect(viewportSize?.width).toBeLessThan(500); // Mobile width
+    expect(viewportSize?.height).toBeGreaterThan(600); // Mobile height
 
     // Navigation should be visible (hamburger menu or mobile nav)
     await page.waitForLoadState('networkidle');
@@ -35,7 +34,8 @@ test.describe('Mobile Experience - iPhone 12', () => {
     await expect(hero).toBeVisible();
 
     const box = await hero.boundingBox();
-    expect(box?.width).toBeLessThan(400); // Should fit in mobile viewport
+    const viewportWidth = page.viewportSize()?.width || 0;
+    expect(box?.width).toBeLessThan(viewportWidth); // Should fit in mobile viewport
   });
 
   test('should have tappable buttons (min 44x44px)', async ({ page }) => {
@@ -94,25 +94,6 @@ test.describe('Mobile Experience - iPhone 12', () => {
     const koreanText = page.locator('text=국가, text=정부, text=사업').first();
     await expect(koreanText).toBeVisible();
   });
-});
-
-test.describe('Mobile Experience - Android (Pixel 5)', () => {
-  test.use({ ...devices['Pixel 5'] });
-
-  test('should display correctly on Android devices', async ({ page }) => {
-    await page.goto(`${BASE_URL}/`);
-
-    // Check viewport size
-    const viewportSize = page.viewportSize();
-    expect(viewportSize?.width).toBe(393); // Pixel 5 width
-    expect(viewportSize?.height).toBe(851); // Pixel 5 height
-
-    await page.waitForLoadState('networkidle');
-
-    // Page should load without errors
-    const header = page.locator('header, nav').first();
-    await expect(header).toBeVisible();
-  });
 
   test('should handle touch interactions', async ({ page }) => {
     await page.goto(`${BASE_URL}/auth/signin`);
@@ -134,7 +115,7 @@ test.describe('Mobile Experience - Android (Pixel 5)', () => {
     console.log('After tap, URL:', url);
   });
 
-  test('should display images properly on Android', async ({ page }) => {
+  test('should display images properly', async ({ page }) => {
     await page.goto(`${BASE_URL}/`);
 
     await page.waitForLoadState('networkidle');
@@ -152,10 +133,6 @@ test.describe('Mobile Experience - Android (Pixel 5)', () => {
       await expect(firstImage).toBeVisible();
     }
   });
-});
-
-test.describe('Mobile Performance', () => {
-  test.use({ ...devices['iPhone 12'] });
 
   test('should load homepage quickly on mobile', async ({ page }) => {
     const startTime = Date.now();
@@ -183,13 +160,9 @@ test.describe('Mobile Performance', () => {
     const title = await page.title();
     expect(title.length).toBeGreaterThan(0);
   });
-});
 
-test.describe('Mobile Orientation', () => {
-  test('should work in portrait mode', async ({ page, browserName }) => {
-    // Set portrait orientation
-    await page.setViewportSize({ width: 390, height: 844 });
-
+  test('should work in portrait mode', async ({ page }) => {
+    // Portrait is default mobile orientation
     await page.goto(`${BASE_URL}/`);
 
     await page.waitForLoadState('networkidle');
@@ -200,8 +173,11 @@ test.describe('Mobile Orientation', () => {
   });
 
   test('should work in landscape mode', async ({ page }) => {
-    // Set landscape orientation (swap width/height)
-    await page.setViewportSize({ width: 844, height: 390 });
+    // Get current viewport and swap width/height for landscape
+    const viewport = page.viewportSize();
+    if (viewport) {
+      await page.setViewportSize({ width: viewport.height, height: viewport.width });
+    }
 
     await page.goto(`${BASE_URL}/`);
 
@@ -217,10 +193,6 @@ test.describe('Mobile Orientation', () => {
 
     expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 1);
   });
-});
-
-test.describe('Mobile Accessibility', () => {
-  test.use({ ...devices['iPhone 12'] });
 
   test('should have accessible form labels', async ({ page }) => {
     await page.goto(`${BASE_URL}/auth/signin`);
@@ -258,10 +230,6 @@ test.describe('Mobile Accessibility', () => {
     // Kakao button should have dark text on yellow background (good contrast)
     // This is a visual test - in real scenarios, use axe-core or similar
   });
-});
-
-test.describe('Mobile Input Handling', () => {
-  test.use({ ...devices['iPhone 12'] });
 
   test.skip('should show mobile keyboard for text inputs', async ({ page }) => {
     // Note: Can't directly test keyboard appearance, but can test input focus
