@@ -246,6 +246,73 @@ All critical deployment verification complete:
 
 ---
 
+## Session 37 Update: Known Issues Resolved
+
+**Date**: October 11, 2025 23:30 KST
+**Duration**: ~45 minutes
+**Status**: ✅ **COMPLETE - Both Known Issues Fixed**
+
+### Issues Fixed
+
+#### 1. Mobile Test Configuration ✅ FIXED
+**Commit**: 0c72f7b
+
+**Changes Made**:
+- ✅ Created device-specific projects in `playwright.config.ts`:
+  - "Mobile Safari - iPhone 12"
+  - "Mobile Chrome - Pixel 5"
+- ✅ Removed all 5 `test.use()` calls from `mobile.spec.ts` (lines 11, 100, 158, 223, 264)
+- ✅ Made viewport checks device-agnostic (dynamic vs hardcoded)
+- ✅ Consolidated 5 describe blocks into single "Mobile Experience" suite
+
+**Validation Results**:
+- ✅ 15/16 mobile tests passing on production (93% pass rate)
+- ✅ No more "test.use() in describe block" errors
+- ✅ Tests run with project-level device configuration
+- ⚠️ 1 test has pre-existing selector bug (not related to config fix)
+
+#### 2. k6 Summary Handler ✅ FIXED
+**Commit**: 0c72f7b
+
+**Changes Made**:
+- ✅ Added `safeValue()` helper with null checks
+- ✅ Used optional chaining (`?.`) for nested properties
+- ✅ Fallback to "N/A" for undefined metrics
+- ✅ Protected all `.toFixed()` calls from TypeError
+
+**Validation Results**:
+- ✅ 300 requests, 100% success rate
+- ✅ P95: 26.27ms (excellent performance)
+- ✅ No TypeError crashes
+- ✅ Graceful "N/A" display for missing metrics (P50, P99)
+
+### Updated Production Status
+
+**Git Status**:
+- **Last Commit**: 0c72f7b (Session 37: Fix test configuration issues)
+- **Date**: October 11, 2025 23:30 KST
+- **Changes**: Mobile test config + k6 summary handler fixes
+
+**Test Suite Health**:
+- ✅ Homepage E2E: 7/7 passing
+- ✅ Auth E2E: 12/12 passing (3 skipped)
+- ✅ Dashboard E2E: 5/5 passing
+- ✅ Mobile E2E: 15/16 passing (1 pre-existing bug)
+- ✅ Performance: k6 smoke test 100% success
+
+### Remaining Tasks
+
+**Immediate**:
+1. ⏭️ **Fix Korean text selector bug** - Replace invalid `text=국가, text=정부, text=사업` with proper selector
+2. ⏭️ **OAuth flow testing** - Test Kakao/Naver login with real accounts
+3. ⏭️ **Install webkit browser** - For "Mobile Safari - iPhone 12" project testing
+
+**Short-term**:
+4. ⏭️ **Beta recruitment** - Prepare materials per EXECUTION-PLAN-MASTER.md
+5. ⏭️ **Monitoring setup** - Grafana dashboards for Day 6 caching metrics
+
+---
+
 **Prepared by**: Claude Code
-**Session**: 36 (Continued)
-**Report Date**: October 11, 2025 23:00 KST
+**Sessions**: 36 (Deployment + Testing), 37 (Issue Fixes)
+**Report Dates**: October 11, 2025 23:00 KST (Session 36), 23:30 KST (Session 37)
