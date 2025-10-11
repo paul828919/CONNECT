@@ -168,7 +168,7 @@ async function testQAChatAtTemperature(
 
   const result = await sendAIRequest({
     system,
-    messages,
+    messages: messages as Array<{ role: 'user' | 'assistant'; content: string }>,
     maxTokens: 1000,
     temperature,
   });
