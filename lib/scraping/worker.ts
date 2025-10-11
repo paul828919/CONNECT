@@ -1,8 +1,12 @@
 /**
- * Scraping Worker
+ * Scraping Worker (with Cache Invalidation)
  *
  * Bull queue worker that processes scraping jobs for 4 NTIS agencies.
  * Uses Playwright for browser automation and change detection via SHA-256 hashing.
+ *
+ * Cache invalidation:
+ * - After successful scraping: Invalidates programs cache and all match caches
+ * - Ensures users get fresh matches after new programs are added
  */
 
 import { Worker, Job } from 'bullmq';
@@ -18,6 +22,10 @@ import {
 import { scrapingConfig, AgencyConfig } from './config';
 import { sendNewMatchNotification } from '../email/notifications';
 import { parseProgramDetails } from './parsers';
+import {
+  invalidateProgramsCache,
+  invalidateAllMatches,
+} from '@/lib/cache/redis-cache';
 
 
 // Job data interface
@@ -213,6 +221,17 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
         agency,
         `Scraping completed: ${programsNew} new, ${programsUpdated} updated`
       );
+
+      // 7. Invalidate caches (programs and matches need refresh)
+      if (programsNew > 0 || programsUpdated > 0) {
+        logScraping(agency, 'Invalidating programs and match caches...');
+        await invalidateProgramsCache();
+        const matchesInvalidated = await invalidateAllMatches();
+        logScraping(
+          agency,
+          `Cache invalidated: programs + ${matchesInvalidated} match caches`
+        );
+      }
 
       return {
         agency,

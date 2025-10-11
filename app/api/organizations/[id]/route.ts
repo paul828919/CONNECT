@@ -1,19 +1,22 @@
 /**
- * Organization Detail API
+ * Organization Detail API (with Cache Invalidation)
  *
  * Operations for specific organization:
  * - GET: Fetch organization details
- * - PATCH: Update organization
+ * - PATCH: Update organization (invalidates cache)
  * - DELETE: Delete organization (admin only)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 import { decrypt } from '@/lib/encryption';
+import {
+  invalidateOrgProfile,
+  invalidateOrgMatches,
+} from '@/lib/cache/redis-cache';
 
-const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,
@@ -28,7 +31,7 @@ export async function GET(
     const organizationId = params.id;
     const userId = (session.user as any).id;
 
-    const organization = await prisma.organization.findUnique({
+    const organization = await db.organizations.findUnique({
       where: { id: organizationId },
       select: {
         id: true,
@@ -114,7 +117,7 @@ export async function PATCH(
     const userId = (session.user as any).id;
 
     // Verify user belongs to this organization
-    const existingOrg = await prisma.organization.findUnique({
+    const existingOrg = await db.organizations.findUnique({
       where: { id: organizationId },
       include: {
         users: {
@@ -184,7 +187,7 @@ export async function PATCH(
     updateData.updatedAt = new Date();
 
     // Update organization
-    const updatedOrganization = await prisma.organization.update({
+    const updatedOrganization = await db.organizations.update({
       where: { id: organizationId },
       data: updateData,
       select: {
@@ -201,6 +204,10 @@ export async function PATCH(
         updatedAt: true,
       },
     });
+
+    // Invalidate caches (profile changes affect match results)
+    await invalidateOrgProfile(organizationId);
+    await invalidateOrgMatches(organizationId);
 
     return NextResponse.json({
       success: true,
@@ -237,10 +244,10 @@ export async function DELETE(
     const organizationId = params.id;
 
     // Soft delete by updating status
-    await prisma.organization.update({
+    await db.organizations.update({
       where: { id: organizationId },
       data: {
-        status: 'INACTIVE',
+        status: 'DEACTIVATED',
         updatedAt: new Date(),
       },
     });
