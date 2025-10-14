@@ -75,6 +75,10 @@ backups/
 *.backup
 *.bak
 
+# Data directories
+data/
+uploads/
+
 # Development only
 .env.development
 .env.test

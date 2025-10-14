@@ -5,10 +5,9 @@
  */
 
 import cron from 'node-cron';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 import { sendDeadlineReminder, sendWeeklyDigestToAll } from './notifications';
 
-const prisma = new PrismaClient();
 
 /**
  * Send deadline reminders (7 days, 3 days, 1 day before)
@@ -38,7 +37,7 @@ export function startDeadlineReminderCron() {
           nextDay.setDate(nextDay.getDate() + 1);
 
           // Find programs with deadlines matching this threshold
-          const programsWithDeadlines = await prisma.fundingProgram.findMany({
+          const programsWithDeadlines = await db.funding_programs.findMany({
             where: {
               deadline: {
                 gte: targetDeadline,
@@ -55,14 +54,13 @@ export function startDeadlineReminderCron() {
 
           // Get all matches for these programs
           for (const program of programsWithDeadlines) {
-            const matches = await prisma.fundingMatch.findMany({
+            const matches = await db.funding_matches.findMany({
               where: {
                 programId: program.id,
-                status: 'ACTIVE',
                 score: { gte: 60 }, // Minimum threshold
               },
               include: {
-                organization: {
+                organizations: {
                   include: {
                     users: {
                       select: { id: true },
@@ -74,7 +72,7 @@ export function startDeadlineReminderCron() {
 
             // Send reminder to each user
             for (const match of matches) {
-              for (const user of match.organization.users) {
+              for (const user of match.organizations.users) {
                 try {
                   await sendDeadlineReminder(user.id, match.id, threshold.days);
                   // Small delay to avoid rate limiting

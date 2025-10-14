@@ -104,7 +104,7 @@ describe('/api/organizations POST', () => {
       expect(data.organization.profileScore).toBeGreaterThan(0);
 
       // Verify user's organizationId was updated
-      const updatedUser = await prisma.user.findUnique({
+      const updatedUser = await prisma.users.findUnique({
         where: { id: testUser.id },
         select: { organizationId: true },
       });
@@ -112,7 +112,7 @@ describe('/api/organizations POST', () => {
       expect(updatedUser?.organizationId).toBe(data.organization.id);
 
       // Verify business number was encrypted
-      const organization = await prisma.organization.findUnique({
+      const organization = await prisma.organizations.findUnique({
         where: { id: data.organization.id },
         select: { businessNumberEncrypted: true },
       });
@@ -379,7 +379,7 @@ describe('/api/organizations POST', () => {
       const data = await response.json();
 
       // Fetch from database
-      const organization = await prisma.organization.findUnique({
+      const organization = await prisma.organizations.findUnique({
         where: { id: data.organization.id },
         select: {
           businessNumberEncrypted: true,
@@ -420,7 +420,7 @@ describe('/api/organizations POST', () => {
       const data = await response.json();
 
       // Fetch organization
-      const organization = await prisma.organization.findUnique({
+      const organization = await prisma.organizations.findUnique({
         where: { id: data.organization.id },
         select: {
           businessNumberHash: true,

@@ -8,9 +8,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +21,7 @@ export async function GET(request: NextRequest) {
     const userId = (session.user as any).id;
 
     // Get user's organization
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });
@@ -35,12 +34,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch consortiums where user's org is lead or member
-    const consortiums = await prisma.consortiumProject.findMany({
+    const consortiums = await db.consortium_projects.findMany({
       where: {
         OR: [
           { leadOrganizationId: user.organizationId },
           {
-            members: {
+            consortium_members: {
               some: {
                 organizationId: user.organizationId,
                 status: { in: ['INVITED', 'ACCEPTED'] },
@@ -50,7 +49,7 @@ export async function GET(request: NextRequest) {
         ],
       },
       include: {
-        leadOrganization: {
+        organizations: {
           select: {
             id: true,
             name: true,
@@ -58,7 +57,7 @@ export async function GET(request: NextRequest) {
             logoUrl: true,
           },
         },
-        targetProgram: {
+        funding_programs: {
           select: {
             id: true,
             title: true,
@@ -66,9 +65,9 @@ export async function GET(request: NextRequest) {
             deadline: true,
           },
         },
-        members: {
+        consortium_members: {
           include: {
-            organization: {
+            organizations: {
               select: {
                 id: true,
                 name: true,
@@ -81,7 +80,7 @@ export async function GET(request: NextRequest) {
         },
         _count: {
           select: {
-            members: true,
+            consortium_members: true,
           },
         },
       },
@@ -111,7 +110,7 @@ export async function POST(request: NextRequest) {
     const userId = (session.user as any).id;
 
     // Get user's organization
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });
@@ -144,7 +143,7 @@ export async function POST(request: NextRequest) {
 
     // If targetProgramId is provided, verify it exists
     if (targetProgramId) {
-      const program = await prisma.fundingProgram.findUnique({
+      const program = await db.funding_programs.findUnique({
         where: { id: targetProgramId },
       });
 
@@ -157,8 +156,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Create consortium project
-    const consortium = await prisma.consortiumProject.create({
+    const { createId } = await import('@paralleldrive/cuid2');
+    const consortium = await db.consortium_projects.create({
       data: {
+        id: createId(),
         name: name.trim(),
         description: description?.trim() || null,
         targetProgramId: targetProgramId || null,
@@ -169,9 +170,11 @@ export async function POST(request: NextRequest) {
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         status: 'DRAFT',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       include: {
-        leadOrganization: {
+        organizations: {
           select: {
             id: true,
             name: true,
@@ -179,7 +182,7 @@ export async function POST(request: NextRequest) {
             logoUrl: true,
           },
         },
-        targetProgram: {
+        funding_programs: {
           select: {
             id: true,
             title: true,
@@ -191,13 +194,16 @@ export async function POST(request: NextRequest) {
     });
 
     // Automatically add lead organization as a member with LEAD role
-    await prisma.consortiumMember.create({
+    await db.consortium_members.create({
       data: {
+        id: createId(),
         consortiumId: consortium.id,
         organizationId: user.organizationId,
         invitedById: userId,
         role: 'LEAD',
         status: 'ACCEPTED', // Lead is automatically accepted
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 

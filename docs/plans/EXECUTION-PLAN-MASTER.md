@@ -1282,6 +1282,235 @@ lib/ai/client.ts
 
 ---
 
-**Last Updated**: October 9, 2025
-**Current Task**: Week 1 Day 1 - PostgreSQL Primary Server Configuration
-**Next Checkpoint**: Week 1 Complete (Oct 15, 2025)
+# BETA WEEK 1 ADDENDUM: DAY 6-10 REVISED PLAN
+## Date: October 11, 2025
+## Status: 🟡 IN PROGRESS
+
+### Strategic Pivot Rationale
+
+**Original Plan**: Build passive beta recruitment infrastructure (signup forms, database schema, admin dashboard)
+
+**Revised Plan**: Active LinkedIn recruitment + Platform quality improvements first
+
+**Why the Change?**
+1. **Platform Quality First**: Recruiting beta users to a platform with 32 TypeScript errors = risk of runtime bugs
+2. **Performance Matters**: Poor first impressions destroy beta user trust
+3. **Active > Passive**: LinkedIn outreach (30-50% response rate) >> Landing page conversion (2-5%)
+4. **Efficiency**: 4-6 hours LinkedIn recruitment vs 10+ hours building signup infrastructure
+5. **Professional Polish**: Polished homepage = credibility for beta recruitment
+
+### Revised Execution Order (Days 6-10)
+
+#### Day 6: TypeScript Type Error Fixes (2-3 hours)
+**Priority**: 🔴 CRITICAL
+
+**Tasks**:
+1. Create `types/next-auth.d.ts` to extend NextAuth session with `id` field
+2. Fix singular/plural table name errors (~15 API routes)
+   - `prisma.user` → `prisma.users`
+   - `prisma.organization` → `prisma.organizations`
+   - Other Prisma model references
+3. Verify import path consistency across all API routes
+4. Run `npm run type-check` (target: 0 errors, currently 32 errors)
+5. Run `npm run build` (verify success)
+
+**Success Criteria**:
+- [ ] `npm run type-check` shows 0 errors
+- [ ] `npm run build` completes successfully
+- [ ] All API routes use correct Prisma table names
+- [ ] NextAuth session type includes `id` field
+
+---
+
+#### Day 6-7: Performance Optimization Review (2-3 hours)
+**Priority**: 🟡 HIGH
+
+**Tasks**:
+1. Review Day 3 performance test results (baseline: P95 26-677ms)
+   - Smoke test: P95 29.32ms (target: <500ms) ✅
+   - Homepage load: P95 676.56ms (target: <2000ms) ✅
+   - API stress: P95 59.06ms (500 VUs) ✅
+2. Implement Redis caching for frequently accessed data
+   - Match generation results (24-hour TTL)
+   - AI explanations (7-day TTL)
+   - Organization profiles (1-hour TTL)
+3. Database query optimization (if needed)
+   - Add indexes for frequently queried columns
+   - Optimize N+1 queries with `include` statements
+4. Load testing validation (verify P95 <500ms maintained)
+
+**Success Criteria**:
+- [ ] P95 response time <500ms for all endpoints
+- [ ] Redis cache hit rate >40% for repeated queries
+- [ ] No performance regressions from Day 3 baseline
+- [ ] Load test: 500 concurrent users, 0% error rate
+
+---
+
+#### Day 7: Homepage & SEO Polish (2-3 hours)
+**Priority**: 🟡 HIGH
+
+**Tasks**:
+1. Visual improvements
+   - Add beta user recruitment banner (Korean)
+   - Display 4 agency logos (IITP, KEIT, TIPA, KIMST)
+   - Platform screenshots (optional, if available)
+2. SEO optimization
+   - Meta tags (title, description, keywords, og:tags)
+   - Structured data (JSON-LD for SaaS platform)
+   - Sitemap.xml generation
+   - robots.txt configuration
+3. Mobile optimization
+   - Lighthouse score target: >90
+   - Viewport optimization for mobile
+   - Touch target sizing (>44px iOS guidelines)
+4. Production validation (verify all improvements working)
+
+**Success Criteria**:
+- [ ] Lighthouse score >90 (Performance, Accessibility, Best Practices, SEO)
+- [ ] Beta recruitment banner visible on homepage
+- [ ] All meta tags properly configured
+- [ ] Sitemap.xml accessible at `/sitemap.xml`
+- [ ] Mobile-friendly test passing (Google Mobile-Friendly Test)
+
+---
+
+#### Day 8-10: Beta Recruitment via LinkedIn (4-6 hours)
+**Priority**: 🔴 CRITICAL
+
+**Strategy**: Active LinkedIn outreach using Playwright MCP
+
+**Tasks**:
+
+**Phase 1: Candidate Discovery (1-2 hours)**
+1. Use Playwright MCP to navigate LinkedIn
+2. Search queries:
+   - "ICT 스타트업 CEO site:linkedin.com"
+   - "산업기술 연구개발 책임자 site:linkedin.com"
+   - "R&D 담당 중소기업 site:linkedin.com"
+3. Target profiles:
+   - Tier 1 (30 candidates): ICT companies, SMEs with R&D departments
+   - Tier 2 (30 candidates): Industrial tech companies, research-heavy sectors
+   - Tier 3 (20 candidates): Research institutes (secondary targets)
+4. Extract contact information (LinkedIn messages, emails from company websites)
+
+**Phase 2: Tracking System Setup (30 min)**
+1. Create Google Sheets or Airtable tracking system
+2. Columns:
+   - Name, Company, Title, LinkedIn URL, Email, Phone
+   - Tier (1/2/3), Status (Pending/Contacted/Responded/Committed/Declined)
+   - Contact Date, Response Date, Notes
+3. Import discovered candidates (Wave 1: 30 Tier 1 candidates)
+
+**Phase 3: Email Templates (1 hour)**
+1. Draft 3 Korean email variations:
+   - **Variation A**: Personalized (CEO + company-specific pain point)
+   - **Variation B**: Value-first (feature highlights + beta benefits)
+   - **Variation C**: Social proof (professor network mention)
+2. Key messaging:
+   - Beta benefits: Free 30 days + ₩24,500/month (50% lifetime discount off ₩49,000)
+   - AI-powered matching, 4 agencies (IITP, KEIT, TIPA, KIMST)
+   - Early adopter badge + priority feature requests
+3. CTA: "Connect 베타 테스트에 참여하시겠습니까?" with Calendly link or email reply
+
+**Phase 4: Wave 1 Outreach (2-3 hours)**
+1. Send personalized emails to 30 Tier 1 candidates
+2. Follow-up sequence:
+   - Day 0: Initial email
+   - Day 3: Follow-up email (if no response)
+   - Day 7: Final reminder (if no response)
+3. Track responses in real-time
+4. Schedule discovery calls with interested candidates
+
+**Success Criteria**:
+- [ ] 80+ candidates identified and tracked (30 Tier 1, 30 Tier 2, 20 Tier 3)
+- [ ] Tracking system operational (Google Sheets/Airtable)
+- [ ] 3 email variations drafted and tested (Korean)
+- [ ] Wave 1 emails sent (30 Tier 1 candidates)
+- [ ] 10+ beta user commitments by Day 10 ✨ **KEY METRIC**
+
+---
+
+### Verified Beta Pricing (from BETA-TEST-MASTER-PLAN.md)
+
+**CORRECT Pricing**:
+- **Free 30 days** → **₩24,500/month** (50% lifetime discount off ₩49,000)
+
+**INCORRECT Pricing** (common error):
+- ₩4,900/month (this does NOT exist in documentation)
+
+**Email Template Pricing Example**:
+```
+[Beta Benefits]
+✓ 30일 무료 체험
+✓ 평생 50% 할인 (₩24,500/월, 정상가 ₩49,000)
+✓ 우선 기능 추가 요청권
+✓ Early Adopter 배지 (정식 출시 시)
+```
+
+---
+
+### LinkedIn Recruitment Playbook
+
+**Playwright MCP Usage**:
+1. Navigate to LinkedIn: `mcp__playwright__browser_navigate({ url: "https://www.linkedin.com" })`
+2. Search for candidates: Use browser automation to search by keywords
+3. Extract profiles: `mcp__playwright__browser_snapshot()` to read page content
+4. Compile list: Export to CSV or Google Sheets
+
+**Discovery Call Agenda** (20 minutes):
+1. Introduction (2 min): Platform overview, beta test objectives
+2. Pain Points (5 min): Current R&D grant discovery process
+3. Demo (5 min): Show matching algorithm, AI explanations
+4. Q&A (5 min): Answer questions, clarify features
+5. Commitment (3 min): Invite to beta, explain pricing, next steps
+
+**Beta User Onboarding Flow**:
+1. Commitment → Send welcome email with beta access credentials
+2. Week 1: Onboarding call + profile setup (15 min)
+3. Week 2: First match generation + AI explanation demo
+4. Week 3: Feedback collection + feature requests
+5. Week 4: Renewal decision (convert to paid or churn)
+
+---
+
+### Day 6-10 Time Estimates
+
+| Day | Focus | Time | Priority |
+|-----|-------|------|----------|
+| **Day 6** | TypeScript Fixes | 2-3 hours | 🔴 CRITICAL |
+| **Day 6-7** | Performance Optimization | 2-3 hours | 🟡 HIGH |
+| **Day 7** | Homepage & SEO Polish | 2-3 hours | 🟡 HIGH |
+| **Day 8-10** | Beta Recruitment (LinkedIn) | 4-6 hours | 🔴 CRITICAL |
+| **TOTAL** | | **11-15 hours** | |
+
+**Target Completion**: October 15, 2025 (End of Beta Week 1)
+
+---
+
+### Files to Create/Modify (Day 6-10)
+
+**TypeScript Fixes**:
+- `types/next-auth.d.ts` - NEW (NextAuth session type extension)
+- `~15 API route files` - FIX (table name corrections)
+
+**Performance Optimization**:
+- `lib/redis-cache.ts` - UPDATE (add new caching functions)
+- Database indexes - MIGRATION (add optimized indexes)
+
+**Homepage & SEO**:
+- `app/page.tsx` - UPDATE (visual improvements, beta banner)
+- `app/layout.tsx` - UPDATE (SEO meta tags)
+- `public/sitemap.xml` - NEW (SEO)
+- `public/robots.txt` - NEW (SEO)
+
+**Beta Recruitment**:
+- Candidate tracking spreadsheet - NEW (Google Sheets/Airtable)
+- Email templates (3 variations) - NEW (Korean)
+- Discovery call scripts - NEW (Korean + English)
+
+---
+
+**Last Updated**: October 11, 2025 03:00 KST
+**Current Task**: Beta Week 1 Day 6 - TypeScript Type Error Fixes (IN PROGRESS)
+**Next Checkpoint**: Beta Week 1 Complete (Oct 15, 2025)

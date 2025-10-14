@@ -7,9 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. Fetch recent scraping logs (last 50)
-    const logs = await prisma.scrapingLog.findMany({
+    const logs = await db.scraping_logs.findMany({
       orderBy: {
         completedAt: 'desc',
       },

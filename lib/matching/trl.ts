@@ -13,7 +13,7 @@
  * 7-9: Commercialization & deployment (상용화)
  */
 
-import { Organization, FundingProgram } from '@prisma/client';
+import { organizations, funding_programs } from '@prisma/client';
 
 export interface TRLMatchResult {
   score: number; // 0-20 points
@@ -31,8 +31,8 @@ export interface TRLMatchResult {
  * Enhanced TRL scoring with graduated weighting
  */
 export function scoreTRLEnhanced(
-  org: Organization,
-  program: FundingProgram
+  org: organizations,
+  program: funding_programs
 ): TRLMatchResult {
   const orgTRL = org.technologyReadinessLevel;
   const minTRL = program.minTrl;

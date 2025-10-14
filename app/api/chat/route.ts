@@ -16,7 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 import {
   sendQAChatWithRateLimit,
   startNewConversation,
@@ -25,7 +25,6 @@ import {
   RelevantProgram,
 } from '@/lib/ai/services/qa-chat';
 
-const prisma = new PrismaClient();
 
 /**
  * POST /api/chat
@@ -64,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Get user's organization for company context
-    const user = await prisma.users.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       include: {
         organizations: true,
@@ -85,10 +84,10 @@ export async function POST(request: NextRequest) {
       companyContext = {
         name: org.name,
         industry: org.industrySector || '정보 없음',
-        trl: org.trlLevel || 0,
-        revenue: Number(org.revenue || 0),
-        certifications: org.certifications || [],
-        rdExperience: org.rdExperience || 0,
+        trl: org.technologyReadinessLevel || 0,
+        revenue: org.revenueRange ? 1 : 0, // Convert enum to number (placeholder)
+        certifications: [], // Certifications not in schema yet
+        rdExperience: org.rdExperience ? 1 : 0, // Convert boolean to number
       };
     }
 

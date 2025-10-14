@@ -11,7 +11,7 @@
  * - Technology keyword match explanations
  */
 
-import { Organization, FundingProgram } from '@prisma/client';
+import { organizations, funding_programs } from '@prisma/client';
 import { MatchScore } from './algorithm';
 import { getTRLDescription } from './trl';
 
@@ -27,8 +27,8 @@ export interface MatchExplanation {
  */
 export function generateExplanation(
   match: MatchScore,
-  org: Organization,
-  program: FundingProgram
+  org: organizations,
+  program: funding_programs
 ): MatchExplanation {
   const reasons: string[] = [];
   const warnings: string[] = [];
@@ -97,8 +97,8 @@ function generateSummary(score: number, orgType: string): string {
  */
 function getReasonExplanation(
   reason: string,
-  org: Organization,
-  program: FundingProgram,
+  org: organizations,
+  program: funding_programs,
   match: MatchScore
 ): string | null {
   const type = org.type === 'COMPANY' ? '기업' : '연구기관';
@@ -283,8 +283,8 @@ function getEmployeeCountKorean(count: string): string {
  */
 export function generateDetailedAnalysis(
   match: MatchScore,
-  org: Organization,
-  program: FundingProgram
+  org: organizations,
+  program: funding_programs
 ): {
   scoreSummary: string;
   strengths: string[];
@@ -339,8 +339,8 @@ export function generateDetailedAnalysis(
  */
 export function generateSimpleExplanation(
   match: MatchScore,
-  org: Organization,
-  program: FundingProgram
+  org: organizations,
+  program: funding_programs
 ): string[] {
   const explanation = generateExplanation(match, org, program);
   const bullets: string[] = [explanation.summary, ...explanation.reasons];

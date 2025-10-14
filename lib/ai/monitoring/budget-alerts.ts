@@ -8,8 +8,8 @@
 import { PrismaClient, AlertSeverity } from '@prisma/client';
 import { nanoid } from 'nanoid';
 import nodemailer from 'nodemailer';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 // Alert thresholds (percentage of daily budget)
 const ALERT_THRESHOLDS = [
@@ -55,7 +55,7 @@ export async function checkBudgetAndAlert(
   for (const { threshold, severity } of ALERT_THRESHOLDS) {
     if (percentage >= threshold) {
       // Check if alert already sent today for this threshold
-      const existingAlert = await prisma.ai_budget_alerts.findFirst({
+      const existingAlert = await db.ai_budget_alerts.findFirst({
         where: {
           date: new Date(today),
           threshold,
@@ -68,7 +68,7 @@ export async function checkBudgetAndAlert(
       }
 
       // Create alert record
-      const alert = await prisma.ai_budget_alerts.create({
+      const alert = await db.ai_budget_alerts.create({
         data: {
           id: nanoid(),
           date: new Date(today),
@@ -87,7 +87,7 @@ export async function checkBudgetAndAlert(
         await sendBudgetAlertEmail(alert);
 
         // Mark as sent
-        await prisma.ai_budget_alerts.update({
+        await db.ai_budget_alerts.update({
           where: { id: alert.id },
           data: {
             alertSent: true,
@@ -106,7 +106,13 @@ export async function checkBudgetAndAlert(
 /**
  * Send budget alert email
  */
-async function sendBudgetAlertEmail(alert: any): Promise<void> {
+async function sendBudgetAlertEmail(alert: {
+  severity: AlertSeverity;
+  threshold: number;
+  amountSpent: number;
+  dailyLimit: number;
+  percentage: number;
+}): Promise<void> {
   const { severity, threshold, amountSpent, dailyLimit, percentage } = alert;
 
   // Email subject based on severity
@@ -236,7 +242,7 @@ export async function getAlertHistory(
   startDate: Date,
   endDate: Date
 ): Promise<any[]> {
-  return prisma.ai_budget_alerts.findMany({
+  return db.ai_budget_alerts.findMany({
     where: {
       date: {
         gte: startDate,

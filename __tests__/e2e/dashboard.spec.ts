@@ -6,21 +6,10 @@
 import { test, expect, Page } from '@playwright/test';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || process.env.BASE_URL || 'http://localhost:3000';
+const isProduction = BASE_URL.includes('connectplt.kr');
 
-// Helper to set authenticated session cookie
-async function mockAuthSession(page: Page) {
-  await page.context().addCookies([
-    {
-      name: 'next-auth.session-token',
-      value: 'mock-session-token-for-testing',
-      domain: new URL(BASE_URL).hostname,
-      path: '/',
-      httpOnly: true,
-      secure: BASE_URL.startsWith('https'),
-      sameSite: 'Lax',
-    },
-  ]);
-}
+// Note: These tests use Paul Kim's real authentication state from .playwright/paul-auth.json
+// Production tests are READ-ONLY, localhost tests allow full CRUD operations
 
 test.describe('Dashboard (Unauthenticated)', () => {
   test('should redirect unauthenticated users to sign-in', async ({ page }) => {
@@ -48,16 +37,12 @@ test.describe('Dashboard (Unauthenticated)', () => {
   });
 });
 
-test.describe('Dashboard (Authenticated - Mocked)', () => {
+test.describe('Dashboard (Authenticated)', () => {
   /**
-   * Note: These tests use mocked authentication cookies.
-   * In production, NextAuth will validate the session against the database.
-   * For comprehensive testing, use real OAuth flow or Playwright's auth state.
+   * Note: These tests use Paul Kim's real authentication state
    */
 
-  test.skip('should load dashboard for authenticated user', async ({ page }) => {
-    // Skip: Requires valid NextAuth session that's validated against database
-    await mockAuthSession(page);
+  test('should load dashboard for authenticated user', async ({ page }) => {
     await page.goto(`${BASE_URL}/dashboard`);
 
     await page.waitForLoadState('networkidle');
@@ -72,18 +57,14 @@ test.describe('Dashboard (Authenticated - Mocked)', () => {
     console.log('Is Dashboard:', isDashboard);
   });
 
-  test.skip('should display user profile section', async ({ page }) => {
-    // Skip: Requires valid NextAuth session
-    await mockAuthSession(page);
+  test('should display user profile section', async ({ page }) => {
     await page.goto(`${BASE_URL}/dashboard`);
 
     // Check for profile elements
     await expect(page.locator('text=프로필')).toBeVisible();
   });
 
-  test.skip('should show funding match results', async ({ page }) => {
-    // Skip: Requires valid NextAuth session + organization profile
-    await mockAuthSession(page);
+  test('should show funding match results', async ({ page }) => {
     await page.goto(`${BASE_URL}/dashboard`);
 
     // Check for match cards
@@ -91,9 +72,7 @@ test.describe('Dashboard (Authenticated - Mocked)', () => {
     await expect(matchCards.first()).toBeVisible();
   });
 
-  test.skip('should allow viewing match details', async ({ page }) => {
-    // Skip: Requires valid NextAuth session + organization profile
-    await mockAuthSession(page);
+  test('should allow viewing match details', async ({ page }) => {
     await page.goto(`${BASE_URL}/dashboard`);
 
     // Click first match

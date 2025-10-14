@@ -90,8 +90,8 @@ test.describe('Mobile Experience', () => {
 
     await page.waitForLoadState('networkidle');
 
-    // Check Korean text is visible
-    const koreanText = page.locator('text=국가, text=정부, text=사업').first();
+    // Check Korean text is visible (hero heading contains "국가 R&D 사업")
+    const koreanText = page.locator('text=국가 R&D 사업').first();
     await expect(koreanText).toBeVisible();
   });
 

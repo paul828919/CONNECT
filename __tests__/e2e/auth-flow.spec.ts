@@ -11,9 +11,10 @@
 import { test, expect, Page } from '@playwright/test';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || process.env.BASE_URL || 'http://localhost:3000';
+const isProduction = BASE_URL.includes('connectplt.kr');
 
-// Note: For E2E tests with real OAuth, you need actual Kakao credentials
-// These tests assume mocked OAuth or use of Playwright's authentication state
+// Note: These tests use Paul Kim's real authentication state from .playwright/paul-auth.json
+// Production tests are READ-ONLY, localhost tests allow full CRUD operations
 
 test.describe('Authentication Flow', () => {
   // Pure E2E tests - no database dependencies
@@ -78,16 +79,9 @@ test.describe('Authentication Flow', () => {
   });
 
   test.describe('Organization Profile Creation', () => {
-    // This test requires authentication state
-    // In real scenarios, you would use page.context().addCookies() to set auth cookies
+    // These tests use Paul Kim's authentication state
 
-    test.skip('should show profile creation form for new users', async ({ page }) => {
-      // TODO: Set up authenticated session
-      // This would require either:
-      // 1. Mocking NextAuth session in cookies
-      // 2. Using real OAuth flow (requires Kakao test account)
-      // 3. Using Playwright's authentication state persistence
-
+    test('should show profile creation form for new users', async ({ page }) => {
       await page.goto(`${BASE_URL}/dashboard/profile/create`);
 
       // Check form elements
@@ -99,7 +93,7 @@ test.describe('Authentication Flow', () => {
       await expect(page.locator('text=PIPA 규정에 따라 AES-256 암호화')).toBeVisible();
     });
 
-    test.skip('should validate business registration number format', async ({ page }) => {
+    test('should validate business registration number format', async ({ page }) => {
       await page.goto(`${BASE_URL}/dashboard/profile/create`);
 
       // Fill in form with invalid business number
@@ -112,7 +106,10 @@ test.describe('Authentication Flow', () => {
       await expect(page.locator('text=형식이 올바르지 않습니다')).toBeVisible();
     });
 
-    test.skip('should create organization profile successfully', async ({ page }) => {
+    test('should create organization profile successfully', async ({ page }) => {
+      // Skip on production (write operation)
+      test.skip(isProduction, 'Write test - local development only');
+
       await page.goto(`${BASE_URL}/dashboard/profile/create`);
 
       // Select organization type (기업)
@@ -149,7 +146,7 @@ test.describe('Authentication Flow', () => {
   });
 
   test.describe('Dashboard Access', () => {
-    test.skip('should show dashboard with funding matches', async ({ page }) => {
+    test('should show dashboard with funding matches', async ({ page }) => {
       await page.goto(`${BASE_URL}/dashboard`);
 
       // Check dashboard elements
@@ -158,7 +155,7 @@ test.describe('Authentication Flow', () => {
       await expect(page.locator('text=마감일')).toBeVisible();
     });
 
-    test.skip('should allow viewing match details', async ({ page }) => {
+    test('should allow viewing match details', async ({ page }) => {
       await page.goto(`${BASE_URL}/dashboard`);
 
       // Click on first funding match
@@ -173,11 +170,9 @@ test.describe('Authentication Flow', () => {
 });
 
 test.describe('Organization Profile Form Validation', () => {
-  // NOTE: These tests require authentication to access /dashboard/profile/create
-  // After adding middleware, unauthenticated users are redirected to /auth/signin
+  // NOTE: These tests use Paul Kim's authentication state
 
-  test.skip('should validate required fields', async ({ page }) => {
-    // Skip: Requires authentication to access /dashboard/profile/create
+  test('should validate required fields', async ({ page }) => {
     await page.goto(`${BASE_URL}/dashboard/profile/create`);
 
     // Try to submit without filling required fields
@@ -188,8 +183,7 @@ test.describe('Organization Profile Form Validation', () => {
     await expect(errors).toBeVisible();
   });
 
-  test.skip('should validate business number format with various inputs', async ({ page }) => {
-    // Skip: Requires authentication to access /dashboard/profile/create
+  test('should validate business number format with various inputs', async ({ page }) => {
     await page.goto(`${BASE_URL}/dashboard/profile/create`);
 
     const invalidFormats = [
@@ -212,8 +206,7 @@ test.describe('Organization Profile Form Validation', () => {
     }
   });
 
-  test.skip('should toggle between company and research institute forms', async ({ page }) => {
-    // Skip: Requires authentication to access /dashboard/profile/create
+  test('should toggle between company and research institute forms', async ({ page }) => {
     await page.goto(`${BASE_URL}/dashboard/profile/create`);
 
     // Initially show company form
@@ -229,18 +222,15 @@ test.describe('Organization Profile Form Validation', () => {
 });
 
 test.describe('Security and Privacy', () => {
-  // NOTE: These tests require authentication to access /dashboard/profile/create
-  // After adding middleware, unauthenticated users are redirected to /auth/signin (correct behavior)
-  test.skip('should display PIPA compliance notice', async ({ page }) => {
-    // Skip: Requires authentication to access /dashboard/profile/create
+  // NOTE: These tests use Paul Kim's authentication state
+  test('should display PIPA compliance notice', async ({ page }) => {
     await page.goto(`${BASE_URL}/dashboard/profile/create`);
 
     // Check for PIPA compliance notice
     await expect(page.locator('text=PIPA 규정에 따라 AES-256 암호화')).toBeVisible();
   });
 
-  test.skip('should not expose sensitive data in HTML', async ({ page }) => {
-    // Skip: Requires authentication to access /dashboard/profile/create
+  test('should not expose sensitive data in HTML', async ({ page }) => {
     await page.goto(`${BASE_URL}/dashboard/profile/create`);
 
     // Fill in business number
@@ -283,8 +273,7 @@ test.describe('Responsive Design', () => {
     expect(buttonBox?.height).toBeGreaterThan(40); // Height should meet tap target guidelines
   });
 
-  test.skip('should handle tablet viewport', async ({ page }) => {
-    // Skip: Requires authentication to access /dashboard/profile/create
+  test('should handle tablet viewport', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
 
     await page.goto(`${BASE_URL}/dashboard/profile/create`);

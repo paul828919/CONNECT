@@ -11,7 +11,7 @@ async function clearMatches(organizationId: string) {
   try {
     console.log(`Clearing matches for organization: ${organizationId}`);
 
-    const result = await prisma.fundingMatch.deleteMany({
+    const result = await prisma.funding_matches.deleteMany({
       where: {
         organizationId: organizationId,
       },

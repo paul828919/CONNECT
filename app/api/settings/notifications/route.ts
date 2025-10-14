@@ -8,9 +8,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 // Default notification settings
 const defaultSettings = {
@@ -30,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     const userId = (session.user as any).id;
 
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: { notificationSettings: true },
     });
@@ -93,7 +92,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update user settings
-    await prisma.user.update({
+    await db.users.update({
       where: { id: userId },
       data: {
         notificationSettings: settings as any,

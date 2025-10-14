@@ -18,8 +18,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { db } from '@/lib/db';
-import { ProgramStatus } from '@prisma/client';
+import { PrismaClient, ProgramStatus } from '@prisma/client';
+
+// Direct Prisma Client instantiation (bypasses lib/db module resolution issue)
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+};
+
+const db = globalForPrisma.prisma ?? new PrismaClient({
+  log: ['error'],
+});
+
+if (!globalForPrisma.prisma) {
+  globalForPrisma.prisma = db;
+}
 import { generateMatches } from '@/lib/matching/algorithm';
 import { generateExplanation } from '@/lib/matching/explainer';
 import { checkMatchLimit, trackApiUsage } from '@/lib/rateLimit';
@@ -274,7 +286,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
-  } finally {
-    await db.$disconnect();
   }
+  // NOTE: Do NOT call db.$disconnect() in Next.js API routes
+  // It breaks connection pooling and causes subsequent requests to fail
 }

@@ -10,14 +10,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 import {
   encrypt,
   hashBusinessNumber,
   validateBusinessNumber,
 } from '@/lib/encryption';
 
-const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,7 +48,7 @@ export async function POST(request: NextRequest) {
     const userId = (session.user as any).id;
 
     // Check if user already has an organization
-    const existingUserOrg = await prisma.user.findUnique({
+    const existingUserOrg = await db.users.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });
@@ -94,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     // 3. Check for duplicates using hash
     const businessNumberHash = hashBusinessNumber(businessNumber);
-    const existingOrg = await prisma.organization.findUnique({
+    const existingOrg = await db.organizations.findUnique({
       where: { businessNumberHash },
     });
 
@@ -118,7 +117,7 @@ export async function POST(request: NextRequest) {
     if (description && description.length > 20) profileScore += 5;
 
     // 6. Create organization
-    const organization = await prisma.organization.create({
+    const organization = await db.organizations.create({
       data: {
         type,
         name,
@@ -148,7 +147,7 @@ export async function POST(request: NextRequest) {
     });
 
     // 7. Update user's organizationId
-    await prisma.user.update({
+    await db.users.update({
       where: { id: userId },
       data: { organizationId: organization.id },
     });

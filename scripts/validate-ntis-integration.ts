@@ -133,7 +133,7 @@ async function validateDatabaseConnection(): Promise<ValidationResult> {
     await prisma.$connect();
 
     // Test query
-    const programCount = await prisma.fundingProgram.count();
+    const programCount = await prisma.funding_programs.count();
 
     return {
       name: 'Database Connection',
@@ -281,7 +281,7 @@ async function validateDataDeduplication(): Promise<ValidationResult> {
 
 async function validateNTISDataQuality(): Promise<ValidationResult> {
   try {
-    const ntisPrograms = await prisma.fundingProgram.findMany({
+    const ntisPrograms = await prisma.funding_programs.findMany({
       where: {
         scrapingSource: 'NTIS_API',
       },

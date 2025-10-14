@@ -1,0 +1,152 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "connect-platform-overview",
+    "title": "Connect Platform - Overview",
+    "tags": ["connect", "overview", "platform"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 0},
+        "type": "stat",
+        "title": "Total Users",
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": {"type": "postgres", "uid": "bf11ilxtf5ybkf"},
+            "rawSql": "SELECT COUNT(*) as value FROM \"User\";",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "blue"},
+                {"value": 100, "color": "green"},
+                {"value": 1000, "color": "yellow"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 0},
+        "type": "stat",
+        "title": "Total Projects",
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": {"type": "postgres", "uid": "bf11ilxtf5ybkf"},
+            "rawSql": "SELECT COUNT(*) as value FROM \"Project\";",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "blue"},
+                {"value": 50, "color": "green"},
+                {"value": 500, "color": "yellow"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 0},
+        "type": "stat",
+        "title": "Active Connections",
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": {"type": "postgres", "uid": "bf11ilxtf5ybkf"},
+            "rawSql": "SELECT COUNT(*) as value FROM pg_stat_activity WHERE state = 'active';",
+            "format": "table"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 50, "color": "yellow"},
+                {"value": 150, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+        "type": "graph",
+        "title": "Database Connections Over Time",
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": {"type": "postgres", "uid": "bf11ilxtf5ybkf"},
+            "rawSql": "SELECT NOW() as time, COUNT(*) as connections FROM pg_stat_activity;",
+            "format": "time_series"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+        "type": "table",
+        "title": "Recent User Registrations",
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": {"type": "postgres", "uid": "bf11ilxtf5ybkf"},
+            "rawSql": "SELECT email, \"createdAt\", role FROM \"User\" ORDER BY \"createdAt\" DESC LIMIT 10;",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14},
+        "type": "table",
+        "title": "Database Size by Table",
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": {"type": "postgres", "uid": "bf11ilxtf5ybkf"},
+            "rawSql": "SELECT tablename, pg_size_pretty(pg_total_relation_size('public.' || tablename)) AS size FROM pg_tables WHERE schemaname = 'public' ORDER BY pg_total_relation_size('public.' || tablename) DESC LIMIT 10;",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14},
+        "type": "stat",
+        "title": "Redis Cache Hit Ratio",
+        "description": "Percentage of cache hits vs misses",
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": {"type": "redis-datasource", "uid": "cf11imefcuy2oa"},
+            "query": "INFO stats",
+            "command": "info"
+          }
+        ]
+      }
+    ]
+  },
+  "overwrite": true,
+  "folderId": 0
+}
+

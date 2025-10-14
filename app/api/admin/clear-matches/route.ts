@@ -8,7 +8,19 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+// Direct Prisma Client instantiation (bypasses lib/db module resolution issue)
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+};
+
+const db = globalForPrisma.prisma ?? new PrismaClient({
+  log: ['error'],
+});
+
+if (!globalForPrisma.prisma) {
+  globalForPrisma.prisma = db;
+}
+
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -35,7 +47,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 3. Verify user owns this organization
-    const organization = await prisma.organization.findUnique({
+    const organization = await db.organizations.findUnique({
       where: { id: organizationId },
       include: {
         users: {
@@ -52,7 +64,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 4. Delete all matches for this organization
-    const result = await prisma.fundingMatch.deleteMany({
+    const result = await db.funding_matches.deleteMany({
       where: {
         organizationId: organizationId,
       },
@@ -70,7 +82,7 @@ export async function DELETE(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
+  // NOTE: Do NOT call db.$disconnect() in Next.js API routes
+  // It breaks connection pooling and causes subsequent requests to fail
 }

@@ -77,6 +77,13 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
+# Copy lib directory (custom modules not always traced by Next.js standalone)
+# Using --chown to ensure correct permissions
+COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
+
+# Copy app directory (source files may be needed by some routes)
+COPY --from=builder --chown=nextjs:nodejs /app/app ./app
+
 # Create directories for logs and uploads
 RUN mkdir -p /app/logs /app/uploads && \
     chown -R nextjs:nodejs /app/logs /app/uploads

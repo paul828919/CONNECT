@@ -9,9 +9,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient, ConsortiumRole } from '@prisma/client';
+import { db } from '@/lib/db';
+import { ConsortiumRole } from '@prisma/client';
 
-const prisma = new PrismaClient();
 
 export async function POST(
   request: NextRequest,
@@ -27,13 +27,13 @@ export async function POST(
     const consortiumId = params.id;
 
     // Fetch consortium and verify user is from lead organization
-    const consortium = await prisma.consortiumProject.findUnique({
+    const consortium = await db.consortium_projects.findUnique({
       where: { id: consortiumId },
       select: {
         leadOrganizationId: true,
         status: true,
         totalBudget: true,
-        members: {
+        consortium_members: {
           select: {
             budgetShare: true,
           },
@@ -49,7 +49,7 @@ export async function POST(
     }
 
     // Get user's organization
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });
@@ -80,7 +80,7 @@ export async function POST(
     }
 
     // Verify organization exists
-    const targetOrg = await prisma.organization.findUnique({
+    const targetOrg = await db.organizations.findUnique({
       where: { id: organizationId },
       select: { id: true, name: true, status: true },
     });
@@ -100,7 +100,7 @@ export async function POST(
     }
 
     // Check if organization is already a member
-    const existingMember = await prisma.consortiumMember.findUnique({
+    const existingMember = await db.consortium_members.findUnique({
       where: {
         consortiumId_organizationId: {
           consortiumId,
@@ -118,8 +118,8 @@ export async function POST(
 
     // Validate budget allocation if provided
     if (budgetShare && consortium.totalBudget) {
-      const totalAllocated = consortium.members.reduce(
-        (sum, m) => sum + (m.budgetShare ? Number(m.budgetShare) : 0),
+      const totalAllocated = consortium.consortium_members.reduce(
+        (sum: number, m: any) => sum + (m.budgetShare ? Number(m.budgetShare) : 0),
         0
       );
 
@@ -132,8 +132,10 @@ export async function POST(
     }
 
     // Create member invitation
-    const member = await prisma.consortiumMember.create({
+    const { createId } = await import('@paralleldrive/cuid2');
+    const member = await db.consortium_members.create({
       data: {
+        id: createId(),
         consortiumId,
         organizationId,
         invitedById: userId,
@@ -142,9 +144,11 @@ export async function POST(
         budgetPercent: budgetPercent || null,
         responsibilities: responsibilities?.trim() || null,
         status: 'INVITED',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       include: {
-        organization: {
+        organizations: {
           select: {
             id: true,
             name: true,

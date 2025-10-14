@@ -13,7 +13,7 @@ import { scrapingConfig } from '../lib/scraping/config';
 const scrapingQueue = new Queue('scraping-queue', {
   connection: {
     host: process.env.REDIS_QUEUE_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_QUEUE_PORT || '6380'),
+    port: parseInt(process.env.REDIS_QUEUE_PORT || '6379'), // Fixed: Redis queue runs on 6379
   },
 });
 

@@ -3,7 +3,7 @@
 # Playwright-enabled scraping service
 # ===========================================
 
-FROM mcr.microsoft.com/playwright:v1.40.0-focal
+FROM mcr.microsoft.com/playwright:v1.48.0-focal
 
 WORKDIR /app
 
@@ -17,9 +17,13 @@ COPY package.json package-lock.json ./
 # Install dependencies (including Playwright)
 RUN npm ci --only=production
 
+# Install tsx for TypeScript runtime
+RUN npm install -g tsx
+
 # Copy application code
-COPY lib/scraping ./lib/scraping
+COPY lib ./lib
 COPY prisma ./prisma
+COPY tsconfig.json ./tsconfig.json
 
 # Generate Prisma Client
 RUN npx prisma generate
@@ -37,4 +41,4 @@ ENV NODE_ENV=production
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
 
 # Start scraper worker
-CMD ["node", "lib/scraping/worker.js"]
+CMD ["npx", "tsx", "lib/scraping/worker.ts"]

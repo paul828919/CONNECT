@@ -4,11 +4,11 @@
  */
 
 import { generateMatches, calculateMatchScore } from '@/lib/matching/algorithm';
-import { Organization, FundingProgram, OrganizationType, AgencyId, ProgramStatus, EmployeeCountRange } from '@prisma/client';
+import { organizations, funding_programs, OrganizationType, AgencyId, ProgramStatus, EmployeeCountRange } from '@prisma/client';
 
 describe('Matching Algorithm', () => {
   // Test organization (matches actual Prisma schema)
-  const testOrg: Organization = {
+  const testOrg: organizations = {
     id: 'test-org-1',
     type: OrganizationType.COMPANY,
     name: '테스트 AI 주식회사',
@@ -42,7 +42,7 @@ describe('Matching Algorithm', () => {
   };
 
   // Test funding programs
-  const ictProgram: FundingProgram = {
+  const ictProgram: funding_programs = {
     id: 'program-iitp-1',
     agencyId: AgencyId.IITP,
     title: 'AI 핵심기술개발 지원사업',
@@ -67,7 +67,7 @@ describe('Matching Algorithm', () => {
     updatedAt: new Date(),
   };
 
-  const manufacturingProgram: FundingProgram = {
+  const manufacturingProgram: funding_programs = {
     ...ictProgram,
     id: 'program-keit-1',
     agencyId: AgencyId.KEIT,
@@ -80,7 +80,7 @@ describe('Matching Algorithm', () => {
     contentHash: 'hash_keit_test_1',
   };
 
-  const expiredProgram: FundingProgram = {
+  const expiredProgram: funding_programs = {
     ...ictProgram,
     id: 'program-expired',
     deadline: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago

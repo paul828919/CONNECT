@@ -37,7 +37,7 @@ async function testPartnerSearch() {
 
   try {
     // Test basic search (should return both organizations)
-    const allOrgs = await prisma.organization.findMany({
+    const allOrgs = await prisma.organizations.findMany({
       where: {
         status: 'ACTIVE',
         profileCompleted: true,
@@ -58,7 +58,7 @@ async function testPartnerSearch() {
     );
 
     // Test type filter (COMPANY)
-    const companies = await prisma.organization.findMany({
+    const companies = await prisma.organizations.findMany({
       where: {
         status: 'ACTIVE',
         profileCompleted: true,
@@ -74,7 +74,7 @@ async function testPartnerSearch() {
     );
 
     // Test industry filter
-    const ictOrgs = await prisma.organization.findMany({
+    const ictOrgs = await prisma.organizations.findMany({
       where: {
         status: 'ACTIVE',
         profileCompleted: true,
@@ -102,7 +102,7 @@ async function testPublicProfile() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
   try {
-    const org = await prisma.organization.findUnique({
+    const org = await prisma.organizations.findUnique({
       where: { id: COMPANY_ORG_ID },
       select: {
         id: true,
@@ -130,7 +130,7 @@ async function testPublicProfile() {
     );
 
     // Verify privacy - business number is encrypted (not plain text)
-    const fullOrg = await prisma.organization.findUnique({
+    const fullOrg = await prisma.organizations.findUnique({
       where: { id: COMPANY_ORG_ID },
       select: {businessNumberEncrypted: true, businessNumberHash: true },
     });
@@ -153,7 +153,7 @@ async function testContactRequest() {
 
   try {
     // Create contact request: Company → Research Institute
-    const contactRequest = await prisma.contactRequest.create({
+    const contactRequest = await prisma.contact_requests.create({
       data: {
         senderId: COMPANY_USER_ID,
         senderOrgId: COMPANY_ORG_ID,
@@ -164,10 +164,10 @@ async function testContactRequest() {
         status: 'PENDING',
       },
       include: {
-        senderOrg: { select: { name: true } },
-        receiverOrg: { select: { name: true } },
+        organizations_contact_requests_senderOrgIdToorganizations: { select: { name: true } },
+        organizations_contact_requests_receiverOrgIdToorganizations: { select: { name: true } },
       },
-    });
+    }) as any;
 
     logTest(
       'Create contact request (Company → Research Institute)',
@@ -176,13 +176,13 @@ async function testContactRequest() {
       {
         id: contactRequest.id,
         type: contactRequest.type,
-        from: contactRequest.senderOrg.name,
-        to: contactRequest.receiverOrg.name,
+        from: contactRequest.organizations_contact_requests_senderOrgIdToorganizations?.name || 'Unknown',
+        to: contactRequest.organizations_contact_requests_receiverOrgIdToorganizations?.name || 'Unknown',
       }
     );
 
     // Accept the contact request
-    const acceptedRequest = await prisma.contactRequest.update({
+    const acceptedRequest = await prisma.contact_requests.update({
       where: { id: contactRequest.id },
       data: {
         status: 'ACCEPTED',
@@ -218,7 +218,7 @@ async function testConsortiumManagement() {
 
   try {
     // Create consortium project
-    const consortium = await prisma.consortiumProject.create({
+    const consortium = await prisma.consortium_projects.create({
       data: {
         name: '차세대 AI 기술개발 컨소시엄',
         description: 'AI 기반 제조 공정 최적화 기술 개발',
@@ -229,9 +229,9 @@ async function testConsortiumManagement() {
         status: 'DRAFT',
       },
       include: {
-        leadOrganization: { select: { name: true } },
+        organizations: { select: { name: true } },
       },
-    });
+    }) as any;
 
     logTest(
       'Create consortium project',
@@ -240,13 +240,13 @@ async function testConsortiumManagement() {
       {
         id: consortium.id,
         name: consortium.name,
-        lead: consortium.leadOrganization.name,
+        lead: consortium.organizations?.name || 'Unknown',
         budget: '5억원',
       }
     );
 
     // Auto-add lead organization as member
-    const leadMember = await prisma.consortiumMember.create({
+    const leadMember = await prisma.consortium_members.create({
       data: {
         consortiumId: consortium.id,
         organizationId: COMPANY_ORG_ID,
@@ -257,7 +257,7 @@ async function testConsortiumManagement() {
         budgetPercent: 60,
         responsibilities: '총괄 관리 및 제조 공정 데이터 제공',
       },
-    });
+    }) as any;
 
     logTest(
       'Add lead organization as member (auto-accepted)',
@@ -267,7 +267,7 @@ async function testConsortiumManagement() {
     );
 
     // Invite research institute as participant
-    const participantInvite = await prisma.consortiumMember.create({
+    const participantInvite = await prisma.consortium_members.create({
       data: {
         consortiumId: consortium.id,
         organizationId: RESEARCH_ORG_ID,
@@ -278,7 +278,7 @@ async function testConsortiumManagement() {
         budgetPercent: 40,
         responsibilities: 'AI 알고리즘 개발 및 연구',
       },
-    });
+    }) as any;
 
     logTest(
       'Invite participant organization',
@@ -288,7 +288,7 @@ async function testConsortiumManagement() {
     );
 
     // Accept invitation
-    const acceptedMember = await prisma.consortiumMember.update({
+    const acceptedMember = await prisma.consortium_members.update({
       where: { id: participantInvite.id },
       data: {
         status: 'ACCEPTED',
@@ -305,7 +305,7 @@ async function testConsortiumManagement() {
     );
 
     // Test budget validation
-    const members = await prisma.consortiumMember.findMany({
+    const members = await prisma.consortium_members.findMany({
       where: { consortiumId: consortium.id },
     });
 
@@ -340,20 +340,20 @@ async function testConsortiumExport() {
 
   try {
     // Find the consortium we just created
-    const consortium = await prisma.consortiumProject.findFirst({
+    const consortium = await prisma.consortium_projects.findFirst({
       where: { leadOrganizationId: COMPANY_ORG_ID },
       include: {
-        leadOrganization: {
+        organizations: {
           select: {
             name: true,
             type: true,
             industrySector: true,
           },
         },
-        members: {
+        consortium_members: {
           where: { status: 'ACCEPTED' },
           include: {
-            organization: {
+            organizations: {
               select: {
                 name: true,
                 type: true,
@@ -367,13 +367,13 @@ async function testConsortiumExport() {
 
     logTest(
       'Fetch consortium with members for export',
-      consortium !== null && consortium.members.length === 2,
-      !consortium ? 'Consortium not found' : `Expected 2 members, got ${consortium?.members.length}`,
+      consortium !== null && consortium.consortium_members.length === 2,
+      !consortium ? 'Consortium not found' : `Expected 2 members, got ${consortium?.consortium_members.length}`,
       consortium
         ? {
             name: consortium.name,
-            lead: consortium.leadOrganization.name,
-            memberCount: consortium.members.length,
+            lead: consortium.organizations?.name || 'Unknown',
+            memberCount: consortium.consortium_members.length,
           }
         : undefined
     );
@@ -382,12 +382,12 @@ async function testConsortiumExport() {
       // Calculate budget summary
       const budgetSummary = {
         total: Number(consortium.totalBudget),
-        allocated: consortium.members.reduce(
+        allocated: consortium.consortium_members.reduce(
           (sum, m) => sum + (m.budgetShare ? Number(m.budgetShare) : 0),
           0
         ),
-        breakdown: consortium.members.map((m) => ({
-          organization: m.organization.name,
+        breakdown: consortium.consortium_members.map((m) => ({
+          organization: m.organizations?.name || 'Unknown',
           role: m.role,
           amount: m.budgetShare ? Number(m.budgetShare) : 0,
           percent: m.budgetPercent || 0,

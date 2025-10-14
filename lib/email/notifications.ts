@@ -4,7 +4,7 @@
  * Handles all email notifications with user preference checking.
  */
 
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 import { sendEmail } from './utils';
 import { newMatchEmailTemplate, NewMatchEmailData } from './templates/new-match';
 import {
@@ -13,7 +13,6 @@ import {
 } from './templates/deadline-reminder';
 import { weeklyDigestEmailTemplate, WeeklyDigestEmailData } from './templates/weekly-digest';
 
-const prisma = new PrismaClient();
 
 /**
  * Default notification settings
@@ -30,7 +29,7 @@ const defaultNotificationSettings = {
  * Get user notification settings
  */
 async function getUserNotificationSettings(userId: string) {
-  const user = await prisma.user.findUnique({
+  const user = await db.users.findUnique({
     where: { id: userId },
     select: { notificationSettings: true },
   });
@@ -62,10 +61,10 @@ export async function sendNewMatchNotification(
     }
 
     // 2. Fetch user data
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       include: {
-        organization: {
+        organizations: {
           select: {
             name: true,
           },
@@ -73,25 +72,19 @@ export async function sendNewMatchNotification(
       },
     });
 
-    if (!user || !user.email || !user.organization) {
+    if (!user || !user.email || !user.organizations) {
       console.error(`User ${userId} not found or missing data`);
       return false;
     }
 
     // 3. Fetch matches with details
-    const matches = await prisma.fundingMatch.findMany({
+    const matches = await db.funding_matches.findMany({
       where: {
         id: { in: matchIds },
         score: { gte: settings.minimumMatchScore },
       },
       include: {
-        program: {
-          include: {
-            agency: {
-              select: { name: true },
-            },
-          },
-        },
+        funding_programs: true,
       },
       orderBy: { score: 'desc' },
       take: 5, // Top 5 matches
@@ -105,15 +98,15 @@ export async function sendNewMatchNotification(
     // 4. Prepare email data
     const emailData: NewMatchEmailData = {
       userName: user.name || '사용자',
-      organizationName: user.organization.name,
+      organizationName: user.organizations.name,
       matches: matches.map((match) => ({
         id: match.id,
-        title: match.program.title,
-        agencyName: match.program.agency?.name || '기관',
+        title: match.funding_programs.title,
+        agencyName: match.funding_programs.agencyId || '기관',
         score: match.score,
-        deadline: match.program.deadline,
-        budgetAmount: match.program.budgetAmount
-          ? Number(match.program.budgetAmount)
+        deadline: match.funding_programs.deadline,
+        budgetAmount: match.funding_programs.budgetAmount
+          ? Number(match.funding_programs.budgetAmount)
           : null,
         explanation: match.explanation as string[],
       })),
@@ -129,7 +122,7 @@ export async function sendNewMatchNotification(
 
     if (success) {
       // Update last notification time
-      await prisma.user.update({
+      await db.users.update({
         where: { id: userId },
         data: {
           lastNotificationSentAt: new Date(),
@@ -162,49 +155,43 @@ export async function sendDeadlineReminder(
     }
 
     // 2. Fetch user and match data
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       include: {
-        organization: {
+        organizations: {
           select: { name: true },
         },
       },
     });
 
-    if (!user || !user.email || !user.organization) {
+    if (!user || !user.email || !user.organizations) {
       return false;
     }
 
-    const match = await prisma.fundingMatch.findUnique({
+    const match = await db.funding_matches.findUnique({
       where: { id: matchId },
       include: {
-        program: {
-          include: {
-            agency: {
-              select: { name: true },
-            },
-          },
-        },
+        funding_programs: true,
       },
     });
 
-    if (!match || !match.program.deadline) {
+    if (!match || !match.funding_programs.deadline) {
       return false;
     }
 
     // 3. Prepare email data
     const emailData: DeadlineReminderEmailData = {
       userName: user.name || '사용자',
-      organizationName: user.organization.name,
+      organizationName: user.organizations.name,
       program: {
-        id: match.program.id,
-        title: match.program.title,
-        agencyName: match.program.agency?.name || '기관',
-        deadline: match.program.deadline,
-        budgetAmount: match.program.budgetAmount
-          ? Number(match.program.budgetAmount)
+        id: match.funding_programs.id,
+        title: match.funding_programs.title,
+        agencyName: match.funding_programs.agencyId || '기관',
+        deadline: match.funding_programs.deadline,
+        budgetAmount: match.funding_programs.budgetAmount
+          ? Number(match.funding_programs.budgetAmount)
           : null,
-        announcementUrl: match.program.announcementUrl,
+        announcementUrl: match.funding_programs.announcementUrl,
         matchScore: match.score,
       },
       daysUntilDeadline,
@@ -214,7 +201,7 @@ export async function sendDeadlineReminder(
     const html = deadlineReminderEmailTemplate(emailData);
     const success = await sendEmail({
       to: user.email,
-      subject: `⏰ D-${daysUntilDeadline} 마감 알림: ${match.program.title.substring(0, 40)}...`,
+      subject: `⏰ D-${daysUntilDeadline} 마감 알림: ${match.funding_programs.title.substring(0, 40)}...`,
       html,
     });
 
@@ -239,16 +226,16 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
     }
 
     // 2. Fetch user data
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       include: {
-        organization: {
+        organizations: {
           select: { id: true, name: true },
         },
       },
     });
 
-    if (!user || !user.email || !user.organization) {
+    if (!user || !user.email || !user.organizations) {
       return false;
     }
 
@@ -260,7 +247,7 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
     // 4. Fetch week statistics
     const [newPrograms, newMatches, upcomingDeadlines] = await Promise.all([
       // New programs this week
-      prisma.fundingProgram.count({
+      db.funding_programs.count({
         where: {
           createdAt: {
             gte: weekStart,
@@ -271,23 +258,21 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
       }),
 
       // New matches this week
-      prisma.fundingMatch.count({
+      db.funding_matches.count({
         where: {
-          organizationId: user.organization.id,
+          organizationId: user.organizations.id,
           createdAt: {
             gte: weekStart,
             lte: weekEnd,
           },
-          status: 'ACTIVE',
         },
       }),
 
       // Upcoming deadlines (next 14 days)
-      prisma.fundingMatch.count({
+      db.funding_matches.count({
         where: {
-          organizationId: user.organization.id,
-          status: 'ACTIVE',
-          program: {
+          organizationId: user.organizations.id,
+          funding_programs: {
             deadline: {
               gte: new Date(),
               lte: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
@@ -298,35 +283,27 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
     ]);
 
     // 5. Fetch top matches
-    const topMatches = await prisma.fundingMatch.findMany({
+    const topMatches = await db.funding_matches.findMany({
       where: {
-        organizationId: user.organization.id,
+        organizationId: user.organizations.id,
         createdAt: {
           gte: weekStart,
           lte: weekEnd,
         },
-        status: 'ACTIVE',
         score: { gte: settings.minimumMatchScore },
       },
       include: {
-        program: {
-          include: {
-            agency: {
-              select: { name: true },
-            },
-          },
-        },
+        funding_programs: true,
       },
       orderBy: { score: 'desc' },
       take: 3,
     });
 
     // 6. Fetch upcoming deadlines
-    const upcomingDeadlinesList = await prisma.fundingMatch.findMany({
+    const upcomingDeadlinesList = await db.funding_matches.findMany({
       where: {
-        organizationId: user.organization.id,
-        status: 'ACTIVE',
-        program: {
+        organizationId: user.organizations.id,
+        funding_programs: {
           deadline: {
             gte: new Date(),
             lte: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
@@ -334,16 +311,10 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
         },
       },
       include: {
-        program: {
-          include: {
-            agency: {
-              select: { name: true },
-            },
-          },
-        },
+        funding_programs: true,
       },
       orderBy: {
-        program: {
+        funding_programs: {
           deadline: 'asc',
         },
       },
@@ -353,7 +324,7 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
     // 7. Prepare email data
     const emailData: WeeklyDigestEmailData = {
       userName: user.name || '사용자',
-      organizationName: user.organization.name,
+      organizationName: user.organizations.name,
       weekStart,
       weekEnd,
       stats: {
@@ -363,23 +334,23 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
       },
       topMatches: topMatches.map((match) => ({
         id: match.id,
-        title: match.program.title,
-        agencyName: match.program.agency?.name || '기관',
+        title: match.funding_programs.title,
+        agencyName: match.funding_programs.agencyId || '기관',
         score: match.score,
-        deadline: match.program.deadline,
-        budgetAmount: match.program.budgetAmount
-          ? Number(match.program.budgetAmount)
+        deadline: match.funding_programs.deadline,
+        budgetAmount: match.funding_programs.budgetAmount
+          ? Number(match.funding_programs.budgetAmount)
           : null,
       })),
       upcomingDeadlines: upcomingDeadlinesList.map((match) => {
         const daysUntil = Math.ceil(
-          (match.program.deadline!.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          (match.funding_programs.deadline!.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
         );
         return {
-          id: match.program.id,
-          title: match.program.title,
-          agencyName: match.program.agency?.name || '기관',
-          deadline: match.program.deadline!,
+          id: match.funding_programs.id,
+          title: match.funding_programs.title,
+          agencyName: match.funding_programs.agencyId || '기관',
+          deadline: match.funding_programs.deadline!,
           daysUntil,
         };
       }),
@@ -409,10 +380,10 @@ export async function sendWeeklyDigestToAll(): Promise<{
   failed: number;
 }> {
   try {
-    const users = await prisma.user.findMany({
+    const users = await db.users.findMany({
       where: {
         email: { not: null },
-        organization: { isNot: null },
+        organizations: { isNot: null },
       },
       select: { id: true },
     });

@@ -18,6 +18,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:e2e": "playwright test",
+    "test:e2e:auth-setup": "npx playwright test auth-manual.setup.ts --headed --project=setup",
+    "test:e2e:auth-verify": "npx playwright test auth-verify.spec.ts --project=chromium",
+    "test:e2e:full": "npx playwright test --project=chromium --project=\"Mobile Chrome - Pixel 5\"",
+    "test:e2e:prod": "PLAYWRIGHT_BASE_URL=https://connectplt.kr npx playwright test",
     "docker:build": "docker compose -f docker-compose.production.yml build",
     "docker:up": "docker compose -f docker-compose.production.yml up -d",
     "docker:down": "docker compose -f docker-compose.production.yml down",
@@ -38,6 +42,7 @@
     "@hookform/resolvers": "^3.9.0",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@next/bundle-analyzer": "^14.2.5",
+    "@paralleldrive/cuid2": "^2.2.2",
     "@prisma/client": "^5.19.1",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
@@ -97,7 +102,7 @@
     "zustand": "^4.5.4"
   },
   "devDependencies": {
-    "@playwright/test": "^1.46.0",
+    "@playwright/test": "1.48.0",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.13",
     "@testing-library/jest-dom": "^6.9.0",
@@ -124,5 +129,8 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }
