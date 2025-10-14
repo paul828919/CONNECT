@@ -8,9 +8,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient, ContactRequestType } from '@prisma/client';
+import { db } from '@/lib/db';
+import { ContactRequestType } from '@prisma/client';
 
-const prisma = new PrismaClient();
 
 // Message templates for different request types
 const MESSAGE_TEMPLATES: Record<ContactRequestType, string> = {
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     const userId = (session.user as any).id;
 
     // Get user's organization
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });
@@ -82,14 +82,14 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type'); // 'sent' or 'received'
 
-    let sentRequests = [];
-    let receivedRequests = [];
+    let sentRequests: any[] = [];
+    let receivedRequests: any[] = [];
 
     if (!type || type === 'sent') {
-      sentRequests = await prisma.contactRequest.findMany({
+      sentRequests = await db.contact_requests.findMany({
         where: { senderOrgId: user.organizationId },
         include: {
-          receiverOrg: {
+          organizations_contact_requests_receiverOrgIdToorganizations: {
             select: {
               id: true,
               name: true,
@@ -103,17 +103,17 @@ export async function GET(request: NextRequest) {
     }
 
     if (!type || type === 'received') {
-      receivedRequests = await prisma.contactRequest.findMany({
+      receivedRequests = await db.contact_requests.findMany({
         where: { receiverOrgId: user.organizationId },
         include: {
-          sender: {
+          users: {
             select: {
               id: true,
               name: true,
               email: true,
             },
           },
-          senderOrg: {
+          organizations_contact_requests_senderOrgIdToorganizations: {
             select: {
               id: true,
               name: true,
@@ -150,12 +150,12 @@ export async function POST(request: NextRequest) {
     const userId = (session.user as any).id;
 
     // Get user's organization
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
-      include: { organization: true },
+      include: { organizations: true },
     });
 
-    if (!user?.organization) {
+    if (!user?.organizations) {
       return NextResponse.json(
         { error: 'No organization associated with user' },
         { status: 400 }
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if receiver organization exists and is active
-    const receiverOrg = await prisma.organization.findUnique({
+    const receiverOrg = await db.organizations.findUnique({
       where: { id: receiverOrgId },
       select: { id: true, name: true, status: true, industrySector: true },
     });
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prevent sending request to own organization
-    if (receiverOrgId === user.organization.id) {
+    if (receiverOrgId === user.organizations?.id) {
       return NextResponse.json(
         { error: 'Cannot send request to your own organization' },
         { status: 400 }
@@ -202,9 +202,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for duplicate recent requests (within 30 days)
-    const recentRequest = await prisma.contactRequest.findFirst({
+    const recentRequest = await db.contact_requests.findFirst({
       where: {
-        senderOrgId: user.organization.id,
+        senderOrgId: user.organizations?.id,
         receiverOrgId,
         createdAt: {
           gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
     let finalMessage = message;
     if (useTemplate && MESSAGE_TEMPLATES[type as ContactRequestType]) {
       finalMessage = MESSAGE_TEMPLATES[type as ContactRequestType]
-        .replace('{senderOrgName}', user.organization.name)
+        .replace('{senderOrgName}', user.organizations?.name || '')
         .replace('{receiverOrgName}', receiverOrg.name)
         .replace('{industry}', receiverOrg.industrySector || '해당 분야')
         .replace('{programName}', '관련 R&D 프로그램')
@@ -232,18 +232,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Create contact request
-    const contactRequest = await prisma.contactRequest.create({
+    const { createId } = await import('@paralleldrive/cuid2');
+    const contactRequest = await db.contact_requests.create({
       data: {
+        id: createId(),
         senderId: userId,
-        senderOrgId: user.organization.id,
+        senderOrgId: user.organizations?.id || '',
         receiverOrgId,
         type: type as ContactRequestType,
         subject,
         message: finalMessage,
         status: 'PENDING',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       include: {
-        receiverOrg: {
+        organizations_contact_requests_receiverOrgIdToorganizations: {
           select: {
             id: true,
             name: true,

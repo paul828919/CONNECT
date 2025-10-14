@@ -1,0 +1,55 @@
+
+> connect-platform@1.0.0 type-check
+> tsc --noEmit
+
+app/api/matches/generate/route.ts(162,13): error TS2322: Type 'MatchExplanation' is not assignable to type 'JsonNull | InputJsonValue'.
+  Type 'MatchExplanation' is not assignable to type 'InputJsonObject'.
+    Index signature for type 'string' is missing in type 'MatchExplanation'.
+app/api/partners/[id]/route.ts(62,13): error TS2353: Object literal may only specify known properties, and 'matches' does not exist in type 'OrganizationsCountOutputTypeSelect<DefaultArgs>'.
+app/dashboard/admin/scraping/page.tsx(155,43): error TS2554: Expected 1-2 arguments, but got 0.
+lib/ai/client.ts(409,32): error TS2339: Property 'content' does not exist on type '(Stream<RawMessageStreamEvent> & { _request_id?: string | null | undefined; }) | (Message & { _request_id?: string | null | undefined; })'.
+  Property 'content' does not exist on type 'Stream<RawMessageStreamEvent> & { _request_id?: string | null | undefined; }'.
+lib/ai/client.ts(410,18): error TS7006: Parameter 'block' implicitly has an 'any' type.
+lib/ai/client.ts(411,15): error TS7006: Parameter 'block' implicitly has an 'any' type.
+lib/ai/client.ts(415,36): error TS2339: Property 'usage' does not exist on type '(Stream<RawMessageStreamEvent> & { _request_id?: string | null | undefined; }) | (Message & { _request_id?: string | null | undefined; })'.
+  Property 'usage' does not exist on type 'Stream<RawMessageStreamEvent> & { _request_id?: string | null | undefined; }'.
+lib/ai/client.ts(416,37): error TS2339: Property 'usage' does not exist on type '(Stream<RawMessageStreamEvent> & { _request_id?: string | null | undefined; }) | (Message & { _request_id?: string | null | undefined; })'.
+  Property 'usage' does not exist on type 'Stream<RawMessageStreamEvent> & { _request_id?: string | null | undefined; }'.
+lib/ai/client.ts(464,32): error TS2339: Property 'stop_reason' does not exist on type '(Stream<RawMessageStreamEvent> & { _request_id?: string | null | undefined; }) | (Message & { _request_id?: string | null | undefined; })'.
+  Property 'stop_reason' does not exist on type 'Stream<RawMessageStreamEvent> & { _request_id?: string | null | undefined; }'.
+lib/ai/client.ts(476,25): error TS2339: Property 'model' does not exist on type '(Stream<RawMessageStreamEvent> & { _request_id?: string | null | undefined; }) | (Message & { _request_id?: string | null | undefined; })'.
+  Property 'model' does not exist on type 'Stream<RawMessageStreamEvent> & { _request_id?: string | null | undefined; }'.
+lib/ai/client.ts(477,30): error TS2339: Property 'stop_reason' does not exist on type '(Stream<RawMessageStreamEvent> & { _request_id?: string | null | undefined; }) | (Message & { _request_id?: string | null | undefined; })'.
+  Property 'stop_reason' does not exist on type 'Stream<RawMessageStreamEvent> & { _request_id?: string | null | undefined; }'.
+lib/ai/monitoring/cost-logger.ts(129,12): error TS2790: The operand of a 'delete' operator must be optional.
+lib/ai/monitoring/cost-logger.ts(139,5): error TS2739: Type 'Record<string, { count: number; cost: number; totalDuration: number; averageDuration?: number | undefined; }>' is missing the following properties from type 'Record<AIServiceType, { count: number; cost: number; averageDuration: number; }>': MATCH_EXPLANATION, QA_CHAT
+lib/ai/services/match-explanation.ts(183,7): error TS2353: Object literal may only specify known properties, and 'overallExplanation' does not exist in type 'ParsedMatchExplanation'.
+lib/ai/services/qa-chat.ts(113,7): error TS2322: Type '{ role: string; content: string; }[]' is not assignable to type '{ role: "user" | "assistant"; content: string; }[]'.
+  Type '{ role: string; content: string; }' is not assignable to type '{ role: "user" | "assistant"; content: string; }'.
+    Types of property 'role' are incompatible.
+      Type 'string' is not assignable to type '"user" | "assistant"'.
+lib/matching/taxonomy.ts(354,50): error TS7006: Parameter 'k' implicitly has an 'any' type.
+lib/matching/taxonomy.ts(355,28): error TS7006: Parameter 'k' implicitly has an 'any' type.
+lib/matching/taxonomy.ts(374,50): error TS7006: Parameter 'k' implicitly has an 'any' type.
+lib/matching/taxonomy.ts(375,28): error TS7006: Parameter 'k' implicitly has an 'any' type.
+lib/scraping/worker.ts(152,17): error TS2322: Type 'string[]' is not assignable to type 'OrganizationType[] | funding_programsCreatetargetTypeInput | undefined'.
+  Type 'string[]' is not assignable to type 'OrganizationType[]'.
+    Type 'string' is not assignable to type 'OrganizationType'.
+lib/scraping/worker.ts(436,11): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'Without<funding_matchesCreateInput, funding_matchesUncheckedCreateInput> & funding_matchesUncheckedCreateInput'.
+scripts/debug-selectors.ts(22,18): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ iitp: AgencyConfig; keit: AgencyConfig; tipa: AgencyConfig; kimst: AgencyConfig; }'.
+  No index signature with a parameter of type 'string' was found on type '{ iitp: AgencyConfig; keit: AgencyConfig; tipa: AgencyConfig; kimst: AgencyConfig; }'.
+scripts/load-test-ai-features.ts(228,17): error TS7022: 'response' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+scripts/load-test-ai-features.ts(241,17): error TS7022: 'data' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+scripts/test-email-delivery.ts(77,9): error TS2554: Expected 2 arguments, but got 5.
+scripts/test-email-delivery.ts(100,13): error TS2554: Expected 3 arguments, but got 2.
+scripts/test-email-delivery.ts(129,17): error TS2353: Object literal may only specify known properties, and 'totalScore' does not exist in type 'Without<funding_matchesCreateInput, funding_matchesUncheckedCreateInput> & funding_matchesUncheckedCreateInput'.
+scripts/test-temperature-optimization.ts(171,5): error TS2322: Type '{ role: string; content: string; }[]' is not assignable to type '{ role: "user" | "assistant"; content: string; }[]'.
+  Type '{ role: string; content: string; }' is not assignable to type '{ role: "user" | "assistant"; content: string; }'.
+    Types of property 'role' are incompatible.
+      Type 'string' is not assignable to type '"user" | "assistant"'.
+scripts/trigger-scraping.ts(28,20): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ iitp: AgencyConfig; keit: AgencyConfig; tipa: AgencyConfig; kimst: AgencyConfig; }'.
+  No index signature with a parameter of type 'string' was found on type '{ iitp: AgencyConfig; keit: AgencyConfig; tipa: AgencyConfig; kimst: AgencyConfig; }'.
+scripts/validate-korean-quality.ts(430,7): error TS2322: Type '{ role: string; content: string; }[]' is not assignable to type '{ role: "user" | "assistant"; content: string; }[]'.
+  Type '{ role: string; content: string; }' is not assignable to type '{ role: "user" | "assistant"; content: string; }'.
+    Types of property 'role' are incompatible.
+      Type 'string' is not assignable to type '"user" | "assistant"'.

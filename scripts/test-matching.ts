@@ -11,7 +11,7 @@ async function main() {
   console.log('\n🧪 Testing Matching Algorithm...\n');
 
   // Fetch an organization
-  const org = await prisma.organization.findFirst({
+  const org = await prisma.organizations.findFirst({
     where: { type: OrganizationType.COMPANY },
   });
 
@@ -21,7 +21,7 @@ async function main() {
   }
 
   // Fetch active programs
-  const programs = await prisma.fundingProgram.findMany({
+  const programs = await prisma.funding_programs.findMany({
     where: { status: 'ACTIVE' },
   });
 

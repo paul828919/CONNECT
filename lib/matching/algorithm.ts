@@ -17,9 +17,13 @@
  * - Technology keyword matching for research institutes
  */
 
-import { Organization, FundingProgram, ProgramStatus, EmployeeCountRange } from '@prisma/client';
+import { organizations, funding_programs, ProgramStatus, EmployeeCountRange } from '@prisma/client';
 import { scoreIndustryKeywordsEnhanced } from './keywords';
 import { scoreTRLEnhanced } from './trl';
+
+// Type aliases for cleaner code
+type Organization = organizations;
+type FundingProgram = funding_programs;
 
 export interface MatchScore {
   programId: string;

@@ -12,12 +12,11 @@
 
 import { NextAuthOptions } from 'next-auth';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(db),
   providers: [
     {
       id: 'kakao',
@@ -157,7 +156,7 @@ export const authOptions: NextAuthOptions = {
 
       // On session update (e.g., after creating organization), refresh user data
       if (trigger === 'update' && token.userId) {
-        const updatedUser = await prisma.user.findUnique({
+        const updatedUser = await db.user.findUnique({
           where: { id: token.userId as string },
           select: { id: true, role: true, organizationId: true },
         });

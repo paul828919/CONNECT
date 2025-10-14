@@ -4,10 +4,8 @@
  * Common utilities for testing authentication and database operations
  */
 
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 import { encrypt, hashBusinessNumber } from '@/lib/encryption';
-
-const prisma = new PrismaClient();
 
 /**
  * Create a test user in the database
@@ -17,11 +15,15 @@ export async function createTestUser(data?: {
   email?: string;
   role?: string;
 }) {
-  const user = await prisma.user.create({
+  const { createId } = await import('@paralleldrive/cuid2');
+  const user = await db.users.create({
     data: {
+      id: createId(),
       name: data?.name || 'Test User',
       email: data?.email || `test-${Date.now()}@example.com`,
       role: (data?.role as any) || 'USER',
+      createdAt: new Date(),
+      updatedAt: new Date(),
     },
   });
 
@@ -37,10 +39,12 @@ export async function createTestOrganization(data?: {
   businessNumber?: string;
   userId?: string;
 }) {
+  const { createId } = await import('@paralleldrive/cuid2');
   const businessNumber = data?.businessNumber || '123-45-67890';
 
-  const organization = await prisma.organization.create({
+  const organization = await db.organizations.create({
     data: {
+      id: createId(),
       type: (data?.type as any) || 'COMPANY',
       name: data?.name || 'Test Company',
       businessNumberEncrypted: encrypt(businessNumber),
@@ -51,6 +55,8 @@ export async function createTestOrganization(data?: {
       profileCompleted: true,
       profileScore: 80,
       status: 'ACTIVE',
+      createdAt: new Date(),
+      updatedAt: new Date(),
       ...(data?.userId && {
         users: {
           connect: { id: data.userId },
@@ -67,9 +73,9 @@ export async function createTestOrganization(data?: {
  */
 export async function cleanupTestData() {
   // Delete in order to avoid foreign key constraints
-  await prisma.matchNotification.deleteMany({
+  await db.match_notifications.deleteMany({
     where: {
-      user: {
+      users: {
         email: {
           contains: 'test-',
         },
@@ -77,9 +83,9 @@ export async function cleanupTestData() {
     },
   });
 
-  await prisma.fundingMatch.deleteMany({
+  await db.funding_matches.deleteMany({
     where: {
-      organization: {
+      organizations: {
         name: {
           contains: 'Test',
         },
@@ -87,9 +93,9 @@ export async function cleanupTestData() {
     },
   });
 
-  await prisma.auditLog.deleteMany({
+  await db.audit_logs.deleteMany({
     where: {
-      user: {
+      users: {
         email: {
           contains: 'test-',
         },
@@ -97,10 +103,10 @@ export async function cleanupTestData() {
     },
   });
 
-  await prisma.payment.deleteMany({
+  await db.payments.deleteMany({
     where: {
-      subscription: {
-        user: {
+      subscriptions: {
+        users: {
           email: {
             contains: 'test-',
           },
@@ -109,9 +115,9 @@ export async function cleanupTestData() {
     },
   });
 
-  await prisma.subscription.deleteMany({
+  await db.subscriptions.deleteMany({
     where: {
-      user: {
+      users: {
         email: {
           contains: 'test-',
         },
@@ -119,9 +125,9 @@ export async function cleanupTestData() {
     },
   });
 
-  await prisma.session.deleteMany({
+  await db.sessions.deleteMany({
     where: {
-      user: {
+      users: {
         email: {
           contains: 'test-',
         },
@@ -129,9 +135,9 @@ export async function cleanupTestData() {
     },
   });
 
-  await prisma.account.deleteMany({
+  await db.accounts.deleteMany({
     where: {
-      user: {
+      users: {
         email: {
           contains: 'test-',
         },
@@ -139,7 +145,7 @@ export async function cleanupTestData() {
     },
   });
 
-  await prisma.organization.deleteMany({
+  await db.organizations.deleteMany({
     where: {
       name: {
         contains: 'Test',
@@ -147,7 +153,7 @@ export async function cleanupTestData() {
     },
   });
 
-  await prisma.user.deleteMany({
+  await db.users.deleteMany({
     where: {
       email: {
         contains: 'test-',

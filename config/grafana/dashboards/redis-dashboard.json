@@ -1,0 +1,101 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "redis-monitoring",
+    "title": "Redis - Cache & Queue",
+    "tags": ["redis", "cache", "queue", "connect"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "type": "stat",
+        "title": "Redis Cache - Connected Clients",
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": {"type": "redis-datasource", "uid": "cf11imefcuy2oa"},
+            "query": "INFO clients",
+            "command": "info"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "type": "stat",
+        "title": "Redis Cache - Memory Usage",
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": {"type": "redis-datasource", "uid": "cf11imefcuy2oa"},
+            "query": "INFO memory",
+            "command": "info"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "type": "stat",
+        "title": "Redis Queue - Connected Clients",
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": {"type": "redis-datasource", "uid": "ef11imi291edcf"},
+            "query": "INFO clients",
+            "command": "info"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "type": "stat",
+        "title": "Redis Queue - Memory Usage",
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": {"type": "redis-datasource", "uid": "ef11imi291edcf"},
+            "query": "INFO memory",
+            "command": "info"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "type": "graph",
+        "title": "Redis Cache - Commands/sec",
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": {"type": "redis-datasource", "uid": "cf11imefcuy2oa"},
+            "query": "INFO stats",
+            "command": "info"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "type": "graph",
+        "title": "Redis Queue - Commands/sec",
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": {"type": "redis-datasource", "uid": "ef11imi291edcf"},
+            "query": "INFO stats",
+            "command": "info"
+          }
+        ]
+      }
+    ]
+  },
+  "overwrite": true,
+  "folderId": 0
+}
+

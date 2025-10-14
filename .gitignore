@@ -9,6 +9,10 @@
 # testing
 /coverage
 
+# playwright authentication state (contains real session tokens)
+.playwright/
+.playwright/*.json
+
 # next.js
 /.next/
 /out/

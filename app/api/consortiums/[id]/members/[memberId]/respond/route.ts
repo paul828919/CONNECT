@@ -7,9 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 export async function POST(
   request: NextRequest,
@@ -25,7 +24,7 @@ export async function POST(
     const { id: consortiumId, memberId } = params;
 
     // Get user's organization
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });
@@ -38,19 +37,19 @@ export async function POST(
     }
 
     // Fetch the member invitation
-    const member = await prisma.consortiumMember.findUnique({
+    const member = await db.consortium_members.findUnique({
       where: { id: memberId },
       include: {
-        consortium: {
+        consortium_projects: {
           select: {
             id: true,
             name: true,
-            leadOrganization: {
+            organizations: {
               select: { name: true },
             },
           },
         },
-        organization: {
+        organizations: {
           select: { name: true },
         },
       },
@@ -98,7 +97,7 @@ export async function POST(
     }
 
     // Update member status
-    const updatedMember = await prisma.consortiumMember.update({
+    const updatedMember = await db.consortium_members.update({
       where: { id: memberId },
       data: {
         status: action === 'accept' ? 'ACCEPTED' : 'DECLINED',
@@ -106,13 +105,13 @@ export async function POST(
         respondedAt: new Date(),
       },
       include: {
-        consortium: {
+        consortium_projects: {
           select: {
             id: true,
             name: true,
           },
         },
-        organization: {
+        organizations: {
           select: {
             id: true,
             name: true,

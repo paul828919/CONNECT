@@ -180,23 +180,14 @@ export async function generateMatchExplanation(
 
     // Parse fallback content into expected format
     const fallbackExplanation: ParsedMatchExplanation = {
-      overallExplanation: fallback.korean,
-      strengths: [
+      summary: fallback.korean,
+      reasons: [
         '귀사의 사업 분야와 과제의 목적이 일치합니다',
         '과제 요구사항과 귀사의 역량이 부합합니다',
         '매칭 점수가 지원 기준을 충족합니다',
       ],
-      concerns: [
-        'AI 서비스 일시 중단으로 상세 분석을 제공할 수 없습니다',
-        '과제 공고문을 직접 검토하여 세부 요건을 확인하세요',
-      ],
-      nextSteps: [
-        '과제 공고문 상세 검토 (지원 자격, TRL 요구사항)',
-        '필요한 인증 및 서류 준비',
-        '신청 마감일 확인 및 일정 계획',
-      ],
-      tags: ['기본 매칭', 'AI 일시 중단', '재시도 권장'],
-      confidence: 'medium',
+      cautions: 'AI 서비스 일시 중단으로 상세 분석을 제공할 수 없습니다. 과제 공고문을 직접 검토하여 세부 요건을 확인하세요.',
+      recommendation: '과제 공고문 상세 검토 (지원 자격, TRL 요구사항) 후 필요한 인증 및 서류를 준비하고 신청 마감일을 확인하세요.',
     };
 
     const responseTime = Date.now() - startTime;

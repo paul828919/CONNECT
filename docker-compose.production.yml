@@ -40,7 +40,7 @@ services:
 
       # Redis
       REDIS_CACHE_URL: redis://redis-cache:6379/0
-      REDIS_QUEUE_URL: redis://redis-queue:6380/0
+      REDIS_QUEUE_URL: redis://redis-queue:6379/0
 
       # Auth
       JWT_SECRET: ${JWT_SECRET}
@@ -59,6 +59,9 @@ services:
 
       # Encryption (PIPA Compliance)
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+
+      # NTIS API
+      NTIS_API_KEY: ${NTIS_API_KEY}
 
       # Monitoring
       SENTRY_DSN: ${SENTRY_DSN}
@@ -118,7 +121,7 @@ services:
       INSTANCE_ID: app2
       DATABASE_URL: postgresql://connect:${DB_PASSWORD}@postgres:5432/connect?schema=public&pool_timeout=30&connection_limit=50
       REDIS_CACHE_URL: redis://redis-cache:6379/0
-      REDIS_QUEUE_URL: redis://redis-queue:6380/0
+      REDIS_QUEUE_URL: redis://redis-queue:6379/0
       JWT_SECRET: ${JWT_SECRET}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NEXTAUTH_URL: ${NEXTAUTH_URL}
@@ -129,6 +132,7 @@ services:
       TOSS_CLIENT_KEY: ${TOSS_CLIENT_KEY}
       TOSS_SECRET_KEY: ${TOSS_SECRET_KEY}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      NTIS_API_KEY: ${NTIS_API_KEY}
       SENTRY_DSN: ${SENTRY_DSN}
       NODE_OPTIONS: "--max-old-space-size=8192"
       UV_THREADPOOL_SIZE: 16
@@ -334,7 +338,9 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://connect:${DB_PASSWORD}@postgres:5432/connect?schema=public
-      REDIS_QUEUE_URL: redis://redis-queue:6380/0
+      REDIS_QUEUE_URL: redis://redis-queue:6379/0
+      REDIS_QUEUE_HOST: redis-queue
+      REDIS_QUEUE_PORT: 6379
 
       # Scraping configuration
       SCRAPER_CONCURRENCY: 2
@@ -346,6 +352,9 @@ services:
       KEIT_URL: https://www.keit.re.kr
       TIPA_URL: https://www.tipa.or.kr
       KIMST_URL: https://www.kimst.re.kr
+
+      # NTIS API
+      NTIS_API_KEY: ${NTIS_API_KEY}
 
       # Rate limiting
       RATE_LIMIT_PER_MINUTE: 10
@@ -381,16 +390,25 @@ services:
     image: grafana/grafana:latest
     container_name: connect_grafana
     restart: unless-stopped
+    user: "472"
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: false
       GF_SERVER_ROOT_URL: http://localhost:3100
       GF_INSTALL_PLUGINS: redis-datasource
+      
+      # SMTP Configuration for Email Alerts
+      GF_SMTP_ENABLED: ${SMTP_ENABLED:-false}
+      GF_SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com:587}
+      GF_SMTP_USER: ${SMTP_USER:-}
+      GF_SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      GF_SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS:-alerts@connectplt.kr}
+      GF_SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Connect Platform Alerts}
+      GF_SMTP_SKIP_VERIFY: ${SMTP_SKIP_VERIFY:-false}
     volumes:
       - ./data/grafana:/var/lib/grafana
       - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
     networks:
       connect_net:
         ipv4_address: 172.25.0.70

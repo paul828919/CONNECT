@@ -5,14 +5,14 @@
  * Fetches R&D programs and saves them to the database
  */
 
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
+import { AgencyId } from '@prisma/client';
 import { NTISApiClient } from './client';
 import { NTISXmlParser } from './parser';
 import { ntisApiConfig, agencySearchConfigs, defaultSearchParams } from './config';
 import { NTISProgram } from './types';
 import { generateProgramHash } from '../scraping/utils';
 
-const prisma = new PrismaClient();
 
 export class NTISApiScraper {
   private client: NTISApiClient;
@@ -145,7 +145,7 @@ export class NTISApiScraper {
       });
 
       // Check if program exists
-      const existing = await prisma.fundingProgram.findFirst({
+      const existing = await db.funding_programs.findFirst({
         where: { contentHash },
       });
 
@@ -160,9 +160,9 @@ export class NTISApiScraper {
 
       if (!existing) {
         // Create new program
-        await prisma.fundingProgram.create({
+        await db.funding_programs.create({
           data: {
-            agencyId,
+            agencyId: agencyId as AgencyId,
             title: program.titleKorean || program.titleEnglish || 'Untitled',
             description: this.buildDescription(program),
             announcementUrl: `https://www.ntis.go.kr/project/${program.projectNumber}`,
@@ -182,7 +182,7 @@ export class NTISApiScraper {
         return 'new';
       } else {
         // Update existing program
-        await prisma.fundingProgram.update({
+        await db.funding_programs.update({
           where: { id: existing.id },
           data: {
             scrapedAt: new Date(),

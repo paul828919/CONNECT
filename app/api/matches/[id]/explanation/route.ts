@@ -18,10 +18,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
 import { PrismaClient } from '@prisma/client';
+
+// Direct Prisma Client instantiation (bypasses lib/db module resolution issue)
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+};
+
+const db = globalForPrisma.prisma ?? new PrismaClient({
+  log: ['error'],
+});
+
+if (!globalForPrisma.prisma) {
+  globalForPrisma.prisma = db;
+}
 import { generateMatchExplanation } from '@/lib/ai/services/match-explanation';
 import type { MatchExplanationInput } from '@/lib/ai/prompts/match-explanation';
 
-const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,
@@ -41,7 +53,7 @@ export async function GET(
     const matchId = params.id;
 
     // 2. Fetch match with related data
-    const match = await prisma.funding_matches.findUnique({
+    const match = await db.funding_matches.findUnique({
       where: { id: matchId },
       include: {
         organizations: true,
@@ -57,7 +69,7 @@ export async function GET(
     }
 
     // 3. Verify user owns this match
-    const userOrg = await prisma.users.findFirst({
+    const userOrg = await db.users.findFirst({
       where: {
         id: userId,
         organizationId: match.organizationId,
@@ -120,7 +132,7 @@ export async function GET(
     const result = await generateMatchExplanation(input);
 
     // 6. Update match record with viewed status
-    await prisma.funding_matches.update({
+    await db.funding_matches.update({
       where: { id: matchId },
       data: {
         viewed: true,
@@ -184,9 +196,9 @@ export async function GET(
       },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
+  // NOTE: Do NOT call db.$disconnect() in Next.js API routes
+  // It breaks connection pooling and causes subsequent requests to fail
 }
 
 // Helper functions

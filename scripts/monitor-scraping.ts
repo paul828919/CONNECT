@@ -15,21 +15,21 @@ async function monitorScraping() {
 
   try {
     // Get program counts by agency
-    const programsByAgency = await prisma.fundingProgram.groupBy({
+    const programsByAgency = await prisma.funding_programs.groupBy({
       by: ['agencyId'],
       _count: true,
     });
 
     // Get total programs
-    const totalPrograms = await prisma.fundingProgram.count();
+    const totalPrograms = await prisma.funding_programs.count();
     
     // Get total matches
-    const totalMatches = await prisma.fundingMatch.count();
+    const totalMatches = await prisma.funding_matches.count();
 
     // Get recent programs (last 24 hours)
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const recentPrograms = await prisma.fundingProgram.count({
+    const recentPrograms = await prisma.funding_programs.count({
       where: {
         createdAt: {
           gte: yesterday,
@@ -58,7 +58,7 @@ async function monitorScraping() {
     }
 
     // Get latest 5 programs
-    const latestPrograms = await prisma.fundingProgram.findMany({
+    const latestPrograms = await prisma.funding_programs.findMany({
       take: 5,
       orderBy: {
         createdAt: 'desc',

@@ -573,8 +573,8 @@ export default function HomePage() {
               © 2025 Connect. All rights reserved.
             </div>
             <div className="flex gap-6 mt-4 md:mt-0">
-              <a href="#" className="hover:text-white transition-colors">개인정보처리방침</a>
-              <a href="#" className="hover:text-white transition-colors">이용약관</a>
+              <Link href="/privacy" className="hover:text-white transition-colors">개인정보처리방침</Link>
+              <Link href="/terms" className="hover:text-white transition-colors">이용약관</Link>
             </div>
           </div>
         </div>

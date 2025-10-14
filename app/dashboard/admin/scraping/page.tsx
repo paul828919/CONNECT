@@ -152,7 +152,7 @@ export default function AdminScrapingDashboard() {
           ))}
 
           <Button
-            onClick={() => scrapeMutation.mutate()}
+            onClick={() => scrapeMutation.mutate(undefined)}
             disabled={scrapeMutation.isPending}
             variant="default"
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600"

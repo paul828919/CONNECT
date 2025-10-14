@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { db } from '@/lib/db';
 import { sendEmail } from '@/lib/email/utils';
-import { emailConfig } from '@/lib/email/config';
+import { emailConfig, emailBaseUrl } from '@/lib/email/config';
 import { nanoid } from 'nanoid';
 
 export const runtime = 'nodejs';
@@ -346,7 +346,7 @@ async function sendAdminNotificationEmail(params: {
         <div class="field-value">${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })} KST</div>
       </div>
 
-      <a href="${emailConfig.baseUrl}/dashboard/admin/feedback?id=${feedbackId}" class="cta">
+      <a href="${emailBaseUrl}/dashboard/admin/feedback?id=${feedbackId}" class="cta">
         View in Admin Dashboard
       </a>
     </div>

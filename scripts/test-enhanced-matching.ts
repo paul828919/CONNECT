@@ -21,7 +21,7 @@ async function main() {
   console.log('');
 
   // 1. Fetch test organizations
-  const organizations = await prisma.organization.findMany({
+  const organizations = await prisma.organizations.findMany({
     where: { status: 'ACTIVE' },
   });
 
@@ -29,7 +29,7 @@ async function main() {
   console.log('');
 
   // 2. Fetch active funding programs
-  const programs = await prisma.fundingProgram.findMany({
+  const programs = await prisma.funding_programs.findMany({
     where: {
       status: 'ACTIVE',
       deadline: { gte: new Date() }, // Only future deadlines

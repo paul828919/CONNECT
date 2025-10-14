@@ -23,7 +23,7 @@ async function verifyMVP() {
 
   // 2. Funding Programs
   try {
-    const programs = await prisma.fundingProgram.count();
+    const programs = await prisma.funding_programs.count();
     if (programs >= 8) {
       console.log(`✅ Funding programs seeded: ${programs} programs`);
     } else {
@@ -37,7 +37,7 @@ async function verifyMVP() {
 
   // 3. Organizations
   try {
-    const orgs = await prisma.organization.count();
+    const orgs = await prisma.organizations.count();
     console.log(`✅ Organizations in database: ${orgs}`);
   } catch (error) {
     console.log('❌ Failed to fetch organizations');
@@ -47,8 +47,8 @@ async function verifyMVP() {
   // 4. Check Matching Algorithm
   try {
     const { generateMatches } = await import('../lib/matching/algorithm');
-    const org = await prisma.organization.findFirst();
-    const programs = await prisma.fundingProgram.findMany({ take: 5 });
+    const org = await prisma.organizations.findFirst();
+    const programs = await prisma.funding_programs.findMany({ take: 5 });
 
     if (org && programs.length > 0) {
       const matches = generateMatches(org, programs, 3);

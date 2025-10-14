@@ -10,10 +10,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient, OrganizationType } from '@prisma/client';
+import { db } from '@/lib/db';
+import { OrganizationType } from '@prisma/client';
 import { findIndustrySector, normalizeKoreanKeyword } from '@/lib/matching/taxonomy';
 
-const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const userId = (session.user as any).id;
 
     // Get user's organization to exclude from search
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
 
     const [organizations, total] = await Promise.all([
-      prisma.organization.findMany({
+      db.organizations.findMany({
         where,
         select: {
           id: true,
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
           { name: 'asc' },
         ],
       }),
-      prisma.organization.count({ where }),
+      db.organizations.count({ where }),
     ]);
 
     return NextResponse.json({

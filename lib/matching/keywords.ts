@@ -9,7 +9,7 @@
  * - Cross-industry relevance scoring
  */
 
-import { Organization, FundingProgram } from '@prisma/client';
+import { organizations, funding_programs } from '@prisma/client';
 import {
   findIndustrySector,
   findSubSector,
@@ -19,6 +19,10 @@ import {
   matchTechnologyKeyword,
   INDUSTRY_TAXONOMY,
 } from './taxonomy';
+
+// Type aliases for cleaner code
+type Organization = organizations;
+type FundingProgram = funding_programs;
 
 export interface KeywordMatchResult {
   score: number; // 0-30 points

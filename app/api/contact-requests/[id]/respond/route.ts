@@ -7,9 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 export async function POST(
   request: NextRequest,
@@ -25,7 +24,7 @@ export async function POST(
     const requestId = params.id;
 
     // Get user's organization
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });
@@ -48,11 +47,11 @@ export async function POST(
     }
 
     // Fetch the contact request
-    const contactRequest = await prisma.contactRequest.findUnique({
+    const contactRequest = await db.contact_requests.findUnique({
       where: { id: requestId },
       include: {
-        senderOrg: { select: { name: true } },
-        receiverOrg: { select: { name: true } },
+        organizations_contact_requests_senderOrgIdToorganizations: { select: { name: true } },
+        organizations_contact_requests_receiverOrgIdToorganizations: { select: { name: true } },
       },
     });
 
@@ -80,7 +79,7 @@ export async function POST(
     }
 
     // Update the contact request
-    const updatedRequest = await prisma.contactRequest.update({
+    const updatedRequest = await db.contact_requests.update({
       where: { id: requestId },
       data: {
         status: action === 'accept' ? 'ACCEPTED' : 'DECLINED',
@@ -88,13 +87,13 @@ export async function POST(
         respondedAt: new Date(),
       },
       include: {
-        sender: {
+        users: {
           select: { name: true, email: true },
         },
-        senderOrg: {
+        organizations_contact_requests_senderOrgIdToorganizations: {
           select: { name: true, type: true, logoUrl: true },
         },
-        receiverOrg: {
+        organizations_contact_requests_receiverOrgIdToorganizations: {
           select: { name: true, type: true, logoUrl: true },
         },
       },

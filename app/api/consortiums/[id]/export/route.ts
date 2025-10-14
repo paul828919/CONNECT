@@ -8,9 +8,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,
@@ -26,7 +25,7 @@ export async function GET(
     const consortiumId = params.id;
 
     // Get user's organization
-    const user = await prisma.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });
@@ -39,10 +38,10 @@ export async function GET(
     }
 
     // Fetch consortium with all details
-    const consortium = await prisma.consortiumProject.findUnique({
+    const consortium = await db.consortium_projects.findUnique({
       where: { id: consortiumId },
       include: {
-        leadOrganization: {
+        organizations: {
           select: {
             id: true,
             name: true,
@@ -56,13 +55,13 @@ export async function GET(
             address: true,
           },
         },
-        createdBy: {
+        users: {
           select: {
             name: true,
             email: true,
           },
         },
-        targetProgram: {
+        funding_programs: {
           select: {
             id: true,
             agencyId: true,
@@ -72,12 +71,12 @@ export async function GET(
             announcementUrl: true,
           },
         },
-        members: {
+        consortium_members: {
           where: {
             status: 'ACCEPTED', // Only include accepted members
           },
           include: {
-            organization: {
+            organizations: {
               select: {
                 id: true,
                 name: true,
@@ -111,7 +110,7 @@ export async function GET(
     }
 
     // Verify user's organization is a member
-    const isMember = consortium.members.some(
+    const isMember = consortium.consortium_members.some(
       (m) => m.organizationId === user.organizationId
     );
 
@@ -128,13 +127,13 @@ export async function GET(
     // Calculate budget summary
     const budgetSummary = {
       total: consortium.totalBudget ? Number(consortium.totalBudget) : 0,
-      allocated: consortium.members.reduce(
-        (sum, m) => sum + (m.budgetShare ? Number(m.budgetShare) : 0),
+      allocated: consortium.consortium_members.reduce(
+        (sum: number, m: any) => sum + (m.budgetShare ? Number(m.budgetShare) : 0),
         0
       ),
       unallocated: 0,
-      breakdown: consortium.members.map((m) => ({
-        organization: m.organization.name,
+      breakdown: consortium.consortium_members.map((m: any) => ({
+        organization: m.organizations.name,
         role: m.role,
         amount: m.budgetShare ? Number(m.budgetShare) : 0,
         percent: m.budgetPercent || 0,
@@ -156,47 +155,47 @@ export async function GET(
       },
 
       // Target Program Info
-      targetProgram: consortium.targetProgram
+      targetProgram: consortium.funding_programs
         ? {
-            agency: consortium.targetProgram.agencyId,
-            title: consortium.targetProgram.title,
-            deadline: consortium.targetProgram.deadline,
-            budget: consortium.targetProgram.budgetAmount
-              ? Number(consortium.targetProgram.budgetAmount)
+            agency: consortium.funding_programs.agencyId,
+            title: consortium.funding_programs.title,
+            deadline: consortium.funding_programs.deadline,
+            budget: consortium.funding_programs.budgetAmount
+              ? Number(consortium.funding_programs.budgetAmount)
               : null,
-            url: consortium.targetProgram.announcementUrl,
+            url: consortium.funding_programs.announcementUrl,
           }
         : null,
 
       // Lead Organization
       leadOrganization: {
-        name: consortium.leadOrganization.name,
-        type: consortium.leadOrganization.type,
-        industry: consortium.leadOrganization.industrySector,
+        name: consortium.organizations.name,
+        type: consortium.organizations.type,
+        industry: consortium.organizations.industrySector,
         contact: {
-          name: consortium.leadOrganization.primaryContactName,
-          email: consortium.leadOrganization.primaryContactEmail,
-          phone: consortium.leadOrganization.primaryContactPhone,
+          name: consortium.organizations.primaryContactName,
+          email: consortium.organizations.primaryContactEmail,
+          phone: consortium.organizations.primaryContactPhone,
         },
-        address: consortium.leadOrganization.address,
+        address: consortium.organizations.address,
       },
 
       // Member Organizations
-      members: consortium.members.map((m) => ({
+      members: consortium.consortium_members.map((m: any) => ({
         organization: {
-          name: m.organization.name,
-          type: m.organization.type,
-          industry: m.organization.industrySector,
-          employeeCount: m.organization.employeeCount,
-          trl: m.organization.technologyReadinessLevel,
-          rdExperience: m.organization.rdExperience,
-          researchFocus: m.organization.researchFocusAreas,
+          name: m.organizations.name,
+          type: m.organizations.type,
+          industry: m.organizations.industrySector,
+          employeeCount: m.organizations.employeeCount,
+          trl: m.organizations.technologyReadinessLevel,
+          rdExperience: m.organizations.rdExperience,
+          researchFocus: m.organizations.researchFocusAreas,
           contact: {
-            name: m.organization.primaryContactName,
-            email: m.organization.primaryContactEmail,
-            phone: m.organization.primaryContactPhone,
+            name: m.organizations.primaryContactName,
+            email: m.organizations.primaryContactEmail,
+            phone: m.organizations.primaryContactPhone,
           },
-          address: m.organization.address,
+          address: m.organizations.address,
         },
         role: m.role,
         responsibilities: m.responsibilities,
@@ -223,7 +222,7 @@ export async function GET(
           name: session.user.name,
           email: session.user.email,
         },
-        memberCount: consortium.members.length,
+        memberCount: consortium.consortium_members.length,
       },
     };
 
