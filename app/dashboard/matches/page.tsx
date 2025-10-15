@@ -166,7 +166,7 @@ export default function MatchesPage() {
               아직 매칭 결과가 없습니다
             </h3>
             <p className="text-gray-600 mb-6">
-              대시보드에서 "매칭 생성하기"를 클릭하여 적합한 프로그램을 찾아보세요.
+              대시보드에서 &quot;매칭 생성하기&quot;를 클릭하여 적합한 프로그램을 찾아보세요.
             </p>
             <Link
               href="/dashboard"

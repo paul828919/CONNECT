@@ -40,7 +40,7 @@ function SignInContent() {
             한국 R&D 생태계 매칭 플랫폼
           </p>
           <p className="mt-1 text-sm text-gray-500">
-            Korea's Innovation Ecosystem Matching Platform
+            Korea&apos;s Innovation Ecosystem Matching Platform
           </p>
         </div>
 
