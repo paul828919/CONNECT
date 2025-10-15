@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Get user's organization for company context
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       include: {
         organizations: true,

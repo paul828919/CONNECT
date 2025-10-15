@@ -29,7 +29,7 @@ const defaultNotificationSettings = {
  * Get user notification settings
  */
 async function getUserNotificationSettings(userId: string) {
-  const user = await db.users.findUnique({
+  const user = await db.user.findUnique({
     where: { id: userId },
     select: { notificationSettings: true },
   });
@@ -61,7 +61,7 @@ export async function sendNewMatchNotification(
     }
 
     // 2. Fetch user data
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       include: {
         organizations: {
@@ -122,7 +122,7 @@ export async function sendNewMatchNotification(
 
     if (success) {
       // Update last notification time
-      await db.users.update({
+      await db.user.update({
         where: { id: userId },
         data: {
           lastNotificationSentAt: new Date(),
@@ -155,7 +155,7 @@ export async function sendDeadlineReminder(
     }
 
     // 2. Fetch user and match data
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       include: {
         organizations: {
@@ -226,7 +226,7 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
     }
 
     // 2. Fetch user data
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       include: {
         organizations: {
@@ -380,7 +380,7 @@ export async function sendWeeklyDigestToAll(): Promise<{
   failed: number;
 }> {
   try {
-    const users = await db.users.findMany({
+    const users = await db.user.findMany({
       where: {
         email: { not: null },
         organizations: { isNot: null },

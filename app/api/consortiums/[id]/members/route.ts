@@ -49,7 +49,7 @@ export async function POST(
     }
 
     // Get user's organization
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });

@@ -222,7 +222,7 @@ export async function getTopUsersByCost(
       },
     },
     include: {
-      users: {
+      user: {
         select: {
           name: true,
           email: true,
@@ -248,8 +248,8 @@ export async function getTopUsersByCost(
         userId: log.userId,
         totalCost: 0,
         totalRequests: 0,
-        userName: log.users?.name ?? undefined,
-        userEmail: log.users?.email ?? undefined,
+        userName: log.user?.name ?? undefined,
+        userEmail: log.user?.email ?? undefined,
       };
     }
     byUser[log.userId].totalCost += log.costKRW;

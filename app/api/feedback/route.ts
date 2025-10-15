@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
     // Get organization ID if user is logged in
     let organizationId: string | null = null;
     if (userId) {
-      const user = await db.users.findUnique({
+      const user = await db.user.findUnique({
         where: { id: userId },
         select: { organizationId: true, name: true, email: true },
       });
@@ -216,7 +216,7 @@ async function sendAdminNotificationEmail(params: {
   let organizationName = 'N/A';
 
   if (userId) {
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       select: {
         name: true,

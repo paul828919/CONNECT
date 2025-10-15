@@ -69,7 +69,7 @@ export async function GET(
     }
 
     // 3. Verify user owns this match
-    const userOrg = await db.users.findFirst({
+    const userOrg = await db.user.findFirst({
       where: {
         id: userId,
         organizationId: match.organizationId,

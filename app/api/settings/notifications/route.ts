@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     const userId = (session.user as any).id;
 
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       select: { notificationSettings: true },
     });
@@ -92,7 +92,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update user settings
-    await db.users.update({
+    await db.user.update({
       where: { id: userId },
       data: {
         notificationSettings: settings as any,

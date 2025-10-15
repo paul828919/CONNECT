@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const userId = (session.user as any).id;
 
     // Get user's organization to exclude from search
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });
