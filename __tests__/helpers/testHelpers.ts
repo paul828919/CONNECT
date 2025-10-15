@@ -95,7 +95,7 @@ export async function cleanupTestData() {
 
   await db.audit_logs.deleteMany({
     where: {
-      users: {
+      user: {
         email: {
           contains: 'test-',
         },
@@ -106,7 +106,7 @@ export async function cleanupTestData() {
   await db.payments.deleteMany({
     where: {
       subscriptions: {
-        users: {
+        user: {
           email: {
             contains: 'test-',
           },
@@ -117,7 +117,7 @@ export async function cleanupTestData() {
 
   await db.subscriptions.deleteMany({
     where: {
-      users: {
+      user: {
         email: {
           contains: 'test-',
         },
@@ -127,7 +127,7 @@ export async function cleanupTestData() {
 
   await db.sessions.deleteMany({
     where: {
-      users: {
+      user: {
         email: {
           contains: 'test-',
         },
@@ -137,7 +137,7 @@ export async function cleanupTestData() {
 
   await db.accounts.deleteMany({
     where: {
-      users: {
+      user: {
         email: {
           contains: 'test-',
         },
