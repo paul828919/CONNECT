@@ -107,7 +107,7 @@ export function baseEmailTemplate({ title, preheader, content }: BaseEmailProps)
             <p style="margin-top: 16px;">
               <a href="${emailBaseUrl}/dashboard/settings/notifications">알림 설정</a> ·
               <a href="${emailBaseUrl}/dashboard">대시보드</a> ·
-              <a href="mailto:support@connect.kr">고객지원</a>
+              <a href="mailto:support@connectplt.kr">고객지원</a>
             </p>
             <p style="margin-top: 12px; color: #9ca3af;">
               이 이메일을 더 이상 받고 싶지 않으시면 <a href="${emailBaseUrl}/dashboard/settings/notifications">알림 설정</a>에서 변경하실 수 있습니다.

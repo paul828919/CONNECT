@@ -172,7 +172,7 @@ export function generateBetaWelcomeEmail({
       </h3>
       <div style="font-size: 14px; color: #4b5563; line-height: 1.8;">
         <p style="margin: 0 0 8px;">
-          <strong>이메일</strong>: <a href="mailto:support@connect.kr" style="color: #2563eb; text-decoration: none;">support@connect.kr</a> (24시간 이내 응답)
+          <strong>이메일</strong>: <a href="mailto:support@connectplt.kr" style="color: #2563eb; text-decoration: none;">support@connectplt.kr</a> (24시간 이내 응답)
         </p>
         <p style="margin: 0 0 8px;">
           <strong>대시보드</strong>: <a href="${dashboardUrl}" style="color: #2563eb; text-decoration: none;">connect.kr/dashboard</a>
