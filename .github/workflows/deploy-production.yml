@@ -184,10 +184,8 @@ jobs:
             # Update docker-compose with new image
             export COMPOSE_FILE=docker-compose.production.yml
             
-            # Load environment variables
-            set -a
-            source /opt/connect/.env.production
-            set +a
+            # Extract DB_PASSWORD from .env.production (avoid sourcing to prevent bash syntax errors)
+            DB_PASSWORD=$(grep '^DB_PASSWORD=' /opt/connect/.env.production | cut -d '=' -f 2-)
             
             # Discover the network name used by existing containers
             NETWORK_NAME=$(docker inspect connect_postgres --format='{{range $net,$v := .NetworkSettings.Networks}}{{$net}}{{end}}')
