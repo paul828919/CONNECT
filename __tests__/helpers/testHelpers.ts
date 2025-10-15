@@ -16,7 +16,7 @@ export async function createTestUser(data?: {
   role?: string;
 }) {
   const { createId } = await import('@paralleldrive/cuid2');
-  const user = await db.users.create({
+  const user = await db.user.create({
     data: {
       id: createId(),
       name: data?.name || 'Test User',
@@ -125,7 +125,7 @@ export async function cleanupTestData() {
     },
   });
 
-  await db.sessions.deleteMany({
+  await db.session.deleteMany({
     where: {
       user: {
         email: {
@@ -135,7 +135,7 @@ export async function cleanupTestData() {
     },
   });
 
-  await db.accounts.deleteMany({
+  await db.account.deleteMany({
     where: {
       user: {
         email: {
@@ -153,7 +153,7 @@ export async function cleanupTestData() {
     },
   });
 
-  await db.users.deleteMany({
+  await db.user.deleteMany({
     where: {
       email: {
         contains: 'test-',
