@@ -52,7 +52,7 @@ global.Response = jest.fn().mockImplementation((body, init) => ({
   json: async () => typeof body === 'string' ? JSON.parse(body) : body,
 })) as any;
 
-// Mock NextResponse for Next.js API routes
+// Mock NextResponse and NextRequest for Next.js API routes
 jest.mock('next/server', () => ({
   NextResponse: {
     json: jest.fn((body, init) => ({
@@ -61,6 +61,23 @@ jest.mock('next/server', () => ({
       headers: new Headers(init?.headers),
       json: async () => body,
     })),
+  },
+  NextRequest: class MockNextRequest {
+    url: string;
+    method: string;
+    headers: MockHeaders;
+    body: any;
+    
+    constructor(url: string, init?: any) {
+      this.url = url;
+      this.method = init?.method || 'GET';
+      this.headers = new MockHeaders(init?.headers);
+      this.body = init?.body;
+    }
+    
+    async json() {
+      return this.body ? JSON.parse(this.body) : {};
+    }
   },
 }));
 
