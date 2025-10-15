@@ -53,21 +53,42 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      
       - name: Wait for PostgreSQL
         run: |
+          echo "Waiting for PostgreSQL to be ready..."
           for i in {1..30}; do
             if pg_isready -h localhost -p 6432 -U postgres; then
-              echo "PostgreSQL is ready!"
+              echo "✓ PostgreSQL is ready!"
               break
             fi
-            echo "Waiting for PostgreSQL... ($i/30)"
-            sleep 1
+            echo "Attempt $i/30: PostgreSQL not ready yet..."
+            sleep 2
           done
+          
+          # Verify connection
+          PGPASSWORD=postgres psql -h localhost -p 6432 -U postgres -d connect_test -c "SELECT version();"
       
       - name: Setup test database
         run: |
+          echo "Generating Prisma client..."
           npx prisma generate
+          
+          echo "Pushing database schema..."
           npx prisma db push --skip-generate --accept-data-loss
+          
+          echo "✓ Database setup complete"
+      
+      - name: Verify environment
+        run: |
+          echo "DATABASE_URL: $DATABASE_URL"
+          echo "NODE_ENV: $NODE_ENV"
+          echo "Prisma client location:"
+          ls -la node_modules/.prisma/client/ || echo "Prisma client not found"
       
       - name: Run tests
         run: npm test -- --passWithNoTests
