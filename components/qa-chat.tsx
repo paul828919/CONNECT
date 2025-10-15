@@ -199,13 +199,13 @@ export function QAChat({ conversationId: initialConversationId, autoFocus = true
               </div>
               <div className="grid grid-cols-1 gap-2 text-sm text-muted-foreground max-w-md">
                 <div className="text-left p-2 rounded bg-muted/50">
-                  💡 예: "TRL 7에서 TRL 8로 올리려면 무엇이 필요한가요?"
+                  💡 예: &quot;TRL 7에서 TRL 8로 올리려면 무엇이 필요한가요?&quot;
                 </div>
                 <div className="text-left p-2 rounded bg-muted/50">
-                  💡 예: "ISMS-P 인증은 어떻게 준비하나요?"
+                  💡 예: &quot;ISMS-P 인증은 어떻게 준비하나요?&quot;
                 </div>
                 <div className="text-left p-2 rounded bg-muted/50">
-                  💡 예: "IITP와 KEIT의 차이점은 무엇인가요?"
+                  💡 예: &quot;IITP와 KEIT의 차이점은 무엇인가요?&quot;
                 </div>
               </div>
             </div>

@@ -436,7 +436,7 @@ export default function HomePage() {
                 </div>
               </div>
               <p className="text-gray-700 leading-relaxed mb-4">
-                "복잡한 국가 공고를 일일이 찾아보는 시간을 절약하고, 우리 기술에 맞는 과제를 빠르게 발견하고 싶습니다."
+                &quot;복잡한 국가 공고를 일일이 찾아보는 시간을 절약하고, 우리 기술에 맞는 과제를 빠르게 발견하고 싶습니다.&quot;
               </p>
               <div className="text-sm text-gray-500">
                 기대 효과: 공고 검색 시간 단축 및 매칭 정확도 향상
@@ -454,7 +454,7 @@ export default function HomePage() {
                 </div>
               </div>
               <p className="text-gray-700 leading-relaxed mb-4">
-                "우리 연구실의 기술을 필요로 하는 산업체 파트너를 쉽게 찾고, 실제 사업화로 연결하고 싶습니다."
+                &quot;우리 연구실의 기술을 필요로 하는 산업체 파트너를 쉽게 찾고, 실제 사업화로 연결하고 싶습니다.&quot;
               </p>
               <div className="text-sm text-gray-500">
                 기대 효과: 산학 협력 기회 확대 및 기술 이전 활성화
@@ -472,7 +472,7 @@ export default function HomePage() {
                 </div>
               </div>
               <p className="text-gray-700 leading-relaxed mb-4">
-                "정기적으로 업데이트되는 공고 알림을 통해 우리 연구 분야에 맞는 과제를 놓치지 않고 지원하고 싶습니다."
+                &quot;정기적으로 업데이트되는 공고 알림을 통해 우리 연구 분야에 맞는 과제를 놓치지 않고 지원하고 싶습니다.&quot;
               </p>
               <div className="text-sm text-gray-500">
                 기대 효과: 적합한 R&D 과제 발굴 및 선정 성공률 증대

@@ -42,11 +42,11 @@ export default function TermsOfServicePage() {
             <section>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">서문</h2>
               <p className="mb-4">
-                본 약관은 Connect(이하 "회사")가 제공하는 R&D 펀딩 매칭 플랫폼 서비스(이하 "서비스")의
+                본 약관은 Connect(이하 &quot;회사&quot;)가 제공하는 R&D 펀딩 매칭 플랫폼 서비스(이하 &quot;서비스&quot;)의
                 이용조건 및 절차, 이용자와 회사의 권리, 의무, 책임사항 및 기타 필요한 사항을 규정함을 목적으로 합니다.
               </p>
               <p className="text-sm text-gray-600 italic">
-                These Terms of Service govern the use of Connect's R&D funding matching platform service,
+                These Terms of Service govern the use of Connect&apos;s R&D funding matching platform service,
                 including conditions, procedures, rights, obligations, and responsibilities of users and the Company.
               </p>
             </section>
@@ -57,16 +57,16 @@ export default function TermsOfServicePage() {
                 제1조 (용어의 정의)
               </h2>
               <ol className="list-decimal list-inside space-y-2 mb-4">
-                <li><strong>"서비스"</strong>란 회사가 제공하는 R&D 펀딩 프로그램 매칭, 조직 프로필 관리, 매칭 결과 제공 등 일체의 서비스를 의미합니다.</li>
-                <li><strong>"회원"</strong>이란 회사의 서비스에 접속하여 본 약관에 따라 회사와 이용계약을 체결하고 회사가 제공하는 서비스를 이용하는 고객을 말합니다.</li>
-                <li><strong>"소셜 로그인"</strong>이란 카카오, 네이버 등의 OAuth 인증 방식을 통해 서비스에 가입 및 로그인하는 것을 의미합니다.</li>
-                <li><strong>"조직 프로필"</strong>이란 회원이 등록한 기업, 대학, 연구소 등의 정보를 의미합니다.</li>
+                <li><strong>&quot;서비스&quot;</strong>란 회사가 제공하는 R&D 펀딩 프로그램 매칭, 조직 프로필 관리, 매칭 결과 제공 등 일체의 서비스를 의미합니다.</li>
+                <li><strong>&quot;회원&quot;</strong>이란 회사의 서비스에 접속하여 본 약관에 따라 회사와 이용계약을 체결하고 회사가 제공하는 서비스를 이용하는 고객을 말합니다.</li>
+                <li><strong>&quot;소셜 로그인&quot;</strong>이란 카카오, 네이버 등의 OAuth 인증 방식을 통해 서비스에 가입 및 로그인하는 것을 의미합니다.</li>
+                <li><strong>&quot;조직 프로필&quot;</strong>이란 회원이 등록한 기업, 대학, 연구소 등의 정보를 의미합니다.</li>
               </ol>
               <p className="text-sm text-gray-600 italic">
                 <strong>Article 1 (Definitions)</strong><br />
-                "Service" means all services provided by the Company including R&D funding matching and organization profile management.
-                "Member" means a customer who accesses the Service and enters into a user agreement with the Company.
-                "Social Login" means signing up and logging in via OAuth authentication (Kakao, Naver).
+                &quot;Service&quot; means all services provided by the Company including R&D funding matching and organization profile management.
+                &quot;Member&quot; means a customer who accesses the Service and enters into a user agreement with the Company.
+                &quot;Social Login&quot; means signing up and logging in via OAuth authentication (Kakao, Naver).
               </p>
             </section>
 
@@ -107,7 +107,7 @@ export default function TermsOfServicePage() {
               <p className="text-sm text-gray-600 italic">
                 <strong>Article 3 (Application for Service Use)</strong><br />
                 Membership is established through Kakao or Naver social login. The Company may refuse or terminate
-                membership for: (1) use of another person's name; (2) providing false information;
+                membership for: (1) use of another person&apos;s name; (2) providing false information;
                 (3) violating related laws or public order.
               </p>
             </section>
@@ -186,7 +186,7 @@ export default function TermsOfServicePage() {
               </ol>
               <p className="text-sm text-gray-600 italic">
                 <strong>Article 6 (Member Obligations)</strong><br />
-                Members must not: (1) register false information; (2) misappropriate others' information;
+                Members must not: (1) register false information; (2) misappropriate others&apos; information;
                 (3) infringe intellectual property rights; (4) damage reputation or interfere with business;
                 (5) post obscene or violent content violating public order.
               </p>
@@ -230,7 +230,7 @@ export default function TermsOfServicePage() {
               <p className="text-sm text-gray-600 italic">
                 <strong>Article 8 (Disclaimer)</strong><br />
                 The Company is not liable for: (1) force majeure events preventing service provision;
-                (2) service disruptions due to member's fault; (3) member's failure to obtain expected profits;
+                (2) service disruptions due to member&apos;s fault; (3) member&apos;s failure to obtain expected profits;
                 (4) reliability or accuracy of member-posted content; (5) actual R&D program selection results.
                 The matching service is for informational purposes only.
               </p>
@@ -250,7 +250,7 @@ export default function TermsOfServicePage() {
                 <strong>Article 9 (Dispute Resolution)</strong><br />
                 The Company prioritizes handling member complaints and opinions. These Terms are governed by
                 the laws of the Republic of Korea. Disputes shall be subject to the jurisdiction of the court
-                having jurisdiction over the Company's principal office location.
+                having jurisdiction over the Company&apos;s principal office location.
               </p>
             </section>
 
@@ -261,7 +261,7 @@ export default function TermsOfServicePage() {
                 정식 서비스 출시 시 법률 자문을 거쳐 최종 확정됩니다.
               </p>
               <p className="text-sm text-gray-500 mt-2 italic">
-                These Terms of Service are a draft for Connect's beta service launch and will be finalized
+                These Terms of Service are a draft for Connect&apos;s beta service launch and will be finalized
                 with legal consultation before official service launch.
               </p>
             </div>
