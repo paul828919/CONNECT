@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     const userId = (session.user as any).id;
 
     // Get user's organization
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
       receivedRequests = await db.contact_requests.findMany({
         where: { receiverOrgId: user.organizationId },
         include: {
-          users: {
+          user: {
             select: {
               id: true,
               name: true,
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
     const userId = (session.user as any).id;
 
     // Get user's organization
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       include: { organizations: true },
     });

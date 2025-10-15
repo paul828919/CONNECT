@@ -25,7 +25,7 @@ export async function GET(
     const consortiumId = params.id;
 
     // Get user's organization
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });
@@ -55,7 +55,7 @@ export async function GET(
             address: true,
           },
         },
-        users: {
+        user: {
           select: {
             name: true,
             email: true,

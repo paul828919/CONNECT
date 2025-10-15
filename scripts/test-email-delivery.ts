@@ -41,7 +41,7 @@ async function testEmailDelivery() {
     console.log('\n📊 Step 2: Preparing test data...');
 
     // Find a user (or use first user)
-    const user = await prisma.users.findFirst({
+    const user = await prisma.user.findFirst({
       include: {
         organizations: true,
       },

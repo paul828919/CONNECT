@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 6. Get user's subscription plan
-    const user = await db.users.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
       include: { subscriptions: true },
     });

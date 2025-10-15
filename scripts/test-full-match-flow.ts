@@ -116,7 +116,7 @@ async function main() {
       console.log(`   - Industry/Keywords: ${match.breakdown.industryScore}/30`);
       console.log(`   - TRL Compatibility: ${match.breakdown.trlScore}/20`);
       console.log(`   - Organization Type: ${match.breakdown.typeScore}/20`);
-      console.log(`   - R&D Experience: ${match.breakdown.experienceScore}/15`);
+      console.log(`   - R&D Experience: ${match.breakdown.rdScore}/15`);
       console.log(`   - Deadline Urgency: ${match.breakdown.deadlineScore}/15`);
 
       // Generate Korean explanation
