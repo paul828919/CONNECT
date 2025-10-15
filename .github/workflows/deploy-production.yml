@@ -99,6 +99,7 @@ jobs:
     name: Deploy to Production Server
     runs-on: ubuntu-latest
     needs: build
+    if: always() && needs.build.result == 'success'
     environment:
       name: production
       url: https://221.164.102.253
