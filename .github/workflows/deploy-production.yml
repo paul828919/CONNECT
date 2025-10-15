@@ -219,7 +219,7 @@ jobs:
         run: |
           sleep 5
           for i in {1..5}; do
-            if curl -f https://221.164.102.253/api/health; then
+            if curl -f http://221.164.102.253/api/health; then
               echo "Health check passed!"
               exit 0
             fi
