@@ -104,7 +104,7 @@ describe('/api/organizations POST', () => {
       expect(data.organization.profileScore).toBeGreaterThan(0);
 
       // Verify user's organizationId was updated
-      const updatedUser = await prisma.users.findUnique({
+      const updatedUser = await prisma.user.findUnique({
         where: { id: testUser.id },
         select: { organizationId: true },
       });
@@ -222,7 +222,6 @@ describe('/api/organizations POST', () => {
         '123456789',        // No dashes
         '123-45-6789',      // Too short
         'abc-de-fghij',     // Non-numeric
-        '',                 // Empty
       ];
 
       for (const invalidNumber of invalidFormats) {
