@@ -39,6 +39,10 @@ jobs:
       NEXTAUTH_SECRET: test_nextauth_secret_for_ci_testing_only
       NEXTAUTH_URL: http://localhost:3000
       JWT_SECRET: test_jwt_secret_for_ci_testing_only
+      NAVER_CLIENT_ID: test_naver_client_id_for_ci
+      NAVER_CLIENT_SECRET: test_naver_client_secret_for_ci
+      KAKAO_CLIENT_ID: test_kakao_client_id_for_ci
+      KAKAO_CLIENT_SECRET: test_kakao_client_secret_for_ci
     
     steps:
       - name: Checkout code
@@ -81,6 +85,9 @@ jobs:
           echo "Pushing database schema..."
           npx prisma db push --skip-generate --accept-data-loss
           
+          echo "Verifying database schema..."
+          PGPASSWORD=postgres psql -h localhost -p 6432 -U postgres -d connect_test -c "\dt"
+          
           echo "✓ Database setup complete"
       
       - name: Verify environment
@@ -91,6 +98,9 @@ jobs:
           ls -la node_modules/.prisma/client/ || echo "Prisma client not found"
       
       - name: Run tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:6432/connect_test
+          DIRECT_URL: postgresql://postgres:postgres@localhost:6432/connect_test
         run: npm test -- --passWithNoTests
       
       - name: Run linter
