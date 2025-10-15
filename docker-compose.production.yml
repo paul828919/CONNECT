@@ -96,8 +96,8 @@ services:
       test: ["CMD", "curl", "-f", "http://172.25.0.21:3001/api/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 60s
+      retries: 5        # Increased from 3 to 5 (more resilient)
+      start_period: 90s  # Increased from 60s to 90s (allow time for migrations)
     logging:
       driver: "json-file"
       options:
@@ -163,8 +163,8 @@ services:
       test: ["CMD", "curl", "-f", "http://172.25.0.22:3002/api/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 60s
+      retries: 5        # Increased from 3 to 5 (more resilient)
+      start_period: 90s  # Increased from 60s to 90s (allow time for migrations)
     logging:
       driver: "json-file"
       options:

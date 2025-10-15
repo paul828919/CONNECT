@@ -78,6 +78,10 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
 
+# Copy entrypoint script (before USER switch for proper permissions)
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
 # Copy lib directory (custom modules not always traced by Next.js standalone)
 # Using --chown to ensure correct permissions
 COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
@@ -99,5 +103,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1
 
-# Start application
-CMD ["node", "server.js"]
+# Use entrypoint for container initialization (migrations → app startup)
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
