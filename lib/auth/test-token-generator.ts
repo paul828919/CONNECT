@@ -79,12 +79,12 @@ export async function generateTestTokens(
  * Generates an admin test token
  *
  * @param userId - Admin user ID (default: 'admin-user-id')
- * @param email - Admin email (default: 'admin@connect.kr')
+ * @param email - Admin email (default: 'admin@connectplt.kr')
  * @returns JWT token string
  */
 export async function generateAdminTestToken(
   userId: string = 'admin-user-id',
-  email: string = 'admin@connect.kr'
+  email: string = 'admin@connectplt.kr'
 ): Promise<string> {
   return generateTestToken(userId, email, 'ADMIN');
 }

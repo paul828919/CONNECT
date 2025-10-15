@@ -130,7 +130,7 @@ function ErrorContent() {
         <div className="mt-8 pt-6 border-t border-gray-200 text-center">
           <p className="text-sm text-gray-500">
             문제가 계속되면{' '}
-            <a href="mailto:support@connect.kr" className="text-blue-600 hover:underline">
+            <a href="mailto:support@connectplt.kr" className="text-blue-600 hover:underline">
               고객 지원팀
             </a>
             에 문의하세요

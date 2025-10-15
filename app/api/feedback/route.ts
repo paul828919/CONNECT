@@ -363,7 +363,7 @@ async function sendAdminNotificationEmail(params: {
   // Send email to admin
   try {
     await sendEmail({
-      to: process.env.ADMIN_EMAIL || 'support@connect.kr',
+      to: process.env.ADMIN_EMAIL || 'support@connectplt.kr',
       subject,
       html: emailBody,
     });

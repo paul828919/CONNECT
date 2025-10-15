@@ -33,9 +33,9 @@ if (process.env.NODE_ENV === 'production') {
 export const emailConfig = {
   from: {
     name: process.env.SMTP_FROM_NAME || 'Connect',
-    address: process.env.SMTP_FROM_EMAIL || 'noreply@connect.kr',
+    address: process.env.SMTP_FROM_EMAIL || 'noreply@connectplt.kr',
   },
-  replyTo: process.env.SMTP_REPLY_TO || 'support@connect.kr',
+  replyTo: process.env.SMTP_REPLY_TO || 'support@connectplt.kr',
 };
 
 // Email templates base URL
