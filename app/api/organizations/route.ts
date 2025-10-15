@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const userId = (session.user as any).id;
 
     // Check if user already has an organization
-    const existingUserOrg = await db.users.findUnique({
+    const existingUserOrg = await db.user.findUnique({
       where: { id: userId },
       select: { organizationId: true },
     });
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
     });
 
     // 7. Update user's organizationId
-    await db.users.update({
+    await db.user.update({
       where: { id: userId },
       data: { organizationId: organization.id },
     });
