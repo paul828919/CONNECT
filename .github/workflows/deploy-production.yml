@@ -184,6 +184,14 @@ jobs:
             # Update docker-compose with new image
             export COMPOSE_FILE=docker-compose.production.yml
             
+            # Run migrations BEFORE deployment (using existing container)
+            echo "Running database migrations..."
+            docker-compose exec -T app1 npm run db:migrate:deploy || {
+              echo "❌ Migrations failed!"
+              exit 1
+            }
+            echo "✓ Migrations completed successfully"
+            
             # Blue-Green deployment
             if docker ps | grep -q connect_app1; then
               echo "Deploying to app2, switching traffic..."
@@ -205,9 +213,6 @@ jobs:
               echo "Deploying to app1..."
               docker-compose up -d app1
             fi
-            
-            # Run migrations
-            docker-compose exec -T app1 npm run db:migrate
             
             echo "Deployment complete!"
           EOF
