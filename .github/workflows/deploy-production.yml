@@ -177,56 +177,42 @@ jobs:
           ssh -i ~/.ssh/deploy_key \
           ${{ secrets.PRODUCTION_SERVER_USER }}@${{ secrets.PRODUCTION_SERVER_IP }} << 'EOF'
             cd /opt/connect
-            
+
             # Tag new image
             docker tag connect:${{ github.sha }} connect:latest
-            
-            # Update docker-compose with new image
+
+            # Deploy using docker-compose (migrations run automatically inside containers)
             export COMPOSE_FILE=docker-compose.production.yml
-            
-            # Extract DB_PASSWORD from .env.production (avoid sourcing to prevent bash syntax errors)
-            DB_PASSWORD=$(grep '^DB_PASSWORD=' /opt/connect/.env.production | cut -d '=' -f 2-)
-            
-            # Discover the network name used by existing containers
-            NETWORK_NAME=$(docker inspect connect_postgres --format='{{range $net,$v := .NetworkSettings.Networks}}{{$net}}{{end}}')
-            echo "Using network: $NETWORK_NAME"
-            
-            # Run migrations using new image (no port binding)
-            echo "Running database migrations with new image..."
-            docker run --rm \
-              --network "$NETWORK_NAME" \
-              -e DATABASE_URL="postgresql://connect:${DB_PASSWORD}@postgres:5432/connect?schema=public" \
-              -e DIRECT_URL="postgresql://connect:${DB_PASSWORD}@postgres:5432/connect?schema=public" \
-              connect:latest \
-              npm run db:migrate:deploy || {
-              echo "❌ Migrations failed!"
-              exit 1
-            }
-            echo "✓ Migrations completed successfully"
-            
+
             # Blue-Green deployment
             if docker ps | grep -q connect_app1; then
-              echo "Deploying to app2, switching traffic..."
+              echo "🔄 Deploying to app2 first (blue-green deployment)..."
               docker-compose up -d app2
-              sleep 10
-              
-              # Health check
-              if curl -f http://172.25.0.22:3002/api/health; then
-                echo "App2 healthy, switching traffic..."
-                # Update HAProxy or nginx config here
-                docker-compose stop app1
-                docker-compose up -d app1
-              else
-                echo "App2 health check failed!"
-                docker-compose stop app2
-                exit 1
-              fi
-            else
-              echo "Deploying to app1..."
+
+              # Wait for health check (migrations run automatically inside container)
+              echo "⏳ Waiting for app2 to be healthy (including migrations)..."
+              timeout 180 sh -c 'until curl -sf http://172.25.0.22:3002/api/health; do sleep 5; done'
+
+              # Switch traffic and update app1
+              echo "✅ App2 healthy. Updating app1..."
+              docker-compose stop app1
               docker-compose up -d app1
+
+              # Wait for app1
+              echo "⏳ Waiting for app1 to be healthy..."
+              timeout 180 sh -c 'until curl -sf http://172.25.0.21:3001/api/health; do sleep 5; done'
+
+              echo "✅ Both instances healthy and running!"
+            else
+              echo "🆕 First deployment - starting both instances..."
+              docker-compose up -d app1 app2
+
+              # Wait for both to be healthy
+              timeout 180 sh -c 'until curl -sf http://172.25.0.21:3001/api/health; do sleep 5; done'
+              timeout 180 sh -c 'until curl -sf http://172.25.0.22:3002/api/health; do sleep 5; done'
             fi
-            
-            echo "Deployment complete!"
+
+            echo "🎉 Deployment complete!"
           EOF
       
       - name: Run health checks
