@@ -184,9 +184,23 @@ jobs:
             # Update docker-compose with new image
             export COMPOSE_FILE=docker-compose.production.yml
             
-            # Run migrations using docker-compose (handles network & env automatically)
+            # Load environment variables
+            set -a
+            source /opt/connect/.env.production
+            set +a
+            
+            # Discover the network name used by existing containers
+            NETWORK_NAME=$(docker inspect connect_postgres --format='{{range $net,$v := .NetworkSettings.Networks}}{{$net}}{{end}}')
+            echo "Using network: $NETWORK_NAME"
+            
+            # Run migrations using new image (no port binding)
             echo "Running database migrations with new image..."
-            docker-compose run --rm --no-deps app1 npm run db:migrate:deploy || {
+            docker run --rm \
+              --network "$NETWORK_NAME" \
+              -e DATABASE_URL="postgresql://connect:${DB_PASSWORD}@postgres:5432/connect?schema=public" \
+              -e DIRECT_URL="postgresql://connect:${DB_PASSWORD}@postgres:5432/connect?schema=public" \
+              connect:latest \
+              npm run db:migrate:deploy || {
               echo "❌ Migrations failed!"
               exit 1
             }
