@@ -75,7 +75,7 @@ export async function cleanupTestData() {
   // Delete in order to avoid foreign key constraints
   await db.match_notifications.deleteMany({
     where: {
-      users: {
+      user: {
         email: {
           contains: 'test-',
         },
