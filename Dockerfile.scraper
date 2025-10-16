@@ -28,6 +28,10 @@ COPY tsconfig.json ./tsconfig.json
 # Generate Prisma Client
 RUN npx prisma generate
 
+# Copy entrypoint script (before USER switch for proper permissions)
+COPY docker-entrypoint-scraper.sh ./
+RUN chmod +x docker-entrypoint-scraper.sh
+
 # Create non-root user
 RUN useradd --system --uid 1001 scraper && \
     mkdir -p /app/logs /app/data && \
@@ -40,5 +44,11 @@ USER scraper
 ENV NODE_ENV=production
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
 
-# Start scraper worker
-CMD ["npx", "tsx", "lib/scraping/worker.ts"]
+# Health check - verify scraper worker is responsive
+# Check if the worker process is running and logs are being updated
+HEALTHCHECK --interval=60s --timeout=10s --start-period=60s --retries=3 \
+  CMD test -f /app/logs/scraper.log && \
+      find /app/logs/scraper.log -mmin -10 | grep -q . || exit 1
+
+# Use entrypoint for container initialization
+ENTRYPOINT ["/app/docker-entrypoint-scraper.sh"]
