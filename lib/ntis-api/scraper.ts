@@ -162,7 +162,7 @@ export class NTISApiScraper {
         // Create new program
         await db.funding_programs.create({
           data: {
-            agencyId: agencyId as AgencyId,
+            agencyId: agencyId,
             title: program.titleKorean || program.titleEnglish || 'Untitled',
             description: this.buildDescription(program),
             announcementUrl: `https://www.ntis.go.kr/project/${program.projectNumber}`,
@@ -229,13 +229,20 @@ export class NTISApiScraper {
 
   /**
    * Map agency name to agency ID
+   *
+   * CRITICAL FIX: Default must be a valid AgencyId enum value
+   * Valid values: IITP, KEIT, TIPA, KIMST (no 'NTIS' in enum!)
    */
-  private mapAgencyId(orderAgency: string): string {
-    if (orderAgency.includes('정보통신')) return 'IITP';
-    if (orderAgency.includes('중소기업')) return 'TIPA';
-    if (orderAgency.includes('해양')) return 'KIMST';
-    if (orderAgency.includes('산업기술')) return 'KEIT';
-    return 'NTIS'; // Default
+  private mapAgencyId(orderAgency: string): AgencyId {
+    const agency = orderAgency.toLowerCase();
+
+    if (agency.includes('정보통신') || agency.includes('iitp')) return 'IITP' as AgencyId;
+    if (agency.includes('중소기업') || agency.includes('tipa') || agency.includes('기술정보')) return 'TIPA' as AgencyId;
+    if (agency.includes('해양') || agency.includes('kimst') || agency.includes('수산')) return 'KIMST' as AgencyId;
+    if (agency.includes('산업기술') || agency.includes('keit') || agency.includes('산업통상')) return 'KEIT' as AgencyId;
+
+    // Default to IITP (most common for general R&D) instead of invalid 'NTIS'
+    return 'IITP' as AgencyId;
   }
 
   /**

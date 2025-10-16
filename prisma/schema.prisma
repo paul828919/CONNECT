@@ -381,6 +381,7 @@ model User {
   organizations          organizations?        @relation(fields: [organizationId], references: [id])
   ai_cost_logs           ai_cost_logs[]
   feedback               feedback[]
+  ai_feedback            ai_feedback[]
 
   @@index([email])
   @@index([organizationId])
@@ -629,4 +630,28 @@ enum FeedbackStatus {
   IN_PROGRESS
   RESOLVED
   CLOSED
+}
+
+// AI-specific feedback (thumbs up/down for AI responses)
+model ai_feedback {
+  id              String        @id @default(cuid())
+  serviceType     AIServiceType
+  resourceId      String        // match ID or message ID
+  userId          String?
+  organizationId  String?
+  rating          AIFeedbackRating
+  comment         String?       // Optional text feedback
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([serviceType, resourceId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([rating])
+}
+
+enum AIFeedbackRating {
+  HELPFUL       // Thumbs up
+  NOT_HELPFUL   // Thumbs down
 }
