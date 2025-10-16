@@ -45,10 +45,9 @@ ENV NODE_ENV=production
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
 
 # Health check - verify scraper worker is responsive
-# Check if the worker process is running and logs are being updated
+# Check if the worker process is running
 HEALTHCHECK --interval=60s --timeout=10s --start-period=60s --retries=3 \
-  CMD test -f /app/logs/scraper.log && \
-      find /app/logs/scraper.log -mmin -10 | grep -q . || exit 1
+  CMD pgrep -f "tsx lib/scraping/worker.ts" > /dev/null || exit 1
 
 # Use entrypoint for container initialization
 ENTRYPOINT ["/app/docker-entrypoint-scraper.sh"]
