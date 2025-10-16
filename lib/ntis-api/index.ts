@@ -7,5 +7,6 @@
 export { NTISApiClient } from './client';
 export { NTISXmlParser } from './parser';
 export { NTISApiScraper } from './scraper';
+export { startNTISScheduler, triggerManualNTISScrape } from './scheduler';
 export { ntisApiConfig, agencySearchConfigs, defaultSearchParams } from './config';
 export * from './types';
