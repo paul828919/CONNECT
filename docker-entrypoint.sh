@@ -9,6 +9,10 @@ echo "Instance: ${INSTANCE_ID:-unknown}"
 export npm_config_cache=/tmp/.npm
 export npm_config_loglevel=error
 
+# Create npm cache directory with proper permissions
+mkdir -p /tmp/.npm
+chmod 777 /tmp/.npm
+
 # Run database migrations
 echo "📦 Running database migrations..."
 npx prisma migrate deploy

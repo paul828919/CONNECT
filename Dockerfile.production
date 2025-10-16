@@ -51,9 +51,10 @@ WORKDIR /app
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
-# Create non-root user
+# Create non-root user with home directory
+# --create-home ensures npm/npx have a writable home directory for cache/logs
 RUN groupadd --system --gid 1001 nodejs && \
-    useradd --system --uid 1001 --gid nodejs nextjs
+    useradd --system --create-home --uid 1001 --gid nodejs nextjs
 
 # Install production dependencies and utilities
 RUN apt-get update && apt-get install -y \
