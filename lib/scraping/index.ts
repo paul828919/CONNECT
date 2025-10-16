@@ -8,17 +8,27 @@
 import { startScheduler } from './scheduler';
 import scrapingWorker from './worker';
 import { startEmailCronJobs } from '../email/cron';
+import { startNTISScheduler } from '../ntis-api';
 
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log('🤖 Connect Platform - Scraping Service');
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log('');
 
-// 1. Start the scraping scheduler (cron jobs)
+// 1. Start the scraping scheduler (cron jobs for Playwright)
 startScheduler();
 
-// 2. Start email notification cron jobs
-startEmailCronJobs();
+// 2. Start NTIS API scheduler (cron job for NTIS API scraping)
+startNTISScheduler();
+
+// 3. Start email notification cron jobs (graceful failure if SMTP not configured)
+try {
+  startEmailCronJobs();
+  console.log('✓ Email notifications enabled');
+} catch (error: any) {
+  console.warn('⚠️  Email notifications disabled:', error.message);
+  console.warn('   (This is non-critical - scraping will continue)');
+}
 
 // 2. Worker is already started via import
 console.log('✓ Scraping worker started (max concurrency: 2)');
