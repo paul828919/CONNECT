@@ -18,13 +18,18 @@ export class NTISApiClient {
       baseURL: this.config.baseUrl,
       timeout: this.config.timeout || 30000,
       headers: {
-        'Accept': 'application/xml, text/xml, */*',
-        // CRITICAL: NTIS API blocks programmatic User-Agents (returns 404)
-        // even with valid API keys. Use browser-like UA to avoid blocking.
+        // Note: NTIS API rejects 'Accept: application/xml' header (returns 404)
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Accept-Encoding': 'gzip, deflate, br',
       },
+    });
+
+    // Add request interceptor for debugging
+    this.client.interceptors.request.use((config) => {
+      const url = `${config.baseURL}${config.url}`;
+      const params = new URLSearchParams(config.params as any).toString();
+      console.log('🌐 Full URL:', `${url}?${params}`);
+      console.log('📋 Headers:', JSON.stringify(config.headers, null, 2));
+      return config;
     });
   }
 
@@ -34,10 +39,19 @@ export class NTISApiClient {
   async searchProjects(params: NTISSearchParams): Promise<NTISSearchResponse> {
     try {
       const queryParams = this.buildQueryParams(params);
-      
+
+      // Debug logging
+      console.log('🔍 NTIS API Request:');
+      console.log('   Base URL:', this.config.baseUrl);
+      console.log('   Endpoint: /public_project');
+      console.log('   Params:', JSON.stringify(queryParams, null, 2));
+
       const response = await this.client.get('/public_project', {
         params: queryParams,
       });
+
+      console.log('✅ NTIS API Response:', response.status, response.statusText);
+      console.log('   Total Hits:', this.extractTotalHits(response.data));
 
       return {
         success: true,
@@ -46,6 +60,12 @@ export class NTISApiClient {
         searchTime: this.extractSearchTime(response.data),
       };
     } catch (error: any) {
+      console.error('❌ NTIS API Error:', error.message);
+      if (error.response) {
+        console.error('   Status:', error.response.status);
+        console.error('   Status Text:', error.response.statusText);
+        console.error('   URL:', error.config?.url);
+      }
       return {
         success: false,
         error: error.message,
@@ -58,8 +78,8 @@ export class NTISApiClient {
   /**
    * Search recent announcements (공고) from specific date range
    *
-   * Note: Year filtering (addQuery: PY=YYYY/SAME) was removed because it returns 0 results.
-   * Instead, we rely on DATE/DESC sorting to get the most recent programs.
+   * Note: The NTIS API does not support sorting (searchRnkn parameter causes 404).
+   * Results are returned in the API's default order.
    */
   async searchRecentAnnouncements(
     daysBack: number = 7,
@@ -67,7 +87,6 @@ export class NTISApiClient {
   ): Promise<NTISSearchResponse> {
     return this.searchProjects({
       SRWR: '연구개발', // Broad R&D search term (NTIS API requires non-empty search)
-      searchRnkn: 'DATE/DESC', // Sort by date descending (most recent first)
       startPosition: 1,
       displayCnt: displayCount,
     });
@@ -85,7 +104,6 @@ export class NTISApiClient {
 
     return this.searchProjects({
       SRWR: query,
-      searchRnkn: 'DATE/DESC',
       startPosition: 1,
       displayCnt: 100,
       ...options,
@@ -102,7 +120,6 @@ export class NTISApiClient {
     return this.searchProjects({
       SRWR: agencyName,
       searchFd: 'OG', // Search in agency field
-      searchRnkn: 'DATE/DESC',
       startPosition: 1,
       displayCnt: 100,
       ...options,
