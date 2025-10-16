@@ -66,7 +66,7 @@ export class NTISApiClient {
     const currentYear = endDate.getFullYear();
 
     return this.searchProjects({
-      SRWR: '', // Search all
+      SRWR: '연구개발', // Broad R&D search term (NTIS API requires non-empty search)
       searchRnkn: 'DATE/DESC', // Sort by date descending
       addQuery: `PY=${currentYear}/SAME`, // Current year only
       startPosition: 1,
