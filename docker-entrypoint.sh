@@ -5,6 +5,10 @@ echo "🚀 Starting Connect Platform..."
 echo "Container: $HOSTNAME"
 echo "Instance: ${INSTANCE_ID:-unknown}"
 
+# Set npm cache to writable temporary directory
+export npm_config_cache=/tmp/.npm
+export npm_config_loglevel=error
+
 # Run database migrations
 echo "📦 Running database migrations..."
 npx prisma migrate deploy
