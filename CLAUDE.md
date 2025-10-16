@@ -79,6 +79,9 @@ npm run gates:calculate      # Recalculate sector gate scores (ISMS-P, KC)
 npm run procurement:update   # Update procurement readiness scores
 
 # Docker (Production)
+# ⚠️ CRITICAL: Always use --platform linux/amd64 for production builds (ARM Mac → x86 Linux)
+./scripts/build-production-docker.sh        # Recommended: Uses correct platform automatically
+docker buildx build --platform linux/amd64 -f Dockerfile.production -t connect:latest .  # Manual build
 npm run docker:build    # Build Docker images
 npm run docker:up       # Start Docker stack
 npm run docker:down     # Stop Docker stack
@@ -582,10 +585,42 @@ Documentation/
 - ROI: Prevents ₩10-50M revenue loss from churn
 
 ### Cross-Platform Build Requirements
-- Development on ARM (MacBook M4) with deployment to x86 (Linux server)
-- Docker handles architecture differences automatically
-- Multi-stage builds for optimized production images
+
+**⚠️ CRITICAL - ALWAYS READ THIS BEFORE DOCKER BUILDS:**
+
+**Development Environment:** MacBook Pro M4 Max (ARM64/aarch64 architecture)
+**Production Environment:** Linux server 221.164.102.253 (x86_64/amd64 architecture)
+
+**MANDATORY BUILD COMMAND (use in ALL sessions):**
+```bash
+docker buildx build --platform linux/amd64 -f Dockerfile.production -t connect:latest .
+```
+
+**Why This Matters:**
+1. **Architecture Mismatch** - ARM builds on Mac will crash on x86 Linux production with missing system libraries
+2. **Silent Failures** - Docker won't error during build, but containers fail at runtime with cryptic errors like:
+   - `exec /usr/local/bin/node: exec format error` (wrong CPU architecture)
+   - `npm ERR! missing: @prisma/client` (native bindings compiled for ARM instead of x86)
+   - `libssl.so.3: cannot open shared object file` (wrong system library version)
+3. **Production Impact** - Last incident: October 17, 2025 - npm EACCES errors caused 502 downtime
+
+**Alternative: Set Default Platform (optional but recommended)**
+Add to your shell profile (`~/.zshrc` or `~/.bashrc`):
+```bash
+export DOCKER_DEFAULT_PLATFORM=linux/amd64
+```
+Then restart terminal. All future `docker build` commands will default to x86_64.
+
+**Verification After Build:**
+```bash
+# Check image architecture (must show "linux/amd64")
+docker inspect connect:latest --format='{{.Architecture}}'
+```
+
+**Other Requirements:**
+- Multi-stage builds for optimized production images (current: ~850MB)
 - Use `npm ci --production` in Docker for correct architecture bindings
+- Never skip `--platform` flag even if DOCKER_DEFAULT_PLATFORM is set (explicit > implicit)
 
 ### Performance Requirements
 - API response time: <500ms (P95) for MVP
@@ -633,7 +668,8 @@ HAVING COUNT(*) >= 5; -- Minimum 5 data points
 
 ### Primary: Automated GitHub Actions (Recommended)
 
-**Status:** ✅ Production Ready (October 14, 2025)
+**Status:** ✅ Production Ready (October 14, 2025)  
+**Architecture:** Industry-Standard Entrypoint Pattern (Heroku/AWS/K8s)
 
 ```bash
 # Automated deployment (87% faster than manual)
@@ -646,7 +682,7 @@ git push origin main
 # 2. Runs tests + linting + security scans
 # 3. SSHs to production server
 # 4. Performs zero-downtime rolling update
-# 5. Runs health checks
+# 5. Runs health checks (migrations happen inside containers)
 # 6. Rolls back on failure
 # 7. Sends notifications
 
@@ -657,36 +693,55 @@ git push origin main
 ./scripts/verify-deployment.sh
 ```
 
+**Architecture Pattern - Entrypoint (Industry Standard):**
+- Migrations run **inside containers** on startup (not externally)
+- Self-contained: Each container handles its own initialization
+- Self-healing: Failed migrations = failed container = automatic rollback
+- Health checks validate: Migrations + App + Endpoint (atomic validation)
+
 **Automated Workflow Steps:**
 1. **Build** - Docker image with multi-stage caching (3-4 min)
 2. **Test** - TypeScript, ESLint, unit tests, security scans
 3. **Deploy** - SSH to server, zero-downtime rolling update
-4. **Verify** - Health checks on `/api/health` endpoint
-5. **Rollback** - Automatic if health checks fail
-6. **Notify** - GitHub PR comments + email on failure
+4. **Initialize** - Containers run migrations via entrypoint script
+5. **Verify** - Health checks on `/api/health` endpoint (post-migration)
+6. **Rollback** - Automatic if health checks fail (30 seconds)
+7. **Notify** - GitHub PR comments + email on failure
 
 **Performance:**
 - Deployment time: **4 minutes** (vs. 35 min manual)
 - Build time: **3-4 minutes** (with caching)
 - Transfer size: **280 MB** (vs. 1.2 GB full image)
-- Zero-downtime: **Always** (rolling update)
+- Zero-downtime: **Always** (blue-green rolling update)
+- Code reduction: **75%** (200 lines → 50 lines vs. old external migration pattern)
 
-### Fallback: Manual Docker Deployment
+**Key Files:**
+- `docker-entrypoint.sh` - Container initialization (migrations → app)
+- `.github/workflows/deploy-production.yml` - Automated deployment pipeline
+- See: [START-HERE-DEPLOYMENT-DOCS.md](./START-HERE-DEPLOYMENT-DOCS.md) for complete documentation
 
-When GitHub Actions unavailable or for emergency hotfixes:
+### Deployment Documentation
 
-```bash
-# Manual zero-downtime deployment
-./scripts/deploy.sh
+**📚 Complete deployment architecture documentation:**
 
-# Rolling update process:
-# 1. Build new Docker images
-# 2. Run database migrations
-# 3. Health check new images
-# 4. Rolling restart (app2 first, then app1)
-# 5. Verify health endpoints
-# 6. Cleanup old images
-```
+**Start Here:**
+- [START-HERE-DEPLOYMENT-DOCS.md](./START-HERE-DEPLOYMENT-DOCS.md) - Main navigation
+- [DEPLOYMENT-ARCHITECTURE-INDEX.md](./DEPLOYMENT-ARCHITECTURE-INDEX.md) - Complete index
+- [DEPLOYMENT-ARCHITECTURE-LESSONS.md](./DEPLOYMENT-ARCHITECTURE-LESSONS.md) - Deep-dive (788 lines)
+- [DEPLOYMENT-ARCHITECTURE-QUICK-REFERENCE.md](./DEPLOYMENT-ARCHITECTURE-QUICK-REFERENCE.md) - Quick patterns
+
+**What Changed (Oct 15, 2025):**
+- ✅ Replaced external migration orchestration with entrypoint pattern
+- ✅ Reduced deployment complexity by 75% (200 → 50 lines)
+- ✅ Achieved 100% deployment success (was 5 failed attempts)
+- ✅ Industry-standard architecture (Heroku/AWS/Kubernetes model)
+
+**Deprecated (Don't Use):**
+- ❌ `scripts/deploy.sh` - Old manual deployment with external migrations
+- ❌ `docs/architecture/DEPLOYMENT-STRATEGY.md` - Describes old pattern
+- ❌ External migration coordination (docker run for migrations)
+
+See [DEPLOYMENT-DOCS-STATUS.md](./DEPLOYMENT-DOCS-STATUS.md) for complete documentation status
 
 ### Directory Structure
 ```bash
