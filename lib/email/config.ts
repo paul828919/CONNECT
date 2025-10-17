@@ -18,8 +18,8 @@ export const emailTransporter = nodemailer.createTransport({
   },
 });
 
-// Verify SMTP connection on startup (in production)
-if (process.env.NODE_ENV === 'production') {
+// Verify SMTP connection on startup (only if credentials are configured)
+if (process.env.NODE_ENV === 'production' && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
   emailTransporter.verify((error, success) => {
     if (error) {
       console.error('❌ SMTP connection failed:', error);
@@ -27,6 +27,8 @@ if (process.env.NODE_ENV === 'production') {
       console.log('✓ SMTP server is ready to send emails');
     }
   });
+} else if (process.env.NODE_ENV === 'production') {
+  console.log('⚠️  SMTP credentials not configured - email notifications disabled');
 }
 
 // Email sender configuration
