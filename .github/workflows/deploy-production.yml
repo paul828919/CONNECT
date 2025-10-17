@@ -190,7 +190,16 @@ jobs:
           echo "${{ secrets.PRODUCTION_SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.PRODUCTION_SERVER_IP }} >> ~/.ssh/known_hosts
-      
+
+      - name: Copy configuration files to production
+        run: |
+          echo "Copying docker-compose.production.yml to production server..."
+          scp -i ~/.ssh/deploy_key \
+          docker-compose.production.yml \
+          ${{ secrets.PRODUCTION_SERVER_USER }}@${{ secrets.PRODUCTION_SERVER_IP }}:/opt/connect/
+
+          echo "✓ Configuration files copied successfully"
+
       - name: Copy images to production
         run: |
           echo "Transferring app image..."
