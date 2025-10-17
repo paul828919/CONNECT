@@ -2,6 +2,66 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## ⚠️ CRITICAL WORK RULES - READ FIRST
+
+### 1. Local Verification is MANDATORY
+
+**NEVER commit and push without local verification.**
+
+- **Rule**: When executing any task, ALWAYS verify the work locally upon completion. Only after local verification is complete should you commit and push.
+- **Timing**: Deployment to production takes ~12 minutes. Local verification takes 2-5 minutes. Always verify first.
+- **Docker requirement**: If Docker is not running locally during development or modification, **tell the user to start Docker**. Never skip local verification just because Docker isn't running.
+- **No exceptions**: Even for "simple" changes like config files, YAML syntax, or documentation updates.
+
+**Why this matters:**
+- Prevents production failures that take 12+ minutes to discover
+- Catches issues in 2-5 minutes locally vs. hours of production debugging
+- Industry standard: Local → CI → Staging → Production (NEVER skip local)
+
+### 2. Security: SSH Keys Only
+
+**NEVER use passwords in commands.**
+
+```bash
+# ✅ CORRECT - Always use SSH key authentication
+ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253
+
+# ❌ WRONG - Never use password authentication
+sshpass -p 'password' ssh user@221.164.102.253
+```
+
+### 3. 🏗️ CI/CD Architecture (Production-grade entrypoint pattern)
+
+**Status:** ✅ Production-ready (100% successful deployments since October 15, 2025)
+**Architecture pattern:** Industry-standard entrypoint
+
+**Changes (October 15, 2025):**
+- ❌ **Old Method (5 failures)**: External migration orchestration - 200 lines, 7 failure points
+- ✅ **New Method (100% success)**: Entrypoint pattern (Heroku/AWS/K8s model) - 50 lines, self-healing
+
+**How it works:**
+```
+Push to GitHub → GitHub Actions trigger Docker build → SSH connection to server →
+Zero-downtime rolling update → Migration runs at container startup (entrypoint) →
+Health check validation → Success (or auto-rollback)
+```
+
+**Core Files:**
+1. `docker-entrypoint.sh` - Runs internal migration at container startup (20 lines)
+2. `Dockerfile.production` - Multi-stage build including entrypoint
+3. `.github/workflows/deploy-production.yml` - Automated deployment (50 lines)
+4. `docker-compose.production.yml` - Orchestration including 90-second health checks
+
+**Core Concepts:**
+- **Migration runs inside the container** (not externally via `docker run`)
+- **Self-containment**: Each container handles its own initialization
+- **Self-healing**: Migration failure = container failure = automatic rollback
+- **Atomic verification**: Health checks simultaneously validate migration + application + endpoints
+
+---
+
 ## Project Overview
 
 Connect is **Korea's R&D commercialization operating system** that transforms companies' grant-seeking journey from discovery through winning. The platform combines automated matching with professional execution services, targeting companies as primary paying customers (research institutes as supply-side for consortium matching).
