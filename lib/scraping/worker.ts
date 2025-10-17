@@ -165,7 +165,7 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
                 eligibilityCriteria: details.eligibilityCriteria || undefined,
                 contentHash,
                 scrapedAt: new Date(),
-                scrapingSource: announcement.link, // ✅ SET scrapingSource for identifying real scraped programs
+                scrapingSource: agency.toLowerCase(), // Agency ID: tipa, iitp, keit, kimst
                 status: 'ACTIVE',
               },
             });
