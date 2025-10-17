@@ -111,13 +111,33 @@ export class NTISXmlParser {
   }
 
   /**
+   * Remove HTML tags from NTIS API responses
+   * NTIS API returns search term highlighting: <span class="search_word">연구개발</span>
+   */
+  private cleanHtmlTags(text: string): string {
+    return text
+      .replace(/<span class="search_word">/g, '')
+      .replace(/<\/span>/g, '')
+      .trim();
+  }
+
+  /**
    * Extract text from element
    */
   private extractText(element: any): string | null {
     if (!element) return null;
-    if (typeof element === 'string') return element.trim();
-    if (typeof element === 'object' && element._) return element._.trim();
-    return null;
+
+    let text: string;
+    if (typeof element === 'string') {
+      text = element;
+    } else if (typeof element === 'object' && element._) {
+      text = element._;
+    } else {
+      return null;
+    }
+
+    // Clean HTML tags and trim
+    return this.cleanHtmlTags(text);
   }
 
   /**
