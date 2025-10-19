@@ -1,0 +1,82 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - heading "조직 프로필 생성" [level=1] [ref=e6]
+      - paragraph [ref=e7]: 펀딩 매칭을 위해 조직 정보를 입력해주세요
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - text: 조직 유형
+          - generic [ref=e12]: "*"
+        - generic [ref=e13]:
+          - generic [ref=e14] [cursor=pointer]:
+            - radio "🏢 기업" [ref=e15]
+            - generic [ref=e16] [cursor=pointer]:
+              - generic [ref=e17] [cursor=pointer]: 🏢
+              - generic [ref=e18] [cursor=pointer]: 기업
+          - generic [ref=e19] [cursor=pointer]:
+            - radio "🔬 연구소" [checked] [active] [ref=e20]
+            - generic [ref=e21] [cursor=pointer]:
+              - generic [ref=e22] [cursor=pointer]: 🔬
+              - generic [ref=e23] [cursor=pointer]: 연구소
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - text: 조직명
+          - generic [ref=e26]: "*"
+        - textbox "조직명 *" [ref=e27]
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - text: 사업자등록번호
+          - generic [ref=e30]: "*"
+        - textbox "사업자등록번호 *" [ref=e31]
+        - paragraph [ref=e32]: 🔒 PIPA 규정에 따라 AES-256 암호화로 안전하게 보관됩니다
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - text: 산업 분야
+          - generic [ref=e35]: "*"
+        - combobox "산업 분야 *" [ref=e36]:
+          - option "선택해주세요" [selected]
+          - option "ICT (정보통신)"
+          - option "바이오/헬스"
+          - option "제조업"
+          - option "에너지"
+          - option "환경"
+          - option "농업"
+          - option "해양수산"
+          - option "건설"
+          - option "교통/운송"
+          - option "기타"
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - text: 직원 수
+          - generic [ref=e39]: "*"
+        - combobox "직원 수 *" [ref=e40]:
+          - option "선택해주세요" [selected]
+          - option "10명 미만"
+          - option "10~50명"
+          - option "50~100명"
+          - option "100~300명"
+          - option "300명 이상"
+      - generic [ref=e41]:
+        - checkbox "정부 R&D 과제 수행 경험이 있습니다" [ref=e42]
+        - generic [ref=e43]: 정부 R&D 과제 수행 경험이 있습니다
+      - generic [ref=e44]:
+        - generic [ref=e45]: 조직 설명 (선택사항)
+        - textbox "조직 설명 (선택사항)" [ref=e46]
+      - generic [ref=e47]:
+        - button "취소" [ref=e48] [cursor=pointer]
+        - button "프로필 생성" [ref=e49] [cursor=pointer]
+    - generic [ref=e50]:
+      - paragraph [ref=e51]: 💡 프로필 완성 후 이용 가능
+      - list [ref=e52]:
+        - listitem [ref=e53]: 4개 주요 기관 (IITP, KEIT, TIPA, KIMST) 펀딩 매칭
+        - listitem [ref=e54]: 설명 가능한 AI 매칭 알고리즘
+        - listitem [ref=e55]: 실시간 공고 알림
+  - button "피드백 보내기" [ref=e56] [cursor=pointer]:
+    - img [ref=e57] [cursor=pointer]
+    - generic [ref=e59] [cursor=pointer]: 피드백
+  - alert [ref=e60]
+```

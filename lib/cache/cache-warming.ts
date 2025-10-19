@@ -242,7 +242,7 @@ export async function warmAIExplanations(
       inputs.push(input);
       matchIds.push({
         organizationId: match.organizationId,
-        programId: match.fundingProgramId,
+        programId: match.programId,
       });
     }
 

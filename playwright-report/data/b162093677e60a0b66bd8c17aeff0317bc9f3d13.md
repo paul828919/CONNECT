@@ -1,0 +1,43 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - heading "Connect" [level=1] [ref=e6]
+      - paragraph [ref=e7]: 한국 R&D 생태계 매칭 플랫폼
+      - paragraph [ref=e8]: Korea's Innovation Ecosystem Matching Platform
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - heading "시작하기" [level=2] [ref=e12]
+          - paragraph [ref=e13]: 카카오 또는 네이버 계정으로 빠르게 시작하세요
+        - button "카카오로 시작하기" [ref=e14] [cursor=pointer]:
+          - img [ref=e15] [cursor=pointer]
+          - generic [ref=e17] [cursor=pointer]: 카카오로 시작하기
+        - button "네이버로 시작하기" [ref=e18] [cursor=pointer]:
+          - img [ref=e19] [cursor=pointer]
+          - generic [ref=e21] [cursor=pointer]: 네이버로 시작하기
+      - generic [ref=e22]:
+        - text: 로그인하면
+        - link "이용약관" [ref=e23] [cursor=pointer]:
+          - /url: /terms
+        - text: 및
+        - link "개인정보처리방침" [ref=e24] [cursor=pointer]:
+          - /url: /privacy
+        - text: 에 동의하는 것으로 간주됩니다.
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - generic [ref=e27]: 55%
+        - generic [ref=e28]: R&D 예산 커버리지
+      - generic [ref=e29]:
+        - generic [ref=e30]: 4개
+        - generic [ref=e31]: 주요 기관 실시간 수집
+      - generic [ref=e32]:
+        - generic [ref=e33]: AI
+        - generic [ref=e34]: 설명 가능한 매칭
+  - button "피드백 보내기" [ref=e35] [cursor=pointer]:
+    - img [ref=e36] [cursor=pointer]
+    - generic [ref=e38] [cursor=pointer]: 피드백
+  - alert [ref=e39]
+```

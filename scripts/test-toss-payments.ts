@@ -14,6 +14,9 @@
  * - Valid NextAuth session (use browser cookies or auth token)
  */
 
+// Make this file a module to avoid global scope conflicts
+export {};
+
 console.log('🧪 Toss Payments Local Test Mode\n');
 
 const BASE_URL = 'http://localhost:3000';

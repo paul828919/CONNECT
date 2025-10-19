@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getRedisClient } from '@/lib/cache/redis-cache';
+import { getCacheClient } from '@/lib/cache/redis-cache';
 
 /**
  * Rate limiter config (per IP address)
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const rateLimitKey = `ratelimit:example:${ip}`;
 
     // 3. Check rate limit
-    const redis = await getRedisClient();
+    const redis = await getCacheClient();
     const currentCount = await redis.get(rateLimitKey);
     const count = currentCount ? parseInt(currentCount, 10) : 0;
 

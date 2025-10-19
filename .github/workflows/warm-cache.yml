@@ -1,0 +1,67 @@
+name: Cache Warming Scheduler
+#
+# Automatically warms cache daily at 06:00 KST (21:00 UTC previous day)
+# to maintain 80%+ hit rate and reduce AI API costs
+#
+# Phase 3: Cache Optimization - Week 9 Automation
+
+on:
+  schedule:
+    # Daily at 06:00 KST (21:00 UTC previous day)
+    - cron: '0 21 * * *'
+
+  workflow_dispatch:
+    # Manual trigger for testing
+    inputs:
+      strategy:
+        description: 'Warming strategy (smart, full, programs)'
+        required: false
+        default: 'smart'
+        type: choice
+        options:
+          - smart
+          - full
+          - programs
+
+env:
+  WARM_URL: ${{ secrets.CACHE_WARM_URL || 'https://connectplt.kr/api/admin/cache-warming' }}
+
+jobs:
+  warm-cache:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Determine strategy
+        id: strategy
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "strategy=${{ github.event.inputs.strategy }}" >> $GITHUB_OUTPUT
+          else
+            echo "strategy=smart" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Warm cache
+        run: |
+          response=$(curl -X POST "${{ env.WARM_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"strategy\":\"${{ steps.strategy.outputs.strategy }}\"}" \
+            -w "\nHTTP_STATUS:%{http_code}" \
+            -s)
+
+          http_status=$(echo "$response" | grep "HTTP_STATUS" | cut -d':' -f2)
+          body=$(echo "$response" | sed '/HTTP_STATUS/d')
+
+          echo "Response: $body"
+
+          if [ "$http_status" -ne 200 ]; then
+            echo "❌ Cache warming failed with status $http_status"
+            exit 1
+          fi
+
+          echo "✅ Cache warming successful"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::warning::Cache warming failed. Check logs and retry manually."
