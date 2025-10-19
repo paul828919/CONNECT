@@ -33,7 +33,7 @@ async function testSMTPConnection() {
   }
 
   // Create transporter
-  const transporter = nodemailer.createTransporter({
+  const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'email-smtp.ap-northeast-2.amazonaws.com',
     port: parseInt(process.env.SMTP_PORT || '587'),
     secure: process.env.SMTP_SECURE === 'true',
