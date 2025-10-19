@@ -10,11 +10,36 @@ jobs:
   test:
     name: Test & Lint
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         node-version: [18.x, 20.x]
-    
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: connect
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: connect
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -48,6 +73,16 @@ jobs:
       
       - name: Run tests
         run: npm test -- --coverage --passWithNoTests
+        env:
+          DATABASE_URL: postgresql://connect:password@localhost:5432/connect?schema=public
+          REDIS_CACHE_URL: redis://localhost:6379/0
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          NEXTAUTH_SECRET: test_nextauth_secret_for_ci_only
+          NEXTAUTH_URL: http://localhost:3000
       
       - name: Upload coverage
         uses: codecov/codecov-action@v3
@@ -73,7 +108,7 @@ jobs:
           output: 'trivy-results.sarif'
       
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
       

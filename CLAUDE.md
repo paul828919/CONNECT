@@ -6,6 +6,8 @@ This file provides guidelines for using Claude Code (claude.ai/code) when workin
 **Do not commit or push without local verification.**
 - **Rule**: When executing a task, always verify it locally after completion. Commit and push only after local verification is complete.
 - **Time**: Production deployment takes approximately 12 minutes. Local verification takes 2-5 minutes. Always verify first.
+**Never use browser automation tools (Playwright) when inspecting GitHub Actions pages.**
+- **Rule**: I(user) will personally visit the pagehttps://github.com/paul828919/CONNECT/actions를 to check and share the latest run results. 
 - **Docker Requirement**: If Docker is not running locally during development or modification, **notify the user to start Docker**. Never skip local verification solely because Docker is not running.
 - **No Exceptions**: Even “simple” changes like configuration files, YAML syntax, or document updates are no exception.
 **Importance:**
