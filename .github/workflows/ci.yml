@@ -64,7 +64,12 @@ jobs:
       
       - name: Install dependencies
         run: npm ci
-      
+
+      - name: Setup database schema
+        run: npx prisma db push --accept-data-loss
+        env:
+          DATABASE_URL: postgresql://connect:password@localhost:5432/connect?schema=public
+
       - name: Run linter
         run: npm run lint
       
