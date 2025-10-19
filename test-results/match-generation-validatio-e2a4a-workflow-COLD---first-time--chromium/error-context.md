@@ -37,7 +37,7 @@
             - generic [ref=e33]: 구독 플랜
             - generic [ref=e34]: Free
             - generic [ref=e35]: 3 매칭/월
-        - paragraph [ref=e37]: 매칭 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.
+        - paragraph [ref=e37]: 매칭 생성에 실패했습니다.
         - generic [ref=e38]:
           - generic [ref=e39]:
             - heading "맞춤형 펀딩 기회 찾기" [level=3] [ref=e40]

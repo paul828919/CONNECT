@@ -129,7 +129,13 @@ export async function GET(
     };
 
     // 5. Generate AI explanation (with caching)
-    const result = await generateMatchExplanation(input);
+    // Pass actual IDs for better cache key consistency
+    const result = await generateMatchExplanation(
+      input,
+      userId,
+      match.organizationId,
+      match.programId
+    );
 
     // 6. Update match record with viewed status
     await db.funding_matches.update({
