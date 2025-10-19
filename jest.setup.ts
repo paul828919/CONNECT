@@ -7,10 +7,18 @@ if (typeof window !== 'undefined') {
 }
 
 // Set up test environment variables
-process.env.ENCRYPTION_KEY = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+// Use CI environment variables if available, otherwise use local/mock values
+process.env.ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://connect:password@localhost:5432/connect?schema=public';
-process.env.NEXTAUTH_SECRET = 'test_nextauth_secret_for_testing_only';
-process.env.NEXTAUTH_URL = 'http://localhost:3000';
+process.env.REDIS_CACHE_URL = process.env.REDIS_CACHE_URL || 'redis://localhost:6379/0';
+process.env.NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || 'test_nextauth_secret_for_testing_only';
+process.env.NEXTAUTH_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+
+// OAuth provider credentials (from CI secrets or local .env)
+process.env.NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID || 'mock_naver_client_id_for_testing';
+process.env.NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET || 'mock_naver_secret_for_testing';
+process.env.KAKAO_CLIENT_ID = process.env.KAKAO_CLIENT_ID || 'mock_kakao_client_id_for_testing';
+process.env.KAKAO_CLIENT_SECRET = process.env.KAKAO_CLIENT_SECRET || 'mock_kakao_secret_for_testing';
 
 // Mock Headers class for Node.js environment (not available by default)
 class MockHeaders {

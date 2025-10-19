@@ -772,9 +772,16 @@ CREATE TABLE procurement_readiness (
 
 ### 4.3 CI/CD Infrastructure (Production Ready)
 
-**Status:** ✅ **Complete** (October 14, 2025)
-**Achievement:** 87% faster deployments (35 min → 4 min)
+**Status:** ✅ **Complete** (October 15, 2025)  
+**Architecture:** Industry-Standard Entrypoint Pattern (v4.0)  
+**Achievement:** 87% faster deployments (35 min → 4 min), 75% code reduction  
 **Security:** SSH key authentication (enterprise-grade)
+
+**📚 Complete Documentation:**
+- [START-HERE-DEPLOYMENT-DOCS.md](../../START-HERE-DEPLOYMENT-DOCS.md) - Deployment guide entry point
+- [DEPLOYMENT-ARCHITECTURE-INDEX.md](../../DEPLOYMENT-ARCHITECTURE-INDEX.md) - Complete index
+- [DEPLOYMENT-ARCHITECTURE-LESSONS.md](../../DEPLOYMENT-ARCHITECTURE-LESSONS.md) - Transformation story (788 lines)
+- [DEPLOYMENT-DOCS-STATUS.md](../../DEPLOYMENT-DOCS-STATUS.md) - Documentation status
 
 #### Automated Deployment Pipeline
 
@@ -794,14 +801,16 @@ CREATE TABLE procurement_readiness (
 2. **Production Deployment** (`.github/workflows/deploy-production.yml`)
    - **Trigger:** Push to main branch
    - **Duration:** 3-4 minutes
+   - **Architecture:** Entrypoint pattern (migrations inside containers)
    - **Steps:**
      - Build optimized Docker image with multi-stage caching
      - SSH to production server (key-based authentication)
      - Zero-downtime rolling update (app2 → app1)
-     - Health checks on `/api/health` endpoint
-     - Automatic rollback on failure
+     - Containers run migrations via entrypoint script on startup
+     - Health checks on `/api/health` endpoint (validates migrations + app)
+     - Automatic rollback on failure (30 seconds)
      - Cleanup old images
-   - **Purpose:** Automated production deployment
+   - **Purpose:** Automated production deployment with self-contained containers
 
 3. **PR Preview** (`.github/workflows/preview-deploy.yml`)
    - **Trigger:** Pull request creation/update

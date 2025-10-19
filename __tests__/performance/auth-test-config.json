@@ -1,0 +1,100 @@
+{
+  "generated_at": "2025-10-18T15:04:07.003Z",
+  "base_url": "http://localhost:3000",
+  "users": [
+    {
+      "id": "test-user-0-1760798319125",
+      "email": "loadtest+0@connectplt.kr",
+      "name": "Load Test User 0",
+      "role": "ADMIN",
+      "organization_id": "cmgwduuc10000qxz2zlob8udk"
+    },
+    {
+      "id": "test-user-1-1760798319128",
+      "email": "loadtest+1@connectplt.kr",
+      "name": "Load Test User 1",
+      "role": "USER",
+      "organization_id": "cmgwduuc10000qxz2zlob8udk"
+    },
+    {
+      "id": "test-user-2-1760798319130",
+      "email": "loadtest+2@connectplt.kr",
+      "name": "Load Test User 2",
+      "role": "USER",
+      "organization_id": "cmgwduuc10000qxz2zlob8udk"
+    },
+    {
+      "id": "test-user-3-1760798319131",
+      "email": "loadtest+3@connectplt.kr",
+      "name": "Load Test User 3",
+      "role": "USER",
+      "organization_id": "cmgwduuc10000qxz2zlob8udk"
+    },
+    {
+      "id": "test-user-4-1760798319132",
+      "email": "loadtest+4@connectplt.kr",
+      "name": "Load Test User 4",
+      "role": "USER",
+      "organization_id": "cmgwduuc10000qxz2zlob8udk"
+    },
+    {
+      "id": "test-user-5-1760798319133",
+      "email": "loadtest+5@connectplt.kr",
+      "name": "Load Test User 5",
+      "role": "USER",
+      "organization_id": "cmgwduuc10000qxz2zlob8udk"
+    },
+    {
+      "id": "test-user-6-1760798319134",
+      "email": "loadtest+6@connectplt.kr",
+      "name": "Load Test User 6",
+      "role": "USER",
+      "organization_id": "cmgwduuc10000qxz2zlob8udk"
+    },
+    {
+      "id": "test-user-7-1760798319135",
+      "email": "loadtest+7@connectplt.kr",
+      "name": "Load Test User 7",
+      "role": "USER",
+      "organization_id": "cmgwduuc10000qxz2zlob8udk"
+    },
+    {
+      "id": "test-user-8-1760798319136",
+      "email": "loadtest+8@connectplt.kr",
+      "name": "Load Test User 8",
+      "role": "USER",
+      "organization_id": "cmgwduuc10000qxz2zlob8udk"
+    },
+    {
+      "id": "test-user-9-1760798319137",
+      "email": "loadtest+9@connectplt.kr",
+      "name": "Load Test User 9",
+      "role": "USER",
+      "organization_id": "cmgwduuc10000qxz2zlob8udk"
+    }
+  ],
+  "session_tokens": [
+    "test-session-0-1760799846989-90nead",
+    "test-session-1-1760799846993-9x581l",
+    "test-session-2-1760799846994-wwzgmc",
+    "test-session-3-1760799846996-m0pi7",
+    "test-session-4-1760799846997-xyoiio",
+    "test-session-5-1760799846998-vvb62",
+    "test-session-6-1760799846999-ya2b75",
+    "test-session-7-1760799847000-xbrtkh",
+    "test-session-8-1760799847001-a18qn3r",
+    "test-session-9-1760799847002-qno47"
+  ],
+  "sample_match_ids": [
+    "08a075d2-d78b-4cc1-b017-5adb0073f91e",
+    "55d07d2e-67e6-4a97-a890-7f3c5f503747",
+    "7af9e10a-e061-4227-9f51-d6989b1933e5",
+    "99eda9cd-5e91-430c-8655-549e36493253",
+    "d87e0e83-eebe-4edc-9c0b-29b849df6400"
+  ],
+  "test_info": {
+    "total_users": 10,
+    "admin_users": 1,
+    "regular_users": 9
+  }
+}

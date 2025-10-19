@@ -1,3 +1,11 @@
+<!-- Auto-update on 2025-10-19 KST -->
+## Update — 2025-10-19 (Launch Cadence & Gates)
+
+- **Launch target**: Move to **2025-12-02** official launch.
+- **Beta**: Quiet beta continues with **14-day free** trial policy, collecting feedback through **2025-12-01**.
+- **Payments readiness**: Toss in test by **11/22**, live by **11/29** (subscription, billing key, webhooks, receipt emails minimal set).
+- **Performance gate**: Use Phase 2 k6 auth baseline as reference; re-check p95 & error-rate after Toss deploy.
+
 # Connect Platform: 12-Week Execution Plan (Master)
 ## January 1, 2026 Launch Target
 
@@ -1442,7 +1450,7 @@ lib/ai/client.ts
 **Email Template Pricing Example**:
 ```
 [Beta Benefits]
-✓ 30일 무료 체험
+✓ 14일 무료 체험
 ✓ 평생 50% 할인 (₩24,500/월, 정상가 ₩49,000)
 ✓ 우선 기능 추가 요청권
 ✓ Early Adopter 배지 (정식 출시 시)

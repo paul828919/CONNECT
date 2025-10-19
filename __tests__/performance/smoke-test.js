@@ -20,7 +20,8 @@ export let options = {
 };
 
 export default function () {
-  const res = http.get('https://connectplt.kr/api/health');
+  const BASE_URL = __ENV.BASE_URL || 'https://connectplt.kr';
+  const res = http.get(`${BASE_URL}/api/health`);
 
   check(res, {
     'status is 200': (r) => r.status === 200,

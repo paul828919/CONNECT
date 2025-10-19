@@ -54,6 +54,7 @@ export interface MatchExplanationResponse {
 
 /**
  * Generate cache key for match explanation
+ * Uses IDs for consistency and to avoid issues with name changes
  */
 function getCacheKey(organizationId: string, programId: string): string {
   return `${CACHE_KEY_PREFIX}${organizationId}:${programId}`;
@@ -72,12 +73,14 @@ async function getCachedExplanation(
     const cached = await redis.get(key);
 
     if (cached) {
+      console.log('[CACHE] HIT - AI Explanation:', key);
       return JSON.parse(cached) as ParsedMatchExplanation;
     }
 
+    console.log('[CACHE] MISS - AI Explanation:', key);
     return null;
   } catch (error) {
-    console.error('Cache read error:', error);
+    console.error('[CACHE] Read error - AI Explanation:', error);
     return null; // Fall through to generate new explanation
   }
 }
@@ -94,8 +97,9 @@ async function cacheExplanation(
     const redis = getRedisClient();
     const key = getCacheKey(organizationId, programId);
     await redis.setex(key, CACHE_TTL_SECONDS, JSON.stringify(explanation));
+    console.log('[CACHE] SET - AI Explanation:', key, `(TTL: ${CACHE_TTL_SECONDS}s)`);
   } catch (error) {
-    console.error('Cache write error:', error);
+    console.error('[CACHE] Write error - AI Explanation:', error);
     // Non-critical error, don't throw
   }
 }
@@ -106,12 +110,15 @@ async function cacheExplanation(
 export async function generateMatchExplanation(
   input: MatchExplanationInput,
   userId?: string,
-  organizationId?: string
+  organizationId?: string,
+  programId?: string
 ): Promise<MatchExplanationResponse> {
   const startTime = Date.now();
 
-  // Try to get from cache first
-  const cached = await getCachedExplanation(input.companyName, input.programTitle);
+  // Try to get from cache first (use IDs if available, fallback to names)
+  const cacheOrgId = organizationId || input.companyName;
+  const cacheProgramId = programId || input.programTitle;
+  const cached = await getCachedExplanation(cacheOrgId, cacheProgramId);
 
   if (cached) {
     const responseTime = Date.now() - startTime;
@@ -149,8 +156,8 @@ export async function generateMatchExplanation(
     // Parse XML response
     const explanation = parseMatchExplanation(aiResponse.content);
 
-    // Cache the result
-    await cacheExplanation(input.companyName, input.programTitle, explanation);
+    // Cache the result (use IDs if available, fallback to names)
+    await cacheExplanation(cacheOrgId, cacheProgramId, explanation);
 
     const responseTime = Date.now() - startTime;
 

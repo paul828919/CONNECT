@@ -99,13 +99,19 @@ test.describe('Match Generation System Validation', () => {
     let apiResponseTime = 0;
     let apiStatusCode = 0;
     let responsePayload: any = null;
+    let requestStartTime = 0;
+
+    page.on('request', (request) => {
+      if (request.url().includes('/api/matches/generate')) {
+        requestStartTime = Date.now();
+      }
+    });
 
     page.on('response', async (response) => {
       if (response.url().includes('/api/matches/generate')) {
         apiCallDetected = true;
         apiStatusCode = response.status();
-        const timing = response.timing();
-        apiResponseTime = timing.responseEnd - timing.requestStart;
+        apiResponseTime = Date.now() - requestStartTime;
 
         try {
           responsePayload = await response.json();
@@ -249,13 +255,19 @@ test.describe('Match Generation System Validation', () => {
     let apiResponseTime = 0;
     let apiStatusCode = 0;
     let responsePayload: any = null;
+    let requestStartTime = 0;
+
+    page.on('request', (request) => {
+      if (request.url().includes('/api/matches/generate')) {
+        requestStartTime = Date.now();
+      }
+    });
 
     page.on('response', async (response) => {
       if (response.url().includes('/api/matches/generate')) {
         apiCallDetected = true;
         apiStatusCode = response.status();
-        const timing = response.timing();
-        apiResponseTime = timing.responseEnd - timing.requestStart;
+        apiResponseTime = Date.now() - requestStartTime;
 
         try {
           responsePayload = await response.json();

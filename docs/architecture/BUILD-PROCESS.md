@@ -1,14 +1,29 @@
 # Build Process Architecture
 
+> **📌 NOTE - October 15, 2025**
+> 
+> This document remains mostly accurate but should be read in conjunction with the new entrypoint pattern architecture.
+> 
+> **Key Update:** The Dockerfile now includes an ENTRYPOINT script that runs migrations before app startup (industry-standard pattern).
+> 
+> **See also:**
+> - [DEPLOYMENT-ARCHITECTURE-LESSONS.md](../../DEPLOYMENT-ARCHITECTURE-LESSONS.md) - Entrypoint pattern implementation
+> - [DEPLOYMENT-ARCHITECTURE-QUICK-REFERENCE.md](../../DEPLOYMENT-ARCHITECTURE-QUICK-REFERENCE.md) - Build with entrypoint
+> - GitHub Actions automated builds - [GITHUB-ACTIONS-INDEX.md](../../GITHUB-ACTIONS-INDEX.md)
+
+---
+
 **Document Version:** 1.0  
 **Last Updated:** October 13, 2025  
-**Status:** Production Active
+**Status:** Production Active (Updated Oct 15 for entrypoint pattern)
 
 ---
 
 ## Overview
 
 Connect uses a **multi-stage Docker build process** optimized for production deployment. The build pipeline focuses on minimal image size, fast builds with layer caching, and security best practices.
+
+**New (Oct 15, 2025):** The final stage now uses an ENTRYPOINT script (`docker-entrypoint.sh`) that runs database migrations before starting the application - following the industry-standard pattern used by Heroku, AWS, and Kubernetes.
 
 ---
 

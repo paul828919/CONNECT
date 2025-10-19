@@ -1,8 +1,97 @@
+<!-- Auto-update on 2025-10-19 KST -->
+## Update — 2025-10-19 (Auth Baseline & Payments Plan)
+
+- **k6 Auth Baseline**: Phase 2 results reviewed and accepted as **meaningful** for baseline (staging ✅, light prod run acceptable). Key metrics (from `phase2-test-results.md`):
+  - P50: None ms
+  - P95: 58.93 ms
+  - Error rate: None
+  - Redis/Cache: None
+- **Payments Plan (Toss)**: Trial policy updated to **14-day free → ₩24,500/month** (was 30-day). Toss integration to be implemented **before beta launch**.
+- **Schedule**:
+  - Toss **test mode** by **2025-11-22**, **live** by **2025-11-29**.
+  - Quiet beta optimization through **2025-12-01**.
+  - **Official Launch**: **2025-12-02**.
+
 # Connect Platform - Implementation Status
 ## 12-Week Execution Plan (Oct 9, 2025 → Jan 1, 2026)
 
-**Last Updated**: October 16, 2025 15:45 KST
+**Last Updated**: October 19, 2025 15:10 KST
 **Current Status**: 🟡 Infrastructure Prerequisites (Email ✅ + NTIS ⚠️) → Week 3-4 AI Integration
+---
+
+
+---
+
+## ✅ New in this conversation (October 19, 2025 15:10 KST)
+
+**Context**: Week 7, Week 8, and Week 9 prep were completed locally in Claude Code. OAuth callback issues on prod were resolved via CI/CD (GitHub Actions) redeploy. SMTP + NTIS API prod verification complete. Auto‑warm is scheduled via GitHub Actions.
+
+### Completed (this session)
+- **Week 7**: 100% (E2E, AI load test round 2, performance re‑test)  
+- **Week 8**: 100% (security hardening, bug‑fix sprint, beta prep assets)  
+- **Week 9 prep**: 100% (internal testing prep & validation checklist ready)
+- **Files created**:  
+  - `app/api/example-with-ratelimit/route.ts` (rate limiting example)  
+  - `scripts/seed-test-orgs.ts` (create 5 test organizations)  
+  - `docs/beta/README.md` (beta onboarding guide)  
+  - `docs/VALIDATION-COMMANDS.md` (validation steps)  
+  - `WEEK9-EXECUTION-READY-CHECKLIST.md` (35‑min validation workflow)  
+  - `.github/workflows/warm-cache.yml` (daily cache warming)
+- **Files modified**:  
+  - `next.config.js` (CSP header added; compression ensured)  
+  - `lib/auth.config.ts` (cookie security: httpOnly, secure, sameSite=lax)  
+  - `PHASE3-CACHE-QUICK-REFERENCE.md` (Grafana alert note added)
+- **CI/CD**: GitHub Actions pipeline implemented and verified; production deployment confirmed healthy after redeploy (no stale code path).  
+- **Auth testing**: k6 **cookie‑based** NextAuth auth‑load suite prepared; DB session seeding SQL prepared.
+
+### Remaining to reach **Beta Release**
+**Immediate (execute now)**
+1) **Commit & push** all Week7‑9 prep changes to a feature branch → open PR “phase3/week7‑9‑prep‑complete”.  
+2) **Run 35‑min validation**: `cat WEEK9-EXECUTION-READY-CHECKLIST.md` and execute the steps; attach results to PR.  
+3) **Run Auth‑Load Baseline** (k6) against staging/prod, archive metrics (p95, error rate).  
+
+**Short‑term (this week)**
+4) **Internal Team Testing (Week 9 Day 1‑2)** — seed test orgs (if not already), run full journeys, log issues.  
+5) **Monitoring & alerts** — confirm Grafana dashboards + cache‑hit (<60%) & P95 (>2s) alerts firing.
+
+**Payments**
+6) **Toss Payments MVP**: If launch is **Dec 2**, integrate Toss in **test mode by Nov 22** and **live by Nov 29** (minimal: billing key + subscription + webhooks + receipt email). For a **Jan 1 public launch**, Toss can be finalized in late Week 11.
+
+---
+## ✅ New in this conversation (October 19, 2025 14:14 KST)
+
+**Context**: Updates based on our Oct 19 session (cookie vs Bearer auth issue, auth load testing, cache warm-up orchestration, low‑token Claude prompt).
+
+### Completed in this session
+- **Auth method diagnosis**: Identified **401** root cause — test harness used Bearer token, API expects **NextAuth session cookies**. Decision: switch tests to cookie-based sessions.
+- **Auth Load Test artifacts created**:
+  - `__tests__/performance/auth-load.js` (k6) — cookie-based login + session churn + authed endpoints
+  - `scripts/seed_session_example.sql` — optional DB session seeding for NextAuth
+- **Execution strategy confirmed**: Run **Auth Load Baseline BEFORE Stage 3** optimization, and **re-run AFTER** to verify gains.
+- **Low‑token Claude Code orchestration prompt** prepared (for Weeks 7–9 gating + patches) — ready to paste.
+- **Cache auto‑warm runbook** drafted (manual trigger + daily schedule pattern).
+
+> Note: The two artifacts above are prepared and ready to copy into the repo; scheduling the auto‑warm (cron/GitHub Actions) is **pending** execution on your environment.
+
+### Remaining to reach **Beta Release** (target: Nov 1, 2025)
+**Critical (this week)**
+1) **Integrate & run Auth Load Baseline** (k6) → fix any auth/session failures; archive metrics.
+2) **Schedule cache auto‑warm** (cron @ 06:00 KST or GH Actions workflow) + verify dashboard hit‑rate command.
+3) **Security hardening**: rate limiting on API, CSP headers, `httpOnly/secure/sameSite` for NextAuth cookies; brief throttle/attack checks.
+4) **Monitoring**: deploy **Grafana + Prometheus** dashboards + alert for cache hit rate <60% and P95 > 2s.
+5) **TypeScript error cleanup** (prev. ~32) → `npm run type-check` = 0.
+
+**High Priority (to start Week 9 Internal Testing Day 1–2)**
+6) **Seed 5–10 diverse test orgs** (startup/SME/enterprise/research) + test accounts.
+7) **Run E2E user‑journey** (profile → matches → 10+ explanations → 10+ chat Qs) and log issues.
+8) **Re‑run Auth Load** after any Stage 3 perf changes; compare to baseline.
+
+**Nice‑to‑have (not blocking beta)**
+9) **Cloudflare rules** for static/cache, structured logging for P95/P99.
+10) **NTIS production key**: continue vendor escalation (non‑blocking for beta).
+
+---
+
 
 ---
 
@@ -815,7 +904,7 @@ For a complete narrative view of all progress (Oct 9 → Jan 1, 2026), see:
 5. ⏸️ Beta recruitment via LinkedIn (4-6 hours)
 
 **Verified Pricing** (from BETA-TEST-MASTER-PLAN.md):
-- Free 30 days → ₩24,500/month (50% lifetime discount off ₩49,000)
+- Free 14 days → ₩24,500/month (50% lifetime discount off ₩49,000)
 - **NOT** ₩4,900/month (this was an error caught by user)
 
 **Day 6 Tasks - TypeScript Fixes (2-3 hours)**:

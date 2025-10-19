@@ -1,0 +1,64 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - link "Connect" [ref=e7] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e8] [cursor=pointer]: Connect
+        - navigation [ref=e9]:
+          - link "대시보드" [ref=e10] [cursor=pointer]:
+            - /url: /dashboard
+          - link "매칭 결과" [ref=e11] [cursor=pointer]:
+            - /url: /dashboard/matches
+          - link "파트너 검색" [ref=e12] [cursor=pointer]:
+            - /url: /dashboard/partners
+        - button "김 김병진" [ref=e14] [cursor=pointer]:
+          - generic [ref=e16] [cursor=pointer]: 김
+          - generic [ref=e17] [cursor=pointer]: 김병진
+    - main [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - heading "환영합니다! 👋" [level=2] [ref=e21]
+          - paragraph [ref=e22]: Connect 플랫폼에 오신 것을 환영합니다. 프로필이 설정되면 맞춤형 R&D 펀딩 기회를 확인하실 수 있습니다.
+        - generic [ref=e23]:
+          - link "내 매칭 0 저장된 매칭" [ref=e24] [cursor=pointer]:
+            - /url: /dashboard/matches
+            - generic [ref=e25] [cursor=pointer]: 내 매칭
+            - generic [ref=e26] [cursor=pointer]: "0"
+            - generic [ref=e27] [cursor=pointer]: 저장된 매칭
+          - generic [ref=e28]:
+            - generic [ref=e29]: 활성 프로그램
+            - generic [ref=e30]: "8"
+            - generic [ref=e31]: 4개 기관
+          - generic [ref=e32]:
+            - generic [ref=e33]: 구독 플랜
+            - generic [ref=e34]: Free
+            - generic [ref=e35]: 3 매칭/월
+        - generic [ref=e36]:
+          - generic [ref=e37]:
+            - heading "맞춤형 펀딩 기회 찾기" [level=3] [ref=e38]
+            - paragraph [ref=e39]: 귀하의 조직 프로필에 최적화된 정부 R&D 지원 프로그램을 추천해드립니다.
+          - generic [ref=e40]:
+            - button "매칭 생성하기" [ref=e41] [cursor=pointer]:
+              - img [ref=e42] [cursor=pointer]
+              - text: 매칭 생성하기
+            - paragraph [ref=e44]: 4개 주요 기관 (IITP, KEIT, TIPA, KIMST)의 활성 프로그램 대상
+        - generic [ref=e45]:
+          - link "조직 프로필 관리 프로필을 업데이트하여 더 정확한 매칭 받기" [ref=e46] [cursor=pointer]:
+            - /url: /dashboard/profile/edit
+            - heading "조직 프로필 관리" [level=4] [ref=e47] [cursor=pointer]
+            - paragraph [ref=e48] [cursor=pointer]: 프로필을 업데이트하여 더 정확한 매칭 받기
+          - link "매칭 결과 보기 저장된 매칭 결과 확인 및 관리" [ref=e49] [cursor=pointer]:
+            - /url: /dashboard/matches
+            - heading "매칭 결과 보기" [level=4] [ref=e50] [cursor=pointer]
+            - paragraph [ref=e51] [cursor=pointer]: 저장된 매칭 결과 확인 및 관리
+    - region "Notifications (F8)":
+      - list
+  - button "피드백 보내기" [ref=e52] [cursor=pointer]:
+    - img [ref=e53] [cursor=pointer]
+    - generic [ref=e55] [cursor=pointer]: 피드백
+  - alert [ref=e56]
+```

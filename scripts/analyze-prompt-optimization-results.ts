@@ -18,6 +18,9 @@
  * npx tsx scripts/analyze-prompt-optimization-results.ts
  */
 
+// Make this file a module to avoid global scope conflicts
+export {};
+
 // ANSI colors
 const colors = {
   reset: '\x1b[0m',

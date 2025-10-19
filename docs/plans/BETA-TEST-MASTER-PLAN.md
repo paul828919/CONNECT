@@ -1,3 +1,10 @@
+<!-- Auto-update on 2025-10-19 KST -->
+## Update — 2025-10-19 (Beta Plan & Tester Sourcing)
+
+- **Trial policy**: **14-day free → ₩24,500/month**.
+- **Tester sourcing**: Up to **100** LinkedIn prospects; target **≥50** active beta testers.
+- **Process**: Implement Toss first; run internal testing; then iterate weekly on feedback until **2025-12-01**; launch **2025-12-02**.
+
 # Connect Platform: Beta Test Master Plan
 ## Stealth Beta Strategy for Confident January 1, 2026 Launch
 
@@ -5,7 +12,7 @@
 **Created**: October 10, 2025  
 **Author**: Paul Kim (Founder & CEO)  
 **Launch Date**: January 1, 2026 00:00 KST  
-**Beta Period**: November 15 - December 15, 2025 (4 weeks)  
+**Beta Period**: November 1 - December 2, 2025 (4 weeks)  
 **Project Root**: `/Users/paulkim/Downloads/connect`
 
 ---

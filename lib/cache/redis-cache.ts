@@ -17,12 +17,15 @@
 
 import { createClient } from 'redis';
 
-// TTL constants (in seconds)
+// Import optimized TTL strategies
+import { BASE_TTL } from './ttl-optimizer';
+
+// TTL constants (in seconds) - now using optimized values
 export const CACHE_TTL = {
-  MATCH_RESULTS: 24 * 60 * 60,      // 24 hours - matches change on scraping
-  ORG_PROFILE: 60 * 60,             // 1 hour - profiles updated infrequently
-  PROGRAMS: 6 * 60 * 60,            // 6 hours - updated 2-4x daily by scraper
-  AI_EXPLANATION: 24 * 60 * 60,     // 24 hours - explanations rarely change
+  MATCH_RESULTS: BASE_TTL.MATCH_RESULTS,      // 24 hours - matches change on scraping
+  ORG_PROFILE: BASE_TTL.ORGANIZATION_PROFILE, // 2 hours - profiles updated infrequently (optimized)
+  PROGRAMS: BASE_TTL.PROGRAMS,                // 4 hours - updated 2-4x daily by scraper (optimized)
+  AI_EXPLANATION: BASE_TTL.AI_EXPLANATION,    // 7 days - AI explanations are expensive (optimized)
 } as const;
 
 // Cache key prefixes
@@ -39,7 +42,7 @@ let cacheClient: ReturnType<typeof createClient> | null = null;
 /**
  * Get Redis cache client (singleton)
  */
-async function getCacheClient() {
+export async function getCacheClient() {
   if (!cacheClient) {
     cacheClient = createClient({
       url: process.env.REDIS_CACHE_URL || 'redis://localhost:6379',
@@ -138,7 +141,13 @@ export async function setCache<T>(
 ): Promise<void> {
   try {
     const redis = await getCacheClient();
-    await redis.set(key, JSON.stringify(value), {
+    
+    // Custom JSON serializer that handles BigInt
+    const serialized = JSON.stringify(value, (_, v) => 
+      typeof v === 'bigint' ? v.toString() : v
+    );
+    
+    await redis.set(key, serialized, {
       EX: ttl, // Expire after ttl seconds
     });
     console.log('[CACHE] SET', key, `(TTL: ${ttl}s)`);
