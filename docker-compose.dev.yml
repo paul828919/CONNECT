@@ -22,6 +22,12 @@ services:
       NEXTAUTH_URL: http://localhost:3000
       NEXTAUTH_SECRET: dev-secret-change-in-production-min-32-chars
       JWT_SECRET: dev-jwt-secret-change-in-production
+      # Toss Payments - Test Mode (Week 9 Phase 3)
+      TOSS_CLIENT_KEY: ${TOSS_CLIENT_KEY}
+      TOSS_SECRET_KEY: ${TOSS_SECRET_KEY}
+      TOSS_TEST_MODE: ${TOSS_TEST_MODE:-true}
+      # Encryption (PIPA Compliance)
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       # Anthropic Claude AI Configuration
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5-20250929}
