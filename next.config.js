@@ -39,6 +39,8 @@ const nextConfig = {
       'bcryptjs',
     ],
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    // Enable instrumentation hook for server initialization (cache warming scheduler)
+    instrumentationHook: true,
   },
 
   // Image optimization for agency domains
