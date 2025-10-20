@@ -24,12 +24,13 @@ export function initializeCacheScheduler() {
     return;
   }
 
-  // Only run in app1 container (shared cache, no need for duplicate jobs)
+  // Only run in app1 container or scraper container (shared cache, no need for duplicate jobs)
+  // Skip only in app2 to prevent duplicate jobs
   const instanceId = process.env.INSTANCE_ID;
 
-  if (instanceId !== 'app1') {
-    console.log(`[CACHE INIT] Skipping scheduler initialization (instance: ${instanceId || 'unknown'})`);
-    console.log('[CACHE INIT] Cache warming scheduler only runs in app1 container');
+  if (instanceId === 'app2') {
+    console.log(`[CACHE INIT] Skipping scheduler initialization (instance: ${instanceId})`);
+    console.log('[CACHE INIT] Cache warming scheduler only runs in app1 or scraper container');
     return;
   }
 

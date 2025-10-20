@@ -28,6 +28,7 @@ import {
 } from '@/lib/cache/redis-cache';
 import { startScheduler } from './scheduler';
 import { startNTISScheduler } from '../ntis-api/scheduler';
+import { initializeCacheScheduler } from '../cache/init';
 
 
 // Job data interface
@@ -482,8 +483,9 @@ scrapingWorker.on('failed', (job, err) => {
 
 // Start schedulers on worker initialization
 console.log('🚀 Initializing schedulers...');
-startScheduler();         // Playwright scraper (9 AM, 3 PM KST)
-startNTISScheduler();     // NTIS API scraper (9 AM KST daily)
+startScheduler();            // Playwright scraper (9 AM, 3 PM KST)
+startNTISScheduler();        // NTIS API scraper (9 AM KST daily)
+initializeCacheScheduler();  // Cache warming (6 AM KST daily)
 console.log('✅ Schedulers initialized successfully');
 
 export default scrapingWorker;
