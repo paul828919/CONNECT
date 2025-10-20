@@ -230,7 +230,7 @@ jobs:
             # Blue-Green deployment for app instances
             if docker ps | grep -q connect_app1; then
               echo "🔄 Deploying to app2 first (blue-green deployment)..."
-              docker-compose up -d app2
+              docker-compose --env-file .env.production up -d app2
 
               # Wait for health check (migrations run automatically inside container)
               echo "⏳ Waiting for app2 to be healthy (including migrations)..."
@@ -238,8 +238,8 @@ jobs:
 
               # Switch traffic and update app1
               echo "✅ App2 healthy. Updating app1..."
-              docker-compose stop app1
-              docker-compose up -d app1
+              docker-compose --env-file .env.production stop app1
+              docker-compose --env-file .env.production up -d app1
 
               # Wait for app1
               echo "⏳ Waiting for app1 to be healthy..."
@@ -248,7 +248,7 @@ jobs:
               echo "✅ Both app instances healthy!"
             else
               echo "🆕 First deployment - starting both app instances..."
-              docker-compose up -d app1 app2
+              docker-compose --env-file .env.production up -d app1 app2
 
               # Wait for both to be healthy
               timeout 180 sh -c 'until curl -sf http://172.25.0.21:3001/api/health; do sleep 5; done'
@@ -258,7 +258,7 @@ jobs:
 
             # Deploy scraper (with fresh code and health checks)
             echo "🔄 Deploying scraper..."
-            docker-compose up -d scraper
+            docker-compose --env-file .env.production up -d scraper
 
             # Wait for scraper to be healthy
             echo "⏳ Waiting for scraper to be healthy..."
@@ -311,5 +311,5 @@ jobs:
           echo "❌ Deployment failed! Rolling back..."
           ssh -i ~/.ssh/deploy_key \
           ${{ secrets.PRODUCTION_SERVER_USER }}@${{ secrets.PRODUCTION_SERVER_IP }} \
-          'cd /opt/connect && docker-compose restart app1 app2 scraper'
+          'cd /opt/connect && docker-compose --env-file .env.production restart app1 app2 scraper'
 
