@@ -348,7 +348,7 @@ export async function closeCacheConnection(): Promise<void> {
 }
 
 // Export everything
-export default {
+const redisCache = {
   getCache,
   setCache,
   deleteCache,
@@ -367,3 +367,5 @@ export default {
   resetCacheStats,
   closeCacheConnection,
 };
+
+export default redisCache;

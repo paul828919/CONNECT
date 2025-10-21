@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
@@ -20,6 +20,33 @@ export default function DashboardPage() {
     billingCycle: string;
     expiresAt: string;
   } | null>(null);
+
+  const fetchMatchStats = useCallback(async () => {
+    try {
+      const orgId = (session?.user as any)?.organizationId;
+      if (!orgId) return;
+
+      const res = await fetch(`/api/matches?organizationId=${orgId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMatchCount(data.matches?.length || 0);
+      }
+    } catch (err) {
+      console.error('Error fetching match stats:', err);
+    }
+  }, [session]);
+
+  const fetchSubscription = useCallback(async () => {
+    try {
+      const res = await fetch('/api/subscriptions/me');
+      if (res.ok) {
+        const data = await res.json();
+        setSubscription(data.subscription);
+      }
+    } catch (err) {
+      console.error('Error fetching subscription:', err);
+    }
+  }, []);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -40,34 +67,7 @@ export default function DashboardPage() {
 
     fetchMatchStats();
     fetchSubscription();
-  }, [session, status, router]);
-
-  const fetchMatchStats = async () => {
-    try {
-      const orgId = (session?.user as any)?.organizationId;
-      if (!orgId) return;
-
-      const res = await fetch(`/api/matches?organizationId=${orgId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setMatchCount(data.matches?.length || 0);
-      }
-    } catch (err) {
-      console.error('Error fetching match stats:', err);
-    }
-  };
-
-  const fetchSubscription = async () => {
-    try {
-      const res = await fetch('/api/subscriptions/me');
-      if (res.ok) {
-        const data = await res.json();
-        setSubscription(data.subscription);
-      }
-    } catch (err) {
-      console.error('Error fetching subscription:', err);
-    }
-  };
+  }, [session, status, router, fetchMatchStats, fetchSubscription]);
 
   const handleGenerateMatches = async () => {
     try {

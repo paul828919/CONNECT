@@ -95,7 +95,9 @@ export async function triggerManualCacheWarming(): Promise<{
   }
 }
 
-export default {
+const cacheWarmingScheduler = {
   startCacheWarmingScheduler,
   triggerManualCacheWarming,
 };
+
+export default cacheWarmingScheduler;

@@ -469,10 +469,12 @@ export async function checkPerformanceAlerts(): Promise<{
   }
 }
 
-export default {
+const performanceMonitor = {
   recordPerformanceMetric,
   getPerformanceStats,
   getSlowRequests,
   getPerformanceTrends,
   checkPerformanceAlerts,
 };
+
+export default performanceMonitor;

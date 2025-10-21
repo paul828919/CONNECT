@@ -321,10 +321,12 @@ export async function clearAllExplanationCaches(): Promise<number> {
   }
 }
 
-export default {
+const matchExplanationService = {
   generateMatchExplanation,
   batchGenerateExplanations,
   getCacheStats,
   clearExplanationCache,
   clearAllExplanationCaches,
 };
+
+export default matchExplanationService;

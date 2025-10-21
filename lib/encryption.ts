@@ -310,7 +310,7 @@ export function benchmarkEncryption(iterations: number = 1000): void {
 }
 
 // Export all functions
-export default {
+const encryption = {
   generateKey,
   encrypt,
   decrypt,
@@ -320,3 +320,5 @@ export default {
   rotateKey,
   benchmarkEncryption,
 };
+
+export default encryption;

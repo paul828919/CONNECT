@@ -517,11 +517,13 @@ function parseEmployeeCount(employeeCount: string | null): number {
   return ranges[employeeCount] || 0;
 }
 
-export default {
+const cacheWarming = {
   warmOrganizationCache,
   warmProgramsCache,
   warmAIExplanations,
   warmAllActiveOrganizations,
   smartWarmCache,
 };
+
+export default cacheWarming;
 

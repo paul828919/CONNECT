@@ -281,10 +281,12 @@ export async function cleanupOldLogs(): Promise<number> {
   return result.count;
 }
 
-export default {
+const costLogger = {
   logAICost,
   getCostStats,
   getDailyCostBreakdown,
   getTopUsersByCost,
   cleanupOldLogs,
 };
+
+export default costLogger;
