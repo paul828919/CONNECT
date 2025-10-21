@@ -21,8 +21,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
 
 const PLAN_PRICES = {
-  PRO: { monthly: 490000, yearly: 4900000 },
-  TEAM: { monthly: 990000, yearly: 9900000 },
+  PRO: { monthly: 49000, yearly: 490000 },
+  TEAM: { monthly: 99000, yearly: 990000 },
 };
 
 export async function POST(request: NextRequest) {
@@ -56,6 +56,11 @@ export async function POST(request: NextRequest) {
       billingCycle as 'monthly' | 'yearly'
     ];
 
+    // Transform billing cycle to uppercase for database compatibility
+    // Frontend sends: 'monthly' / 'yearly' (user-friendly)
+    // Database expects: 'MONTHLY' / 'ANNUAL' (Prisma enum)
+    const dbBillingCycle = billingCycle === 'yearly' ? 'ANNUAL' : 'MONTHLY';
+
     // Test mode: Return mock response
     if (process.env.TOSS_TEST_MODE === 'true') {
       const mockOrderId = `test_order_${Date.now()}`;
@@ -63,10 +68,10 @@ export async function POST(request: NextRequest) {
         success: true,
         mode: 'TEST',
         orderId: mockOrderId,
-        checkoutUrl: `http://localhost:3000/payments/test-checkout?orderId=${mockOrderId}&plan=${plan}&amount=${amount}`,
+        checkoutUrl: `http://localhost:3000/payments/test-checkout?orderId=${mockOrderId}&plan=${plan}&amount=${amount}&billingCycle=${dbBillingCycle}`,
         amount,
         plan,
-        billingCycle,
+        billingCycle: dbBillingCycle,
         message: 'Test mode: No actual payment required',
       });
     }

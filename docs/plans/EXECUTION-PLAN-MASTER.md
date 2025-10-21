@@ -1,16 +1,15 @@
 <!-- Auto-update on 2025-10-19 KST -->
-## Update — 2025-10-19 (Launch Cadence & Gates)
+## Update — 2025-10-21 (Launch Cadence & Gates)
 
-- **Launch target**: Move to **2025-12-02** official launch.
-- **Beta**: Quiet beta continues with **14-day free** trial policy, collecting feedback through **2025-12-01**.
-- **Payments readiness**: Toss in test by **11/22**, live by **11/29** (subscription, billing key, webhooks, receipt emails minimal set).
-- **Performance gate**: Use Phase 2 k6 auth baseline as reference; re-check p95 & error-rate after Toss deploy.
+- **Launch target**: Move to **2025-11-29** official launch, **2025-10-28** Beta launch.
+- **Beta**: transition to monthly subscription fee (Pro) of 24,500 KRW after **7-day free** trial policy, collecting feedback through **2025-11-28**.
+- **Payments readiness**: Toss in test by **10/22**, live by **10/28** (subscription, billing key, webhooks, receipt emails minimal set).
 
 # Connect Platform: 12-Week Execution Plan (Master)
-## January 1, 2026 Launch Target
+## November 29, 2026 Launch Target
 
 **Start Date**: October 9, 2025
-**Launch Date**: January 1, 2026
+**Launch Date**: January 1, 2026(updated November 29)
 **Duration**: 12 weeks (84 days)
 **Development Environment**: MacBook Pro M4 Max + Claude Code + Claude Desktop
 **Project Root**: `/Users/paulkim/Downloads/connect`
@@ -53,7 +52,7 @@
 
 ---
 
-## 📅 12-Week Timeline Overview
+## 📅 12-Week Timeline Overview(Date before the recent update)
 
 | Week | Dates | Focus | Status | Risk |
 |------|-------|-------|--------|------|
@@ -1416,7 +1415,7 @@ lib/ai/client.ts
    - **Variation B**: Value-first (feature highlights + beta benefits)
    - **Variation C**: Social proof (professor network mention)
 2. Key messaging:
-   - Beta benefits: Free 30 days + ₩24,500/month (50% lifetime discount off ₩49,000)
+   - Beta benefits: Free 7 days + ₩24,500/month (50% lifetime discount off ₩49,000)
    - AI-powered matching, 4 agencies (IITP, KEIT, TIPA, KIMST)
    - Early adopter badge + priority feature requests
 3. CTA: "Connect 베타 테스트에 참여하시겠습니까?" with Calendly link or email reply
@@ -1450,7 +1449,7 @@ lib/ai/client.ts
 **Email Template Pricing Example**:
 ```
 [Beta Benefits]
-✓ 14일 무료 체험
+✓ 7일 무료 체험
 ✓ 평생 50% 할인 (₩24,500/월, 정상가 ₩49,000)
 ✓ 우선 기능 추가 요청권
 ✓ Early Adopter 배지 (정식 출시 시)
@@ -1519,6 +1518,4 @@ lib/ai/client.ts
 
 ---
 
-**Last Updated**: October 11, 2025 03:00 KST
-**Current Task**: Beta Week 1 Day 6 - TypeScript Type Error Fixes (IN PROGRESS)
-**Next Checkpoint**: Beta Week 1 Complete (Oct 15, 2025)
+**Last Updated**: October 21, 2025 02:00 KST

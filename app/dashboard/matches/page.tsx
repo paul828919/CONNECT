@@ -35,6 +35,23 @@ const agencyNames: Record<string, string> = {
   KIMST: '해양수산과학기술진흥원',
 };
 
+/**
+ * Validate and normalize external URL
+ * Defensive programming: Ensures relative URLs are never rendered
+ */
+const normalizeExternalUrl = (url: string): string | null => {
+  if (!url) return null;
+
+  // Valid absolute URL
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  // Invalid relative URL - return null to disable link
+  console.warn('[URL Validation] Relative URL detected:', url);
+  return null;
+};
+
 export default function MatchesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -278,27 +295,50 @@ export default function MatchesPage() {
 
               {/* Actions */}
               <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
-                <a
-                  href={match.program.announcementUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  공고 확인하기
-                  <svg
-                    className="ml-2 w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                {normalizeExternalUrl(match.program.announcementUrl) ? (
+                  <a
+                    href={normalizeExternalUrl(match.program.announcementUrl)!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
-                </a>
+                    공고 확인하기
+                    <svg
+                      className="ml-2 w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                  </a>
+                ) : (
+                  <button
+                    disabled
+                    className="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed"
+                    title="공고 URL이 유효하지 않습니다"
+                  >
+                    공고 확인하기
+                    <svg
+                      className="ml-2 w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                  </button>
+                )}
                 <button className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
                   북마크
                 </button>

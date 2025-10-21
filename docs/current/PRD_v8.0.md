@@ -929,7 +929,7 @@ All secrets documented in `docs/guides/GITHUB-SECRETS-COMPLETE-SETUP.md`:
 
 | Plan | Monthly | Annual | Target User |
 |------|---------|--------|-------------|
-| **Beta** | ₩4,900 | - | First 50 users (30-day promotional) |
+| **Beta** | ₩24,500 | - | First 50 users (30-day promotional) |
 | **Free** | ₩0 | ₩0 | Trial users (10 matches/month) |
 | **Pro** | ₩49,000 | ₩49,000/mo | Active grant seekers (companies) |
 | **Team** | ₩99,000 | ₩99,000/mo | Larger teams (5 seats) |
@@ -1448,3 +1448,4 @@ Connect v8.0 represents a **complete strategic revision** from "grant discovery 
 **Target Launch:** January 1, 2026 00:00 KST (Peak Season Aligned)
 
 *End of PRD v8.0 - Final Strategic Revision*
+/

@@ -13,6 +13,13 @@ export default function DashboardPage() {
   const [matchCount, setMatchCount] = useState(0);
   const [usage, setUsage] = useState<{ used: number; remaining: number; plan: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [upgradeUrl, setUpgradeUrl] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<{
+    plan: string;
+    status: string;
+    billingCycle: string;
+    expiresAt: string;
+  } | null>(null);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -32,6 +39,7 @@ export default function DashboardPage() {
     }
 
     fetchMatchStats();
+    fetchSubscription();
   }, [session, status, router]);
 
   const fetchMatchStats = async () => {
@@ -46,6 +54,18 @@ export default function DashboardPage() {
       }
     } catch (err) {
       console.error('Error fetching match stats:', err);
+    }
+  };
+
+  const fetchSubscription = async () => {
+    try {
+      const res = await fetch('/api/subscriptions/me');
+      if (res.ok) {
+        const data = await res.json();
+        setSubscription(data.subscription);
+      }
+    } catch (err) {
+      console.error('Error fetching subscription:', err);
     }
   };
 
@@ -68,6 +88,7 @@ export default function DashboardPage() {
 
       if (res.status === 429) {
         setError(data.message || '이번 달 무료 매칭 횟수를 모두 사용하셨습니다.');
+        setUpgradeUrl(data.upgradeUrl || '/pricing');
         return;
       }
 
@@ -146,17 +167,59 @@ export default function DashboardPage() {
               <div className="text-sm font-medium text-gray-600">
                 구독 플랜
               </div>
-              <div className="mt-2 text-3xl font-bold text-green-600">Free</div>
+              <div className="mt-2 text-3xl font-bold text-green-600">
+                {subscription?.plan || 'Free'}
+              </div>
               <div className="mt-1 text-xs text-gray-500">
-                {usage ? `${usage.remaining}회 남음` : '3 매칭/월'}
+                {subscription
+                  ? `${subscription.billingCycle === 'MONTHLY' ? '월간' : '연간'} 결제`
+                  : usage
+                  ? `${usage.remaining}회 남음`
+                  : '3 매칭/월'}
               </div>
             </div>
           </div>
 
-          {/* Error Message */}
+          {/* Error Message / Upgrade Banner */}
           {error && (
-            <div className="rounded-xl bg-red-50 border border-red-200 p-4">
-              <p className="text-sm text-red-600">{error}</p>
+            <div className={`rounded-xl border p-6 ${upgradeUrl ? 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200' : 'bg-red-50 border-red-200'}`}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    {upgradeUrl ? (
+                      <svg className="h-5 w-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
+                    <h3 className={`font-semibold ${upgradeUrl ? 'text-orange-900' : 'text-red-900'}`}>
+                      {upgradeUrl ? '매칭 횟수 제한' : '오류'}
+                    </h3>
+                  </div>
+                  <p className={`text-sm ${upgradeUrl ? 'text-orange-700' : 'text-red-600'} mb-3`}>
+                    {error}
+                  </p>
+                  {upgradeUrl && (
+                    <p className="text-sm text-gray-600 mb-4">
+                      Pro 플랜으로 업그레이드하여 <strong>무제한 매칭</strong>, 실시간 업데이트, 전문가 지원 등을 이용하세요.
+                    </p>
+                  )}
+                </div>
+                {upgradeUrl && (
+                  <Link
+                    href={upgradeUrl}
+                    className="inline-flex items-center px-6 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 whitespace-nowrap"
+                  >
+                    <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    Pro 업그레이드
+                  </Link>
+                )}
+              </div>
             </div>
           )}
 
