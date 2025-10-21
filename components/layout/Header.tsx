@@ -10,6 +10,7 @@ const navLinks = [
   { href: '/dashboard', label: '대시보드' },
   { href: '/dashboard/matches', label: '매칭 결과' },
   { href: '/dashboard/partners', label: '파트너 검색' },
+  { href: '/dashboard/help', label: 'AI 어시스턴트' },
 ];
 
 export default function Header() {
