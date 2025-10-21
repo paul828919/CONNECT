@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { MatchExplanation } from '@/components/match-explanation';
 
 interface Match {
   id: string;
@@ -58,6 +59,7 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
 
   const fetchMatches = useCallback(async () => {
     try {
@@ -295,6 +297,25 @@ export default function MatchesPage() {
 
               {/* Actions */}
               <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => setExpandedMatchId(expandedMatchId === match.id ? null : match.id)}
+                  className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  <svg
+                    className="mr-2 w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    />
+                  </svg>
+                  {expandedMatchId === match.id ? 'AI 설명 닫기' : 'AI 설명 보기'}
+                </button>
                 {normalizeExternalUrl(match.program.announcementUrl) ? (
                   <a
                     href={normalizeExternalUrl(match.program.announcementUrl)!}
@@ -343,6 +364,13 @@ export default function MatchesPage() {
                   북마크
                 </button>
               </div>
+
+              {/* AI Explanation (Expandable) */}
+              {expandedMatchId === match.id && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <MatchExplanation matchId={match.id} autoLoad={true} />
+                </div>
+              )}
             </div>
           ))}
         </div>
