@@ -282,6 +282,23 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
 );
 
 /**
+ * Normalize URL to absolute format
+ * Converts relative URLs to absolute using baseUrl
+ */
+function normalizeUrl(href: string, baseUrl: string): string {
+  if (!href) return '';
+
+  // Already absolute URL
+  if (href.startsWith('http://') || href.startsWith('https://')) {
+    return href;
+  }
+
+  // Relative URL - prepend baseUrl
+  const separator = href.startsWith('/') ? '' : '/';
+  return baseUrl + separator + href;
+}
+
+/**
  * Extract announcements from listing page
  */
 async function extractAnnouncements(
@@ -305,8 +322,13 @@ async function extractAnnouncements(
     config.selectors
   );
 
-  // Filter out empty titles/links
-  return announcements.filter((a) => a.title && a.link);
+  // Filter out empty titles/links and normalize URLs to absolute format
+  return announcements
+    .filter((a) => a.title && a.link)
+    .map((a) => ({
+      ...a,
+      link: normalizeUrl(a.link, config.baseUrl),
+    }));
 }
 
 /**

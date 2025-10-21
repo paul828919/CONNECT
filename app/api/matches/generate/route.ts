@@ -139,7 +139,8 @@ export async function POST(request: NextRequest) {
       include: { subscriptions: true },
     });
 
-    const subscriptionPlan = user?.subscriptions?.plan?.toLowerCase() as 'free' | 'pro' | 'team' || 'free';
+    const plan = user?.subscriptions?.plan;
+    const subscriptionPlan = (plan ? plan.toLowerCase() : 'free') as 'free' | 'pro' | 'team';
 
     // 7. Check rate limit (critical for business model!)
     const rateLimitCheck = await checkMatchLimit(userId, subscriptionPlan);
@@ -207,7 +208,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 10. Store matches in database
+    // 10. Store matches in database (UPSERT to handle existing matches)
     const createdMatches = await Promise.all(
       matchResults.map(async (matchResult) => {
         // Generate Korean explanations
@@ -217,13 +218,27 @@ export async function POST(request: NextRequest) {
           matchResult.program
         );
 
-        // Create match record
-        return db.funding_matches.create({
-          data: {
+        // UPSERT match record (create or update existing)
+        // This makes the API idempotent - clicking "Create Match" multiple times is safe
+        return db.funding_matches.upsert({
+          where: {
+            organizationId_programId: {
+              organizationId: organization.id,
+              programId: matchResult.program.id,
+            },
+          },
+          update: {
+            // Update score and explanation if match already exists
+            // Preserves user state: viewed, saved, notificationSent flags
+            score: matchResult.score,
+            explanation: explanation as any,
+          },
+          create: {
+            // Create new match if doesn't exist
             organizationId: organization.id,
             programId: matchResult.program.id,
             score: matchResult.score,
-            explanation: explanation as any, // Use Korean explanations from generateExplanation
+            explanation: explanation as any,
           },
           include: {
             funding_programs: true,
