@@ -288,10 +288,12 @@ export async function sendQAChatWithRateLimit(request: QAChatRequest): Promise<Q
   return await sendQAChat(request);
 }
 
-export default {
+const qaChatService = {
   sendQAChat: sendQAChatWithRateLimit,
   startNewConversation,
   getConversationHistory,
   deleteConversation,
   getUserConversations,
 };
+
+export default qaChatService;

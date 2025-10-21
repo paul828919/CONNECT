@@ -141,7 +141,7 @@ function TestCheckoutContent() {
             <div>
               <h3 className="font-semibold text-yellow-900 mb-1">테스트 모드</h3>
               <p className="text-sm text-yellow-700">
-                실제 카드 결제가 진행되지 않습니다. "결제 완료" 버튼을 클릭하면 즉시 구독이 활성화됩니다.
+                실제 카드 결제가 진행되지 않습니다. &ldquo;결제 완료&rdquo; 버튼을 클릭하면 즉시 구독이 활성화됩니다.
               </p>
             </div>
           </div>

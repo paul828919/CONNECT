@@ -398,7 +398,7 @@ export async function cleanupExpiredKeys(): Promise<number> {
 }
 
 // Export everything
-export default {
+const rateLimit = {
   withRateLimit,
   apiRateLimiter,
   authRateLimiter,
@@ -410,3 +410,5 @@ export default {
   getUserApiUsage,
   cleanupExpiredKeys,
 };
+
+export default rateLimit;

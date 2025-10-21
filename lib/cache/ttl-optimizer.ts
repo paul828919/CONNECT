@@ -295,7 +295,7 @@ export const CACHE_THRESHOLDS = {
   },
 } as const;
 
-export default {
+const ttlOptimizer = {
   BASE_TTL,
   getAIExplanationTTL,
   getProgramCacheTTL,
@@ -305,4 +305,6 @@ export default {
   getWarmingSchedule,
   CACHE_THRESHOLDS,
 };
+
+export default ttlOptimizer;
 

@@ -690,10 +690,12 @@ export async function healthCheck(): Promise<{
   }
 }
 
-export default {
+const aiClient = {
   sendAIRequest,
   getBudgetStatus,
   getRateLimitStatus,
   getCircuitBreakerStatusExternal,
   healthCheck,
 };
+
+export default aiClient;

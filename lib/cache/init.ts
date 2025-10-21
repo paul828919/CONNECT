@@ -57,6 +57,8 @@ export function initializeCacheScheduler() {
   }
 }
 
-export default {
+const cacheInit = {
   initializeCacheScheduler,
 };
+
+export default cacheInit;

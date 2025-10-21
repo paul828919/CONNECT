@@ -14,7 +14,7 @@
  * Week 3-4: AI Integration (Day 16-17)
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -73,7 +73,7 @@ export function MatchExplanation({ matchId, autoLoad = false }: MatchExplanation
   const [matchInfo, setMatchInfo] = useState<MatchInfo | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
 
-  const loadExplanation = async () => {
+  const loadExplanation = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -94,13 +94,13 @@ export function MatchExplanation({ matchId, autoLoad = false }: MatchExplanation
     } finally {
       setLoading(false);
     }
-  };
+  }, [matchId]);
 
   useEffect(() => {
     if (autoLoad && !hasLoaded) {
       loadExplanation();
     }
-  }, [autoLoad, hasLoaded, matchId]);
+  }, [autoLoad, hasLoaded, matchId, loadExplanation]);
 
   // Initial state: Click to load
   if (!hasLoaded && !loading) {

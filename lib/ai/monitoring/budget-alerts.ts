@@ -272,8 +272,10 @@ export async function testAlertSystem(): Promise<void> {
   console.log('✅ Test alert email sent successfully');
 }
 
-export default {
+const budgetAlerts = {
   checkBudgetAndAlert,
   getAlertHistory,
   testAlertSystem,
 };
+
+export default budgetAlerts;
