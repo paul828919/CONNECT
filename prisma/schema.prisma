@@ -29,7 +29,7 @@ model Account {
 }
 
 model ai_budget_alerts {
-  id              String        @id
+  id              String        @id @default(uuid())
   date            DateTime      @db.Date
   severity        AlertSeverity
   threshold       Int
@@ -47,7 +47,7 @@ model ai_budget_alerts {
 }
 
 model ai_cost_logs {
-  id             String         @id
+  id             String         @id @default(uuid())
   serviceType    AIServiceType
   userId         String?
   organizationId String?
@@ -73,7 +73,7 @@ model ai_cost_logs {
 }
 
 model ai_feedback {
-  id             String           @id
+  id             String           @id @default(uuid())
   serviceType    AIServiceType
   resourceId     String
   userId         String?
@@ -91,7 +91,7 @@ model ai_feedback {
 }
 
 model audit_logs {
-  id           String   @id
+  id           String   @id @default(uuid())
   userId       String?
   action       String
   resourceType String
@@ -110,7 +110,7 @@ model audit_logs {
 }
 
 model category_performance_metrics {
-  id            String   @id
+  id            String   @id @default(uuid())
   category      String
   date          DateTime @db.Date
   matchCount    Int      @default(0)
@@ -125,7 +125,7 @@ model category_performance_metrics {
 }
 
 model consortium_members {
-  id                  String              @id
+  id                  String              @id @default(uuid())
   consortiumId        String
   organizationId      String
   invitedById         String
@@ -150,7 +150,7 @@ model consortium_members {
 }
 
 model consortium_projects {
-  id                 String               @id
+  id                 String               @id @default(uuid())
   name               String
   description        String?
   targetProgramId    String?
@@ -176,7 +176,7 @@ model consortium_projects {
 }
 
 model contact_requests {
-  id                                                          String               @id
+  id                                                          String               @id @default(uuid())
   senderId                                                    String
   senderOrgId                                                 String
   receiverOrgId                                               String
@@ -200,7 +200,7 @@ model contact_requests {
 }
 
 model daily_analytics {
-  id                  String   @id
+  id                  String   @id @default(uuid())
   date                DateTime @unique @db.Date
   totalUsers          Int      @default(0)
   activeUsers         Int      @default(0)
@@ -222,7 +222,7 @@ model daily_analytics {
 }
 
 model feedback {
-  id             String           @id
+  id             String           @id @default(uuid())
   userId         String?
   organizationId String?
   category       FeedbackCategory
@@ -247,7 +247,7 @@ model feedback {
 }
 
 model funding_matches {
-  id                  String                @id
+  id                  String                @id @default(uuid())
   organizationId      String
   programId           String
   score               Int                   @db.SmallInt
@@ -272,7 +272,7 @@ model funding_matches {
 }
 
 model funding_programs {
-  id                  String                @id
+  id                  String                @id @default(uuid())
   agencyId            AgencyId
   title               String
   description         String?
@@ -311,7 +311,7 @@ model funding_programs {
 }
 
 model match_notifications {
-  id              String           @id
+  id              String           @id @default(uuid())
   userId          String
   matchId         String
   type            NotificationType
@@ -330,7 +330,7 @@ model match_notifications {
 }
 
 model match_quality_logs {
-  id             String   @id
+  id             String   @id @default(uuid())
   matchId        String   @unique
   organizationId String
   programId      String
@@ -353,7 +353,7 @@ model match_quality_logs {
 }
 
 model organizations {
-  id                                                             String                @id
+  id                                                             String                @id @default(uuid())
   type                                                           OrganizationType
   name                                                           String
   businessNumberEncrypted                                        String                @unique
@@ -398,7 +398,7 @@ model organizations {
 }
 
 model payments {
-  id               String        @id
+  id               String        @id @default(uuid())
   subscriptionId   String
   amount           Int
   currency         String        @default("KRW")
@@ -423,7 +423,7 @@ model payments {
 }
 
 model scraping_logs {
-  id              String    @id
+  id              String    @id @default(uuid())
   agencyId        AgencyId
   startedAt       DateTime
   completedAt     DateTime?
@@ -454,7 +454,7 @@ model Session {
 }
 
 model subscriptions {
-  id                       String             @id
+  id                       String             @id @default(uuid())
   userId                   String             @unique
   plan                     SubscriptionPlan
   status                   SubscriptionStatus
@@ -486,7 +486,7 @@ model subscriptions {
 }
 
 model unmapped_agency_detections {
-  id           String    @id
+  id           String    @id @default(uuid())
   ministry     String?
   agency       String?
   programId    String
