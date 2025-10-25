@@ -152,6 +152,30 @@ jobs:
           cache-to: type=gha,key=scraper,mode=max
           outputs: type=docker,dest=/tmp/connect-scraper-image.tar
 
+      - name: Verify scripts directory in images
+        run: |
+          echo "🔍 Verifying scripts/ directory exists in Docker images..."
+
+          # Load and check scraper image
+          docker load --input /tmp/connect-scraper-image.tar
+          if docker run --rm connect-scraper:${{ github.sha }} ls /app/scripts/ >/dev/null 2>&1; then
+            echo "✅ scripts/ exists in scraper image"
+          else
+            echo "❌ scripts/ missing from scraper image"
+            exit 1
+          fi
+
+          # Load and check app image
+          docker load --input /tmp/connect-image.tar
+          if docker run --rm connect:${{ github.sha }} ls /app/scripts/ >/dev/null 2>&1; then
+            echo "✅ scripts/ exists in app image"
+          else
+            echo "❌ scripts/ missing from app image"
+            exit 1
+          fi
+
+          echo "✅ All images contain scripts/ directory"
+
       - name: Upload app image artifact
         uses: actions/upload-artifact@v4
         with:

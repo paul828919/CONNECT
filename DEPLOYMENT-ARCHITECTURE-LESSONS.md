@@ -777,6 +777,88 @@ This transformation demonstrates that **the best solutions often involve removin
 
 ---
 
+## Lesson: Missing Directory in Docker Images (Oct 25, 2025)
+
+### Incident Overview
+
+**Date:** October 25, 2025
+**Symptom:** Production showed outdated script dates (Oct 23) despite successful GitHub Actions deployment of commit 6a6fd16 (Oct 24)
+**Root Cause:** scripts/ directory excluded from Docker images since commit f818cc1 (Oct 17, 2025)
+**Impact:** Deployment gap between CI/CD (containerized) and manual operations (rsync)
+
+### The Architecture Gap
+
+**Two-Mechanism Deployment:**
+1. **GitHub Actions (Automated):** Built and deployed Docker images WITHOUT scripts/
+2. **Manual rsync (Ad-hoc):** Synchronized host files INCLUDING scripts/
+
+**Result:** Hidden dependency on manual file synchronization for script updates
+
+**Why This Happened:**
+- Dockerfiles had explicit COPY statements for lib/, prisma/, app/ directories
+- scripts/ directory was omitted from COPY statements
+- Manual rsync operations masked the issue by keeping host files in sync
+- No CI/CD verification to catch missing directories before deployment
+
+### The Fix (Commit 3314be9)
+
+**1. Dockerfile.scraper (Line 27)**
+```dockerfile
+COPY scripts ./scripts  # Added explicit COPY statement
+```
+
+**2. Dockerfile.production (Line 94)**
+```dockerfile
+COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts  # Added to runner stage
+```
+
+**3. GitHub Actions Verification (Lines 155-177)**
+```yaml
+- name: Verify scripts directory in images
+  run: |
+    # Fail build if scripts/ missing from either image
+    docker run --rm connect-scraper:${{ github.sha }} ls /app/scripts/ || exit 1
+    docker run --rm connect:${{ github.sha }} ls /app/scripts/ || exit 1
+```
+
+**4. Documentation Updates**
+- CLAUDE.md: Added "Docker Image Contents" section with containerization principle
+- DEPLOYMENT-ARCHITECTURE-LESSONS.md: This incident documentation
+
+### Prevention Measures
+
+**Principle Established:**
+> **All application code must be in Docker images.** Never rely on manual file synchronization for production deployments.
+
+**CI/CD Safeguards:**
+1. ✅ Automated verification in GitHub Actions catches missing directories before deployment
+2. ✅ Build fails if critical directories are absent from images
+3. ✅ Explicit COPY statements for all application code directories
+4. ✅ Documentation requirement for any directory exclusions
+
+**Future Checklist:**
+- [ ] Every new directory should have explicit COPY statement in Dockerfile
+- [ ] CI/CD verification should be added for critical directories
+- [ ] Never assume manual operations will keep production in sync
+- [ ] Document the "why" when excluding directories from images
+
+### Key Insight
+
+**Before:**
+- Deployment relied on two mechanisms: CI/CD (automated) + rsync (manual)
+- Manual operations created hidden dependencies
+- Changes could succeed locally/manually but fail in CI/CD
+
+**After:**
+- Single source of truth: Docker images contain all application code
+- Fully automated deployment via GitHub Actions
+- CI/CD verification prevents deployment gaps
+- Version control and containerization are in sync
+
+**Lesson:** Manual operations should supplement automation, not replace it. When production works despite CI/CD not handling something, that's a warning sign of hidden dependencies.
+
+---
+
 **Document Version:** 1.0  
 **Last Updated:** October 15, 2025  
 **Production Status:** ✅ Deployed and Stable  

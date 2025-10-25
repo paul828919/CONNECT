@@ -24,6 +24,7 @@ RUN npm install -g tsx
 COPY lib ./lib
 COPY prisma ./prisma
 COPY tsconfig.json ./tsconfig.json
+COPY scripts ./scripts
 
 # Generate Prisma Client
 RUN npx prisma generate
