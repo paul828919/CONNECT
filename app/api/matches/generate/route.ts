@@ -19,7 +19,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
 import { PrismaClient, ProgramStatus, AnnouncementType } from '@prisma/client';
-import { randomUUID } from 'crypto';
 
 // Direct Prisma Client instantiation (bypasses lib/db module resolution issue)
 const globalForPrisma = globalThis as unknown as {
@@ -296,7 +295,6 @@ export async function POST(request: NextRequest) {
           },
           create: {
             // Create new match if doesn't exist
-            id: randomUUID(), // Required: funding_matches.id has no default value
             organizationId: organization.id,
             programId: matchResult.program.id,
             score: matchResult.score,
