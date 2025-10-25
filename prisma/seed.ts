@@ -27,6 +27,13 @@ const createId = () => crypto.randomUUID();
 const prisma = new PrismaClient();
 
 async function main() {
+  // Prevent seeding in production environment
+  if (process.env.NODE_ENV === 'production') {
+    console.log('⚠️  Seed script skipped in production environment');
+    console.log('   Test seed data should not be created in production.');
+    return;
+  }
+
   console.log('🌱 Starting database seed...\n');
 
   try {

@@ -18,6 +18,7 @@ import {
   cleanHtmlText,
   extractTRLRange,
 } from '../utils';
+import { classifyAnnouncement } from '../classification';
 
 export interface KIMSTProgramDetails {
   description: string | null;
@@ -27,6 +28,7 @@ export interface KIMSTProgramDetails {
   minTRL: number | null;
   maxTRL: number | null;
   eligibilityCriteria: Record<string, any> | null;
+  announcementType: 'R_D_PROJECT' | 'SURVEY' | 'EVENT' | 'NOTICE' | 'UNKNOWN';
 }
 
 /**
@@ -48,6 +50,10 @@ export async function parseKIMSTDetails(
       console.warn(`[KIMST] Content area not found for ${url}`);
       return getDefaultDetails();
     }
+
+    // Extract title (from h1, h2, or .title elements)
+    const titleElement = await page.$('h1, h2, .title, .subject');
+    const title = (await titleElement?.textContent()) || '';
 
     // Extract full text content
     const fullText = await contentArea.textContent() || '';
@@ -71,6 +77,14 @@ export async function parseKIMSTDetails(
     // 6. Extract eligibility criteria
     const eligibilityCriteria = extractEligibilityCriteria(cleanText);
 
+    // 7. Classify announcement type using shared utility
+    const announcementType = classifyAnnouncement({
+      title,
+      description: cleanText,
+      url,
+      source: 'kimst',
+    });
+
     return {
       description,
       deadline,
@@ -79,6 +93,7 @@ export async function parseKIMSTDetails(
       minTRL: trlRange?.minTRL || null,
       maxTRL: trlRange?.maxTRL || null,
       eligibilityCriteria,
+      announcementType,
     };
   } catch (error: any) {
     console.error(`[KIMST] Failed to parse details for ${url}:`, error.message);
@@ -111,7 +126,7 @@ function extractDeadline(text: string): Date | null {
         .replace(/\d{1,2}:\d{2}/g, '')
         .trim();
       const parsedDate = parseKoreanDate(cleanedDate);
-      if (parsedDate && parsedDate > new Date()) {
+      if (parsedDate) {
         return parsedDate;
       }
     }
@@ -214,5 +229,6 @@ function getDefaultDetails(): KIMSTProgramDetails {
     minTRL: null,
     maxTRL: null,
     eligibilityCriteria: null,
+    announcementType: 'R_D_PROJECT', // Default to R&D project
   };
 }

@@ -33,6 +33,7 @@ if (!globalForPrisma.prisma) {
 }
 import { generateMatchExplanation } from '@/lib/ai/services/match-explanation';
 import type { MatchExplanationInput } from '@/lib/ai/prompts/match-explanation';
+import { updateMatchEngagement } from '@/lib/analytics/match-performance';
 
 
 export async function GET(
@@ -145,6 +146,9 @@ export async function GET(
         viewedAt: new Date(),
       },
     });
+
+    // 6a. Update analytics engagement tracking
+    await updateMatchEngagement(matchId, { viewed: true });
 
     // 7. Return explanation with metadata
     return NextResponse.json(

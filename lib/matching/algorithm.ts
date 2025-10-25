@@ -39,13 +39,18 @@ export interface MatchScore {
   reasons: string[]; // Keys for explanation generator
 }
 
+export interface GenerateMatchesOptions {
+  includeExpired?: boolean; // Allow matching against EXPIRED programs (for historical matches)
+}
+
 /**
  * Generate match scores for an organization against funding programs
  */
 export function generateMatches(
   organization: Organization,
   programs: FundingProgram[],
-  limit: number = 3
+  limit: number = 3,
+  options?: GenerateMatchesOptions
 ): MatchScore[] {
   if (!organization || !programs || programs.length === 0) {
     return [];
@@ -54,13 +59,13 @@ export function generateMatches(
   const matches: MatchScore[] = [];
 
   for (const program of programs) {
-    // Skip inactive or expired programs
-    if (program.status !== ProgramStatus.ACTIVE) {
+    // Skip inactive or expired programs (unless explicitly including expired for historical matches)
+    if (!options?.includeExpired && program.status !== ProgramStatus.ACTIVE) {
       continue;
     }
 
-    // Skip programs with past deadlines
-    if (program.deadline && new Date(program.deadline) < new Date()) {
+    // Skip programs with past deadlines (unless explicitly including expired for historical matches)
+    if (!options?.includeExpired && program.deadline && new Date(program.deadline) < new Date()) {
       continue;
     }
 
@@ -68,6 +73,12 @@ export function generateMatches(
     if (program.targetType && !program.targetType.includes(organization.type)) {
       continue;
     }
+
+    // TODO (Tier 1A): Add eligibility filtering when funding_programs schema includes eligibility fields
+    // When program eligibility requirements are added to the schema, implement checks here:
+    // - Revenue range requirements (e.g., program.minRevenue, program.maxRevenue)
+    // - Business structure requirements (e.g., program.allowedBusinessStructures)
+    // This ensures "Eligibility-First Matching" - filter before scoring to maintain user trust
 
     const matchScore = calculateMatchScore(organization, program);
     matches.push(matchScore);
@@ -272,6 +283,7 @@ function scoreOrganizationType(
 
 /**
  * Score R&D experience (0-15 points)
+ * Enhanced with Tier 1B: Graduated collaboration scoring
  */
 function scoreRDExperience(
   org: Organization,
@@ -285,10 +297,18 @@ function scoreRDExperience(
     reasons.push('RD_EXPERIENCE');
   }
 
-  // Research institutes with collaboration history get bonus
-  if (org.collaborationHistory) {
-    score += 5;
-    reasons.push('COLLABORATION_HISTORY');
+  // Tier 1B: Graduated collaboration scoring (1=+2pts, 2-3=+4pts, 4+=+5pts)
+  if (org.collaborationCount) {
+    if (org.collaborationCount === 1) {
+      score += 2;
+      reasons.push('COLLABORATION_LIMITED');
+    } else if (org.collaborationCount >= 2 && org.collaborationCount <= 3) {
+      score += 4;
+      reasons.push('COLLABORATION_MODERATE');
+    } else if (org.collaborationCount >= 4) {
+      score += 5;
+      reasons.push('COLLABORATION_EXTENSIVE');
+    }
   }
 
   return Math.min(15, score);
