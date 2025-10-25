@@ -28,6 +28,10 @@ export const CACHE_TTL = {
   AI_EXPLANATION: BASE_TTL.AI_EXPLANATION,    // 7 days - AI explanations are expensive (optimized)
 } as const;
 
+// Cache schema version - increment on breaking changes (e.g., field renames, type changes)
+// This auto-invalidates stale cached data when schema changes
+export const CACHE_SCHEMA_VERSION = '2.0'; // Tier 1A/1B schema (Oct 2025)
+
 // Cache key prefixes
 export const CACHE_PREFIX = {
   MATCH: 'match:org',               // match:org:{orgId}:results
@@ -113,9 +117,20 @@ export async function getCache<T>(key: string): Promise<T | null> {
       return null;
     }
 
+    const parsed = JSON.parse(value);
+
+    // Schema version validation - auto-invalidate stale data
+    if (parsed.schemaVersion !== CACHE_SCHEMA_VERSION) {
+      console.log('[CACHE] SCHEMA MISMATCH - invalidating', key,
+        `(cached: ${parsed.schemaVersion}, expected: ${CACHE_SCHEMA_VERSION})`);
+      await deleteCache(key);
+      stats.misses++;
+      return null;
+    }
+
     stats.hits++;
-    console.log('[CACHE] HIT', key);
-    return JSON.parse(value) as T;
+    console.log('[CACHE] HIT', key, `(schema: ${parsed.schemaVersion})`);
+    return parsed.data as T;
   } catch (error) {
     stats.errors++;
     console.error('[CACHE] Get error:', key, error instanceof Error ? error.message : error);
@@ -141,16 +156,22 @@ export async function setCache<T>(
 ): Promise<void> {
   try {
     const redis = await getCacheClient();
-    
+
+    // Wrap data with schema version for future-proofing
+    const versionedValue = {
+      schemaVersion: CACHE_SCHEMA_VERSION,
+      data: value,
+    };
+
     // Custom JSON serializer that handles BigInt
-    const serialized = JSON.stringify(value, (_, v) => 
+    const serialized = JSON.stringify(versionedValue, (_, v) =>
       typeof v === 'bigint' ? v.toString() : v
     );
-    
+
     await redis.set(key, serialized, {
       EX: ttl, // Expire after ttl seconds
     });
-    console.log('[CACHE] SET', key, `(TTL: ${ttl}s)`);
+    console.log('[CACHE] SET', key, `(TTL: ${ttl}s, schema: ${CACHE_SCHEMA_VERSION})`);
   } catch (error) {
     stats.errors++;
     console.error('[CACHE] Set error:', key, error instanceof Error ? error.message : error);
