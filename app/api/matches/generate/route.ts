@@ -18,7 +18,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient, ProgramStatus } from '@prisma/client';
+import { PrismaClient, ProgramStatus, AnnouncementType } from '@prisma/client';
+import { randomUUID } from 'crypto';
 
 // Direct Prisma Client instantiation (bypasses lib/db module resolution issue)
 const globalForPrisma = globalThis as unknown as {
@@ -43,6 +44,7 @@ import {
   getProgramsCacheKey,
   CACHE_TTL,
 } from '@/lib/cache/redis-cache';
+import { logMatchQualityBulk } from '@/lib/analytics/match-performance';
 
 
 export async function POST(request: NextRequest) {
@@ -61,6 +63,7 @@ export async function POST(request: NextRequest) {
     // 2. Get organization ID from query params
     const { searchParams } = new URL(request.url);
     const organizationId = searchParams.get('organizationId');
+    const forceRegenerate = searchParams.get('forceRegenerate') === 'true';
 
     if (!organizationId) {
       return NextResponse.json(
@@ -69,7 +72,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2a. Check cache for existing match results (24h TTL)
+    // 2a. Force regeneration if requested (safety mechanism)
+    if (forceRegenerate) {
+      // Clear cache and delete all existing matches
+      await invalidateOrgMatches(organizationId);
+      await db.funding_matches.deleteMany({
+        where: { organizationId },
+      });
+      console.log('[MATCH] Force regeneration - cleared cache and database matches for org:', organizationId);
+    }
+
+    // 2b. Check cache for existing match results (24h TTL)
     const matchCacheKey = getMatchCacheKey(organizationId);
     const cachedMatches = await getCache<any>(matchCacheKey);
 
@@ -168,13 +181,20 @@ export async function POST(request: NextRequest) {
       programs = await db.funding_programs.findMany({
         where: {
           status: ProgramStatus.ACTIVE,
-          deadline: {
-            gte: new Date(), // Only future deadlines
+          announcementType: AnnouncementType.R_D_PROJECT, // Only R&D funding opportunities (exclude surveys, events, notices)
+          // Allow NULL deadlines and budgets per user guidance:
+          // - Many Jan-March NTIS announcements have "0억원" (budget TBD) → stored as NULL
+          // - Some announcements don't have deadlines yet → stored as NULL
+          // - These are REAL opportunities, not preliminary surveys
+          scrapingSource: {
+            not: null, // Exclude test seed data (seed data has scrapingSource = null)
+            notIn: ['NTIS_API'], // Exclude NTIS_API (old project data, not announcements)
           },
         },
-        orderBy: {
-          deadline: 'asc',
-        },
+        orderBy: [
+          { publishedAt: 'desc' }, // Newest announcements first
+          { deadline: 'asc' },     // Then by urgency (soonest deadline) - NULLs appear last
+        ],
       });
 
       if (programs.length > 0) {
@@ -183,18 +203,59 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Historical fallback: If no active programs, show recent opportunities (Jan 1 - today)
+    let isHistoricalFallback = false;
     if (programs.length === 0) {
-      return NextResponse.json(
-        {
-          error: 'No active funding programs available',
-          message: '현재 활성화된 지원 프로그램이 없습니다. 나중에 다시 시도해주세요.',
+      const yearStart = new Date(new Date().getFullYear(), 0, 1); // Jan 1 of current year
+      const today = new Date();
+
+      programs = await db.funding_programs.findMany({
+        where: {
+          status: ProgramStatus.ACTIVE,
+          announcementType: AnnouncementType.R_D_PROJECT, // Only R&D funding opportunities (exclude surveys, events, notices)
+          deadline: {
+            gte: yearStart,
+            lt: today, // Only past deadlines (historical)
+          },
+          // Allow NULL budgets in historical fallback too
+          scrapingSource: {
+            not: null,
+            notIn: ['NTIS_API'],
+          },
         },
-        { status: 404 }
-      );
+        orderBy: [
+          { publishedAt: 'desc' },
+          { deadline: 'desc' }, // Most recent deadlines first for historical data
+        ],
+        take: 10, // Limit historical results
+      });
+
+      if (programs.length > 0) {
+        isHistoricalFallback = true;
+      } else {
+        // No programs at all (active or historical)
+        return NextResponse.json(
+          {
+            error: 'No funding programs available',
+            message: '현재 활성화된 지원 프로그램이 없습니다. 나중에 다시 시도해주세요.',
+          },
+          { status: 404 }
+        );
+      }
     }
 
     // 9. Generate matches using algorithm
+    console.log('[MATCH GENERATION] Using organization profile for org:', organizationId);
+    console.log('[MATCH GENERATION] Profile data:', {
+      name: organization.name,
+      industrySector: organization.industrySector,
+      trlLevel: organization.technologyReadinessLevel,
+      rdExperience: organization.rdExperience,
+      employeeCount: organization.employeeCount,
+      profileUpdatedAt: organization.updatedAt,
+    });
     const matchResults = generateMatches(organization, programs, 3);
+    console.log('[MATCH GENERATION] Generated', matchResults.length, 'matches');
 
     if (matchResults.length === 0) {
       return NextResponse.json(
@@ -235,6 +296,7 @@ export async function POST(request: NextRequest) {
           },
           create: {
             // Create new match if doesn't exist
+            id: randomUUID(), // Required: funding_matches.id has no default value
             organizationId: organization.id,
             programId: matchResult.program.id,
             score: matchResult.score,
@@ -247,10 +309,24 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    // 11. Track API usage for analytics
+    // 11. Log match quality for analytics (non-blocking)
+    await logMatchQualityBulk(
+      matchResults.map((matchResult, index) => ({
+        matchId: createdMatches[index].id,
+        organizationId: organization.id,
+        programId: matchResult.program.id,
+        category: matchResult.program.category || 'UNKNOWN',
+        score: matchResult.score,
+        breakdown: matchResult.breakdown,
+        saved: false, // Will be updated when user saves
+        viewed: false, // Will be updated when user views
+      }))
+    );
+
+    // 12. Track API usage for analytics
     await trackApiUsage(userId, '/api/matches/generate');
 
-    // 12. Return matches with explanations
+    // 13. Return matches with explanations
     const response = {
       success: true,
       matches: createdMatches.map((match: any) => ({
@@ -275,7 +351,10 @@ export async function POST(request: NextRequest) {
         matchesRemaining: rateLimitCheck.remaining - 1,
         resetDate: rateLimitCheck.resetDate.toISOString(),
       },
-      message: `${matchResults.length}개의 적합한 지원 프로그램을 찾았습니다.`,
+      message: isHistoricalFallback
+        ? `현재 진행 중인 공고는 없지만, 올해 마감된 유사 프로그램 ${matchResults.length}개를 찾았습니다. 새로운 공고가 올라오면 알림을 받으세요.`
+        : `${matchResults.length}개의 적합한 지원 프로그램을 찾았습니다.`,
+      isHistorical: isHistoricalFallback,
     };
 
     // 13. Cache match results for 24 hours

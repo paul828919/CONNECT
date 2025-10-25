@@ -16,6 +16,10 @@ import {
   hashBusinessNumber,
   validateBusinessNumber,
 } from '@/lib/encryption';
+import {
+  invalidateOrgProfile,
+  invalidateOrgMatches,
+} from '@/lib/cache/redis-cache';
 
 
 export async function GET(request: NextRequest) {
@@ -67,7 +71,15 @@ export async function POST(request: NextRequest) {
       businessNumber,
       industrySector,
       employeeCount,
+      // Tier 1A: Company eligibility fields
+      revenueRange,
+      businessStructure,
       rdExperience,
+      // Tier 1B: Algorithm enhancement fields
+      collaborationCount,
+      instituteType,
+      researchFocusAreas, // comma-separated string from form
+      keyTechnologies, // comma-separated string from form
       technologyReadinessLevel,
       description,
     } = body;
@@ -107,7 +119,7 @@ export async function POST(request: NextRequest) {
     // 4. Encrypt sensitive data (PIPA compliance)
     const businessNumberEncrypted = encrypt(businessNumber);
 
-    // 5. Calculate profile score (basic scoring)
+    // 5. Calculate profile score (enhanced scoring with Tier 1A + 1B)
     let profileScore = 50; // Base score
     if (name) profileScore += 10;
     if (industrySector) profileScore += 10;
@@ -115,6 +127,22 @@ export async function POST(request: NextRequest) {
     if (rdExperience) profileScore += 10;
     if (technologyReadinessLevel) profileScore += 5;
     if (description && description.length > 20) profileScore += 5;
+
+    // Tier 1A: Company eligibility fields
+    if (revenueRange) profileScore += 5;
+    if (businessStructure) profileScore += 5;
+
+    // Tier 1B: Algorithm enhancement fields
+    // collaborationCount: Stepwise scoring (1=+2pts, 2-3=+4pts, 4+=+5pts)
+    if (collaborationCount) {
+      if (collaborationCount === 1) profileScore += 2;
+      else if (collaborationCount >= 2 && collaborationCount <= 3) profileScore += 4;
+      else if (collaborationCount >= 4) profileScore += 5;
+    }
+    if (instituteType) profileScore += 5;
+    if (researchFocusAreas && researchFocusAreas.trim().length > 0)
+      profileScore += 5;
+    if (keyTechnologies && keyTechnologies.trim().length > 0) profileScore += 5;
 
     // 6. Create organization
     const organization = await db.organizations.create({
@@ -128,6 +156,25 @@ export async function POST(request: NextRequest) {
         rdExperience: rdExperience || false,
         technologyReadinessLevel: technologyReadinessLevel || null,
         description: description || null,
+        // Tier 1A: Company eligibility fields
+        revenueRange: revenueRange || null,
+        businessStructure: businessStructure || null,
+        // Tier 1B: Algorithm enhancement fields
+        collaborationCount: collaborationCount || null,
+        instituteType: instituteType || null,
+        // Convert comma-separated strings to arrays for database storage
+        researchFocusAreas: researchFocusAreas
+          ? researchFocusAreas
+              .split(',')
+              .map((area) => area.trim())
+              .filter((area) => area.length > 0)
+          : [],
+        keyTechnologies: keyTechnologies
+          ? keyTechnologies
+              .split(',')
+              .map((tech) => tech.trim())
+              .filter((tech) => tech.length > 0)
+          : [],
         profileCompleted: true,
         profileScore,
         status: 'ACTIVE',
@@ -151,6 +198,10 @@ export async function POST(request: NextRequest) {
       where: { id: userId },
       data: { organizationId: organization.id },
     });
+
+    // 8. Invalidate caches to ensure fresh data for match generation
+    await invalidateOrgProfile(organization.id);
+    await invalidateOrgMatches(organization.id);
 
     return NextResponse.json(
       {
