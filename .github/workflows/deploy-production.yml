@@ -282,6 +282,15 @@ jobs:
 
           echo "✓ Configuration files copied successfully"
 
+      - name: Sync source files to production
+        run: |
+          echo "Syncing source files to production host..."
+          scp -i ~/.ssh/deploy_key -r \
+            scripts/ \
+            ${{ secrets.PRODUCTION_SERVER_USER }}@${{ secrets.PRODUCTION_SERVER_IP }}:/opt/connect/
+
+          echo "✓ Source files synchronized"
+
       - name: Copy images to production
         run: |
           echo "Transferring app image..."
