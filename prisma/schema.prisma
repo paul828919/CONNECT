@@ -81,7 +81,7 @@ model ai_feedback {
   rating         AIFeedbackRating
   comment        String?
   createdAt      DateTime         @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime         @updatedAt
   user           User?            @relation(fields: [userId], references: [id])
 
   @@index([createdAt])
@@ -138,7 +138,7 @@ model consortium_members {
   respondedAt         DateTime?
   responseMessage     String?
   createdAt           DateTime            @default(now())
-  updatedAt           DateTime
+  updatedAt           DateTime            @updatedAt
   consortium_projects consortium_projects @relation(fields: [consortiumId], references: [id], onDelete: Cascade)
   invitedBy           User                @relation(fields: [invitedById], references: [id], onDelete: Cascade)
   organizations       organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -162,7 +162,7 @@ model consortium_projects {
   endDate            DateTime?
   status             ConsortiumStatus     @default(DRAFT)
   createdAt          DateTime             @default(now())
-  updatedAt          DateTime
+  updatedAt          DateTime             @updatedAt
   consortium_members consortium_members[]
   createdBy          User                 @relation(fields: [createdById], references: [id], onDelete: Cascade)
   organizations      organizations        @relation(fields: [leadOrganizationId], references: [id], onDelete: Cascade)
@@ -187,7 +187,7 @@ model contact_requests {
   responseMessage                                             String?
   respondedAt                                                 DateTime?
   createdAt                                                   DateTime             @default(now())
-  updatedAt                                                   DateTime
+  updatedAt                                                   DateTime             @updatedAt
   organizations_contact_requests_receiverOrgIdToorganizations organizations        @relation("contact_requests_receiverOrgIdToorganizations", fields: [receiverOrgId], references: [id], onDelete: Cascade)
   sender                                                      User                 @relation(fields: [senderId], references: [id], onDelete: Cascade)
   organizations_contact_requests_senderOrgIdToorganizations   organizations        @relation("contact_requests_senderOrgIdToorganizations", fields: [senderOrgId], references: [id], onDelete: Cascade)
@@ -236,7 +236,7 @@ model feedback {
   adminNotes     String?
   resolvedAt     DateTime?
   createdAt      DateTime         @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime         @updatedAt
   user           User?            @relation(fields: [userId], references: [id])
 
   @@index([category])
@@ -293,7 +293,7 @@ model funding_programs {
   lastCheckedAt       DateTime              @default(now())
   scrapingSource      String?
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime
+  updatedAt           DateTime              @updatedAt
   announcementType    AnnouncementType      @default(R_D_PROJECT)
   announcingAgency    String?
   ministry            String?
@@ -382,7 +382,7 @@ model organizations {
   status                                                         OrganizationStatus    @default(ACTIVE)
   verifiedAt                                                     DateTime?
   createdAt                                                      DateTime              @default(now())
-  updatedAt                                                      DateTime
+  updatedAt                                                      DateTime              @updatedAt
   ai_cost_logs                                                   ai_cost_logs[]
   consortium_members                                             consortium_members[]
   consortium_projects                                            consortium_projects[]
@@ -414,7 +414,7 @@ model payments {
   taxInvoiceIssued Boolean       @default(false)
   taxInvoiceNumber String?
   createdAt        DateTime      @default(now())
-  updatedAt        DateTime
+  updatedAt        DateTime      @updatedAt
   subscriptions    subscriptions @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@index([paidAt])
@@ -476,7 +476,7 @@ model subscriptions {
   taxInvoiceEmail          String?
   taxInvoiceBusinessNumber String?
   createdAt                DateTime           @default(now())
-  updatedAt                DateTime
+  updatedAt                DateTime           @updatedAt
   payments                 payments[]
   user                     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -513,7 +513,7 @@ model User {
   emailNotifications     Boolean               @default(true)
   weeklyDigest           Boolean               @default(true)
   createdAt              DateTime              @default(now())
-  updatedAt              DateTime
+  updatedAt              DateTime              @updatedAt
   lastLoginAt            DateTime?
   image                  String?
   lastNotificationSentAt DateTime?
