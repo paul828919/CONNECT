@@ -71,6 +71,16 @@ docker inspect connect:latest --format=‘{ {.Architecture}}’
 - **Self-contained**: Each container handles its own initialization
 - **Self-healing**: Migration failure = container failure = automatic rollback
 - **Atomic verification**: Health checks simultaneously validate migration + application + endpoint
+
+**Docker Image Contents (Critical - October 25, 2025 Fix):**
+- **All application code must be in Docker images** - Never rely on manual file synchronization (rsync) for production
+- **scripts/ directory is containerized** - Added explicit COPY statements in both Dockerfiles (commit 3314be9)
+- **CI/CD verification enforced** - GitHub Actions verifies scripts/ exists before deployment
+- **Historical Context**: Prior to Oct 25, scripts/ was excluded, creating a deployment gap where:
+  - GitHub Actions deployed containers without scripts/
+  - Manual rsync kept host files in sync
+  - Result: Two-mechanism deployment with hidden manual dependency
+- **Fix Applied**: Dockerfile.scraper line 27, Dockerfile.production line 94, GitHub Actions lines 155-177
 ---
 ## Project Overview
 Connect is **Korea's R&D Commercialization Operating System**, transforming companies' research funding acquisition journey from discovery to contract award. This platform combines automated matching with specialized execution services, positioning companies as primary paying customers (research institutions serve as supply-side partners for consortium matching).

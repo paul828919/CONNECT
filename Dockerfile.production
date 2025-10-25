@@ -90,6 +90,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/lib ./lib
 # Copy app directory (source files may be needed by some routes)
 COPY --from=builder --chown=nextjs:nodejs /app/app ./app
 
+# Copy scripts directory (ad-hoc operations and maintenance)
+COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+
 # Create directories for logs and uploads
 RUN mkdir -p /app/logs /app/uploads && \
     chown -R nextjs:nodejs /app/logs /app/uploads
