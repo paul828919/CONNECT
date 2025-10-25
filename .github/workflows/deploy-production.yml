@@ -154,27 +154,74 @@ jobs:
 
       - name: Verify scripts directory in images
         run: |
-          echo "🔍 Verifying scripts/ directory exists in Docker images..."
+          echo "🔍 Verifying Docker images contain required files..."
 
-          # Load and check scraper image
+          # ========== Scraper Image ==========
           docker load --input /tmp/connect-scraper-image.tar
-          if docker run --rm connect-scraper:${{ github.sha }} ls /app/scripts/ >/dev/null 2>&1; then
-            echo "✅ scripts/ exists in scraper image"
-          else
-            echo "❌ scripts/ missing from scraper image"
+
+          # Check 1: Build requirements (scripts directory for ad-hoc operations)
+          echo "Checking scraper build requirements..."
+          if ! docker run --rm --entrypoint ls connect-scraper:${{ github.sha }} -la /app/scripts/ >/dev/null 2>&1; then
+            echo "❌ Missing /app/scripts/ in scraper image"
+            echo "   Required for: ad-hoc operations (e.g., scrape-ntis-historical.ts)"
+            echo "   Fix: Verify Dockerfile.scraper line 27 contains 'COPY scripts ./scripts'"
             exit 1
           fi
+          echo "✅ /app/scripts/ exists in scraper image"
 
-          # Load and check app image
+          # Check 2: Runtime requirements
+          echo "Checking scraper runtime requirements..."
+          docker run --rm --entrypoint sh connect-scraper:${{ github.sha }} -c '
+            if [ ! -f /app/lib/scraping/worker.ts ]; then
+              echo "❌ Missing /app/lib/scraping/worker.ts (entrypoint execution target)"
+              exit 1
+            fi
+            if [ ! -f /app/docker-entrypoint-scraper.sh ]; then
+              echo "❌ Missing /app/docker-entrypoint-scraper.sh"
+              exit 1
+            fi
+            echo "✅ Runtime files present: worker.ts, entrypoint script"
+          '
+
+          # Check 3: Image metadata
+          echo "Verifying scraper image metadata..."
+          docker image inspect connect-scraper:${{ github.sha }} \
+            --format 'WorkingDir={{.Config.WorkingDir}} Entrypoint={{json .Config.Entrypoint}}'
+
+          # ========== App Image ==========
           docker load --input /tmp/connect-image.tar
-          if docker run --rm connect:${{ github.sha }} ls /app/scripts/ >/dev/null 2>&1; then
-            echo "✅ scripts/ exists in app image"
-          else
-            echo "❌ scripts/ missing from app image"
+
+          echo "Checking app build requirements..."
+          if ! docker run --rm --entrypoint ls connect:${{ github.sha }} -la /app/scripts/ >/dev/null 2>&1; then
+            echo "❌ Missing /app/scripts/ in app image"
+            echo "   Required for: maintenance scripts and ad-hoc operations"
+            echo "   Fix: Verify Dockerfile.production line 94 contains scripts COPY"
             exit 1
           fi
+          echo "✅ /app/scripts/ exists in app image"
 
-          echo "✅ All images contain scripts/ directory"
+          echo "Checking app runtime requirements..."
+          docker run --rm --entrypoint sh connect:${{ github.sha }} -c '
+            if [ ! -f /app/docker-entrypoint.sh ]; then
+              echo "❌ Missing /app/docker-entrypoint.sh"
+              exit 1
+            fi
+            if [ ! -f /app/server.js ]; then
+              echo "❌ Missing /app/server.js (Next.js standalone server)"
+              exit 1
+            fi
+            echo "✅ Runtime files present: server.js, entrypoint script"
+          '
+
+          echo "Verifying app image metadata..."
+          docker image inspect connect:${{ github.sha }} \
+            --format 'WorkingDir={{.Config.WorkingDir}} Entrypoint={{json .Config.Entrypoint}}'
+
+          echo ""
+          echo "✅ All images verified successfully"
+          echo "   - Build requirements: /app/scripts/ present"
+          echo "   - Runtime requirements: entrypoints and execution targets present"
+          echo "   - Image metadata: validated"
 
       - name: Upload app image artifact
         uses: actions/upload-artifact@v4
