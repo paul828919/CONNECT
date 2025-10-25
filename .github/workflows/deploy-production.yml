@@ -30,10 +30,21 @@ jobs:
           --health-retries 5
         ports:
           - 6432:5432
-    
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:6432/connect_test
       DIRECT_URL: postgresql://postgres:postgres@localhost:6432/connect_test
+      REDIS_CACHE_URL: redis://localhost:6379/0
       NODE_ENV: test
       ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       NEXTAUTH_SECRET: test_nextauth_secret_for_ci_testing_only

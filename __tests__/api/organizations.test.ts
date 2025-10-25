@@ -16,6 +16,7 @@ import {
   sampleOrganizationData,
 } from '../helpers/testHelpers';
 import { decrypt } from '@/lib/encryption';
+import { closeCacheConnection } from '@/lib/cache/redis-cache';
 
 // Mock NextAuth session
 jest.mock('next-auth/next', () => ({
@@ -58,6 +59,9 @@ describe('/api/organizations POST', () => {
   });
 
   afterAll(async () => {
+    // Close Redis connection to prevent resource leaks
+    await closeCacheConnection();
+    // Close Prisma connection
     await prisma.$disconnect();
   });
 
