@@ -1,13 +1,21 @@
 /**
- * Fetch Funding Matches API
+ * Fetch Historical Funding Matches API
  *
- * GET /api/matches?organizationId=xxx
+ * Feature: Retrieve previously generated matches from EXPIRED programs
+ * Use case: Display "missed opportunities" in UI without consuming rate limit
+ *
+ * Business Logic:
+ * - Read-only endpoint (no rate limiting - retrieving existing data is free)
+ * - Returns matches to EXPIRED programs only
+ * - Sorted by score (highest first) then creation date (newest first)
+ *
+ * GET /api/matches/historical?organizationId=xxx
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient, AnnouncementType } from '@prisma/client';
+import { PrismaClient, ProgramStatus, AnnouncementType } from '@prisma/client';
 
 // Direct Prisma Client instantiation (bypasses lib/db module resolution issue)
 const globalForPrisma = globalThis as unknown as {
@@ -64,33 +72,32 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 4. Fetch matches for this organization
+    // 4. Fetch historical matches for this organization
     const matches = await db.funding_matches.findMany({
       where: {
         organizationId,
         funding_programs: {
-          status: 'ACTIVE', // Only show matches to active programs (exclude EXPIRED)
-          announcementType: AnnouncementType.R_D_PROJECT, // Only R&D funding opportunities (exclude surveys, events, notices)
+          status: ProgramStatus.EXPIRED, // Only show matches to EXPIRED programs
+          announcementType: AnnouncementType.R_D_PROJECT, // Only R&D funding opportunities
           scrapingSource: {
             not: null, // Exclude test seed data
             notIn: ['NTIS_API'], // Exclude NTIS_API (old project data)
           },
-          // Allow NULL budgets and deadlines per user guidance
-          // (Jan-March NTIS announcements may have budget/deadline TBD)
         },
       },
       include: {
         funding_programs: true,
       },
       orderBy: [
-        { funding_programs: { publishedAt: 'desc' } }, // Newest announcements first
-        { funding_programs: { deadline: 'asc' } },     // Then by urgency (NULLs last)
+        { score: 'desc' },           // Highest relevance first
+        { createdAt: 'desc' },       // Most recently generated first
       ],
     });
 
-    // 5. Return matches
+    // 5. Return historical matches
     const response = {
       success: true,
+      type: 'historical',
       matches: matches.map((match: any) => ({
         id: match.id,
         program: {
@@ -102,18 +109,25 @@ export async function GET(request: NextRequest) {
           budgetAmount: match.funding_programs.budgetAmount?.toString(),
           deadline: match.funding_programs.deadline?.toISOString(),
           announcementUrl: match.funding_programs.announcementUrl,
+          status: match.funding_programs.status, // Will be "EXPIRED"
+          publishedAt: match.funding_programs.publishedAt?.toISOString(),
         },
         score: match.score,
         explanation: match.explanation,
         viewed: match.viewed,
         saved: match.saved,
+        isExpired: true, // Flag for UI rendering
         createdAt: match.createdAt.toISOString(),
       })),
+      count: matches.length,
+      message: matches.length === 0
+        ? '아직 생성된 과거 매칭 결과가 없습니다. "과거 기회 보기" 버튼을 클릭하여 2025년 놓친 기회를 확인하세요.'
+        : `${matches.length}개의 과거 매칭 결과를 찾았습니다.`,
     };
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error('Error fetching matches:', error);
+    console.error('Error fetching historical matches:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

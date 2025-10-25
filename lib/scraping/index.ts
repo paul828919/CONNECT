@@ -5,23 +5,20 @@
  * Run this as a separate service in Docker (scraper container).
  */
 
-import { startScheduler } from './scheduler';
-import scrapingWorker from './worker';
+import scrapingWorker from './worker'; // Schedulers initialized automatically on import
 import { startEmailCronJobs } from '../email/cron';
-import { startNTISScheduler } from '../ntis-api';
 
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log('🤖 Connect Platform - Scraping Service');
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log('');
 
-// 1. Start the scraping scheduler (cron jobs for Playwright)
-startScheduler();
+// 1. Schedulers are initialized automatically in worker.ts on import
+// - startScheduler() - NTIS Announcement Scraper (Playwright, 9 AM + 3 PM KST)
+// - initializeCacheScheduler() - Cache warming (6 AM KST)
+// NOTE: startNTISScheduler() is DISABLED (NTIS API = completed/in-progress projects, NOT announcements)
 
-// 2. Start NTIS API scheduler (cron job for NTIS API scraping)
-startNTISScheduler();
-
-// 3. Start email notification cron jobs (graceful failure if SMTP not configured)
+// 2. Start email notification cron jobs (graceful failure if SMTP not configured)
 try {
   startEmailCronJobs();
   console.log('✓ Email notifications enabled');

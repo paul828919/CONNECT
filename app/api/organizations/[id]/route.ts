@@ -42,6 +42,14 @@ export async function GET(
         rdExperience: true,
         technologyReadinessLevel: true,
         description: true,
+        // Tier 1A: Company eligibility fields
+        revenueRange: true,
+        businessStructure: true,
+        // Tier 1B: Algorithm enhancement fields
+        collaborationCount: true,
+        instituteType: true,
+        researchFocusAreas: true,
+        keyTechnologies: true,
         profileCompleted: true,
         profileScore: true,
         status: true,
@@ -149,6 +157,14 @@ export async function PATCH(
       rdExperience,
       technologyReadinessLevel,
       description,
+      // Tier 1A: Company eligibility fields
+      revenueRange,
+      businessStructure,
+      // Tier 1B: Algorithm enhancement fields
+      collaborationCount,
+      instituteType,
+      researchFocusAreas,
+      keyTechnologies,
     } = body;
 
     // Build update data (only include fields that are provided)
@@ -161,7 +177,34 @@ export async function PATCH(
       updateData.technologyReadinessLevel = technologyReadinessLevel;
     if (description !== undefined) updateData.description = description;
 
-    // Recalculate profile score
+    // Tier 1A: Company eligibility fields
+    if (revenueRange !== undefined) updateData.revenueRange = revenueRange;
+    if (businessStructure !== undefined)
+      updateData.businessStructure = businessStructure;
+
+    // Tier 1B: Algorithm enhancement fields
+    if (collaborationCount !== undefined)
+      updateData.collaborationCount = collaborationCount;
+    if (instituteType !== undefined) updateData.instituteType = instituteType;
+    // Convert comma-separated strings to arrays for database storage
+    if (researchFocusAreas !== undefined) {
+      updateData.researchFocusAreas = researchFocusAreas
+        ? researchFocusAreas
+            .split(',')
+            .map((area: string) => area.trim())
+            .filter((area: string) => area.length > 0)
+        : [];
+    }
+    if (keyTechnologies !== undefined) {
+      updateData.keyTechnologies = keyTechnologies
+        ? keyTechnologies
+            .split(',')
+            .map((tech: string) => tech.trim())
+            .filter((tech: string) => tech.length > 0)
+        : [];
+    }
+
+    // Recalculate profile score (enhanced with Tier 1A + 1B)
     let profileScore = 50; // Base score
     if (updateData.name || existingOrg.name) profileScore += 10;
     if (updateData.industrySector || existingOrg.industrySector) profileScore += 10;
@@ -183,6 +226,34 @@ export async function PATCH(
     )
       profileScore += 5;
 
+    // Tier 1A: Company eligibility fields
+    if (updateData.revenueRange || existingOrg.revenueRange) profileScore += 5;
+    if (updateData.businessStructure || existingOrg.businessStructure)
+      profileScore += 5;
+
+    // Tier 1B: Algorithm enhancement fields
+    // collaborationCount: Stepwise scoring (1=+2pts, 2-3=+4pts, 4+=+5pts)
+    const finalCollabCount =
+      updateData.collaborationCount !== undefined
+        ? updateData.collaborationCount
+        : existingOrg.collaborationCount;
+    if (finalCollabCount) {
+      if (finalCollabCount === 1) profileScore += 2;
+      else if (finalCollabCount >= 2 && finalCollabCount <= 3) profileScore += 4;
+      else if (finalCollabCount >= 4) profileScore += 5;
+    }
+    if (updateData.instituteType || existingOrg.instituteType) profileScore += 5;
+    const finalResearchAreas =
+      updateData.researchFocusAreas !== undefined
+        ? updateData.researchFocusAreas
+        : existingOrg.researchFocusAreas;
+    if (finalResearchAreas && finalResearchAreas.length > 0) profileScore += 5;
+    const finalKeyTech =
+      updateData.keyTechnologies !== undefined
+        ? updateData.keyTechnologies
+        : existingOrg.keyTechnologies;
+    if (finalKeyTech && finalKeyTech.length > 0) profileScore += 5;
+
     updateData.profileScore = profileScore;
     updateData.updatedAt = new Date();
 
@@ -199,6 +270,14 @@ export async function PATCH(
         rdExperience: true,
         technologyReadinessLevel: true,
         description: true,
+        // Tier 1A: Company eligibility fields
+        revenueRange: true,
+        businessStructure: true,
+        // Tier 1B: Algorithm enhancement fields
+        collaborationCount: true,
+        instituteType: true,
+        researchFocusAreas: true,
+        keyTechnologies: true,
         profileCompleted: true,
         profileScore: true,
         updatedAt: true,
@@ -206,8 +285,18 @@ export async function PATCH(
     });
 
     // Invalidate caches (profile changes affect match results)
+    console.log('[PROFILE UPDATE] Invalidating caches for org:', organizationId);
     await invalidateOrgProfile(organizationId);
     await invalidateOrgMatches(organizationId);
+
+    // Delete ALL existing matches when profile changes
+    // This ensures users see only matches based on their current profile
+    // User trust critical: If profile TRL 5→7 changes, old TRL 5 matches must be cleared
+    console.log('[PROFILE UPDATE] Deleting all existing matches for org:', organizationId);
+    const deleteResult = await db.funding_matches.deleteMany({
+      where: { organizationId },
+    });
+    console.log('[PROFILE UPDATE] ✅ Deleted', deleteResult.count, 'matches');
 
     return NextResponse.json({
       success: true,

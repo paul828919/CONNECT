@@ -1,10 +1,16 @@
 /**
  * NTIS API Scheduler
  *
- * Automated daily scraping of NTIS API for R&D program data
- * Runs at 9:00 AM KST daily via node-cron
+ * ⚠️ WARNING: This scheduler is for completed/in-progress research PROJECTS, NOT announcements
  *
- * Week 6: NTIS Database Integration
+ * Data Source: NTIS API (https://www.ntis.go.kr/openapi)
+ * - Provides: Completed and in-progress research project data (736,923+ projects)
+ * - Does NOT provide: Funding announcements (공고) for new opportunities
+ *
+ * For funding announcements, use: /lib/scraping/scheduler.ts (NTIS Announcement Scraper via Playwright)
+ *
+ * Status: DISABLED (not needed for primary use case)
+ * Original Purpose: Historical R&D project database integration (Week 6)
  */
 
 import cron from 'node-cron';
@@ -13,9 +19,12 @@ import { NTISApiScraper } from './scraper';
 /**
  * Start NTIS API automated scheduler
  *
- * Schedule: Daily at 9:00 AM KST
- * Purpose: Fetch latest R&D programs from NTIS API (736,923+ programs available)
- * Integration: Runs alongside Playwright scraper in connect_scraper container
+ * ⚠️ WARNING: This scrapes COMPLETED/IN-PROGRESS research projects, NOT funding announcements
+ *
+ * Schedule: Daily at 9:00 AM KST (CURRENTLY DISABLED)
+ * Purpose: Fetch historical R&D project data from NTIS API (736,923+ projects)
+ * Data: Research projects already completed or in progress
+ * NOT for: Funding announcements (공고) - use NTIS Announcement Scraper instead
  */
 export function startNTISScheduler(): void {
   console.log('🚀 Starting NTIS API scheduler...');

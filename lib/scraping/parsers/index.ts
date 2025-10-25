@@ -10,6 +10,7 @@ export { parseIITPDetails, type IITPProgramDetails } from './iitp-parser';
 export { parseKEITDetails, type KEITProgramDetails } from './keit-parser';
 export { parseTIPADetails, type TIPAProgramDetails } from './tipa-parser';
 export { parseKIMSTDetails, type KIMSTProgramDetails } from './kimst-parser';
+export { parseNTISAnnouncementDetails, type NTISAnnouncementDetails } from './ntis-announcement-parser';
 
 /**
  * Unified program details interface
@@ -22,6 +23,11 @@ export interface ProgramDetails {
   minTRL: number | null;
   maxTRL: number | null;
   eligibilityCriteria: Record<string, any> | null;
+  publishedAt?: Date | null; // Optional: Only NTIS announcement parser provides this
+  ministry?: string | null; // Optional: 부처명 (extracted from NTIS announcements)
+  announcingAgency?: string | null; // Optional: 공고기관명 (extracted from NTIS announcements)
+  category?: string | null; // Optional: Industry sector (extracted from agency)
+  keywords?: string[]; // Optional: Technology keywords (agency defaults + extracted from title/description)
 }
 
 /**
@@ -37,19 +43,27 @@ export async function parseProgramDetails(
   switch (agency) {
     case 'iitp': {
       const { parseIITPDetails } = await import('./iitp-parser');
-      return await parseIITPDetails(page, url);
+      const result = await parseIITPDetails(page, url);
+      return { ...result, publishedAt: null, ministry: null, announcingAgency: null, category: null, keywords: [] } as ProgramDetails;
     }
     case 'keit': {
       const { parseKEITDetails } = await import('./keit-parser');
-      return await parseKEITDetails(page, url);
+      const result = await parseKEITDetails(page, url);
+      return { ...result, publishedAt: null, ministry: null, announcingAgency: null, category: null, keywords: [] } as ProgramDetails;
     }
     case 'tipa': {
       const { parseTIPADetails } = await import('./tipa-parser');
-      return await parseTIPADetails(page, url);
+      const result = await parseTIPADetails(page, url);
+      return { ...result, publishedAt: null, ministry: null, announcingAgency: null, category: null, keywords: [] } as ProgramDetails;
     }
     case 'kimst': {
       const { parseKIMSTDetails } = await import('./kimst-parser');
-      return await parseKIMSTDetails(page, url);
+      const result = await parseKIMSTDetails(page, url);
+      return { ...result, publishedAt: null, ministry: null, announcingAgency: null, category: null, keywords: [] } as ProgramDetails;
+    }
+    case 'ntis': {
+      const { parseNTISAnnouncementDetails } = await import('./ntis-announcement-parser');
+      return await parseNTISAnnouncementDetails(page, url);
     }
     default:
       console.warn(`[Parser] Unknown agency: ${agencyId}, using default parser`);
@@ -61,6 +75,11 @@ export async function parseProgramDetails(
         minTRL: null,
         maxTRL: null,
         eligibilityCriteria: null,
+        publishedAt: null,
+        ministry: null,
+        announcingAgency: null,
+        category: null,
+        keywords: [],
       };
   }
 }

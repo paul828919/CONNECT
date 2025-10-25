@@ -72,12 +72,59 @@ export function generateProgramHash(data: {
  *  - "2024.01.15"
  *  - "2024년 1월 15일"
  *  - "2024/01/15"
+ *  - "2025-09-23 15시" (with time)
+ *  - "2024.12.31 23시 59분" (with hours and minutes)
+ *  - "2025.9.23" (NTIS format with single-digit months)
  */
 export function parseKoreanDate(dateStr: string): Date | null {
   if (!dateStr) return null;
 
-  // Remove Korean characters
+  // Remove time components (시, 분) and everything after them
+  // This allows us to extract just the date portion
   let cleaned = dateStr
+    .replace(/\s*\d+시.*$/g, '') // Remove "15시" or "23시 59분" at end
+    .trim();
+
+  // PRIORITY 1: NTIS format (YYYY.MM.DD or YYYY-MM-DD) with explicit validation
+  // Match patterns like "2025.9.23", "2025.09.23", "2025-9-23", "2025-09-23"
+  const ntisPattern = /^(\d{4})[.-](\d{1,2})[.-](\d{1,2})$/;
+  const ntisMatch = cleaned.match(ntisPattern);
+
+  if (ntisMatch) {
+    const year = parseInt(ntisMatch[1]);
+    const month = parseInt(ntisMatch[2]);
+    const day = parseInt(ntisMatch[3]);
+
+    // Validate year range (2020-2030) - realistic government funding timeline
+    if (year < 2020 || year > 2030) {
+      return null;
+    }
+
+    // Validate month range (1-12)
+    if (month < 1 || month > 12) {
+      return null;
+    }
+
+    // Validate day range (1-31)
+    if (day < 1 || day > 31) {
+      return null;
+    }
+
+    // Create date and verify it's valid (handles Feb 30, etc.)
+    const parsedDate = new Date(year, month - 1, day); // month is 0-indexed in JS Date
+    if (
+      parsedDate.getFullYear() === year &&
+      parsedDate.getMonth() === month - 1 &&
+      parsedDate.getDate() === day
+    ) {
+      return parsedDate;
+    }
+
+    return null;
+  }
+
+  // PRIORITY 2: Korean traditional formats (년/월/일)
+  cleaned = cleaned
     .replace(/년/g, '-')
     .replace(/월/g, '-')
     .replace(/일/g, '')
@@ -194,23 +241,98 @@ export function normalizeUrl(url: string, baseUrl: string): string {
 }
 
 /**
- * Extract TRL range from text
+ * Extract TRL range from text with confidence tracking
+ *
+ * Detection strategies:
+ * 1. Explicit: Direct TRL mentions (e.g., "TRL 1-3", "기술성숙도 4-6")
+ * 2. Inferred: Korean research stage keywords (기초연구, 응용연구, 실용화)
+ *
+ * @returns TRL range with confidence level, or null if not detected
  */
-export function extractTRLRange(text: string): { minTRL: number; maxTRL: number } | null {
+export function extractTRLRange(text: string): {
+  minTRL: number;
+  maxTRL: number;
+  confidence: 'explicit' | 'inferred'
+} | null {
   if (!text) return null;
 
-  // Match patterns like "TRL 1-3", "TRL 4~6", "기술성숙도 7-9"
-  const pattern = /TRL\s*(\d)\s*[-~]\s*(\d)|기술성숙도\s*(\d)\s*[-~]\s*(\d)/i;
-  const match = text.match(pattern);
+  // ============================================================================
+  // Strategy 1: Explicit TRL Detection (HIGH CONFIDENCE)
+  // ============================================================================
 
-  if (!match) return null;
+  // Pattern 1: "TRL 1-3", "TRL 4~6", "TRL1-3"
+  const explicitPattern = /TRL\s*(\d)\s*[-~]\s*(\d)/i;
+  const explicitMatch = text.match(explicitPattern);
 
-  const minTRL = parseInt(match[1] || match[3]);
-  const maxTRL = parseInt(match[2] || match[4]);
+  if (explicitMatch) {
+    const minTRL = parseInt(explicitMatch[1]);
+    const maxTRL = parseInt(explicitMatch[2]);
 
-  if (minTRL >= 1 && minTRL <= 9 && maxTRL >= 1 && maxTRL <= 9 && minTRL <= maxTRL) {
-    return { minTRL, maxTRL };
+    if (minTRL >= 1 && minTRL <= 9 && maxTRL >= 1 && maxTRL <= 9 && minTRL <= maxTRL) {
+      return { minTRL, maxTRL, confidence: 'explicit' };
+    }
   }
+
+  // Pattern 2: "기술성숙도 7-9", "기술성숙도 4~6"
+  const koreanPattern = /기술성숙도\s*(\d)\s*[-~]\s*(\d)/;
+  const koreanMatch = text.match(koreanPattern);
+
+  if (koreanMatch) {
+    const minTRL = parseInt(koreanMatch[1]);
+    const maxTRL = parseInt(koreanMatch[2]);
+
+    if (minTRL >= 1 && minTRL <= 9 && maxTRL >= 1 && maxTRL <= 9 && minTRL <= maxTRL) {
+      return { minTRL, maxTRL, confidence: 'explicit' };
+    }
+  }
+
+  // Pattern 3: Single TRL value "TRL 5", "TRL5" → interpret as minTRL=maxTRL
+  const singlePattern = /TRL\s*(\d)/i;
+  const singleMatch = text.match(singlePattern);
+
+  if (singleMatch) {
+    const trl = parseInt(singleMatch[1]);
+
+    if (trl >= 1 && trl <= 9) {
+      return { minTRL: trl, maxTRL: trl, confidence: 'explicit' };
+    }
+  }
+
+  // ============================================================================
+  // Strategy 2: Implicit TRL Inference (MEDIUM CONFIDENCE)
+  // ============================================================================
+
+  // Implicit inference from Korean research stage keywords
+  // Based on Korean R&D funding terminology standards
+
+  // TRL 1-3: Basic Research (기초연구)
+  // - Observational/theoretical research
+  // - Laboratory proof-of-concept
+  // Keywords: 기초연구, 원천기술, 이론연구
+  if (/기초연구|원천기술|이론연구|기본원리/i.test(text)) {
+    return { minTRL: 1, maxTRL: 3, confidence: 'inferred' };
+  }
+
+  // TRL 4-6: Applied Research (응용연구)
+  // - Component validation
+  // - Laboratory/relevant environment validation
+  // Keywords: 응용연구, 개발연구, 시제품
+  if (/응용연구|개발연구|시제품|프로토타입|중간단계/i.test(text)) {
+    return { minTRL: 4, maxTRL: 6, confidence: 'inferred' };
+  }
+
+  // TRL 7-9: Commercialization (실용화/사업화)
+  // - System prototype demonstration
+  // - System proven in operational environment
+  // - Actual system proven through operations
+  // Keywords: 실용화, 사업화, 상용화, 시장진입, 양산
+  if (/실용화|사업화|상용화|시장진입|양산|제품화|실증/i.test(text)) {
+    return { minTRL: 7, maxTRL: 9, confidence: 'inferred' };
+  }
+
+  // ============================================================================
+  // No TRL detected
+  // ============================================================================
 
   return null;
 }

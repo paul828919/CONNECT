@@ -58,7 +58,7 @@ This document provides detailed technical specifications for scraping all 19 NTI
 | `kofpi` | 한국임업진흥원 (KOFPI) | 산림청 | Forestry Technology | ₩20M - ₩500M |
 | `kmiti` | 한국기상산업기술원 (KMITI) | 기상청 | Weather Technology | ₩30M - ₩1B |
 | `nrich` | 국립문화유산연구원 (NRICH) | 국가유산청 | Cultural Heritage | ₩20M - ₩300M |
-| `rda` | 농촌진흥청 (RDA) | 농촌진흥청 | Agricultural Research | ₩50M - ₩2B |
+| `rda` | 농촌진흥청 (RDA) | 농림축산식품부 | Agricultural Research | ₩50M - ₩2B |
 
 ---
 

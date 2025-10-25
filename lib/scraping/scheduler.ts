@@ -1,15 +1,15 @@
 /**
- * Scraping Scheduler
+ * Scraping Scheduler (NTIS-only mode)
  *
- * Schedules scraping jobs using node-cron:
- * - Normal mode: 2x daily (9 AM, 3 PM KST)
- * - Peak season (Jan-Mar): 4x daily (9 AM, 12 PM, 3 PM, 6 PM KST)
+ * Schedules NTIS announcement scraping using node-cron:
+ * - Fixed schedule: 9 AM + 3 PM KST daily (2x daily)
+ * - Target: NTIS funding announcements only (IITP, KEIT, TIPA, KIMST disabled)
  */
 
 import cron from 'node-cron';
 import { Queue } from 'bullmq';
 import { getAllAgencyConfigs } from './config';
-import { isPeakSeason, logScraping } from './utils';
+import { logScraping } from './utils';
 
 // Bull queue for scraping jobs
 export const scrapingQueue = new Queue('scraping-queue', {
@@ -20,12 +20,16 @@ export const scrapingQueue = new Queue('scraping-queue', {
 });
 
 /**
- * Queue scraping jobs for all agencies
+ * Queue scraping jobs for NTIS only
+ * NOTE: Only NTIS Announcement Scraper is active (IITP, KEIT, TIPA, KIMST disabled)
  */
 async function queueScrapingJobs(priority: 'high' | 'standard' = 'standard') {
   const agencies = getAllAgencyConfigs();
 
-  for (const agencyConfig of agencies) {
+  // Filter to NTIS only
+  const ntisOnly = agencies.filter(a => a.id === 'ntis');
+
+  for (const agencyConfig of ntisOnly) {
     try {
       await scrapingQueue.add(
         `scrape-${agencyConfig.id}`,
@@ -60,43 +64,27 @@ async function queueScrapingJobs(priority: 'high' | 'standard' = 'standard') {
 
 /**
  * Start scraping scheduler
+ * NTIS-only mode: 9 AM + 3 PM daily (fixed schedule)
  */
 export function startScheduler() {
-  console.log('🚀 Starting scraping scheduler...');
+  console.log('🚀 Starting NTIS announcement scraping scheduler...');
 
-  // Normal mode: 2x daily (9 AM, 3 PM KST)
+  // Fixed schedule: 9 AM + 3 PM KST daily
   // Cron format: minute hour day month weekday
   cron.schedule(
     '0 9,15 * * *',
     async () => {
-      if (!isPeakSeason()) {
-        console.log('⏰ Running normal mode scrape (2x daily)...');
-        await queueScrapingJobs('standard');
-      }
+      console.log('⏰ Running NTIS announcement scrape (9 AM + 3 PM daily)...');
+      await queueScrapingJobs('standard');
     },
     {
       timezone: 'Asia/Seoul',
     }
   );
 
-  // Peak season mode: 4x daily (9 AM, 12 PM, 3 PM, 6 PM KST)
-  cron.schedule(
-    '0 9,12,15,18 * * *',
-    async () => {
-      if (isPeakSeason()) {
-        console.log('⏰ Running peak season scrape (4x daily)...');
-        await queueScrapingJobs('high');
-      }
-    },
-    {
-      timezone: 'Asia/Seoul',
-    }
-  );
-
-  console.log('✓ Scraping scheduler started successfully');
-  console.log(`  - Normal mode: 9 AM, 3 PM KST (2x daily)`);
-  console.log(`  - Peak season (Jan-Mar): 9 AM, 12 PM, 3 PM, 6 PM KST (4x daily)`);
-  console.log(`  - Current mode: ${isPeakSeason() ? 'PEAK SEASON (4x)' : 'NORMAL (2x)'}`);
+  console.log('✓ NTIS announcement scraping scheduler started successfully');
+  console.log(`  - Schedule: 9 AM + 3 PM KST (2x daily)`);
+  console.log(`  - Target: NTIS funding announcements only`);
 }
 
 /**

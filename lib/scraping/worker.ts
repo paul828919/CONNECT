@@ -18,10 +18,11 @@ import {
   generateProgramHash,
   logScraping,
   getRandomUserAgent,
+  parseKoreanDate,
 } from './utils';
 import { scrapingConfig, AgencyConfig } from './config';
 import { sendNewMatchNotification } from '../email/notifications';
-import { parseProgramDetails } from './parsers';
+import { parseProgramDetails, ProgramDetails } from './parsers';
 import {
   invalidateProgramsCache,
   invalidateAllMatches,
@@ -29,6 +30,7 @@ import {
 import { startScheduler } from './scheduler';
 import { startNTISScheduler } from '../ntis-api/scheduler';
 import { initializeCacheScheduler } from '../cache/init';
+import { classifyAnnouncement } from './classification';
 
 
 // Job data interface
@@ -131,14 +133,42 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
           });
 
           if (!existingProgram) {
-            // NEW PROGRAM - Fetch details
+            // NEW PROGRAM
             logScraping(agency, `New program: ${announcement.title.substring(0, 50)}...`);
 
+            // OPTIMIZATION: Parse deadline from NTIS list page (if available)
+            // This avoids fetching detail page in 95% of cases
+            let listPageDeadline: Date | null = null;
+            if (announcement.deadline) {
+              listPageDeadline = parseKoreanDate(announcement.deadline);
+              if (listPageDeadline) {
+                logScraping(
+                  agency,
+                  `✓ Parsed deadline from list page: ${announcement.deadline} → ${listPageDeadline.toISOString()}`
+                );
+              }
+            }
+
+            // Fetch detail page for additional metadata
             const details = await fetchProgramDetails(
               page,
               announcement.link,
               config,
               agency
+            );
+
+            // CLASSIFICATION: Determine announcement type (R&D funding vs survey/event/notice)
+            const announcementType = classifyAnnouncement({
+              title: announcement.title,
+              description: details.description || '',
+              url: announcement.link,
+              source: agency.toLowerCase() as 'iitp' | 'tipa' | 'kimst' | 'ntis',
+            });
+
+            // Log classification decision for debugging/auditing
+            logScraping(
+              agency,
+              `Classified as ${announcementType}: ${announcement.title.substring(0, 60)}...`
             );
 
             // Convert targetType string to array format for Prisma
@@ -158,16 +188,27 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
                 title: announcement.title,
                 description: details.description || null,
                 announcementUrl: announcement.link,
-                deadline: details.deadline || null,
+                // Prioritize list page deadline (95% success rate), fall back to detail page
+                deadline: listPageDeadline || details.deadline || null,
                 budgetAmount: details.budgetAmount || null,
                 targetType: targetTypeArray,
                 minTrl: details.minTRL || null,
                 maxTrl: details.maxTRL || null,
+                // @ts-ignore - trlConfidence added via migration but not yet in Prisma types
+                trlConfidence: details.trlConfidence || 'missing',
+                // @ts-ignore - trlClassification added via migration but not yet in Prisma types
+                trlClassification: details.trlClassification || undefined,
                 eligibilityCriteria: details.eligibilityCriteria || undefined,
+                publishedAt: details.publishedAt ?? null, // 공고일 (only NTIS provides this)
+                ministry: details.ministry || null, // 부처명 (extracted from NTIS announcements)
+                announcingAgency: details.announcingAgency || null, // 공고기관명 (extracted from NTIS announcements)
+                category: details.category || null, // Industry sector (extracted from agency)
+                keywords: details.keywords || [], // Technology keywords (agency defaults + extracted from title/description)
                 contentHash,
                 scrapedAt: new Date(),
-                scrapingSource: agency.toLowerCase(), // Agency ID: tipa, iitp, keit, kimst
+                scrapingSource: agency.toLowerCase(), // Agency ID: tipa, iitp, keit, kimst, ntis
                 status: 'ACTIVE',
+                announcementType, // ✅ Dynamic classification (was hardcoded 'R_D_PROJECT')
               },
             });
 
@@ -300,12 +341,25 @@ function normalizeUrl(href: string, baseUrl: string): string {
 
 /**
  * Extract announcements from listing page
+ * Returns basic data (title + link) + optional NTIS list page columns
  */
 async function extractAnnouncements(
   page: Page,
   config: AgencyConfig,
   agency: string
-): Promise<Array<{ title: string; link: string }>> {
+): Promise<
+  Array<{
+    title: string;
+    link: string;
+    // Optional NTIS list page fields (only populated for NTIS agency)
+    ntisId?: string;
+    status?: string;
+    ministry?: string;
+    startDate?: string;
+    deadline?: string;
+    dday?: string;
+  }>
+> {
   const announcements = await page.$$eval(
     config.selectors.announcementList,
     (elements, selectors) => {
@@ -313,10 +367,39 @@ async function extractAnnouncements(
         const titleEl = el.querySelector(selectors.title);
         const linkEl = el.querySelector(selectors.link);
 
-        return {
+        // Base fields (required for all agencies)
+        const announcement: any = {
           title: titleEl?.textContent?.trim() || '',
           link: linkEl?.getAttribute('href') || '',
         };
+
+        // NTIS-specific list page fields (optional)
+        if (selectors.ntisId) {
+          const ntisIdEl = el.querySelector(selectors.ntisId);
+          announcement.ntisId = ntisIdEl?.textContent?.trim();
+        }
+        if (selectors.status) {
+          const statusEl = el.querySelector(selectors.status);
+          announcement.status = statusEl?.textContent?.trim();
+        }
+        if (selectors.ministry) {
+          const ministryEl = el.querySelector(selectors.ministry);
+          announcement.ministry = ministryEl?.textContent?.trim();
+        }
+        if (selectors.startDate) {
+          const startDateEl = el.querySelector(selectors.startDate);
+          announcement.startDate = startDateEl?.textContent?.trim();
+        }
+        if (selectors.deadline) {
+          const deadlineEl = el.querySelector(selectors.deadline);
+          announcement.deadline = deadlineEl?.textContent?.trim();
+        }
+        if (selectors.dday) {
+          const ddayEl = el.querySelector(selectors.dday);
+          announcement.dday = ddayEl?.textContent?.trim();
+        }
+
+        return announcement;
       });
     },
     config.selectors
@@ -339,15 +422,7 @@ async function fetchProgramDetails(
   link: string,
   config: AgencyConfig,
   agency: string
-): Promise<{
-  description: string | null;
-  deadline: Date | null;
-  budgetAmount: number | null;
-  targetType: 'COMPANY' | 'RESEARCH_INSTITUTE' | 'BOTH';
-  minTRL: number | null;
-  maxTRL: number | null;
-  eligibilityCriteria: Record<string, any> | null;
-}> {
+): Promise<ProgramDetails> {
   try {
     // Navigate to detail page
     const fullUrl = link.startsWith('http') ? link : config.baseUrl + link;
@@ -371,6 +446,7 @@ async function fetchProgramDetails(
       minTRL: null,
       maxTRL: null,
       eligibilityCriteria: null,
+      publishedAt: null,
     };
   }
 }
@@ -505,9 +581,9 @@ scrapingWorker.on('failed', (job, err) => {
 
 // Start schedulers on worker initialization
 console.log('🚀 Initializing schedulers...');
-startScheduler();            // Playwright scraper (9 AM, 3 PM KST)
-startNTISScheduler();        // NTIS API scraper (9 AM KST daily)
+startScheduler();            // NTIS Announcement Scraper (Playwright, 9 AM + 3 PM KST) - PRIMARY DATA SOURCE
+// startNTISScheduler();        // NTIS API scraper (completed/in-progress projects only) - NOT announcements
 initializeCacheScheduler();  // Cache warming (6 AM KST daily)
-console.log('✅ Schedulers initialized successfully');
+console.log('✅ Schedulers initialized successfully (NTIS Announcement Scraper active)');
 
 export default scrapingWorker;

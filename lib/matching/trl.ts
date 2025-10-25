@@ -1,5 +1,5 @@
 /**
- * Enhanced TRL (Technology Readiness Level) Scoring
+ * Enhanced TRL (Technology Readiness Level) Scoring (v2.5)
  *
  * Provides graduated scoring instead of binary pass/fail:
  * - Perfect match: 20 points
@@ -11,9 +11,15 @@
  * 1-3: Basic research (기초연구)
  * 4-6: Applied research & development (응용연구)
  * 7-9: Commercialization & deployment (상용화)
+ *
+ * Enhancements in v2.5:
+ * - TRL confidence weighting (explicit > inferred > missing)
+ * - Stage-based compatibility checking
+ * - Keyword-based TRL validation
  */
 
 import { organizations, funding_programs } from '@prisma/client';
+import { calculateTRLCompatibility } from './trl-classifier';
 
 export interface TRLMatchResult {
   score: number; // 0-20 points
@@ -24,11 +30,23 @@ export interface TRLMatchResult {
     maxTRL: number | null;
     difference: number; // Distance from ideal range
     isWithinRange: boolean;
+    confidence: 'explicit' | 'inferred' | 'missing'; // TRL confidence from program
+    confidenceWeight: number; // Multiplier applied to score (0.7-1.0)
   };
 }
 
 /**
- * Enhanced TRL scoring with graduated weighting
+ * Enhanced TRL scoring with graduated weighting and confidence tracking (v2.5)
+ *
+ * Improvements over v2.0:
+ * 1. Uses trlConfidence from program to weight scores
+ * 2. Uses TRL classifier for advanced compatibility checking
+ * 3. Handles implicit TRL detection (inferred from keywords)
+ *
+ * Confidence weighting:
+ * - Explicit TRL: 1.0x (full score)
+ * - Inferred TRL: 0.85x (good confidence)
+ * - Missing TRL: 0.7x (lower confidence)
  */
 export function scoreTRLEnhanced(
   org: organizations,
@@ -37,6 +55,13 @@ export function scoreTRLEnhanced(
   const orgTRL = org.technologyReadinessLevel;
   const minTRL = program.minTrl;
   const maxTRL = program.maxTrl;
+
+  // Get TRL confidence from program (requires database migration)
+  // @ts-ignore - trlConfidence added via migration but not yet in Prisma types
+  const trlConfidence: 'explicit' | 'inferred' | 'missing' = program.trlConfidence || 'missing';
+
+  // Determine confidence weight
+  const confidenceWeight = getConfidenceWeight(trlConfidence);
 
   const result: TRLMatchResult = {
     score: 0,
@@ -47,6 +72,8 @@ export function scoreTRLEnhanced(
       maxTRL,
       difference: 0,
       isWithinRange: false,
+      confidence: trlConfidence,
+      confidenceWeight,
     },
   };
 
@@ -64,52 +91,71 @@ export function scoreTRLEnhanced(
     return result;
   }
 
-  // Calculate ideal TRL midpoint
+  // Use advanced TRL compatibility checker from trl-classifier
   const programMinTRL = minTRL || 1;
   const programMaxTRL = maxTRL || 9;
-  const idealTRL = (programMinTRL + programMaxTRL) / 2;
 
-  // Check if within range
-  const withinMin = orgTRL >= programMinTRL;
-  const withinMax = orgTRL <= programMaxTRL;
+  let baseScore = 0;
 
-  if (withinMin && withinMax) {
-    // Perfect fit within range
-    result.score = 20;
+  // Check if organization TRL is within program range
+  if (orgTRL >= programMinTRL && orgTRL <= programMaxTRL) {
+    // Perfect match: organization TRL is within program's target range
+    baseScore = 20;
     result.reason = 'TRL_PERFECT_MATCH';
     result.details.isWithinRange = true;
-    result.details.difference = Math.abs(orgTRL - idealTRL);
-    return result;
-  }
-
-  // Calculate distance from range
-  let distance = 0;
-  if (orgTRL < programMinTRL) {
-    distance = programMinTRL - orgTRL;
-    result.reason = getTRLTooLowReason(distance);
-  } else if (orgTRL > programMaxTRL) {
-    distance = orgTRL - programMaxTRL;
-    result.reason = getTRLTooHighReason(distance);
-  }
-
-  result.details.difference = distance;
-
-  // Graduated scoring based on distance
-  if (distance === 1) {
-    // Very close (±1 TRL level)
-    result.score = orgTRL < programMinTRL ? 12 : 15; // Higher score if too advanced
-  } else if (distance === 2) {
-    // Moderate distance (±2 TRL levels)
-    result.score = orgTRL < programMinTRL ? 6 : 10;
-  } else if (distance === 3) {
-    // Far distance (±3 TRL levels)
-    result.score = orgTRL < programMinTRL ? 3 : 5;
+    result.details.difference = 0;
   } else {
-    // Very far distance (±4+ TRL levels)
-    result.score = 0;
+    // Use compatibility calculator from trl-classifier
+    const compatibilityScore = calculateTRLCompatibility(
+      orgTRL,
+      orgTRL, // Org has single TRL, so min=max
+      programMinTRL,
+      programMaxTRL
+    );
+
+    // Map compatibility score (0-100) to our scoring range (0-20)
+    baseScore = Math.round((compatibilityScore / 100) * 20);
+
+    // Calculate distance for reason code
+    let distance = 0;
+    if (orgTRL < programMinTRL) {
+      distance = programMinTRL - orgTRL;
+      result.reason = getTRLTooLowReason(distance);
+    } else if (orgTRL > programMaxTRL) {
+      distance = orgTRL - programMaxTRL;
+      result.reason = getTRLTooHighReason(distance);
+    }
+    result.details.difference = distance;
+  }
+
+  // Apply confidence weighting to final score
+  result.score = Math.round(baseScore * confidenceWeight);
+
+  // Update reason to include confidence level
+  if (trlConfidence === 'inferred') {
+    result.reason += '_INFERRED';
+  } else if (trlConfidence === 'missing') {
+    result.reason += '_ASSUMED';
   }
 
   return result;
+}
+
+/**
+ * Get confidence weight multiplier
+ *
+ * @param confidence - TRL detection confidence level
+ * @returns Multiplier (0.7-1.0) to apply to base score
+ */
+function getConfidenceWeight(confidence: 'explicit' | 'inferred' | 'missing'): number {
+  switch (confidence) {
+    case 'explicit':
+      return 1.0; // Full confidence (explicitly stated TRL in announcement)
+    case 'inferred':
+      return 0.85; // Good confidence (inferred from Korean keywords like 기초연구, 실용화)
+    case 'missing':
+      return 0.7; // Lower confidence (no TRL data, using defaults)
+  }
 }
 
 /**

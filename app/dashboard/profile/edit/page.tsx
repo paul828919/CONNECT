@@ -19,7 +19,24 @@ const organizationEditSchema = z.object({
   employeeCount: z
     .enum(['UNDER_10', 'FROM_10_TO_50', 'FROM_50_TO_100', 'FROM_100_TO_300', 'OVER_300'])
     .optional(),
+  // Tier 1A: Company-specific eligibility fields
+  revenueRange: z
+    .enum(['UNDER_1B', 'FROM_1B_TO_10B', 'FROM_10B_TO_50B', 'FROM_50B_TO_100B', 'OVER_100B'])
+    .optional()
+    .nullable(),
+  businessStructure: z.enum(['CORPORATION', 'SOLE_PROPRIETOR']).optional().nullable(),
   rdExperience: z.boolean().optional(),
+  // Tier 1B: Algorithm enhancement fields
+  collaborationCount: z
+    .number()
+    .min(0, '협력 횟수는 0 이상이어야 합니다')
+    .max(99, '협력 횟수는 99 이하여야 합니다')
+    .optional()
+    .nullable(),
+  // Tier 1B: Research institute specific fields
+  instituteType: z.enum(['UNIVERSITY', 'GOVERNMENT', 'PRIVATE']).optional().nullable(),
+  researchFocusAreas: z.string().optional().nullable(),
+  keyTechnologies: z.string().optional().nullable(),
   technologyReadinessLevel: z
     .number()
     .min(1, 'TRL은 1 이상이어야 합니다')
@@ -86,7 +103,22 @@ export default function EditOrganizationProfilePage() {
         setValue('name', data.organization.name);
         setValue('industrySector', data.organization.industrySector);
         setValue('employeeCount', data.organization.employeeCount);
+        // Tier 1A fields
+        setValue('revenueRange', data.organization.revenueRange);
+        setValue('businessStructure', data.organization.businessStructure);
         setValue('rdExperience', data.organization.rdExperience);
+        // Tier 1B fields
+        setValue('collaborationCount', data.organization.collaborationCount);
+        setValue('instituteType', data.organization.instituteType);
+        // Convert array to comma-separated string for display
+        setValue(
+          'researchFocusAreas',
+          data.organization.researchFocusAreas?.join(', ') || ''
+        );
+        setValue(
+          'keyTechnologies',
+          data.organization.keyTechnologies?.join(', ') || ''
+        );
         setValue('technologyReadinessLevel', data.organization.technologyReadinessLevel);
         setValue('description', data.organization.description);
 
@@ -270,6 +302,94 @@ export default function EditOrganizationProfilePage() {
               )}
             </div>
 
+            {/* Tier 1A: Company-specific fields */}
+            {organizationData?.type === 'COMPANY' && (
+              <>
+                {/* Revenue Range */}
+                <div>
+                  <label
+                    htmlFor="revenueRange"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    연간 매출액 (선택사항)
+                  </label>
+                  <select
+                    id="revenueRange"
+                    {...register('revenueRange')}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  >
+                    <option value="">선택해주세요</option>
+                    <option value="UNDER_1B">10억원 미만</option>
+                    <option value="FROM_1B_TO_10B">10억원~100억원</option>
+                    <option value="FROM_10B_TO_50B">100억원~500억원</option>
+                    <option value="FROM_50B_TO_100B">500억원~1,000억원</option>
+                    <option value="OVER_100B">1,000억원 이상</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    일부 프로그램은 매출액 기준이 있습니다 (예: 중소기업 전용)
+                  </p>
+                  {errors.revenueRange && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.revenueRange.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Business Structure */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    사업자 형태 (선택사항)
+                  </label>
+                  <div className="mt-2 grid grid-cols-2 gap-4">
+                    <label
+                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-4 transition-all ${
+                        watch('businessStructure') === 'CORPORATION'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        value="CORPORATION"
+                        {...register('businessStructure')}
+                        className="sr-only"
+                      />
+                      <div className="text-center">
+                        <div className="text-2xl">🏛️</div>
+                        <div className="mt-1 font-medium text-gray-900">법인</div>
+                      </div>
+                    </label>
+                    <label
+                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-4 transition-all ${
+                        watch('businessStructure') === 'SOLE_PROPRIETOR'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        value="SOLE_PROPRIETOR"
+                        {...register('businessStructure')}
+                        className="sr-only"
+                      />
+                      <div className="text-center">
+                        <div className="text-2xl">👤</div>
+                        <div className="mt-1 font-medium text-gray-900">개인사업자</div>
+                      </div>
+                    </label>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    일부 프로그램은 법인 전용입니다
+                  </p>
+                  {errors.businessStructure && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.businessStructure.message}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+
             {/* R&D Experience */}
             <div className="flex items-start">
               <input
@@ -286,8 +406,37 @@ export default function EditOrganizationProfilePage() {
               </label>
             </div>
 
-            {/* Technology Readiness Level (TRL) */}
+            {/* Tier 1B: Collaboration Count (shown when R&D experience is true) */}
             {rdExperience && (
+              <div>
+                <label
+                  htmlFor="collaborationCount"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  산학/기관 협력 프로젝트 수행 횟수 (선택사항)
+                </label>
+                <input
+                  type="number"
+                  id="collaborationCount"
+                  {...register('collaborationCount', { valueAsNumber: true })}
+                  min="0"
+                  max="99"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="0"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  산학협력, 기관 간 공동연구 등의 경험이 있다면 입력해주세요 (매칭 점수 +2~5점)
+                </p>
+                {errors.collaborationCount && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.collaborationCount.message}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Technology Readiness Level (TRL) - Show if R&D experience OR research institute */}
+            {(rdExperience || organizationData?.type === 'RESEARCH_INSTITUTE') && (
               <div>
                 <label
                   htmlFor="technologyReadinessLevel"
@@ -322,6 +471,129 @@ export default function EditOrganizationProfilePage() {
                   </p>
                 )}
               </div>
+            )}
+
+            {/* Tier 1B: Research Institute specific fields */}
+            {organizationData?.type === 'RESEARCH_INSTITUTE' && (
+              <>
+                {/* Institute Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    연구소 유형 (선택사항)
+                  </label>
+                  <div className="mt-2 grid grid-cols-3 gap-3">
+                    <label
+                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all ${
+                        watch('instituteType') === 'UNIVERSITY'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        value="UNIVERSITY"
+                        {...register('instituteType')}
+                        className="sr-only"
+                      />
+                      <div className="text-center">
+                        <div className="text-xl">🎓</div>
+                        <div className="mt-1 text-sm font-medium text-gray-900">대학</div>
+                      </div>
+                    </label>
+                    <label
+                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all ${
+                        watch('instituteType') === 'GOVERNMENT'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        value="GOVERNMENT"
+                        {...register('instituteType')}
+                        className="sr-only"
+                      />
+                      <div className="text-center">
+                        <div className="text-xl">🏛️</div>
+                        <div className="mt-1 text-sm font-medium text-gray-900">정부출연</div>
+                      </div>
+                    </label>
+                    <label
+                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all ${
+                        watch('instituteType') === 'PRIVATE'
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        value="PRIVATE"
+                        {...register('instituteType')}
+                        className="sr-only"
+                      />
+                      <div className="text-center">
+                        <div className="text-xl">🏢</div>
+                        <div className="mt-1 text-sm font-medium text-gray-900">민간</div>
+                      </div>
+                    </label>
+                  </div>
+                  {errors.instituteType && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.instituteType.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Research Focus Areas */}
+                <div>
+                  <label
+                    htmlFor="researchFocusAreas"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    주요 연구 분야 (선택사항)
+                  </label>
+                  <input
+                    type="text"
+                    id="researchFocusAreas"
+                    {...register('researchFocusAreas')}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="예: AI, 빅데이터, 클라우드 (쉼표로 구분)"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    여러 분야는 쉼표(,)로 구분해주세요
+                  </p>
+                  {errors.researchFocusAreas && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.researchFocusAreas.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Key Technologies */}
+                <div>
+                  <label
+                    htmlFor="keyTechnologies"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    핵심 보유 기술 (선택사항)
+                  </label>
+                  <input
+                    type="text"
+                    id="keyTechnologies"
+                    {...register('keyTechnologies')}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="예: 머신러닝, 자연어처리, 컴퓨터비전 (쉼표로 구분)"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    여러 기술은 쉼표(,)로 구분해주세요
+                  </p>
+                  {errors.keyTechnologies && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.keyTechnologies.message}
+                    </p>
+                  )}
+                </div>
+              </>
             )}
 
             {/* Description */}

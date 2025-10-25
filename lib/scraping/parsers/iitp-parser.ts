@@ -16,6 +16,7 @@ import {
   cleanHtmlText,
   extractTRLRange,
 } from '../utils';
+import { classifyAnnouncement } from '../classification';
 
 export interface IITPProgramDetails {
   description: string | null;
@@ -25,6 +26,7 @@ export interface IITPProgramDetails {
   minTRL: number | null;
   maxTRL: number | null;
   eligibilityCriteria: Record<string, any> | null;
+  announcementType: 'R_D_PROJECT' | 'SURVEY' | 'EVENT' | 'NOTICE' | 'UNKNOWN';
 }
 
 /**
@@ -46,6 +48,10 @@ export async function parseIITPDetails(
       console.warn(`[IITP] Content area not found for ${url}`);
       return getDefaultDetails();
     }
+
+    // Extract title (from h1, h2, or .title elements)
+    const titleElement = await page.$('h1, h2, .title, .subject');
+    const title = (await titleElement?.textContent()) || '';
 
     // Extract full text content
     const fullText = await contentArea.textContent() || '';
@@ -69,6 +75,14 @@ export async function parseIITPDetails(
     // 6. Extract eligibility criteria
     const eligibilityCriteria = extractEligibilityCriteria(cleanText);
 
+    // 7. Classify announcement type using shared utility
+    const announcementType = classifyAnnouncement({
+      title,
+      description: cleanText,
+      url,
+      source: 'iitp',
+    });
+
     return {
       description,
       deadline,
@@ -77,6 +91,7 @@ export async function parseIITPDetails(
       minTRL: trlRange?.minTRL || null,
       maxTRL: trlRange?.maxTRL || null,
       eligibilityCriteria,
+      announcementType,
     };
   } catch (error: any) {
     console.error(`[IITP] Failed to parse details for ${url}:`, error.message);
@@ -90,12 +105,18 @@ export async function parseIITPDetails(
  * - "접수기간: 2024.03.15 ~ 2024.04.15"
  * - "마감일: 2024년 4월 15일"
  * - "신청마감: 2024-04-15"
+ * - "접수기간 2025-09-08 01시 ~ 2025-09-23 15시" (with time)
  */
 function extractDeadline(text: string): Date | null {
-  // Pattern 1: 접수기간/마감일 with date range
+  // Updated patterns to capture dates with optional time components (시, 분)
   const deadlinePatterns = [
-    /마감[일시]*\s*[:\-]?\s*([\d년월일.\-\/\s]+)/i,
+    /접수기간\s*[:\-]?\s*.*?~\s*([\d년월일.\-\/\s]+\d+시?\s*\d*분?)/i, // Capture date with optional time
+    /마감[일시]*\s*[:\-]?\s*([\d년월일.\-\/\s]+\d+시?\s*\d*분?)/i,
+    /신청[기간마감]*\s*[:\-]?\s*.*?~\s*([\d년월일.\-\/\s]+\d+시?\s*\d*분?)/i,
+    /제출[기한마감]*\s*[:\-]?\s*([\d년월일.\-\/\s]+\d+시?\s*\d*분?)/i,
+    // Fallback: simpler patterns without time
     /접수기간\s*[:\-]?\s*.*?~\s*([\d년월일.\-\/\s]+)/i,
+    /마감[일시]*\s*[:\-]?\s*([\d년월일.\-\/\s]+)/i,
     /신청[기간]*\s*[:\-]?\s*.*?~\s*([\d년월일.\-\/\s]+)/i,
     /제출[기한]*\s*[:\-]?\s*([\d년월일.\-\/\s]+)/i,
   ];
@@ -104,8 +125,9 @@ function extractDeadline(text: string): Date | null {
     const match = text.match(pattern);
     if (match && match[1]) {
       const parsedDate = parseKoreanDate(match[1].trim());
-      if (parsedDate && parsedDate > new Date()) {
-        // Only return future dates
+      if (parsedDate) {
+        // Return ALL dates (both past and future) for proper status management
+        // The match generation logic will filter expired programs
         return parsedDate;
       }
     }
@@ -188,5 +210,6 @@ function getDefaultDetails(): IITPProgramDetails {
     minTRL: null,
     maxTRL: null,
     eligibilityCriteria: null,
+    announcementType: 'R_D_PROJECT', // Default to R&D project
   };
 }

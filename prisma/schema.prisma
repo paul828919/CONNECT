@@ -28,6 +28,68 @@ model Account {
   @@map("accounts")
 }
 
+model ai_budget_alerts {
+  id              String        @id
+  date            DateTime      @db.Date
+  severity        AlertSeverity
+  threshold       Int
+  amountSpent     Float
+  dailyLimit      Float
+  percentage      Float
+  alertSent       Boolean       @default(false)
+  alertSentAt     DateTime?
+  recipientEmails String[]
+  createdAt       DateTime      @default(now())
+
+  @@index([alertSent])
+  @@index([date])
+  @@index([severity])
+}
+
+model ai_cost_logs {
+  id             String         @id
+  serviceType    AIServiceType
+  userId         String?
+  organizationId String?
+  endpoint       String
+  model          String
+  inputTokens    Int
+  outputTokens   Int
+  totalTokens    Int
+  costKRW        Float
+  duration       Int
+  success        Boolean        @default(true)
+  errorMessage   String?
+  cacheHit       Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  organizations  organizations? @relation(fields: [organizationId], references: [id])
+  user           User?          @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([organizationId])
+  @@index([serviceType])
+  @@index([success])
+  @@index([userId])
+}
+
+model ai_feedback {
+  id             String           @id
+  serviceType    AIServiceType
+  resourceId     String
+  userId         String?
+  organizationId String?
+  rating         AIFeedbackRating
+  comment        String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  user           User?            @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([rating])
+  @@index([serviceType, resourceId])
+  @@index([userId])
+}
+
 model audit_logs {
   id           String   @id
   userId       String?
@@ -47,8 +109,23 @@ model audit_logs {
   @@index([userId])
 }
 
+model category_performance_metrics {
+  id            String   @id
+  category      String
+  date          DateTime @db.Date
+  matchCount    Int      @default(0)
+  avgMatchScore Float    @default(0)
+  savedRate     Float    @default(0)
+  viewedRate    Float    @default(0)
+  trlMatchRate  Float    @default(0)
+
+  @@unique([category, date])
+  @@index([category])
+  @@index([date])
+}
+
 model consortium_members {
-  id                  String              @id @default(cuid())
+  id                  String              @id
   consortiumId        String
   organizationId      String
   invitedById         String
@@ -61,9 +138,9 @@ model consortium_members {
   respondedAt         DateTime?
   responseMessage     String?
   createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  updatedAt           DateTime
   consortium_projects consortium_projects @relation(fields: [consortiumId], references: [id], onDelete: Cascade)
-  user                User                @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+  invitedBy           User                @relation(fields: [invitedById], references: [id], onDelete: Cascade)
   organizations       organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([consortiumId, organizationId])
@@ -73,7 +150,7 @@ model consortium_members {
 }
 
 model consortium_projects {
-  id                 String               @id @default(cuid())
+  id                 String               @id
   name               String
   description        String?
   targetProgramId    String?
@@ -85,9 +162,9 @@ model consortium_projects {
   endDate            DateTime?
   status             ConsortiumStatus     @default(DRAFT)
   createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
+  updatedAt          DateTime
   consortium_members consortium_members[]
-  user               User                 @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy          User                 @relation(fields: [createdById], references: [id], onDelete: Cascade)
   organizations      organizations        @relation(fields: [leadOrganizationId], references: [id], onDelete: Cascade)
   funding_programs   funding_programs?    @relation(fields: [targetProgramId], references: [id])
 
@@ -99,7 +176,7 @@ model consortium_projects {
 }
 
 model contact_requests {
-  id                                                          String               @id @default(cuid())
+  id                                                          String               @id
   senderId                                                    String
   senderOrgId                                                 String
   receiverOrgId                                               String
@@ -110,9 +187,9 @@ model contact_requests {
   responseMessage                                             String?
   respondedAt                                                 DateTime?
   createdAt                                                   DateTime             @default(now())
-  updatedAt                                                   DateTime             @updatedAt
+  updatedAt                                                   DateTime
   organizations_contact_requests_receiverOrgIdToorganizations organizations        @relation("contact_requests_receiverOrgIdToorganizations", fields: [receiverOrgId], references: [id], onDelete: Cascade)
-  user                                                        User                 @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  sender                                                      User                 @relation(fields: [senderId], references: [id], onDelete: Cascade)
   organizations_contact_requests_senderOrgIdToorganizations   organizations        @relation("contact_requests_senderOrgIdToorganizations", fields: [senderOrgId], references: [id], onDelete: Cascade)
 
   @@index([createdAt])
@@ -144,8 +221,33 @@ model daily_analytics {
   @@index([date])
 }
 
+model feedback {
+  id             String           @id
+  userId         String?
+  organizationId String?
+  category       FeedbackCategory
+  title          String
+  description    String
+  page           String?
+  userAgent      String?
+  screenshotUrl  String?
+  priority       FeedbackPriority @default(MEDIUM)
+  status         FeedbackStatus   @default(NEW)
+  adminNotes     String?
+  resolvedAt     DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  user           User?            @relation(fields: [userId], references: [id])
+
+  @@index([category])
+  @@index([createdAt])
+  @@index([priority])
+  @@index([status])
+  @@index([userId])
+}
+
 model funding_matches {
-  id                  String                @id @default(cuid())
+  id                  String                @id
   organizationId      String
   programId           String
   score               Int                   @db.SmallInt
@@ -170,7 +272,7 @@ model funding_matches {
 }
 
 model funding_programs {
-  id                  String                @id @default(cuid())
+  id                  String                @id
   agencyId            AgencyId
   title               String
   description         String?
@@ -191,11 +293,17 @@ model funding_programs {
   lastCheckedAt       DateTime              @default(now())
   scrapingSource      String?
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
+  updatedAt           DateTime
+  announcementType    AnnouncementType      @default(R_D_PROJECT)
+  announcingAgency    String?
+  ministry            String?
+  trlClassification   Json?
+  trlConfidence       String?
   consortium_projects consortium_projects[]
   funding_matches     funding_matches[]
 
   @@index([agencyId])
+  @@index([announcementType])
   @@index([deadline])
   @@index([scrapedAt])
   @@index([status])
@@ -221,8 +329,31 @@ model match_notifications {
   @@index([userId, read])
 }
 
+model match_quality_logs {
+  id             String   @id
+  matchId        String   @unique
+  organizationId String
+  programId      String
+  category       String
+  score          Int
+  industryScore  Float
+  trlScore       Float
+  typeScore      Float
+  rdScore        Float
+  deadlineScore  Float
+  saved          Boolean  @default(false)
+  viewed         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([category])
+  @@index([createdAt])
+  @@index([organizationId])
+  @@index([programId])
+  @@index([score])
+}
+
 model organizations {
-  id                                                             String                @id @default(cuid())
+  id                                                             String                @id
   type                                                           OrganizationType
   name                                                           String
   businessNumberEncrypted                                        String                @unique
@@ -241,7 +372,7 @@ model organizations {
   annualRdBudget                                                 String?
   researcherCount                                                Int?
   keyTechnologies                                                String[]
-  collaborationHistory                                           Boolean               @default(false)
+  collaborationCount                                             Int?
   primaryContactName                                             String?
   primaryContactEmail                                            String?
   primaryContactPhone                                            String?
@@ -251,14 +382,14 @@ model organizations {
   status                                                         OrganizationStatus    @default(ACTIVE)
   verifiedAt                                                     DateTime?
   createdAt                                                      DateTime              @default(now())
-  updatedAt                                                      DateTime              @updatedAt
+  updatedAt                                                      DateTime
+  ai_cost_logs                                                   ai_cost_logs[]
   consortium_members                                             consortium_members[]
   consortium_projects                                            consortium_projects[]
   contact_requests_contact_requests_receiverOrgIdToorganizations contact_requests[]    @relation("contact_requests_receiverOrgIdToorganizations")
   contact_requests_contact_requests_senderOrgIdToorganizations   contact_requests[]    @relation("contact_requests_senderOrgIdToorganizations")
   funding_matches                                                funding_matches[]
   users                                                          User[]
-  ai_cost_logs                                                   ai_cost_logs[]
 
   @@index([businessNumberHash])
   @@index([profileCompleted])
@@ -283,7 +414,7 @@ model payments {
   taxInvoiceIssued Boolean       @default(false)
   taxInvoiceNumber String?
   createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  updatedAt        DateTime
   subscriptions    subscriptions @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@index([paidAt])
@@ -292,7 +423,7 @@ model payments {
 }
 
 model scraping_logs {
-  id              String    @id @default(cuid())
+  id              String    @id
   agencyId        AgencyId
   startedAt       DateTime
   completedAt     DateTime?
@@ -345,13 +476,30 @@ model subscriptions {
   taxInvoiceEmail          String?
   taxInvoiceBusinessNumber String?
   createdAt                DateTime           @default(now())
-  updatedAt                DateTime           @updatedAt
+  updatedAt                DateTime
   payments                 payments[]
   user                     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([expiresAt])
   @@index([plan])
   @@index([status])
+}
+
+model unmapped_agency_detections {
+  id           String    @id
+  ministry     String?
+  agency       String?
+  programId    String
+  programTitle String
+  detectedAt   DateTime  @default(now())
+  resolved     Boolean   @default(false)
+  resolvedAt   DateTime?
+  category     String?
+
+  @@unique([ministry, agency])
+  @@index([detectedAt])
+  @@index([programId])
+  @@index([resolved])
 }
 
 model User {
@@ -365,23 +513,23 @@ model User {
   emailNotifications     Boolean               @default(true)
   weeklyDigest           Boolean               @default(true)
   createdAt              DateTime              @default(now())
-  updatedAt              DateTime              @updatedAt
+  updatedAt              DateTime
   lastLoginAt            DateTime?
   image                  String?
   lastNotificationSentAt DateTime?
   notificationSettings   Json?
   accounts               Account[]
+  ai_cost_logs           ai_cost_logs[]
+  ai_feedback            ai_feedback[]
   audit_logs             audit_logs[]
   consortium_members     consortium_members[]
   consortium_projects    consortium_projects[]
   contact_requests       contact_requests[]
+  feedback               feedback[]
   match_notifications    match_notifications[]
   sessions               Session[]
   subscriptions          subscriptions?
-  organizations          organizations?        @relation(fields: [organizationId], references: [id])
-  ai_cost_logs           ai_cost_logs[]
-  feedback               feedback[]
-  ai_feedback            ai_feedback[]
+  organization           organizations?        @relation(fields: [organizationId], references: [id])
 
   @@index([email])
   @@index([organizationId])
@@ -397,11 +545,36 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+enum AIFeedbackRating {
+  HELPFUL
+  NOT_HELPFUL
+}
+
+enum AIServiceType {
+  MATCH_EXPLANATION
+  QA_CHAT
+}
+
 enum AgencyId {
   IITP
   KEIT
   TIPA
   KIMST
+  NTIS
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AnnouncementType {
+  R_D_PROJECT
+  SURVEY
+  EVENT
+  NOTICE
+  UNKNOWN
 }
 
 enum BillingCycle {
@@ -452,6 +625,30 @@ enum EmployeeCountRange {
   FROM_50_TO_100
   FROM_100_TO_300
   OVER_300
+}
+
+enum FeedbackCategory {
+  BUG
+  FEATURE_REQUEST
+  POSITIVE
+  COMPLAINT
+  QUESTION
+}
+
+enum FeedbackPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum FeedbackStatus {
+  NEW
+  IN_REVIEW
+  PLANNED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
 }
 
 enum InstituteType {
@@ -526,132 +723,4 @@ enum UserRole {
   USER
   ADMIN
   SUPER_ADMIN
-}
-
-enum AIServiceType {
-  MATCH_EXPLANATION
-  QA_CHAT
-}
-
-enum AlertSeverity {
-  INFO
-  WARNING
-  CRITICAL
-}
-
-model ai_cost_logs {
-  id            String        @id
-  serviceType   AIServiceType
-  userId        String?
-  organizationId String?
-  endpoint      String
-  model         String
-  inputTokens   Int
-  outputTokens  Int
-  totalTokens   Int
-  costKRW       Float
-  duration      Int          // milliseconds
-  success       Boolean      @default(true)
-  errorMessage  String?
-  cacheHit      Boolean      @default(false)
-  createdAt     DateTime     @default(now())
-  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
-  organizations organizations? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-
-  @@index([createdAt])
-  @@index([serviceType])
-  @@index([userId])
-  @@index([organizationId])
-  @@index([success])
-}
-
-model ai_budget_alerts {
-  id              String        @id
-  date            DateTime      @db.Date
-  severity        AlertSeverity
-  threshold       Int           // Percentage (50, 80, 95)
-  amountSpent     Float         // KRW
-  dailyLimit      Float         // KRW
-  percentage      Float         // Calculated percentage
-  alertSent       Boolean       @default(false)
-  alertSentAt     DateTime?
-  recipientEmails String[]
-  createdAt       DateTime      @default(now())
-
-  @@index([date])
-  @@index([severity])
-  @@index([alertSent])
-}
-
-model feedback {
-  id             String           @id
-  userId         String?
-  organizationId String?
-  category       FeedbackCategory
-  title          String
-  description    String
-  page           String?
-  userAgent      String?
-  screenshotUrl  String?
-  priority       FeedbackPriority @default(MEDIUM)
-  status         FeedbackStatus   @default(NEW)
-  adminNotes     String?
-  resolvedAt     DateTime?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  user           User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([userId])
-  @@index([category])
-  @@index([priority])
-  @@index([status])
-  @@index([createdAt])
-}
-
-enum FeedbackCategory {
-  BUG
-  FEATURE_REQUEST
-  POSITIVE
-  COMPLAINT
-  QUESTION
-}
-
-enum FeedbackPriority {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
-}
-
-enum FeedbackStatus {
-  NEW
-  IN_REVIEW
-  PLANNED
-  IN_PROGRESS
-  RESOLVED
-  CLOSED
-}
-
-// AI-specific feedback (thumbs up/down for AI responses)
-model ai_feedback {
-  id              String        @id @default(cuid())
-  serviceType     AIServiceType
-  resourceId      String        // match ID or message ID
-  userId          String?
-  organizationId  String?
-  rating          AIFeedbackRating
-  comment         String?       // Optional text feedback
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([serviceType, resourceId])
-  @@index([userId])
-  @@index([createdAt])
-  @@index([rating])
-}
-
-enum AIFeedbackRating {
-  HELPFUL       // Thumbs up
-  NOT_HELPFUL   // Thumbs down
 }

@@ -18,6 +18,7 @@ import {
   cleanHtmlText,
   extractTRLRange,
 } from '../utils';
+import { classifyAnnouncement } from '../classification';
 
 export interface TIPAProgramDetails {
   description: string | null;
@@ -27,6 +28,7 @@ export interface TIPAProgramDetails {
   minTRL: number | null;
   maxTRL: number | null;
   eligibilityCriteria: Record<string, any> | null;
+  announcementType: 'R_D_PROJECT' | 'SURVEY' | 'EVENT' | 'NOTICE' | 'UNKNOWN';
 }
 
 /**
@@ -48,6 +50,10 @@ export async function parseTIPADetails(
       console.warn(`[TIPA] Content area not found for ${url}`);
       return getDefaultDetails();
     }
+
+    // Extract title (from h1, h2, or .title elements)
+    const titleElement = await page.$('h1, h2, .title, .subject');
+    const title = (await titleElement?.textContent()) || '';
 
     // Extract full text content
     const fullText = await contentArea.textContent() || '';
@@ -71,6 +77,14 @@ export async function parseTIPADetails(
     // 6. Extract eligibility criteria
     const eligibilityCriteria = extractEligibilityCriteria(cleanText);
 
+    // 7. Classify announcement type using shared utility
+    const announcementType = classifyAnnouncement({
+      title,
+      description: cleanText,
+      url,
+      source: 'tipa',
+    });
+
     return {
       description,
       deadline,
@@ -79,6 +93,7 @@ export async function parseTIPADetails(
       minTRL: trlRange?.minTRL || null,
       maxTRL: trlRange?.maxTRL || null,
       eligibilityCriteria,
+      announcementType,
     };
   } catch (error: any) {
     console.error(`[TIPA] Failed to parse details for ${url}:`, error.message);
@@ -108,7 +123,7 @@ function extractDeadline(text: string): Date | null {
       // Remove day of week markers (월), (화), etc.
       const cleanedDate = match[1].replace(/\([일월화수목금토]\)/g, '').trim();
       const parsedDate = parseKoreanDate(cleanedDate);
-      if (parsedDate && parsedDate > new Date()) {
+      if (parsedDate) {
         return parsedDate;
       }
     }
@@ -213,5 +228,6 @@ function getDefaultDetails(): TIPAProgramDetails {
     minTRL: null,
     maxTRL: null,
     eligibilityCriteria: null,
+    announcementType: 'R_D_PROJECT', // Default to R&D project
   };
 }
