@@ -18,6 +18,8 @@ import { getCacheClient } from '@/lib/cache/redis-cache';
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 const RATE_LIMIT_MAX_REQUESTS = 100;
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Protected API route with rate limiting
  *

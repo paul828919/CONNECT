@@ -14,6 +14,7 @@ import { db } from '@/lib/db';
 import { OrganizationType } from '@prisma/client';
 import { findIndustrySector, normalizeKoreanKeyword } from '@/lib/matching/taxonomy';
 
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {

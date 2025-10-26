@@ -23,6 +23,8 @@ import {
 } from '@/lib/ai/monitoring/performance';
 import { AIServiceType } from '@prisma/client';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // 1. Check authentication
