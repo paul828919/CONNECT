@@ -20,6 +20,8 @@ import {
   getRandomUserAgent,
   parseKoreanDate,
 } from './utils';
+import { getDailyScrapeDateRange } from './utils/date-utils';
+import { applyNTISDateFilter } from './utils/ntis-date-filter';
 import { scrapingConfig, AgencyConfig } from './config';
 import { sendNewMatchNotification } from '../email/notifications';
 import { parseProgramDetails, ProgramDetails } from './parsers';
@@ -103,12 +105,47 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
       });
 
       // 3. Navigate to agency listings page
-      logScraping(agency, `Navigating to ${url}...`);
-      await page.goto(url, { waitUntil: 'networkidle', timeout: config.timeout });
+      // NTIS-specific: Apply date filter before extracting announcements
+      if (agency.toLowerCase() === 'ntis') {
+        // Calculate rolling date window (last N days)
+        const daysBack = parseInt(process.env.NTIS_SCRAPING_DAYS_BACK || '2');
+        const { fromDate, toDate } = getDailyScrapeDateRange(daysBack);
 
-      // 4. Extract announcements from listing page
+        logScraping(
+          agency,
+          `Applying date filter: ${fromDate} to ${toDate} (${daysBack} days back)`
+        );
+
+        // Apply date filter using jQuery datepicker form submission
+        await applyNTISDateFilter(page, { fromDate, toDate, pageNum: 1 });
+
+        logScraping(agency, `✓ Date filter applied successfully`);
+      } else {
+        // Other agencies: Navigate normally
+        logScraping(agency, `Navigating to ${url}...`);
+        await page.goto(url, { waitUntil: 'networkidle', timeout: config.timeout });
+      }
+
+      // 4. Extract announcements from listing page (now filtered by date for NTIS)
       const announcements = await extractAnnouncements(page, config, agency);
       logScraping(agency, `Found ${announcements.length} announcements`);
+
+      // 5. Sanity check: Warn if suspiciously low results for NTIS
+      if (announcements.length === 0 && agency.toLowerCase() === 'ntis') {
+        // Check if we've successfully scraped NTIS programs in the last 7 days
+        const recentCount = await db.funding_programs.count({
+          where: {
+            agencyId: 'NTIS',
+            createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+          },
+        });
+
+        if (recentCount > 0) {
+          throw new Error(
+            'NTIS returned 0 announcements (possible maintenance window or filter error). Triggering retry.'
+          );
+        }
+      }
 
       // 5. Process each announcement
       const rateLimiter = new RateLimiter(config.rateLimit.requestsPerMinute);
