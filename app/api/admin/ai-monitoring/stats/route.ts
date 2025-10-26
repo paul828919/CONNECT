@@ -13,6 +13,8 @@ import { authOptions } from '@/lib/auth.config';
 import { getBudgetStatus } from '@/lib/ai/client';
 import { getCostStats } from '@/lib/ai/monitoring/cost-logger';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // 1. Check authentication
