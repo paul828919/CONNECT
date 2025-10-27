@@ -108,3 +108,55 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+
+  # Scraper Service (Isolated from Next.js app)
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile.scraper
+    container_name: connect_dev_scraper
+    restart: "no"  # Manual start only
+    profiles:
+      - scraper  # Only start when explicitly requested
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://connect:connect_dev_password@postgres:5432/connect?schema=public
+      REDIS_CACHE_URL: redis://redis-cache:6379/0
+      REDIS_QUEUE_URL: redis://redis-queue:6379/0
+      REDIS_QUEUE_HOST: redis-queue
+      REDIS_QUEUE_PORT: 6379
+
+      # Scraping configuration
+      SCRAPER_CONCURRENCY: 2
+      SCRAPER_TIMEOUT: 30000
+      SCRAPER_USER_AGENT: Mozilla/5.0 (compatible; ConnectBot/1.0; +https://connect.kr)
+
+      # Anthropic Claude AI (for categorization)
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5-20250929}
+
+      # Agency URLs
+      IITP_URL: https://www.iitp.kr
+      KEIT_URL: https://www.keit.re.kr
+      TIPA_URL: https://www.tipa.or.kr
+      KIMST_URL: https://www.kimst.re.kr
+      NTIS_URL: https://www.ntis.go.kr
+
+      # Rate limiting
+      RATE_LIMIT_PER_MINUTE: 10
+    volumes:
+      - ./logs/scraper:/app/logs
+      - ./data/scraper:/app/data
+      - ./scripts:/app/scripts  # Mount scripts for ad-hoc runs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis-queue:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'      # Limit to 2 CPUs
+          memory: 4G       # Limit to 4GB RAM
+        reservations:
+          memory: 2G

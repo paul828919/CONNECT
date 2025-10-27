@@ -4,7 +4,10 @@ This file provides guidelines for using Claude Code (claude.ai/code) when workin
 ## ⚠️ Important Work Rules - Read First
 ### 1. Local verification is mandatory
 **Do not commit or push without local verification.**
-- **Rule**: When executing a task, always verify it locally after completion. Commit and push only after local verification is complete.
+- **Rule**: When executing a task, always verify it locally after completion. Commit and push only after local verification is complete. After completing all updates to script files, databases, and architecture, be sure to commit and push, then ask me whether to proceed with deployment. Always run npx prisma db push after modifying schema.prisma or use npx prisma migrate dev for production-like environments (creates migration history).
+- **Avoid the mistake of “assuming rather than verifying”**: Especially for infrastructure-related matters like authentication or caching, always explore the actual architecture of the existing codebase before creating imports.
+- **Preventing schema field name mismatches**: When modifying or updating Prisma schemas, avoid assuming field naming conventions. Always verify field names against the actual Prisma schema (schema.prisma) and examine patterns in similar existing routes.
+
 - **Time**: Production deployment takes approximately 12 minutes. Local verification takes 2-5 minutes. Always verify first.
 **Never use browser automation tools (Playwright) when inspecting GitHub Actions pages.**
 - **Rule**: I(user) will personally visit the pagehttps://github.com/paul828919/CONNECT/actions를 to check and share the latest run results. 
@@ -104,12 +107,6 @@ Connect is **Korea's R&D Commercialization Operating System**, transforming comp
 - ✅ Reduced deployment complexity by 75% (200 → 50 lines)
 - ✅ Achieved 100% deployment success rate (previously 5 failures)
 - ✅ Industry-standard architecture (Heroku/AWS/Kubernetes model)
-**Deprecated (Do Not Use):**
-- ❌ `scripts/deploy.sh` - Legacy manual deployment based on external migration
-- ❌ `docs/architecture/DEPLOYMENT-STRATEGY.md` - Legacy pattern description
-- ❌ External migration coordination (`docker run` for migration)
-Refer to [DEPLOYMENT-DOCS-STATUS.md](./DEPLOYMENT-DOCS-STATUS.md) for full document status
-
 - `docs/current/PRD_v8.0.md`: **Start here** - Complete product requirements including strategic shift (enterprise focus, hybrid model, services, performance tracking)
 - `CONNECT_FINAL_PROPOSAL_v1.0.md` (Desktop): Summary of multi-AI discussion synthesis
 - `CONNECT_IMPLEMENTATION_SPECS_v1.0.md` (Desktop): Parts 1-4 (Database schema, MSA, UI copy, email templates)
