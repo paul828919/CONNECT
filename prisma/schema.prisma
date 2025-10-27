@@ -377,6 +377,13 @@ model organizations {
   primaryContactEmail                                            String?
   primaryContactPhone                                            String?
   address                                                        String?
+  desiredConsortiumFields                                        String[]
+  desiredTechnologies                                            String[]
+  targetPartnerTRL                                               Int?                  @db.SmallInt
+  commercializationCapabilities                                  String[]
+  expectedTRLLevel                                               Int?                  @db.SmallInt
+  targetOrgScale                                                 EmployeeCountRange?
+  targetOrgRevenue                                               RevenueRange?
   profileCompleted                                               Boolean               @default(false)
   profileScore                                                   Int                   @default(0) @db.SmallInt
   status                                                         OrganizationStatus    @default(ACTIVE)

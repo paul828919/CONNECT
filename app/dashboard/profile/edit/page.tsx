@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
@@ -44,6 +44,30 @@ const organizationEditSchema = z.object({
     .nullable()
     .optional(),
   description: z.string().max(500, '설명은 500자 이하여야 합니다').nullable().optional(),
+  // Consortium Preferences (optional)
+  desiredConsortiumFields: z.string().optional().nullable(),
+  desiredTechnologies: z.string().optional().nullable(),
+  targetPartnerTRL: z
+    .number()
+    .min(1, '목표 TRL은 1 이상이어야 합니다')
+    .max(9, '목표 TRL은 9 이하여야 합니다')
+    .nullable()
+    .optional(),
+  commercializationCapabilities: z.string().optional().nullable(),
+  expectedTRLLevel: z
+    .number()
+    .min(1, '목표 TRL은 1 이상이어야 합니다')
+    .max(9, '목표 TRL은 9 이하여야 합니다')
+    .nullable()
+    .optional(),
+  targetOrgScale: z
+    .enum(['UNDER_10', 'FROM_10_TO_50', 'FROM_50_TO_100', 'FROM_100_TO_300', 'OVER_300'])
+    .optional()
+    .nullable(),
+  targetOrgRevenue: z
+    .enum(['UNDER_1B', 'FROM_1B_TO_10B', 'FROM_10B_TO_50B', 'FROM_50B_TO_100B', 'OVER_100B'])
+    .optional()
+    .nullable(),
 });
 
 type OrganizationEditData = z.infer<typeof organizationEditSchema>;
@@ -63,11 +87,27 @@ const industrySectors = [
 
 export default function EditOrganizationProfilePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, update } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [organizationData, setOrganizationData] = useState<any>(null);
+  const [showConsortiumPreferences, setShowConsortiumPreferences] = useState(false);
+
+  // Check if redirected from partner search page with preferences flag
+  useEffect(() => {
+    if (searchParams.get('preferences') === 'true') {
+      setShowConsortiumPreferences(true);
+      // Scroll to consortium preferences section after a brief delay
+      setTimeout(() => {
+        const element = document.getElementById('consortium-preferences-section');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 500);
+    }
+  }, [searchParams]);
 
   const {
     register,
@@ -121,6 +161,37 @@ export default function EditOrganizationProfilePage() {
         );
         setValue('technologyReadinessLevel', data.organization.technologyReadinessLevel);
         setValue('description', data.organization.description);
+
+        // Consortium preferences
+        setValue(
+          'desiredConsortiumFields',
+          data.organization.desiredConsortiumFields?.join(', ') || ''
+        );
+        setValue(
+          'desiredTechnologies',
+          data.organization.desiredTechnologies?.join(', ') || ''
+        );
+        setValue('targetPartnerTRL', data.organization.targetPartnerTRL);
+        setValue(
+          'commercializationCapabilities',
+          data.organization.commercializationCapabilities?.join(', ') || ''
+        );
+        setValue('expectedTRLLevel', data.organization.expectedTRLLevel);
+        setValue('targetOrgScale', data.organization.targetOrgScale);
+        setValue('targetOrgRevenue', data.organization.targetOrgRevenue);
+
+        // Auto-expand consortium preferences if any field has data
+        if (
+          data.organization.desiredConsortiumFields?.length > 0 ||
+          data.organization.desiredTechnologies?.length > 0 ||
+          data.organization.targetPartnerTRL ||
+          data.organization.commercializationCapabilities?.length > 0 ||
+          data.organization.expectedTRLLevel ||
+          data.organization.targetOrgScale ||
+          data.organization.targetOrgRevenue
+        ) {
+          setShowConsortiumPreferences(true);
+        }
 
         setIsLoading(false);
       } catch (err: any) {
@@ -615,6 +686,289 @@ export default function EditOrganizationProfilePage() {
                 <p className="mt-1 text-sm text-red-600">
                   {errors.description.message}
                 </p>
+              )}
+            </div>
+
+            {/* Consortium Preferences (Collapsible, Optional) */}
+            <div id="consortium-preferences-section" className="border-t border-gray-200 pt-6">
+              <button
+                type="button"
+                onClick={() => setShowConsortiumPreferences(!showConsortiumPreferences)}
+                className="flex w-full items-center justify-between rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 p-4 transition-all hover:from-purple-100 hover:to-blue-100"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">🤝</div>
+                  <div className="text-left">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      컨소시엄 파트너 선호도 (선택사항)
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      원하는 파트너 유형을 설정하면 더 정확한 매칭을 받을 수 있습니다
+                    </p>
+                  </div>
+                </div>
+                <svg
+                  className={`h-6 w-6 text-gray-600 transition-transform ${
+                    showConsortiumPreferences ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              {showConsortiumPreferences && (
+                <div className="mt-4 space-y-6 rounded-lg border border-gray-200 bg-gray-50 p-6">
+                  {/* Company-specific consortium preferences */}
+                  {organizationData?.type === 'COMPANY' && (
+                    <>
+                      {/* Desired Consortium Fields */}
+                      <div>
+                        <label
+                          htmlFor="desiredConsortiumFields"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          원하는 협력 분야
+                        </label>
+                        <input
+                          type="text"
+                          id="desiredConsortiumFields"
+                          {...register('desiredConsortiumFields')}
+                          className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                          placeholder="예: AI, 빅데이터, 클라우드 (쉼표로 구분)"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          파트너와 함께 연구하고 싶은 기술 분야를 입력해주세요
+                        </p>
+                      </div>
+
+                      {/* Desired Technologies */}
+                      <div>
+                        <label
+                          htmlFor="desiredTechnologies"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          찾고 있는 기술
+                        </label>
+                        <input
+                          type="text"
+                          id="desiredTechnologies"
+                          {...register('desiredTechnologies')}
+                          className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                          placeholder="예: 머신러닝, 자연어처리, 컴퓨터비전 (쉼표로 구분)"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          필요한 기술 역량을 가진 파트너를 찾아드립니다
+                        </p>
+                      </div>
+
+                      {/* Target Partner TRL */}
+                      <div>
+                        <label
+                          htmlFor="targetPartnerTRL"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          원하는 파트너의 TRL 수준
+                        </label>
+                        <select
+                          id="targetPartnerTRL"
+                          {...register('targetPartnerTRL', {
+                            valueAsNumber: true,
+                          })}
+                          className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                        >
+                          <option value="">선택해주세요</option>
+                          <option value="1">TRL 1 - 기초 원리 연구</option>
+                          <option value="2">TRL 2 - 기술 개념 정립</option>
+                          <option value="3">TRL 3 - 개념 증명</option>
+                          <option value="4">TRL 4 - 실험실 환경 검증</option>
+                          <option value="5">TRL 5 - 유사 환경 검증</option>
+                          <option value="6">TRL 6 - 파일럿 실증</option>
+                          <option value="7">TRL 7 - 실제 환경 시연</option>
+                          <option value="8">TRL 8 - 시스템 완성 및 검증</option>
+                          <option value="9">TRL 9 - 상용화</option>
+                        </select>
+                        <p className="mt-1 text-xs text-gray-500">
+                          초기 단계 기술(TRL 1-4)이나 상용화 단계(TRL 7-9) 중 선택하세요
+                        </p>
+                        {errors.targetPartnerTRL && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.targetPartnerTRL.message}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Research Institute-specific consortium preferences */}
+                  {organizationData?.type === 'RESEARCH_INSTITUTE' && (
+                    <>
+                      {/* Desired Consortium Fields */}
+                      <div>
+                        <label
+                          htmlFor="desiredConsortiumFields"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          원하는 협력 분야
+                        </label>
+                        <input
+                          type="text"
+                          id="desiredConsortiumFields"
+                          {...register('desiredConsortiumFields')}
+                          className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                          placeholder="예: ICT, 바이오, 에너지 (쉼표로 구분)"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          협력하고 싶은 산업 분야를 입력해주세요
+                        </p>
+                      </div>
+
+                      {/* Desired Technologies */}
+                      <div>
+                        <label
+                          htmlFor="desiredTechnologies"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          기술이전 가능 기술
+                        </label>
+                        <input
+                          type="text"
+                          id="desiredTechnologies"
+                          {...register('desiredTechnologies')}
+                          className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                          placeholder="예: AI 모델 최적화, 데이터 분석 플랫폼 (쉼표로 구분)"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          기업에 제공 가능한 기술을 입력해주세요
+                        </p>
+                      </div>
+
+                      {/* Commercialization Capabilities */}
+                      <div>
+                        <label
+                          htmlFor="commercializationCapabilities"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          사업화 지원 역량
+                        </label>
+                        <input
+                          type="text"
+                          id="commercializationCapabilities"
+                          {...register('commercializationCapabilities')}
+                          className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                          placeholder="예: 시제품 제작, 기술 검증, 인증 지원 (쉼표로 구분)"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          기업의 사업화를 지원할 수 있는 역량을 입력해주세요
+                        </p>
+                      </div>
+
+                      {/* Expected TRL Level */}
+                      <div>
+                        <label
+                          htmlFor="expectedTRLLevel"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          목표 TRL 수준
+                        </label>
+                        <select
+                          id="expectedTRLLevel"
+                          {...register('expectedTRLLevel', {
+                            valueAsNumber: true,
+                          })}
+                          className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                        >
+                          <option value="">선택해주세요</option>
+                          <option value="4">TRL 4 - 실험실 환경 검증</option>
+                          <option value="5">TRL 5 - 유사 환경 검증</option>
+                          <option value="6">TRL 6 - 파일럿 실증</option>
+                          <option value="7">TRL 7 - 실제 환경 시연</option>
+                          <option value="8">TRL 8 - 시스템 완성 및 검증</option>
+                          <option value="9">TRL 9 - 상용화</option>
+                        </select>
+                        <p className="mt-1 text-xs text-gray-500">
+                          협력을 통해 도달하고자 하는 TRL 수준을 선택해주세요
+                        </p>
+                        {errors.expectedTRLLevel && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.expectedTRLLevel.message}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Target Organization Scale */}
+                      <div>
+                        <label
+                          htmlFor="targetOrgScale"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          선호하는 기업 규모
+                        </label>
+                        <select
+                          id="targetOrgScale"
+                          {...register('targetOrgScale')}
+                          className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                        >
+                          <option value="">선택해주세요</option>
+                          <option value="UNDER_10">10명 미만 (스타트업)</option>
+                          <option value="FROM_10_TO_50">10~50명 (소기업)</option>
+                          <option value="FROM_50_TO_100">50~100명 (중소기업)</option>
+                          <option value="FROM_100_TO_300">100~300명 (중견기업)</option>
+                          <option value="OVER_300">300명 이상 (대기업)</option>
+                        </select>
+                        <p className="mt-1 text-xs text-gray-500">
+                          협력하고 싶은 기업의 규모를 선택해주세요
+                        </p>
+                      </div>
+
+                      {/* Target Organization Revenue */}
+                      <div>
+                        <label
+                          htmlFor="targetOrgRevenue"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          선호하는 기업 매출 규모
+                        </label>
+                        <select
+                          id="targetOrgRevenue"
+                          {...register('targetOrgRevenue')}
+                          className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                        >
+                          <option value="">선택해주세요</option>
+                          <option value="UNDER_1B">10억원 미만</option>
+                          <option value="FROM_1B_TO_10B">10억원~100억원</option>
+                          <option value="FROM_10B_TO_50B">100억원~500억원</option>
+                          <option value="FROM_50B_TO_100B">500억원~1,000억원</option>
+                          <option value="OVER_100B">1,000억원 이상</option>
+                        </select>
+                        <p className="mt-1 text-xs text-gray-500">
+                          협력하고 싶은 기업의 매출 규모를 선택해주세요
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Info box */}
+                  <div className="rounded-lg bg-blue-50 p-4">
+                    <div className="flex gap-2">
+                      <div className="text-blue-600">ℹ️</div>
+                      <div className="text-sm text-blue-800">
+                        <p className="font-medium">더 나은 매칭을 위한 팁</p>
+                        <p className="mt-1">
+                          선호도를 자세히 입력할수록 여러분의 목표에 맞는 최적의 파트너를
+                          추천받을 수 있습니다. 나중에 언제든지 수정 가능합니다.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 

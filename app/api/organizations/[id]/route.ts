@@ -50,6 +50,14 @@ export async function GET(
         instituteType: true,
         researchFocusAreas: true,
         keyTechnologies: true,
+        // Tier 2A: Consortium preference fields
+        desiredConsortiumFields: true,
+        desiredTechnologies: true,
+        targetPartnerTRL: true,
+        commercializationCapabilities: true,
+        expectedTRLLevel: true,
+        targetOrgScale: true,
+        targetOrgRevenue: true,
         profileCompleted: true,
         profileScore: true,
         status: true,
@@ -165,6 +173,14 @@ export async function PATCH(
       instituteType,
       researchFocusAreas,
       keyTechnologies,
+      // Tier 2A: Consortium preference fields
+      desiredConsortiumFields,
+      desiredTechnologies,
+      targetPartnerTRL,
+      commercializationCapabilities,
+      expectedTRLLevel,
+      targetOrgScale,
+      targetOrgRevenue,
     } = body;
 
     // Build update data (only include fields that are provided)
@@ -203,6 +219,41 @@ export async function PATCH(
             .filter((tech: string) => tech.length > 0)
         : [];
     }
+
+    // Tier 2A: Consortium preference fields
+    // Convert comma-separated strings to arrays for database storage
+    if (desiredConsortiumFields !== undefined) {
+      updateData.desiredConsortiumFields = desiredConsortiumFields
+        ? desiredConsortiumFields
+            .split(',')
+            .map((field: string) => field.trim())
+            .filter((field: string) => field.length > 0)
+        : [];
+    }
+    if (desiredTechnologies !== undefined) {
+      updateData.desiredTechnologies = desiredTechnologies
+        ? desiredTechnologies
+            .split(',')
+            .map((tech: string) => tech.trim())
+            .filter((tech: string) => tech.length > 0)
+        : [];
+    }
+    if (commercializationCapabilities !== undefined) {
+      updateData.commercializationCapabilities = commercializationCapabilities
+        ? commercializationCapabilities
+            .split(',')
+            .map((cap: string) => cap.trim())
+            .filter((cap: string) => cap.length > 0)
+        : [];
+    }
+    // Numeric and enum fields
+    if (targetPartnerTRL !== undefined)
+      updateData.targetPartnerTRL = targetPartnerTRL;
+    if (expectedTRLLevel !== undefined)
+      updateData.expectedTRLLevel = expectedTRLLevel;
+    if (targetOrgScale !== undefined) updateData.targetOrgScale = targetOrgScale;
+    if (targetOrgRevenue !== undefined)
+      updateData.targetOrgRevenue = targetOrgRevenue;
 
     // Recalculate profile score (enhanced with Tier 1A + 1B)
     let profileScore = 50; // Base score
@@ -254,6 +305,54 @@ export async function PATCH(
         : existingOrg.keyTechnologies;
     if (finalKeyTech && finalKeyTech.length > 0) profileScore += 5;
 
+    // Tier 2A: Consortium preference fields (optional but valuable)
+    // Award small bonus points for completing consortium preferences (max +10)
+    let consortiumScore = 0;
+    const finalDesiredFields =
+      updateData.desiredConsortiumFields !== undefined
+        ? updateData.desiredConsortiumFields
+        : existingOrg.desiredConsortiumFields;
+    if (finalDesiredFields && finalDesiredFields.length > 0) consortiumScore += 2;
+
+    const finalDesiredTech =
+      updateData.desiredTechnologies !== undefined
+        ? updateData.desiredTechnologies
+        : existingOrg.desiredTechnologies;
+    if (finalDesiredTech && finalDesiredTech.length > 0) consortiumScore += 2;
+
+    const finalTargetTRL =
+      updateData.targetPartnerTRL !== undefined
+        ? updateData.targetPartnerTRL
+        : existingOrg.targetPartnerTRL;
+    if (finalTargetTRL) consortiumScore += 2;
+
+    const finalCommercializationCap =
+      updateData.commercializationCapabilities !== undefined
+        ? updateData.commercializationCapabilities
+        : existingOrg.commercializationCapabilities;
+    if (finalCommercializationCap && finalCommercializationCap.length > 0)
+      consortiumScore += 2;
+
+    const finalExpectedTRL =
+      updateData.expectedTRLLevel !== undefined
+        ? updateData.expectedTRLLevel
+        : existingOrg.expectedTRLLevel;
+    if (finalExpectedTRL) consortiumScore += 1;
+
+    const finalTargetScale =
+      updateData.targetOrgScale !== undefined
+        ? updateData.targetOrgScale
+        : existingOrg.targetOrgScale;
+    if (finalTargetScale) consortiumScore += 1;
+
+    const finalTargetRevenue =
+      updateData.targetOrgRevenue !== undefined
+        ? updateData.targetOrgRevenue
+        : existingOrg.targetOrgRevenue;
+    if (finalTargetRevenue) consortiumScore += 1;
+
+    profileScore += Math.min(10, consortiumScore); // Cap at +10 bonus points
+
     updateData.profileScore = profileScore;
     updateData.updatedAt = new Date();
 
@@ -278,6 +377,14 @@ export async function PATCH(
         instituteType: true,
         researchFocusAreas: true,
         keyTechnologies: true,
+        // Tier 2A: Consortium preference fields
+        desiredConsortiumFields: true,
+        desiredTechnologies: true,
+        targetPartnerTRL: true,
+        commercializationCapabilities: true,
+        expectedTRLLevel: true,
+        targetOrgScale: true,
+        targetOrgRevenue: true,
         profileCompleted: true,
         profileScore: true,
         updatedAt: true,

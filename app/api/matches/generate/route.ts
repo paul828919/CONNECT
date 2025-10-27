@@ -185,10 +185,15 @@ export async function POST(request: NextRequest) {
           // - Many Jan-March NTIS announcements have "0억원" (budget TBD) → stored as NULL
           // - Some announcements don't have deadlines yet → stored as NULL
           // - These are REAL opportunities, not preliminary surveys
-          scrapingSource: {
-            not: null, // Exclude test seed data (seed data has scrapingSource = null)
-            notIn: ['NTIS_API'], // Exclude NTIS_API (old project data, not announcements)
-          },
+
+          // Development mode: Allow seed data (scrapingSource = null) for local testing
+          // Production mode: Exclude seed data to prevent showing test programs to users
+          ...(process.env.NODE_ENV === 'production' && {
+            scrapingSource: {
+              not: null, // Exclude test seed data (seed data has scrapingSource = null)
+              notIn: ['NTIS_API'], // Exclude NTIS_API (old project data, not announcements)
+            },
+          }),
         },
         orderBy: [
           { publishedAt: 'desc' }, // Newest announcements first

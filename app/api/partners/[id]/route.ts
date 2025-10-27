@@ -1,13 +1,14 @@
 /**
- * Public Organization Profile API
+ * Public Organization Profile API (Enhanced with Compatibility Scoring)
  *
- * GET: Fetch public organization profile (visible to authenticated users)
+ * GET: Fetch public organization profile with compatibility score
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
 import { db } from '@/lib/db';
+import { calculatePartnerCompatibility } from '@/lib/matching/partner-algorithm';
 
 
 export async function GET(
@@ -72,22 +73,46 @@ export async function GET(
       );
     }
 
-    // Check if organization profile is visible (active and completed)
+    // Fetch full organization data for status check and compatibility calculation
     const fullOrg = await db.organizations.findUnique({
       where: { id: organizationId },
-      select: { status: true, profileCompleted: true },
     });
 
-    if (fullOrg?.status !== 'ACTIVE' || !fullOrg?.profileCompleted) {
+    if (!fullOrg || fullOrg.status !== 'ACTIVE' || !fullOrg.profileCompleted) {
       return NextResponse.json(
         { error: 'Organization profile is not publicly visible' },
         { status: 403 }
       );
     }
 
+    // Calculate compatibility score with user's organization
+    let compatibilityScore = null;
+    const userId = (session.user as any).id;
+
+    // Fetch user's organization with all fields needed for compatibility calculation
+    const userOrg = await db.organizations.findFirst({
+      where: {
+        users: {
+          some: { id: userId },
+        },
+      },
+    });
+
+    if (userOrg && userOrg.id !== organizationId) {
+      // Calculate compatibility using partner algorithm
+      const compatibility = calculatePartnerCompatibility(userOrg, fullOrg);
+      compatibilityScore = {
+        score: compatibility.score,
+        breakdown: compatibility.breakdown,
+        reasons: compatibility.reasons,
+        explanation: compatibility.explanation,
+      };
+    }
+
     return NextResponse.json({
       success: true,
       organization,
+      compatibilityScore,
     });
   } catch (error: any) {
     console.error('Failed to fetch organization profile:', error);
