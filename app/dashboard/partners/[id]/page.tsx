@@ -22,7 +22,6 @@ interface Organization {
   annualRdBudget: string | null;
   researcherCount: number | null;
   keyTechnologies: string[] | null;
-  collaborationHistory: string | null;
   primaryContactName: string | null;
   primaryContactEmail: string | null;
   profileScore: number;
@@ -257,14 +256,6 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
               </div>
             </dl>
           </div>
-
-          {/* Collaboration History */}
-          {organization.collaborationHistory && (
-            <div className="mb-6 rounded-2xl bg-white p-8 shadow-sm">
-              <h2 className="mb-4 text-xl font-bold text-gray-900">협력 이력</h2>
-              <p className="whitespace-pre-wrap text-gray-700">{organization.collaborationHistory}</p>
-            </div>
-          )}
 
           {/* Contact Information */}
           {(organization.primaryContactName || organization.primaryContactEmail) && (
