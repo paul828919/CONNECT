@@ -131,6 +131,7 @@ export async function POST(request: NextRequest) {
       projectDuration,
       startDate,
       endDate,
+      invitedMemberOrgIds, // New: Array of organization IDs to invite
     } = body;
 
     // Validate input
@@ -150,6 +151,34 @@ export async function POST(request: NextRequest) {
       if (!program) {
         return NextResponse.json(
           { error: 'Target funding program not found' },
+          { status: 404 }
+        );
+      }
+    }
+
+    // Validate invited member organizations if provided
+    if (invitedMemberOrgIds && Array.isArray(invitedMemberOrgIds) && invitedMemberOrgIds.length > 0) {
+      // Prevent inviting own organization
+      const invalidOrgIds = invitedMemberOrgIds.filter(orgId => orgId === user.organizationId);
+      if (invalidOrgIds.length > 0) {
+        return NextResponse.json(
+          { error: 'Cannot invite your own organization to the consortium' },
+          { status: 400 }
+        );
+      }
+
+      // Verify all invited organizations exist and are active
+      const invitedOrgs = await db.organizations.findMany({
+        where: {
+          id: { in: invitedMemberOrgIds },
+          status: 'ACTIVE',
+        },
+        select: { id: true },
+      });
+
+      if (invitedOrgs.length !== invitedMemberOrgIds.length) {
+        return NextResponse.json(
+          { error: 'One or more invited organizations not found or inactive' },
           { status: 404 }
         );
       }
@@ -206,6 +235,24 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date(),
       },
     });
+
+    // Add invited member organizations if provided
+    if (invitedMemberOrgIds && Array.isArray(invitedMemberOrgIds) && invitedMemberOrgIds.length > 0) {
+      const invitedMembersData = invitedMemberOrgIds.map(orgId => ({
+        id: createId(),
+        consortiumId: consortium.id,
+        organizationId: orgId,
+        invitedById: userId,
+        role: 'PARTICIPANT' as const,
+        status: 'INVITED' as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
+
+      await db.consortium_members.createMany({
+        data: invitedMembersData,
+      });
+    }
 
     return NextResponse.json({
       success: true,
