@@ -29,6 +29,11 @@ export const metadata: Metadata = {
     '중소벤처기업부',
   ],
   authors: [{ name: 'Connect Platform' }],
+  icons: {
+    icon: '/logo.svg',
+    shortcut: '/logo.svg',
+    apple: '/logo.svg',
+  },
   openGraph: {
     title: 'Connect - 한국 R&D 자동화 플랫폼 | 정부 과제 매칭',
     description: '국내 주요 4개 기관 200-500개 최신 공고 매칭. 귀사에 적합한 정부 R&D 과제를 자동으로 찾아드립니다.',
