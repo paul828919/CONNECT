@@ -47,7 +47,6 @@ export async function GET(
         annualRdBudget: true,
         researcherCount: true,
         keyTechnologies: true,
-        collaborationHistory: true,
 
         // Contact information (public)
         primaryContactName: true,
