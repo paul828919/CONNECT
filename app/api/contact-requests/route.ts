@@ -152,10 +152,10 @@ export async function POST(request: NextRequest) {
     // Get user's organization
     const user = await db.user.findUnique({
       where: { id: userId },
-      include: { organizations: true },
+      include: { organization: true },
     });
 
-    if (!user?.organizations) {
+    if (!user?.organization) {
       return NextResponse.json(
         { error: 'No organization associated with user' },
         { status: 400 }
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prevent sending request to own organization
-    if (receiverOrgId === user.organizations?.id) {
+    if (receiverOrgId === user.organization?.id) {
       return NextResponse.json(
         { error: 'Cannot send request to your own organization' },
         { status: 400 }
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
     // Check for duplicate recent requests (within 30 days)
     const recentRequest = await db.contact_requests.findFirst({
       where: {
-        senderOrgId: user.organizations?.id,
+        senderOrgId: user.organization?.id,
         receiverOrgId,
         createdAt: {
           gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
     let finalMessage = message;
     if (useTemplate && MESSAGE_TEMPLATES[type as ContactRequestType]) {
       finalMessage = MESSAGE_TEMPLATES[type as ContactRequestType]
-        .replace('{senderOrgName}', user.organizations?.name || '')
+        .replace('{senderOrgName}', user.organization?.name || '')
         .replace('{receiverOrgName}', receiverOrg.name)
         .replace('{industry}', receiverOrg.industrySector || '해당 분야')
         .replace('{programName}', '관련 R&D 프로그램')
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
       data: {
         id: createId(),
         senderId: userId,
-        senderOrgId: user.organizations?.id || '',
+        senderOrgId: user.organization?.id || '',
         receiverOrgId,
         type: type as ContactRequestType,
         subject,
