@@ -55,6 +55,18 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
 
+  // Form states for Connect modal
+  const [connectSubject, setConnectSubject] = useState('');
+  const [connectMessage, setConnectMessage] = useState('');
+  const [connectLoading, setConnectLoading] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
+  const [connectSuccess, setConnectSuccess] = useState(false);
+
+  // Form states for Invite modal
+  const [consortiumName, setConsortiumName] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+
   useEffect(() => {
     async function fetchPartner() {
       try {
@@ -76,6 +88,88 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
 
     fetchPartner();
   }, [params.id]);
+
+  // Handler for Connect (lightweight collaboration request)
+  const handleConnect = async () => {
+    if (!connectSubject.trim()) {
+      setConnectError('제목을 입력해주세요');
+      return;
+    }
+    if (!connectMessage.trim()) {
+      setConnectError('메시지를 입력해주세요');
+      return;
+    }
+
+    setConnectLoading(true);
+    setConnectError(null);
+
+    try {
+      const response = await fetch('/api/contact-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiverOrgId: organization?.id,
+          type: 'COLLABORATION',
+          subject: connectSubject,
+          message: connectMessage,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setConnectSuccess(true);
+        setTimeout(() => {
+          setShowConnectModal(false);
+          setConnectSubject('');
+          setConnectMessage('');
+          setConnectSuccess(false);
+        }, 2000);
+      } else {
+        setConnectError(data.error || '요청 전송에 실패했습니다');
+      }
+    } catch (error) {
+      setConnectError('요청 전송 중 오류가 발생했습니다');
+    } finally {
+      setConnectLoading(false);
+    }
+  };
+
+  // Handler for Consortium Invite (formal consortium creation)
+  const handleInvite = async () => {
+    if (!consortiumName.trim()) {
+      setInviteError('컨소시엄 이름을 입력해주세요');
+      return;
+    }
+
+    setInviteLoading(true);
+    setInviteError(null);
+
+    try {
+      const response = await fetch('/api/consortiums', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: consortiumName,
+          description: `${organization?.name}과(와)의 협력 컨소시엄`,
+          invitedMemberOrgIds: [organization?.id],
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Redirect to consortium detail/builder page
+        router.push(`/dashboard/consortiums/${data.consortium.id}`);
+      } else {
+        setInviteError(data.error || '컨소시엄 생성에 실패했습니다');
+      }
+    } catch (error) {
+      setInviteError('컨소시엄 생성 중 오류가 발생했습니다');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
 
   // Get color class based on compatibility score
   const getScoreColor = (score: number) => {
@@ -384,58 +478,170 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
         </div>
       </div>
 
-      {/* Connect Modal (Placeholder) */}
+      {/* Connect Modal - Lightweight Collaboration Request */}
       {showConnectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="max-w-md rounded-2xl bg-white p-8 shadow-2xl">
-            <h2 className="mb-4 text-2xl font-bold text-gray-900">연결 요청</h2>
-            <p className="mb-6 text-gray-600">
-              {organization.name}에게 협력 문의를 보냅니다. 이 기능은 Phase 7에서 구현됩니다.
+          <div className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-2xl">
+            <h2 className="mb-2 text-2xl font-bold text-gray-900">연결 요청</h2>
+            <p className="mb-6 text-sm text-gray-600">
+              {organization.name}에게 협력 문의를 보냅니다
             </p>
+
+            {connectSuccess ? (
+              <div className="mb-6 rounded-lg bg-green-50 p-4 text-center">
+                <p className="font-medium text-green-800">✓ 요청이 성공적으로 전송되었습니다</p>
+              </div>
+            ) : (
+              <div className="mb-6 space-y-4">
+                {/* Subject Input */}
+                <div>
+                  <label htmlFor="subject" className="mb-1 block text-sm font-medium text-gray-700">
+                    제목
+                  </label>
+                  <input
+                    id="subject"
+                    type="text"
+                    value={connectSubject}
+                    onChange={(e) => setConnectSubject(e.target.value)}
+                    placeholder="협력 제안 제목을 입력하세요"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={connectLoading}
+                  />
+                </div>
+
+                {/* Message Textarea */}
+                <div>
+                  <label htmlFor="message" className="mb-1 block text-sm font-medium text-gray-700">
+                    메시지
+                  </label>
+                  <textarea
+                    id="message"
+                    value={connectMessage}
+                    onChange={(e) => setConnectMessage(e.target.value)}
+                    placeholder={`안녕하세요,\n\n${organization.name}의 전문성에 관심이 있어 연락드립니다.\n협력 가능성을 논의하고 싶습니다.\n\n감사합니다.`}
+                    rows={6}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={connectLoading}
+                  />
+                </div>
+
+                {/* Error Message */}
+                {connectError && (
+                  <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                    {connectError}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Action Buttons */}
             <div className="flex gap-3">
               <button
-                onClick={() => setShowConnectModal(false)}
+                onClick={() => {
+                  setShowConnectModal(false);
+                  setConnectSubject('');
+                  setConnectMessage('');
+                  setConnectError(null);
+                  setConnectSuccess(false);
+                }}
                 className="flex-1 rounded-lg border-2 border-gray-300 px-6 py-3 font-medium text-gray-700 hover:bg-gray-50"
+                disabled={connectLoading}
               >
                 취소
               </button>
-              <button
-                onClick={() => {
-                  alert('연결 요청 기능은 Phase 7에서 구현됩니다');
-                  setShowConnectModal(false);
-                }}
-                className="flex-1 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
-              >
-                요청 보내기
-              </button>
+              {!connectSuccess && (
+                <button
+                  onClick={handleConnect}
+                  disabled={connectLoading}
+                  className="flex-1 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {connectLoading ? '전송 중...' : '요청 보내기'}
+                </button>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Invite Modal (Placeholder) */}
+      {/* Invite Modal - Formal Consortium Creation */}
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="max-w-md rounded-2xl bg-white p-8 shadow-2xl">
-            <h2 className="mb-4 text-2xl font-bold text-gray-900">컨소시엄 초대</h2>
-            <p className="mb-6 text-gray-600">
-              {organization.name}을(를) 컨소시엄에 초대합니다. 이 기능은 Phase 7에서 구현됩니다.
+          <div className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-2xl">
+            <h2 className="mb-2 text-2xl font-bold text-gray-900">컨소시엄 초대</h2>
+            <p className="mb-6 text-sm text-gray-600">
+              {organization.name}을(를) 새로운 컨소시엄 프로젝트에 초대합니다
             </p>
+
+            <div className="mb-6 space-y-4">
+              {/* Consortium Name Input */}
+              <div>
+                <label htmlFor="consortiumName" className="mb-1 block text-sm font-medium text-gray-700">
+                  컨소시엄 프로젝트 이름 *
+                </label>
+                <input
+                  id="consortiumName"
+                  type="text"
+                  value={consortiumName}
+                  onChange={(e) => setConsortiumName(e.target.value)}
+                  placeholder="예: AI 기반 스마트팜 협력 컨소시엄"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  disabled={inviteLoading}
+                />
+              </div>
+
+              {/* Info Box */}
+              <div className="rounded-lg bg-purple-50 p-4">
+                <p className="text-xs text-purple-700">
+                  <strong>참고:</strong> 컨소시엄이 생성되면 자동으로 상세 페이지로 이동합니다.
+                  해당 페이지에서 과제 선택, 예산 등 추가 정보를 입력할 수 있습니다.
+                </p>
+              </div>
+
+              {/* Invited Partner Display */}
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <p className="mb-2 text-xs font-medium text-gray-600">초대 대상</p>
+                <div className="flex items-center gap-3">
+                  {organization.logoUrl && (
+                    <img
+                      src={organization.logoUrl}
+                      alt={organization.name}
+                      className="h-10 w-10 rounded-lg object-cover"
+                    />
+                  )}
+                  <div>
+                    <p className="font-medium text-gray-900">{organization.name}</p>
+                    <p className="text-xs text-gray-500">{organization.type}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {inviteError && (
+                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                  {inviteError}
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
             <div className="flex gap-3">
               <button
-                onClick={() => setShowInviteModal(false)}
+                onClick={() => {
+                  setShowInviteModal(false);
+                  setConsortiumName('');
+                  setInviteError(null);
+                }}
                 className="flex-1 rounded-lg border-2 border-gray-300 px-6 py-3 font-medium text-gray-700 hover:bg-gray-50"
+                disabled={inviteLoading}
               >
                 취소
               </button>
               <button
-                onClick={() => {
-                  alert('컨소시엄 초대 기능은 Phase 7에서 구현됩니다');
-                  setShowInviteModal(false);
-                }}
-                className="flex-1 rounded-lg bg-purple-600 px-6 py-3 font-medium text-white hover:bg-purple-700"
+                onClick={handleInvite}
+                disabled={inviteLoading}
+                className="flex-1 rounded-lg bg-purple-600 px-6 py-3 font-medium text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                초대 보내기
+                {inviteLoading ? '생성 중...' : '컨소시엄 생성'}
               </button>
             </div>
           </div>
