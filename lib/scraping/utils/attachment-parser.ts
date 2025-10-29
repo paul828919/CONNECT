@@ -4,21 +4,21 @@
  * Extracts text from Korean government R&D announcement attachments:
  * - PDF: Direct text extraction using pdf-parse
  * - HWPX: ZIP-based XML format (similar to DOCX)
- * - HWP: Binary format → LibreOffice conversion → PDF → text extraction
+ * - HWP: Binary format → Hancom Docs web conversion → PDF → text extraction
  *
- * Strategy (per user guidance):
+ * Strategy (updated October 29, 2025):
  * 1. Prefer alternate formats (PDF > HWPX > DOCX > HWP)
- * 2. HWP: Convert server-side using LibreOffice headless
+ * 2. HWP: Convert using Hancom Docs web service (https://www.hancomdocs.com)
  * 3. Fallback: OCR (future enhancement)
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { execSync } from 'child_process';
 import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
 import pdfParse from 'pdf-parse';
+import { convertHWPViaPDFHandomDocs, hasHancomDocsCredentials } from './hancom-docs-converter';
 
 /**
  * Extract text from attachment based on file type
@@ -175,14 +175,17 @@ function extractTextFromHWPXSection(obj: any): string {
 }
 
 /**
- * Extract text from HWP (binary format) using LibreOffice conversion
+ * Extract text from HWP files (Korean Hangul Word Processor format)
  *
- * Strategy (per user guidance):
- * 1. Check if LibreOffice is installed (soffice command)
- * 2. Save HWP file to temp directory
- * 3. Convert HWP → PDF using: soffice --headless --convert-to pdf
- * 4. Extract text from converted PDF
- * 5. Clean up temp files
+ * Strategy (updated October 29, 2025):
+ * Uses Hancom Docs web service (https://www.hancomdocs.com) for HWP → PDF conversion.
+ * This provides 100% compatibility with all HWP versions as Hancom is the official HWP creator.
+ *
+ * Process:
+ * 1. Check if Hancom Docs credentials are available
+ * 2. Upload HWP to Hancom Docs via Playwright browser automation
+ * 3. Download converted PDF from Hancom Docs editor
+ * 4. Extract text from PDF using pdf-parse
  *
  * @param fileBuffer - HWP file contents
  * @param fileName - Original file name (for logging)
@@ -191,92 +194,24 @@ async function extractTextFromHWP(
   fileBuffer: Buffer,
   fileName: string
 ): Promise<string | null> {
-  let tempDir: string | null = null;
-  let hwpPath: string | null = null;
-  let pdfPath: string | null = null;
-
   try {
-    // 1. Check if LibreOffice is installed
-    const hasLibreOffice = checkLibreOfficeInstalled();
-
-    if (!hasLibreOffice) {
+    // 1. Check if Hancom Docs credentials are configured
+    if (!hasHancomDocsCredentials()) {
       console.warn(
-        '[ATTACHMENT-PARSER] LibreOffice not installed - HWP conversion skipped. ' +
-        'Install with: brew install libreoffice (macOS) or apt-get install libreoffice (Linux)'
+        '[ATTACHMENT-PARSER] Hancom Docs credentials not configured - HWP conversion skipped. ' +
+          'Set HANCOM_EMAIL and HANCOM_PASSWORD environment variables.'
       );
       return null;
     }
 
-    // 2. Create temp directory for conversion
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hwp-convert-'));
-    hwpPath = path.join(tempDir, fileName);
-    const pdfFileName = fileName.replace(/\.hwp$/i, '.pdf');
-    pdfPath = path.join(tempDir, pdfFileName);
-
-    // 3. Write HWP file to temp directory
-    fs.writeFileSync(hwpPath, fileBuffer);
-
-    console.log(`[ATTACHMENT-PARSER] Converting HWP → PDF: ${fileName}`);
-
-    // 4. Convert HWP → PDF using LibreOffice headless mode
-    // --headless: Run without GUI
-    // --convert-to pdf: Convert to PDF format
-    // --outdir: Output directory for converted file
-    const convertCmd = `soffice --headless --convert-to pdf --outdir "${tempDir}" "${hwpPath}"`;
-
-    try {
-      execSync(convertCmd, {
-        timeout: 30000, // 30 second timeout
-        stdio: 'pipe', // Suppress output
-      });
-    } catch (execError: any) {
-      console.error('[ATTACHMENT-PARSER] LibreOffice conversion failed:', execError.message);
-      return null;
-    }
-
-    // 5. Check if PDF was created
-    if (!fs.existsSync(pdfPath)) {
-      console.error('[ATTACHMENT-PARSER] PDF conversion failed - output file not found');
-      return null;
-    }
-
-    // 6. Read converted PDF and extract text
-    const pdfBuffer = fs.readFileSync(pdfPath);
-    const extractedText = await extractTextFromPDF(pdfBuffer);
-
-    if (extractedText) {
-      console.log(
-        `[ATTACHMENT-PARSER] Successfully converted HWP → PDF → text: ${extractedText.length} characters`
-      );
-    }
+    // 2. Convert HWP → PDF using Hancom Docs web service
+    // This provides official HWP support from the format creator (100% compatibility)
+    const extractedText = await convertHWPViaPDFHandomDocs(fileBuffer, fileName);
 
     return extractedText;
   } catch (error: any) {
     console.error(`[ATTACHMENT-PARSER] HWP conversion failed for ${fileName}:`, error.message);
     return null;
-  } finally {
-    // 7. Clean up temp files
-    if (tempDir && fs.existsSync(tempDir)) {
-      try {
-        if (hwpPath && fs.existsSync(hwpPath)) fs.unlinkSync(hwpPath);
-        if (pdfPath && fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
-        fs.rmdirSync(tempDir);
-      } catch (cleanupError) {
-        // Silent fail on cleanup - not critical
-      }
-    }
-  }
-}
-
-/**
- * Check if LibreOffice is installed (required for HWP conversion)
- */
-function checkLibreOfficeInstalled(): boolean {
-  try {
-    execSync('which soffice', { stdio: 'pipe' });
-    return true;
-  } catch {
-    return false;
   }
 }
 
