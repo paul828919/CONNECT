@@ -18,6 +18,7 @@ import * as os from 'os';
 import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
 import pdfParse from 'pdf-parse';
+import { Browser } from 'playwright';
 import { convertHWPViaPDFHandomDocs, hasHancomDocsCredentials } from './hancom-docs-converter';
 
 /**
@@ -25,11 +26,13 @@ import { convertHWPViaPDFHandomDocs, hasHancomDocsCredentials } from './hancom-d
  *
  * @param fileName - Attachment file name (e.g., "application_guide.pdf")
  * @param fileBuffer - File contents as Buffer
+ * @param sharedBrowser - Optional pre-authenticated browser for HWP conversions
  * @returns Extracted text (up to 5000 characters for performance)
  */
 export async function extractTextFromAttachment(
   fileName: string,
-  fileBuffer: Buffer
+  fileBuffer: Buffer,
+  sharedBrowser?: Browser
 ): Promise<string | null> {
   try {
     const ext = path.extname(fileName).toLowerCase();
@@ -44,7 +47,7 @@ export async function extractTextFromAttachment(
         return await extractTextFromHWPX(fileBuffer);
 
       case '.hwp':
-        return await extractTextFromHWP(fileBuffer, fileName);
+        return await extractTextFromHWP(fileBuffer, fileName, sharedBrowser);
 
       case '.doc':
       case '.docx':
@@ -189,10 +192,12 @@ function extractTextFromHWPXSection(obj: any): string {
  *
  * @param fileBuffer - HWP file contents
  * @param fileName - Original file name (for logging)
+ * @param sharedBrowser - Optional pre-authenticated browser (reuses session for batch conversions)
  */
 async function extractTextFromHWP(
   fileBuffer: Buffer,
-  fileName: string
+  fileName: string,
+  sharedBrowser?: Browser
 ): Promise<string | null> {
   try {
     // 1. Check if Hancom Docs credentials are configured
@@ -205,8 +210,8 @@ async function extractTextFromHWP(
     }
 
     // 2. Convert HWP → PDF using Hancom Docs web service
-    // This provides official HWP support from the format creator (100% compatibility)
-    const extractedText = await convertHWPViaPDFHandomDocs(fileBuffer, fileName);
+    // Pass shared browser to reuse authenticated session (avoids rate limiting)
+    const extractedText = await convertHWPViaPDFHandomDocs(fileBuffer, fileName, sharedBrowser);
 
     return extractedText;
   } catch (error: any) {

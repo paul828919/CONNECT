@@ -12,7 +12,7 @@
  * Primary data source for all Korean R&D funding announcements
  */
 
-import { Page } from 'playwright';
+import { Page, Browser } from 'playwright';
 import {
   parseKoreanDate,
   parseBudgetAmount,
@@ -30,6 +30,10 @@ import {
   extractTextFromAttachment,
   extractKeywordsFromAttachmentText,
 } from '../utils/attachment-parser';
+import {
+  createHancomDocsBrowser,
+  hasHancomDocsCredentials,
+} from '../utils/hancom-docs-converter';
 
 export interface NTISAnnouncementDetails {
   description: string | null;
@@ -161,24 +165,34 @@ export async function parseNTISAnnouncementDetails(
     // 1. Extract publishedAt (공고일)
     const publishedAt = extractPublishedDate(bodyText);
 
-    // 2. Extract deadline (마감일)
+    // 2. Extract deadline (마감일) - from body first
     const deadline = extractDeadline(bodyText);
 
-    // 3. Extract budget amount (공고금액)
-    const budgetAmount = extractBudget(bodyText);
-
-    // 4. Extract ministry and announcing agency
+    // 3. Extract ministry and announcing agency
     const ministry = extractFieldValue(bodyText, '부처명');
     const announcingAgency = extractFieldValue(bodyText, '공고기관명');
 
-    // 5. Extract description (공고내용)
+    // 4. Extract description (공고내용)
     const description = await extractDescription(page);
 
-    // 6. Determine target type from description
-    const targetType = determineTargetType(cleanText);
+    // 5. Extract attachment URLs early (needed for budget/TRL extraction)
+    const attachmentUrls = await extractAttachmentUrls(page);
 
-    // 7. Extract TRL range with confidence tracking
-    const trlRange = extractTRLRange(cleanText);
+    // 6. Download and extract text from announcement documents
+    // This text contains critical details (budget, TRL, eligibility) often missing from HTML
+    const attachmentText = await downloadAndExtractAttachmentText(page, attachmentUrls);
+
+    // 7. Create combined text for enhanced field extraction
+    const combinedText = cleanText + '\n\n' + attachmentText;
+
+    // 8. Extract budget amount from combined text (body + attachments)
+    const budgetAmount = extractBudget(combinedText);
+
+    // 9. Determine target type from combined text
+    const targetType = determineTargetType(combinedText);
+
+    // 10. Extract TRL range from combined text with confidence tracking
+    const trlRange = extractTRLRange(combinedText);
 
     // Generate TRL classification if TRL detected
     let trlClassification: TRLClassification | null = null;
@@ -193,10 +207,10 @@ export async function parseNTISAnnouncementDetails(
       }
     }
 
-    // 8. Extract eligibility criteria
-    const eligibilityCriteria = extractEligibilityCriteria(cleanText);
+    // 11. Extract eligibility criteria from combined text
+    const eligibilityCriteria = extractEligibilityCriteria(combinedText);
 
-    // 9. Extract category from ministry and announcing agency (hierarchical categorization)
+    // 12. Extract category from ministry and announcing agency (hierarchical categorization)
     const categoryResult = extractCategoryFromMinistryAndAgency(ministry, announcingAgency);
     const category = categoryResult.category;
 
@@ -224,13 +238,7 @@ export async function parseNTISAnnouncementDetails(
       console.log(`🔔 [MONITORING] Unmapped agency detected: ${ministry || 'NULL'} / ${announcingAgency || 'NULL'}`);
     }
 
-    // 10. Extract attachment file names (PDF/HWP/HWPX)
-    const attachmentUrls = await extractAttachmentUrls(page);
-
-    // 11. Download and extract text from attachments for enhanced keyword extraction
-    const attachmentText = await downloadAndExtractAttachmentText(page, attachmentUrls);
-
-    // 12. Extract keywords (ministry + agency defaults + title/description + attachments)
+    // 13. Extract keywords (ministry + agency defaults + title/description + attachments)
     const keywords = await extractKeywords(
       page,
       ministry,
@@ -239,10 +247,10 @@ export async function parseNTISAnnouncementDetails(
       attachmentText
     );
 
-    // 13. Extract business structure requirements
-    const allowedBusinessStructures = extractBusinessStructures(cleanText);
+    // 14. Extract business structure requirements from combined text
+    const allowedBusinessStructures = extractBusinessStructures(combinedText);
 
-    // 14. Determine if TRL was inferred (vs explicitly stated)
+    // 15. Determine if TRL was inferred (vs explicitly stated)
     const trlInferred = trlRange ? trlRange.confidence === 'inferred' : false;
 
     return {
@@ -589,76 +597,125 @@ async function downloadAndExtractAttachmentText(
 
   let combinedText = '';
   let processedCount = 0;
+  let sharedBrowser: Browser | null = null;
 
-  // Sort attachments by priority: PDF > HWPX > HWP > others
-  const sortedFiles = [...attachmentFileNames].sort((a, b) => {
-    const getPriority = (fileName: string): number => {
-      if (fileName.endsWith('.pdf')) return 1;
-      if (fileName.endsWith('.hwpx')) return 2;
-      if (fileName.endsWith('.hwp')) return 3;
-      if (fileName.endsWith('.docx')) return 4;
-      return 99;
-    };
-    return getPriority(a) - getPriority(b);
-  });
+  try {
+    // Filter to only process announcement documents (공고문, 신청안내, etc.)
+    // These contain budget/TRL/eligibility details, unlike supplementary files
+    const announcementPatterns = [
+      '공고',        // Announcement
+      '신청안내',     // Application guide
+      '사업안내',     // Project guide
+      '붙임',        // Attachment (usually main document)
+      '안내문',      // Guide document
+      '계획',        // Plan
+      '요강',        // Guideline
+    ];
 
-  // Process up to 3 attachments (to avoid excessive processing time)
-  const filesToProcess = sortedFiles.slice(0, 3);
+    const announcementFiles = attachmentFileNames.filter((fileName) => {
+      // Check if filename contains any announcement keywords
+      return announcementPatterns.some((pattern) => fileName.includes(pattern));
+    });
 
-  for (const fileName of filesToProcess) {
-    try {
-      // Skip non-parsable formats
-      if (/\.(zip|doc)$/i.test(fileName)) {
-        console.log(`[NTIS-ATTACHMENT] Skipping ${fileName} (format not supported)`);
-        continue;
+    console.log(
+      `[NTIS-ATTACHMENT] Filtered ${announcementFiles.length}/${attachmentFileNames.length} announcement documents`
+    );
+
+    // Sort filtered files by priority: PDF > HWPX > HWP > others
+    const sortedFiles = [...announcementFiles].sort((a, b) => {
+      const getPriority = (fileName: string): number => {
+        if (fileName.endsWith('.pdf')) return 1;
+        if (fileName.endsWith('.hwpx')) return 2;
+        if (fileName.endsWith('.hwp')) return 3;
+        if (fileName.endsWith('.docx')) return 4;
+        return 99;
+      };
+      return getPriority(a) - getPriority(b);
+    });
+
+    // Process up to 2 announcement documents (to avoid excessive processing time)
+    const filesToProcess = sortedFiles.slice(0, 2);
+
+    // Check if we have HWP files to process
+    const hasHWPFiles = filesToProcess.some((f) => f.endsWith('.hwp'));
+
+    // Create shared browser session ONCE if we have HWP files (avoids rate limiting)
+    if (hasHWPFiles && hasHancomDocsCredentials()) {
+      sharedBrowser = await createHancomDocsBrowser();
+      if (!sharedBrowser) {
+        console.warn('[NTIS-ATTACHMENT] Failed to create shared browser for HWP conversion');
       }
+    }
 
-      console.log(`[NTIS-ATTACHMENT] Downloading ${fileName}...`);
+    for (const fileName of filesToProcess) {
+      try {
+        // Skip non-parsable formats
+        if (/\.(zip|doc)$/i.test(fileName)) {
+          console.log(`[NTIS-ATTACHMENT] Skipping ${fileName} (format not supported)`);
+          continue;
+        }
 
-      // Find and click the download link
-      const downloadPromise = page.waitForEvent('download', { timeout: 15000 });
+        console.log(`[NTIS-ATTACHMENT] Downloading ${fileName}...`);
 
-      // Click the attachment link (find by text content)
-      await page.click(`a:has-text("${fileName}")`);
+        // Find and click the download link
+        const downloadPromise = page.waitForEvent('download', { timeout: 15000 });
 
-      // Wait for download to start
-      const download = await downloadPromise;
+        // Click the attachment link (find by text content)
+        await page.click(`a:has-text("${fileName}")`);
 
-      // Save to temporary buffer
-      const fileBuffer = await download.createReadStream().then((stream) => {
-        return new Promise<Buffer>((resolve, reject) => {
-          const chunks: Buffer[] = [];
-          stream.on('data', (chunk) => chunks.push(chunk));
-          stream.on('end', () => resolve(Buffer.concat(chunks)));
-          stream.on('error', reject);
+        // Wait for download to start
+        const download = await downloadPromise;
+
+        // Save to temporary buffer
+        const fileBuffer = await download.createReadStream().then((stream) => {
+          return new Promise<Buffer>((resolve, reject) => {
+            const chunks: Buffer[] = [];
+            stream.on('data', (chunk) => chunks.push(chunk));
+            stream.on('end', () => resolve(Buffer.concat(chunks)));
+            stream.on('error', reject);
+          });
         });
-      });
 
-      console.log(`[NTIS-ATTACHMENT] Downloaded ${fileName} (${fileBuffer.length} bytes)`);
+        console.log(`[NTIS-ATTACHMENT] Downloaded ${fileName} (${fileBuffer.length} bytes)`);
 
-      // Extract text from downloaded file
-      const extractedText = await extractTextFromAttachment(fileName, fileBuffer);
+        // Extract text from downloaded file - pass shared browser for HWP conversions
+        const extractedText = await extractTextFromAttachment(
+          fileName,
+          fileBuffer,
+          sharedBrowser || undefined
+        );
 
-      if (extractedText && extractedText.length > 0) {
-        combinedText += extractedText + '\n\n';
-        processedCount++;
-        console.log(`[NTIS-ATTACHMENT] ✓ Extracted ${extractedText.length} characters from ${fileName}`);
-      } else {
-        console.log(`[NTIS-ATTACHMENT] ✗ No text extracted from ${fileName}`);
+        if (extractedText && extractedText.length > 0) {
+          combinedText += extractedText + '\n\n';
+          processedCount++;
+          console.log(`[NTIS-ATTACHMENT] ✓ Extracted ${extractedText.length} characters from ${fileName}`);
+        } else {
+          console.log(`[NTIS-ATTACHMENT] ✗ No text extracted from ${fileName}`);
+        }
+      } catch (error: any) {
+        console.warn(`[NTIS-ATTACHMENT] Failed to process ${fileName}:`, error.message);
+        // Continue with next file on error
       }
-    } catch (error: any) {
-      console.warn(`[NTIS-ATTACHMENT] Failed to process ${fileName}:`, error.message);
-      // Continue with next file on error
+    }
+
+    console.log(
+      `[NTIS-ATTACHMENT] Processed ${processedCount}/${filesToProcess.length} attachments, ` +
+      `extracted ${combinedText.length} total characters`
+    );
+
+    // Return first 10,000 characters (sufficient for keyword extraction)
+    return combinedText.substring(0, 10000).trim();
+  } finally {
+    // Clean up shared browser
+    if (sharedBrowser) {
+      try {
+        await sharedBrowser.close();
+        console.log('[NTIS-ATTACHMENT] Closed shared browser session');
+      } catch (error: any) {
+        console.warn('[NTIS-ATTACHMENT] Failed to close shared browser:', error.message);
+      }
     }
   }
-
-  console.log(
-    `[NTIS-ATTACHMENT] Processed ${processedCount}/${filesToProcess.length} attachments, ` +
-    `extracted ${combinedText.length} total characters`
-  );
-
-  // Return first 10,000 characters (sufficient for keyword extraction)
-  return combinedText.substring(0, 10000).trim();
 }
 
 /**

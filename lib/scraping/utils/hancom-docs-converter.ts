@@ -41,15 +41,17 @@ const LOGIN_TIMEOUT = 30000; // 30 seconds for login
  *
  * @param hwpBuffer - HWP file content as Buffer
  * @param fileName - Original HWP filename
+ * @param sharedBrowser - Optional pre-authenticated browser instance (for batch conversions)
  * @returns Extracted text from PDF, or null if conversion fails
  */
 export async function convertHWPViaPDFHandomDocs(
   hwpBuffer: Buffer,
-  fileName: string
+  fileName: string,
+  sharedBrowser?: Browser
 ): Promise<string | null> {
   let browser: Browser | null = null;
   let tempHwpPath: string | null = null;
-  let tempPdfPath: string | null = null;
+  const shouldCloseBrowser = !sharedBrowser; // Only close if we created it
 
   try {
     console.log(`[HANCOM-DOCS] Converting HWP → PDF: ${fileName}`);
@@ -60,12 +62,17 @@ export async function convertHWPViaPDFHandomDocs(
     tempHwpPath = path.join(tempDir, `hancom-upload-${Date.now()}-${fileName}`);
     fs.writeFileSync(tempHwpPath, hwpBuffer);
 
-    // 2. Launch browser
-    console.log('[HANCOM-DOCS] Launching browser...');
-    browser = await chromium.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
+    // 2. Use shared browser or launch new one
+    if (sharedBrowser) {
+      console.log('[HANCOM-DOCS] Using shared authenticated browser session');
+      browser = sharedBrowser;
+    } else {
+      console.log('[HANCOM-DOCS] Launching browser...');
+      browser = await chromium.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
+    }
 
     const context = await browser.newContext({
       acceptDownloads: true,
@@ -73,9 +80,18 @@ export async function convertHWPViaPDFHandomDocs(
 
     const page = await context.newPage();
 
-    // 3. Login to Hancom Docs
-    console.log('[HANCOM-DOCS] Logging in to Hancom Docs...');
-    await loginToHancomDocs(page);
+    // 3. Login to Hancom Docs (only if using new browser)
+    if (!sharedBrowser) {
+      console.log('[HANCOM-DOCS] Logging in to Hancom Docs...');
+      await loginToHancomDocs(page);
+    } else {
+      // With shared browser, we're already logged in - just navigate to homepage
+      console.log('[HANCOM-DOCS] Navigating to Hancom Docs homepage...');
+      await page.goto('https://www.hancomdocs.com/ko/home', {
+        waitUntil: 'networkidle',
+        timeout: 30000,
+      });
+    }
 
     // 4. Upload HWP file
     console.log('[HANCOM-DOCS] Uploading HWP file...');
@@ -107,16 +123,21 @@ export async function convertHWPViaPDFHandomDocs(
       console.warn('[HANCOM-DOCS] PDF created but text extraction returned empty');
     }
 
+    // 8. Close the page/context (but not the browser if shared)
+    await page.close();
+    await context.close();
+
     return extractedText;
   } catch (error: any) {
     console.error(`[HANCOM-DOCS] Conversion failed for ${fileName}:`, error.message);
     return null;
   } finally {
-    // Clean up
-    if (browser) {
+    // Clean up browser only if we created it (not shared)
+    if (browser && shouldCloseBrowser) {
       await browser.close();
     }
 
+    // Clean up temp file
     if (tempHwpPath && fs.existsSync(tempHwpPath)) {
       try {
         fs.unlinkSync(tempHwpPath);
@@ -143,9 +164,16 @@ async function loginToHancomDocs(page: Page): Promise<void> {
   // Wait for login page
   await page.waitForURL('**/oauth2/authorize**', { timeout: LOGIN_TIMEOUT });
 
+  // Wait for login form to be fully loaded and interactive
+  const emailTextbox = page.getByRole('textbox', { name: '이메일' });
+  const passwordTextbox = page.getByRole('textbox', { name: '비밀번호' });
+
+  await emailTextbox.waitFor({ state: 'visible', timeout: LOGIN_TIMEOUT });
+  await passwordTextbox.waitFor({ state: 'visible', timeout: LOGIN_TIMEOUT });
+
   // Fill in credentials
-  await page.getByRole('textbox', { name: '이메일' }).fill(HANCOM_EMAIL);
-  await page.getByRole('textbox', { name: '비밀번호' }).fill(HANCOM_PASSWORD);
+  await emailTextbox.fill(HANCOM_EMAIL);
+  await passwordTextbox.fill(HANCOM_PASSWORD);
 
   // Click login button
   await page.getByRole('button', { name: '로그인', exact: true }).click();
@@ -244,4 +272,40 @@ async function extractTextFromPDF(pdfBuffer: Buffer): Promise<string | null> {
  */
 export function hasHancomDocsCredentials(): boolean {
   return !!(HANCOM_EMAIL && HANCOM_PASSWORD);
+}
+
+/**
+ * Create and authenticate a browser session for Hancom Docs
+ * Use this to create a shared browser for batch HWP conversions
+ *
+ * @returns Authenticated browser instance, or null if login fails
+ */
+export async function createHancomDocsBrowser(): Promise<Browser | null> {
+  try {
+    console.log('[HANCOM-DOCS] Creating shared browser session...');
+
+    const browser = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+
+    const context = await browser.newContext({
+      acceptDownloads: true,
+    });
+
+    const page = await context.newPage();
+
+    // Login to establish authenticated session
+    console.log('[HANCOM-DOCS] Authenticating with Hancom Docs...');
+    await loginToHancomDocs(page);
+
+    // Close the login page, but keep browser and context alive
+    await page.close();
+
+    console.log('[HANCOM-DOCS] ✓ Shared browser session ready');
+    return browser;
+  } catch (error: any) {
+    console.error('[HANCOM-DOCS] Failed to create shared browser:', error.message);
+    return null;
+  }
 }
