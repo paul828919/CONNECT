@@ -309,7 +309,8 @@ export function extractTRLRange(text: string): {
   // - Observational/theoretical research
   // - Laboratory proof-of-concept
   // Keywords: 기초연구, 원천기술, 이론연구
-  if (/기초연구|원천기술|이론연구|기본원리/i.test(text)) {
+  // Phase 6 additions: 설계기준 (design criteria), 기초 (basic standalone)
+  if (/기초연구|원천기술|이론연구|기본원리|설계기준|설계연구|기초(?!.*응용)/i.test(text)) {
     return { minTRL: 1, maxTRL: 3, confidence: 'inferred' };
   }
 
@@ -317,7 +318,8 @@ export function extractTRLRange(text: string): {
   // - Component validation
   // - Laboratory/relevant environment validation
   // Keywords: 응용연구, 개발연구, 시제품
-  if (/응용연구|개발연구|시제품|프로토타입|중간단계/i.test(text)) {
+  // Phase 6 additions: 응용 (applied standalone), 시험 (test/trial)
+  if (/응용연구|응용(?!.*기초)|개발연구|시제품|프로토타입|중간단계|시험개발/i.test(text)) {
     return { minTRL: 4, maxTRL: 6, confidence: 'inferred' };
   }
 

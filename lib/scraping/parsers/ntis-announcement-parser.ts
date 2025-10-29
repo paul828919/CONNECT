@@ -71,6 +71,15 @@ const FIELD_SYNONYMS = {
     '사업비',
     '지원한도',
     '과제당 지원금',
+    // Phase 6 additions based on manual NTIS attachment verification (Oct 2025)
+    '한국측연구비',      // Korean side research funding (QuantERA, Korea-Germany)
+    '예산',             // Budget (Quantum Computing Flagship)
+    '정부출연금',        // Government funding (Quantum Computing)
+    '사업기간',          // Project period (often appears with budget)
+    '과제당',           // Per project (common in multi-project announcements)
+    '과제당 연간',       // Per project annually (Korea-Germany)
+    '연구개발비',        // R&D funding
+    '지원금',           // Support funding
   ],
   deadline: [
     '마감일',
@@ -341,32 +350,96 @@ function extractDeadline(bodyText: string): Date | null {
  * - "미정" → NULL (budget to be determined)
  * - Actual amounts like "10억원" → 1,000,000,000
  */
+/**
+ * Extract budget amount with comprehensive pattern matching
+ *
+ * Phase 6 Enhancement: Based on manual NTIS attachment verification (Oct 2025)
+ * Handles real-world patterns found in NTIS announcements:
+ * - Decimal billions: "1,764.22억원" → 1,764,220,000,000 won
+ * - Million won: "300백만원" → 300,000,000 won
+ * - Thousands separator: "1,234억원" → 1,234,000,000,000 won
+ * - Per-project: "과제당 연간 300백만원" → 300,000,000 won
+ * - Combined: "총 1,764.22억원*('25년 93억원)" → 1,764,220,000,000 won (total)
+ *
+ * Test cases from Oct 2025 NTIS attachments:
+ * 1. Quantum Computing: "총 1,764.22억원" ✓
+ * 2. QuantERA: "과제당 연간 300백만원" ✓
+ * 3. Korea-Germany: "과제당 연간 (한국측) 300백만원" ✓
+ * 4. Nuclear MSR: "40백만원" ✓
+ */
 function extractBudget(bodyText: string): number | null {
   try {
     // Try all budget synonyms
     for (const synonym of FIELD_SYNONYMS.budget) {
-      // Pattern: "공고금액 : 10억원" or "공고금액 : 0억원"
-      const pattern = new RegExp(`${synonym}\\s*:\\s*(\\d+)억원`);
-      const match = bodyText.match(pattern);
+      // ========================================================================
+      // Pattern 1: Billions with decimals/commas "1,764.22억원" or "1,234억원"
+      // ========================================================================
+      const billionPattern = new RegExp(
+        `${synonym}[^\\d]*([\\d,\\.]+)\\s*억원`,
+        'i'
+      );
+      const billionMatch = bodyText.match(billionPattern);
 
-      if (match && match[1]) {
-        const billionAmount = parseInt(match[1], 10);
+      if (billionMatch && billionMatch[1]) {
+        // Remove commas and parse: "1,764.22" → 1764.22
+        const cleanedAmount = billionMatch[1].replace(/,/g, '');
+        const billionAmount = parseFloat(cleanedAmount);
 
-        // Return NULL for "0억원" (per user guidance: treat as budget TBD)
-        if (billionAmount === 0) {
-          return null;
+        // Validate reasonable range (0.01억 to 100,000억)
+        if (billionAmount > 0 && billionAmount < 100000) {
+          // Convert to won: 1,764.22억원 → 1,764,220,000,000
+          return Math.round(billionAmount * 1000000000);
         }
-
-        // Convert billion won to won: 10억원 → 1,000,000,000
-        return billionAmount * 1000000000;
       }
 
-      // Check for explicit "미정" (to be determined) with this synonym
+      // ========================================================================
+      // Pattern 2: Millions "300백만원" or "40백만원"
+      // ========================================================================
+      const millionPattern = new RegExp(
+        `${synonym}[^\\d]*([\\d,\\.]+)\\s*백만원`,
+        'i'
+      );
+      const millionMatch = bodyText.match(millionPattern);
+
+      if (millionMatch && millionMatch[1]) {
+        // Remove commas and parse: "300" → 300
+        const cleanedAmount = millionMatch[1].replace(/,/g, '');
+        const millionAmount = parseFloat(cleanedAmount);
+
+        // Validate reasonable range (1백만 to 100,000백만)
+        if (millionAmount > 0 && millionAmount < 100000) {
+          // Convert to won: 300백만원 → 300,000,000
+          return Math.round(millionAmount * 1000000);
+        }
+      }
+
+      // ========================================================================
+      // Pattern 3: Check for explicit "미정" (to be determined)
+      // ========================================================================
       const tbdPattern = new RegExp(`${synonym}\\s*:\\s*(미정|추후|확정\\s*전)`, 'i');
       if (tbdPattern.test(bodyText)) {
         return null;
       }
     }
+
+    // ========================================================================
+    // Fallback: Search for standalone budget amounts without synonym prefix
+    // Useful for table formats or unusual layouts
+    // ========================================================================
+
+    // Try "총 [amount]억원" pattern (total budget)
+    const totalBillionPattern = /총\s*([\\d,\\.]+)\s*억원/i;
+    const totalBillionMatch = bodyText.match(totalBillionPattern);
+
+    if (totalBillionMatch && totalBillionMatch[1]) {
+      const cleanedAmount = totalBillionMatch[1].replace(/,/g, '');
+      const billionAmount = parseFloat(cleanedAmount);
+
+      if (billionAmount > 0 && billionAmount < 100000) {
+        return Math.round(billionAmount * 1000000000);
+      }
+    }
+
   } catch (error) {
     console.warn('[NTIS-ANNOUNCEMENT] Failed to extract budget:', error);
   }
