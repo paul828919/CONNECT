@@ -94,13 +94,31 @@ export async function convertHWPViaPDFHandomDocs(
     if (!sharedBrowser) {
       console.log('[HANCOM-DOCS] Logging in to Hancom Docs...');
       await loginToHancomDocs(page);
+      // After login, we're already on /ko/home - no need to navigate again
     } else {
-      // With shared browser, we're already logged in - just navigate to homepage
-      console.log('[HANCOM-DOCS] Navigating to Hancom Docs homepage...');
-      await page.goto('https://www.hancomdocs.com/ko/home', {
-        waitUntil: 'networkidle',
-        timeout: 30000,
-      });
+      // With shared browser, we need to ensure we're on the homepage
+      console.log('[HANCOM-DOCS] Using shared browser - ensuring homepage is loaded...');
+
+      const currentUrl = page.url();
+      console.log(`[HANCOM-DOCS] Current URL: ${currentUrl}`);
+
+      // Always navigate to ensure clean state (new pages start at about:blank)
+      if (!currentUrl.includes('/ko/home')) {
+        console.log('[HANCOM-DOCS] Navigating to homepage...');
+        await page.goto('https://www.hancomdocs.com/ko/home', {
+          waitUntil: 'networkidle', // Wait for network to be idle
+          timeout: 30000,
+        });
+
+        // Additional wait for React SPA to hydrate and render upload button
+        console.log('[HANCOM-DOCS] Waiting for page to fully render...');
+        await page.waitForLoadState('domcontentloaded');
+        await page.waitForTimeout(3000); // Give React time to render
+
+        console.log('[HANCOM-DOCS] Page loaded, ready for upload');
+      } else {
+        console.log('[HANCOM-DOCS] Already on homepage');
+      }
     }
 
     // 4. Upload HWP file
@@ -198,14 +216,36 @@ async function loginToHancomDocs(page: Page): Promise<void> {
  * Upload HWP file to Hancom Docs
  */
 async function uploadHWPFile(page: Page, hwpPath: string): Promise<void> {
-  // Wait for upload button to be visible and clickable
-  const uploadButton = page.getByRole('button', { name: '문서 업로드' });
-  await uploadButton.waitFor({ state: 'visible', timeout: 30000 });
+  // Try multiple selectors for the upload button
+  // The button text is "문서 업로드" but it might not be properly labeled for accessibility
 
-  // Click upload button
-  await uploadButton.click();
+  try {
+    // Strategy 1: Try role-based selector first (most reliable)
+    console.log('[HANCOM-DOCS] Looking for upload button (strategy 1: role-based)...');
+    const uploadButton = page.getByRole('button', { name: /문서.*업로드/i });
+    await uploadButton.waitFor({ state: 'visible', timeout: 10000 });
+
+    console.log('[HANCOM-DOCS] Upload button found, clicking...');
+    await uploadButton.click();
+  } catch (error1) {
+    try {
+      // Strategy 2: Try text-based selector
+      console.log('[HANCOM-DOCS] Strategy 1 failed, trying strategy 2 (text-based)...');
+      const uploadButton = page.getByText('문서 업로드').first();
+      await uploadButton.waitFor({ state: 'visible', timeout: 10000 });
+
+      console.log('[HANCOM-DOCS] Upload button found, clicking...');
+      await uploadButton.click();
+    } catch (error2) {
+      // Strategy 3: Try CSS selector as fallback
+      console.log('[HANCOM-DOCS] Strategy 2 failed, trying strategy 3 (CSS selector)...');
+      await page.waitForSelector('text=문서 업로드', { state: 'visible', timeout: 10000 });
+      await page.click('text=문서 업로드');
+    }
+  }
 
   // Wait for file chooser and upload file
+  console.log('[HANCOM-DOCS] Waiting for file chooser...');
   const fileChooserPromise = page.waitForEvent('filechooser');
   const fileChooser = await fileChooserPromise;
   await fileChooser.setFiles(hwpPath);
@@ -323,8 +363,9 @@ export async function createHancomDocsBrowser(): Promise<Browser | null> {
     console.log('[HANCOM-DOCS] Authenticating with Hancom Docs...');
     await loginToHancomDocs(page);
 
-    // Close the login page, but keep browser and context alive
-    await page.close();
+    // Keep the page alive - it's already on /ko/home after login
+    // This page will be reused for the first conversion
+    // Don't close it, to preserve the homepage state with upload button visible
 
     console.log('[HANCOM-DOCS] ✓ Shared browser session ready');
     return browser;
