@@ -70,12 +70,22 @@ export async function convertHWPViaPDFHandomDocs(
       console.log('[HANCOM-DOCS] Launching browser...');
       browser = await chromium.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-blink-features=AutomationControlled', // Hide automation flag
+          '--disable-dev-shm-usage', // Avoid shared memory issues
+        ],
       });
     }
 
     const context = await browser.newContext({
       acceptDownloads: true,
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      viewport: { width: 1920, height: 1080 },
+      locale: 'ko-KR',
+      timezoneId: 'Asia/Seoul',
     });
 
     const page = await context.newPage();
@@ -286,11 +296,21 @@ export async function createHancomDocsBrowser(): Promise<Browser | null> {
 
     const browser = await chromium.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-blink-features=AutomationControlled', // Hide automation flag
+        '--disable-dev-shm-usage', // Avoid shared memory issues
+      ],
     });
 
     const context = await browser.newContext({
       acceptDownloads: true,
+      userAgent:
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      viewport: { width: 1920, height: 1080 },
+      locale: 'ko-KR',
+      timezoneId: 'Asia/Seoul',
     });
 
     const page = await context.newPage();
