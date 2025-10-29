@@ -198,8 +198,12 @@ async function loginToHancomDocs(page: Page): Promise<void> {
  * Upload HWP file to Hancom Docs
  */
 async function uploadHWPFile(page: Page, hwpPath: string): Promise<void> {
+  // Wait for upload button to be visible and clickable
+  const uploadButton = page.getByRole('button', { name: '문서 업로드' });
+  await uploadButton.waitFor({ state: 'visible', timeout: 30000 });
+
   // Click upload button
-  await page.getByRole('button', { name: '문서 업로드' }).click();
+  await uploadButton.click();
 
   // Wait for file chooser and upload file
   const fileChooserPromise = page.waitForEvent('filechooser');
