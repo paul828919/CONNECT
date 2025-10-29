@@ -138,7 +138,8 @@ export default function MatchesPage() {
   };
 
   const formatBudget = (amount: string | null) => {
-    if (!amount) return '미정';
+    // Enhanced NULL value display with Korean message
+    if (!amount) return '💰 미정 (공고문 확인 필요)';
     const num = Number(amount);
     if (num >= 100000000) return `${(num / 100000000).toFixed(0)}억원`;
     if (num >= 10000) return `${(num / 10000).toFixed(0)}만원`;
@@ -146,7 +147,8 @@ export default function MatchesPage() {
   };
 
   const formatDeadline = (deadline: string | null) => {
-    if (!deadline) return '미정';
+    // Enhanced NULL value display with Korean message
+    if (!deadline) return '📅 추후 공고 (공지 예정)';
     const date = new Date(deadline);
     const now = new Date();
     const daysUntil = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -157,8 +159,9 @@ export default function MatchesPage() {
       day: 'numeric',
     });
 
-    if (daysUntil < 0) return `${formatted} (마감)`;
-    if (daysUntil === 0) return `${formatted} (오늘 마감)`;
+    // Enhanced past deadline display with Korean message
+    if (daysUntil < 0) return `⏰ ${formatted} (마감 - 내년 준비용)`;
+    if (daysUntil === 0) return `${formatted} (오늘 마감 🔥)`;
     if (daysUntil <= 7) return `${formatted} (${daysUntil}일 남음 ⚠️)`;
     return `${formatted} (${daysUntil}일 남음)`;
   };
