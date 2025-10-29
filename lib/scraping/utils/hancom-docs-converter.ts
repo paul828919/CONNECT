@@ -137,36 +137,41 @@ export async function convertHWPViaPDFHandomDocs(
     }
 
     // 4. Upload HWP file
-    console.log('[HANCOM-DOCS] Uploading HWP file...');
     await uploadHWPFile(page, tempHwpPath);
 
-    // 5. Wait for editor to load
-    console.log('[HANCOM-DOCS] Waiting for editor to load...');
-    await waitForEditorReady(page);
+    // 5. Click toast notification to open editor in NEW WINDOW
+    const editorPage = await clickToastFilename(page, fileName);
 
-    // 6. Download as PDF
+    // 6. Wait for editor to load in the new window
+    await waitForEditorReady(editorPage);
+
+    // 7. Download as PDF from the editor window
     console.log('[HANCOM-DOCS] Downloading as PDF...');
-    const pdfBuffer = await downloadAsPDF(page);
+    const pdfBuffer = await downloadAsPDF(editorPage);
 
     if (!pdfBuffer) {
       console.error('[HANCOM-DOCS] PDF download failed');
+      await editorPage.close();
       return null;
     }
 
-    console.log(`[HANCOM-DOCS] PDF downloaded: ${pdfBuffer.length} bytes`);
+    console.log(`[HANCOM-DOCS] ✓ PDF downloaded: ${pdfBuffer.length} bytes`);
 
-    // 7. Extract text from PDF
+    // 8. Extract text from PDF
     const extractedText = await extractTextFromPDF(pdfBuffer);
 
     if (extractedText) {
       console.log(
-        `[HANCOM-DOCS] Successfully converted HWP → PDF → text: ${extractedText.length} characters`
+        `[HANCOM-DOCS] ✓ Successfully converted HWP → PDF → text: ${extractedText.length} characters`
       );
     } else {
       console.warn('[HANCOM-DOCS] PDF created but text extraction returned empty');
     }
 
-    // 8. Close the page (but not context/browser if shared)
+    // 9. Close the editor page
+    await editorPage.close();
+
+    // 10. Close the homepage page (but not context/browser if shared)
     await page.close();
 
     // Only close context if we created it (not using shared browser)
@@ -234,86 +239,321 @@ async function loginToHancomDocs(page: Page): Promise<void> {
 /**
  * Upload HWP file to Hancom Docs
  *
- * Based on HTML inspection (2025-10-30):
- * - Upload button is Material-UI component with text "문서 업로드"
- * - Hidden file input: <input id="contained-button-file" type="file" hidden>
- * - Clicking button triggers file chooser via the hidden input
+ * Based on manual workflow observation (2025-10-30):
+ * 1. Upload file via hidden input: <input id="contained-button-file" type="file" hidden>
+ * 2. Toast notification appears: "1개 항목 업로드 완료됨" with filename link
+ * 3. Click filename in toast notification to open editor in NEW WINDOW
  */
 async function uploadHWPFile(page: Page, hwpPath: string): Promise<void> {
+  console.log('[HANCOM-DOCS] Uploading HWP file...');
+
+  // Upload file via hidden input (direct manipulation is most reliable)
+  const fileInput = page.locator('#contained-button-file');
+  await fileInput.waitFor({ state: 'attached', timeout: 10000 });
+  await fileInput.setInputFiles(hwpPath);
+
+  console.log('[HANCOM-DOCS] ✓ File uploaded, waiting for toast notification...');
+}
+
+/**
+ * Click filename in toast notification to open editor
+ *
+ * After upload, a toast notification appears in bottom-right corner with:
+ * - Header: "1개 항목 업로드 완료됨" (1 item upload completed)
+ * - Clickable filename link (may be truncated if too long)
+ * - Checkmark icon indicating success
+ *
+ * Clicking the filename opens editor in a NEW WINDOW/TAB
+ */
+async function clickToastFilename(page: Page, fileName: string): Promise<Page> {
+  console.log('[HANCOM-DOCS] Waiting for upload toast notification...');
+
   try {
-    // Strategy 1: Direct file input manipulation (most reliable)
-    // This bypasses the button click and directly sets files on the hidden input
-    console.log('[HANCOM-DOCS] Looking for file input (strategy 1: direct input)...');
-    const fileInput = page.locator('#contained-button-file');
-    await fileInput.waitFor({ state: 'attached', timeout: 10000 });
+    // First, wait for the upload completion toast to appear
+    // The toast has header text "항목 업로드 완료됨" (item upload completed)
+    console.log('[HANCOM-DOCS] Looking for upload completion message...');
+    await page.waitForSelector('text=/.*업로드.*완료.*/', {
+      state: 'visible',
+      timeout: 15000
+    });
 
-    console.log('[HANCOM-DOCS] File input found, setting files...');
-    await fileInput.setInputFiles(hwpPath);
-    console.log('[HANCOM-DOCS] HWP file uploaded successfully');
-    return;
-  } catch (error1) {
-    console.log('[HANCOM-DOCS] Strategy 1 failed, trying strategy 2 (button click)...');
-  }
+    console.log('[HANCOM-DOCS] ✓ Upload completion toast detected');
 
-  try {
-    // Strategy 2: Click the Material-UI button using text content
-    console.log('[HANCOM-DOCS] Looking for upload button...');
+    // Now look for the clickable filename link
+    // The toast may truncate long filenames, so try multiple strategies
+    const fileNameShort = fileName.substring(0, 30);
+    const fileNameVeryShort = fileName.substring(0, 15);
 
-    // Wait for button with "문서 업로드" text to be visible
-    const uploadButton = page.locator('button:has-text("문서 업로드")').first();
-    await uploadButton.waitFor({ state: 'visible', timeout: 10000 });
+    console.log(`[HANCOM-DOCS] Looking for filename link...`);
 
-    console.log('[HANCOM-DOCS] Upload button found, clicking...');
+    // Try to find the filename link using multiple selectors
+    let toastLink;
 
-    // Set up file chooser listener BEFORE clicking
-    const fileChooserPromise = page.waitForEvent('filechooser');
-    await uploadButton.click();
+    // Strategy 1: Full filename match
+    try {
+      toastLink = page.locator(`text="${fileName}"`).first();
+      await toastLink.waitFor({ state: 'visible', timeout: 3000 });
+      console.log('[HANCOM-DOCS] Found filename (exact match)');
+    } catch {
+      // Strategy 2: Partial filename match using getByText with substring
+      try {
+        toastLink = page.getByText(fileNameShort, { exact: false }).first();
+        await toastLink.waitFor({ state: 'visible', timeout: 3000 });
+        console.log('[HANCOM-DOCS] Found filename (30 char partial match)');
+      } catch {
+        // Strategy 3: Very short filename match
+        try {
+          toastLink = page.getByText(fileNameVeryShort, { exact: false }).first();
+          await toastLink.waitFor({ state: 'visible', timeout: 3000 });
+          console.log('[HANCOM-DOCS] Found filename (15 char partial match)');
+        } catch {
+          // Strategy 4: Look for any clickable link in the toast notification area
+          console.log('[HANCOM-DOCS] Trying generic toast link selector...');
+          toastLink = page.locator('[class*="toast"] a, [class*="notification"] a, [class*="snackbar"] a').first();
+          await toastLink.waitFor({ state: 'visible', timeout: 3000 });
+          console.log('[HANCOM-DOCS] Found filename (generic toast link)');
+        }
+      }
+    }
 
-    // Wait for file chooser and upload file
-    console.log('[HANCOM-DOCS] Waiting for file chooser...');
-    const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles(hwpPath);
+    console.log('[HANCOM-DOCS] Clicking filename to open editor...');
 
-    console.log('[HANCOM-DOCS] HWP file uploaded successfully');
-  } catch (error2: any) {
-    throw new Error(`Failed to upload HWP file: ${error2.message}`);
+    // Set up listener for new page BEFORE clicking
+    const newPagePromise = page.context().waitForEvent('page');
+    await toastLink.click();
+
+    // Wait for new page to open
+    const editorPage = await newPagePromise;
+    await editorPage.waitForLoadState('domcontentloaded');
+
+    console.log('[HANCOM-DOCS] ✓ Editor opened in new window');
+    return editorPage;
+  } catch (error: any) {
+    throw new Error(`Failed to click toast notification: ${error.message}`);
   }
 }
 
 /**
- * Wait for HWP editor to finish loading
+ * Wait for HWP editor to finish loading in the new window
  */
-async function waitForEditorReady(page: Page): Promise<void> {
+async function waitForEditorReady(editorPage: Page): Promise<void> {
+  console.log('[HANCOM-DOCS] Waiting for editor to load...');
+
   // Wait for editor URL pattern
-  await page.waitForURL('**/webhwp/?mode=HWP_EDITOR**', { timeout: EDITOR_LOAD_TIMEOUT });
+  await editorPage.waitForURL('**/webhwp/?mode=HWP_EDITOR**', { timeout: EDITOR_LOAD_TIMEOUT });
 
   // Wait for the file menu to be available (indicates editor is ready)
-  await page.waitForSelector('text=파일', { state: 'visible', timeout: EDITOR_LOAD_TIMEOUT });
+  await editorPage.waitForSelector('text=파일', { state: 'visible', timeout: EDITOR_LOAD_TIMEOUT });
 
-  console.log('[HANCOM-DOCS] Editor loaded successfully');
+  // Dismiss any modal dialogs that may be blocking the interface
+  try {
+    console.log('[HANCOM-DOCS] Checking for modal dialogs to dismiss...');
+
+    // Check if modal dialog exists
+    const modal = editorPage.locator('#modal_dialog, .modal_dialog').first();
+    const isModalVisible = await modal.isVisible().catch(() => false);
+
+    if (isModalVisible) {
+      console.log('[HANCOM-DOCS] Modal dialog detected, attempting to dismiss...');
+
+      // Try multiple strategies to close the modal
+      // Strategy 1: Look for close button with common selectors
+      const modalCloseSelectors = [
+        '#modal_dialog button[class*="close"]',
+        '#modal_dialog [aria-label*="close" i]',
+        '#modal_dialog button:has-text("닫기")',
+        '#modal_dialog button:has-text("확인")',
+        '#modal_dialog button:has-text("X")',
+        '.modal_dialog button[class*="close"]',
+        '[class*="modal"] button[class*="close"]',
+      ];
+
+      let modalDismissed = false;
+      for (const selector of modalCloseSelectors) {
+        try {
+          const closeButton = editorPage.locator(selector).first();
+          await closeButton.waitFor({ state: 'visible', timeout: 2000 });
+          await closeButton.click();
+          console.log(`[HANCOM-DOCS] ✓ Dismissed modal using selector: ${selector}`);
+          await editorPage.waitForTimeout(1000); // Wait for modal to close
+          modalDismissed = true;
+          break;
+        } catch {
+          // Try next selector
+          continue;
+        }
+      }
+
+      // Strategy 2: If no close button found, try pressing Escape
+      if (!modalDismissed) {
+        console.log('[HANCOM-DOCS] No close button found, trying Escape key...');
+        await editorPage.keyboard.press('Escape');
+        await editorPage.waitForTimeout(1000);
+      }
+
+      // Verify modal is dismissed
+      const isStillVisible = await modal.isVisible().catch(() => false);
+      if (isStillVisible) {
+        console.log('[HANCOM-DOCS] ⚠️ Modal still visible after normal dismissal, forcing hide via DOM...');
+
+        // Force hide the modal by setting display: none directly
+        await editorPage.evaluate(() => {
+          const modalElements = document.querySelectorAll('#modal_dialog, .modal_dialog');
+          modalElements.forEach((el) => {
+            if (el instanceof HTMLElement) {
+              el.style.display = 'none';
+              el.style.visibility = 'hidden';
+              el.style.opacity = '0';
+              el.style.pointerEvents = 'none';
+            }
+          });
+        });
+
+        console.log('[HANCOM-DOCS] ✓ Modal forcibly hidden via DOM manipulation');
+      } else {
+        console.log('[HANCOM-DOCS] ✓ Modal successfully dismissed');
+      }
+    }
+  } catch (error: any) {
+    console.log('[HANCOM-DOCS] No modal dialog found or already dismissed');
+  }
+
+  // Wait for any loading indicators to complete
+  try {
+    console.log('[HANCOM-DOCS] Waiting for editor tools to finish loading...');
+
+    // Wait for the tool_loading_progress indicator to disappear
+    const loadingProgress = editorPage.locator('.tool_loading_progress, #tool_box .tool_loading_progress');
+
+    // Check if loading indicator exists
+    const isLoadingVisible = await loadingProgress.isVisible().catch(() => false);
+
+    if (isLoadingVisible) {
+      console.log('[HANCOM-DOCS] Loading indicator detected, attempting to wait for it to disappear...');
+
+      // Try to wait for loading to complete naturally
+      try {
+        await loadingProgress.waitFor({ state: 'hidden', timeout: 5000 });
+        console.log('[HANCOM-DOCS] ✓ Loading completed naturally');
+      } catch {
+        // Loading didn't complete in time, force hide it
+        console.log('[HANCOM-DOCS] Loading indicator stuck, forcing hide via DOM...');
+
+        await editorPage.evaluate(() => {
+          const loadingElements = document.querySelectorAll('.tool_loading_progress, #tool_box .tool_loading_progress');
+          loadingElements.forEach((el) => {
+            if (el instanceof HTMLElement) {
+              el.style.display = 'none';
+              el.style.visibility = 'hidden';
+              el.style.opacity = '0';
+              el.style.pointerEvents = 'none';
+            }
+          });
+
+          // Also hide the entire tool_box container if it's blocking
+          const toolBox = document.getElementById('tool_box');
+          if (toolBox && toolBox.getAttribute('aria-hidden') === 'true') {
+            toolBox.style.display = 'none';
+            toolBox.style.visibility = 'hidden';
+            toolBox.style.opacity = '0';
+            toolBox.style.pointerEvents = 'none';
+          }
+        });
+
+        console.log('[HANCOM-DOCS] ✓ Loading indicator forcibly hidden');
+      }
+    } else {
+      console.log('[HANCOM-DOCS] No loading indicator found, editor ready');
+    }
+
+    // Give editor a moment to stabilize after loading
+    await editorPage.waitForTimeout(1000);
+  } catch (error: any) {
+    console.log('[HANCOM-DOCS] Warning: Could not handle loading indicator:', error.message);
+  }
+
+  console.log('[HANCOM-DOCS] ✓ Editor loaded and ready');
 }
 
 /**
  * Download opened HWP file as PDF
+ *
+ * Based on manual workflow (screenshot 4):
+ * 1. Click "파일" tab at top of editor
+ * 2. Dropdown menu appears with various options
+ * 3. Click "PDF로 다운로드" option in the dropdown
  */
 async function downloadAsPDF(page: Page): Promise<Buffer | null> {
   try {
-    // Click File menu
-    await page.locator('div').filter({ hasText: /^파일$/ }).click();
+    console.log('[HANCOM-DOCS] Looking for File (파일) button in upper-left corner...');
 
-    // Wait for menu to open
-    await page.waitForSelector('text=PDF로 다운로드', {
-      state: 'visible',
-      timeout: 5000,
-    });
+    // The "파일" button is in the upper-left corner of the editor
+    // Clicking it displays a dropdown menu with various file operations
+    // We need to click it and wait for the dropdown to appear
+
+    // Try multiple strategies to find and click the File button
+    try {
+      // Strategy 1: Look for button with text "파일"
+      const fileButton = page.locator('button:has-text("파일")').first();
+      await fileButton.waitFor({ state: 'visible', timeout: 5000 });
+      await fileButton.click();
+      console.log('[HANCOM-DOCS] File button clicked (strategy 1: button selector)');
+    } catch {
+      try {
+        // Strategy 2: Look for any clickable element with text "파일" in upper area
+        const fileButton = page.locator('[role="button"]:has-text("파일")').first();
+        await fileButton.waitFor({ state: 'visible', timeout: 5000 });
+        await fileButton.click();
+        console.log('[HANCOM-DOCS] File button clicked (strategy 2: role=button)');
+      } catch {
+        // Strategy 3: Fallback to generic text selector
+        const fileButton = page.getByText('파일', { exact: true }).first();
+        await fileButton.waitFor({ state: 'visible', timeout: 5000 });
+        await fileButton.click();
+        console.log('[HANCOM-DOCS] File button clicked (strategy 3: text selector)');
+      }
+    }
+
+    console.log('[HANCOM-DOCS] Waiting for dropdown menu to appear...');
+
+    // Wait for the dropdown menu container to appear
+    // Common selectors for dropdown menus
+    try {
+      await page.locator('[role="menu"], [class*="dropdown"], [class*="menu"][class*="open"]').first().waitFor({
+        state: 'visible',
+        timeout: 5000
+      });
+      console.log('[HANCOM-DOCS] ✓ Dropdown menu appeared');
+    } catch {
+      console.log('[HANCOM-DOCS] Warning: Could not detect dropdown container, proceeding anyway...');
+    }
+
+    // Wait for the "PDF로 다운로드" button to become visible in the dropdown
+    console.log('[HANCOM-DOCS] Looking for "PDF로 다운로드" button in dropdown...');
+
+    // Try to find the button with multiple selectors
+    let pdfDownloadOption;
+    try {
+      pdfDownloadOption = page.locator('button:has-text("PDF로 다운로드")').first();
+      await pdfDownloadOption.waitFor({ state: 'visible', timeout: 10000 });
+      console.log('[HANCOM-DOCS] Found PDF download button (button selector)');
+    } catch {
+      // Fallback to generic text selector
+      pdfDownloadOption = page.getByText('PDF로 다운로드', { exact: false }).first();
+      await pdfDownloadOption.waitFor({ state: 'visible', timeout: 10000 });
+      console.log('[HANCOM-DOCS] Found PDF download button (text selector)');
+    }
+
+    console.log('[HANCOM-DOCS] PDF download option now visible, setting up download listener...');
 
     // Set up download promise BEFORE clicking
     const downloadPromise = page.waitForEvent('download', {
       timeout: PDF_CONVERSION_TIMEOUT,
     });
 
+    console.log('[HANCOM-DOCS] Clicking PDF download option...');
     // Click "Download as PDF"
-    await page.getByRole('menuitem', { name: 'PDF로 다운로드' }).click();
+    await pdfDownloadOption.click();
 
     // Wait for download to complete
     const download = await downloadPromise;
