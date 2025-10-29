@@ -74,11 +74,29 @@ export function generateMatches(
       continue;
     }
 
-    // TODO (Tier 1A): Add eligibility filtering when funding_programs schema includes eligibility fields
-    // When program eligibility requirements are added to the schema, implement checks here:
+    // ============================================================================
+    // Eligibility-First Matching: Filter before scoring to maintain user trust
+    // ============================================================================
+
+    // Business structure requirement check (CRITICAL - prevents fatal mismatches)
+    // If program specifies allowed business structures, organization must match
+    if (program.allowedBusinessStructures && program.allowedBusinessStructures.length > 0) {
+      const orgBusinessStructure = organization.businessStructure;
+
+      // Skip if organization's business structure is not in allowed list
+      if (orgBusinessStructure && !program.allowedBusinessStructures.includes(orgBusinessStructure)) {
+        continue;
+      }
+
+      // Skip if organization has no business structure specified (NULL)
+      // Conservative approach: Require explicit match when program has restrictions
+      if (!orgBusinessStructure) {
+        continue;
+      }
+    }
+
+    // TODO (Future): Add revenue range requirements filtering
     // - Revenue range requirements (e.g., program.minRevenue, program.maxRevenue)
-    // - Business structure requirements (e.g., program.allowedBusinessStructures)
-    // This ensures "Eligibility-First Matching" - filter before scoring to maintain user trust
 
     const matchScore = calculateMatchScore(organization, program);
     matches.push(matchScore);

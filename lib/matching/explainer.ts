@@ -49,6 +49,61 @@ export function generateExplanation(
     }
   }
 
+  // ============================================================================
+  // Add warnings for NULL values and eligibility restrictions
+  // ============================================================================
+
+  // Warning 1: NULL budget amount
+  if (program.budgetAmount === null) {
+    warnings.push('💰 지원규모 미정 - 예산이 아직 확정되지 않았습니다. 공고문에서 확인하세요.');
+  }
+
+  // Warning 2: NULL deadline
+  if (program.deadline === null) {
+    warnings.push('📅 마감일 추후 공고 - 신청 마감일이 아직 공개되지 않았습니다.');
+  }
+
+  // Warning 3: Past deadline (for historical matches)
+  if (program.deadline && new Date(program.deadline) < new Date()) {
+    const deadlineDate = new Date(program.deadline).toLocaleDateString('ko-KR');
+    warnings.push(
+      `⏰ 마감 완료 (${deadlineDate}) - 내년도 유사 프로그램 준비용 참고자료입니다.`
+    );
+  }
+
+  // Warning 4: Business structure restrictions
+  if (program.allowedBusinessStructures && program.allowedBusinessStructures.length > 0) {
+    const allowedStructuresKorean = program.allowedBusinessStructures
+      .map((s) => (s === 'CORPORATION' ? '법인사업자' : '개인사업자'))
+      .join(', ');
+
+    // Check if org's business structure matches
+    if (org.businessStructure) {
+      if (!program.allowedBusinessStructures.includes(org.businessStructure)) {
+        warnings.push(
+          `⚠️ 사업자 유형 불일치 - 본 프로그램은 ${allowedStructuresKorean}만 지원 가능합니다. 귀사는 ${org.businessStructure === 'CORPORATION' ? '법인사업자' : '개인사업자'}입니다.`
+        );
+      } else {
+        // Match - add as positive reason
+        reasons.push(
+          `✓ 사업자 유형 적격 - 본 프로그램은 ${allowedStructuresKorean}를 대상으로 하며, 귀사는 해당됩니다.`
+        );
+      }
+    } else {
+      // NULL business structure - warn user to complete profile
+      warnings.push(
+        `⚠️ 사업자 유형 미기재 - 본 프로그램은 ${allowedStructuresKorean}만 지원 가능합니다. 프로필에서 사업자 유형을 입력해주세요.`
+      );
+    }
+  }
+
+  // Warning 5: Inferred TRL (low confidence)
+  if (program.trlInferred && (program.minTrl !== null || program.maxTrl !== null)) {
+    warnings.push(
+      `ℹ️ 기술성숙도(TRL) 추정값 - 공고문에 명시되지 않아 키워드 기반으로 추정한 값입니다. 정확한 TRL 요구사항은 공고문을 확인하세요.`
+    );
+  }
+
   // Add score-based recommendations
   if (match.score >= 80) {
     recommendations.push('이 프로그램은 귀하의 조직과 매우 적합합니다. 빠른 지원을 권장드립니다.');
