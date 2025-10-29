@@ -27,9 +27,10 @@ async function testEnhancedNTISParser() {
   try {
     // Test with multiple NTIS URLs to cover different announcement formats
     const testUrls = [
-      // Recent valid NTIS URLs from database
+      // URL with 4 attachments (verified via scan): 2 PDFs, 2 ZIPs
+      'https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1198102&flag=rndList',
+      // URL without attachments (to test NULL handling)
       'https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1199437&flag=rndList',
-      'https://www.ntis.go.kr/rndgate/eg/un/ra/view.do?roRndUid=1203233&flag=rndList',
     ];
 
     let totalTests = 0;
@@ -89,10 +90,21 @@ async function testEnhancedNTISParser() {
         console.log('TRL Range:         Not detected');
       }
 
-      // 4. Keywords (verify agency defaults are included)
+      // 4. Keywords (verify agency defaults + attachment keywords are included)
       console.log(`keywords:          ${result.keywords.length} keywords extracted`);
       if (result.keywords.length > 0) {
         console.log(`                   [${result.keywords.slice(0, 5).join(', ')}...]`);
+      }
+
+      // 5. Attachment text extraction (NEW - Phase 2 Enhancement)
+      console.log('\n📎 Attachment Processing:');
+      console.log('─'.repeat(80));
+      if (result.attachmentUrls && result.attachmentUrls.length > 0) {
+        console.log(`✅ ${result.attachmentUrls.length} attachment(s) found`);
+        console.log('   Expected: Text extraction from PDF/HWPX/HWP files');
+        console.log('   Note: Check logs above for [ATTACHMENT-PARSER] entries');
+      } else {
+        console.log('⚪ No attachments found for this announcement');
       }
 
       console.log('\n📈 Validation:');
