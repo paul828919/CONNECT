@@ -79,14 +79,29 @@ export async function convertHWPViaPDFHandomDocs(
       });
     }
 
-    const context = await browser.newContext({
-      acceptDownloads: true,
-      userAgent:
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-      viewport: { width: 1920, height: 1080 },
-      locale: 'ko-KR',
-      timezoneId: 'Asia/Seoul',
-    });
+    // Get or create context
+    // CRITICAL: When using shared browser, reuse the existing authenticated context
+    // Creating a new context means NO cookies/session from login!
+    let context;
+    if (sharedBrowser) {
+      const existingContexts = browser.contexts();
+      if (existingContexts.length > 0) {
+        console.log('[HANCOM-DOCS] Reusing existing authenticated context');
+        context = existingContexts[0]; // Reuse the context from login
+      } else {
+        throw new Error('Shared browser has no contexts - this should not happen');
+      }
+    } else {
+      // Create new context only when using new browser
+      context = await browser.newContext({
+        acceptDownloads: true,
+        userAgent:
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        viewport: { width: 1920, height: 1080 },
+        locale: 'ko-KR',
+        timezoneId: 'Asia/Seoul',
+      });
+    }
 
     const page = await context.newPage();
 
@@ -151,9 +166,13 @@ export async function convertHWPViaPDFHandomDocs(
       console.warn('[HANCOM-DOCS] PDF created but text extraction returned empty');
     }
 
-    // 8. Close the page/context (but not the browser if shared)
+    // 8. Close the page (but not context/browser if shared)
     await page.close();
-    await context.close();
+
+    // Only close context if we created it (not using shared browser)
+    if (!sharedBrowser) {
+      await context.close();
+    }
 
     return extractedText;
   } catch (error: any) {
@@ -214,43 +233,51 @@ async function loginToHancomDocs(page: Page): Promise<void> {
 
 /**
  * Upload HWP file to Hancom Docs
+ *
+ * Based on HTML inspection (2025-10-30):
+ * - Upload button is Material-UI component with text "문서 업로드"
+ * - Hidden file input: <input id="contained-button-file" type="file" hidden>
+ * - Clicking button triggers file chooser via the hidden input
  */
 async function uploadHWPFile(page: Page, hwpPath: string): Promise<void> {
-  // Try multiple selectors for the upload button
-  // The button text is "문서 업로드" but it might not be properly labeled for accessibility
+  try {
+    // Strategy 1: Direct file input manipulation (most reliable)
+    // This bypasses the button click and directly sets files on the hidden input
+    console.log('[HANCOM-DOCS] Looking for file input (strategy 1: direct input)...');
+    const fileInput = page.locator('#contained-button-file');
+    await fileInput.waitFor({ state: 'attached', timeout: 10000 });
+
+    console.log('[HANCOM-DOCS] File input found, setting files...');
+    await fileInput.setInputFiles(hwpPath);
+    console.log('[HANCOM-DOCS] HWP file uploaded successfully');
+    return;
+  } catch (error1) {
+    console.log('[HANCOM-DOCS] Strategy 1 failed, trying strategy 2 (button click)...');
+  }
 
   try {
-    // Strategy 1: Try role-based selector first (most reliable)
-    console.log('[HANCOM-DOCS] Looking for upload button (strategy 1: role-based)...');
-    const uploadButton = page.getByRole('button', { name: /문서.*업로드/i });
+    // Strategy 2: Click the Material-UI button using text content
+    console.log('[HANCOM-DOCS] Looking for upload button...');
+
+    // Wait for button with "문서 업로드" text to be visible
+    const uploadButton = page.locator('button:has-text("문서 업로드")').first();
     await uploadButton.waitFor({ state: 'visible', timeout: 10000 });
 
     console.log('[HANCOM-DOCS] Upload button found, clicking...');
+
+    // Set up file chooser listener BEFORE clicking
+    const fileChooserPromise = page.waitForEvent('filechooser');
     await uploadButton.click();
-  } catch (error1) {
-    try {
-      // Strategy 2: Try text-based selector
-      console.log('[HANCOM-DOCS] Strategy 1 failed, trying strategy 2 (text-based)...');
-      const uploadButton = page.getByText('문서 업로드').first();
-      await uploadButton.waitFor({ state: 'visible', timeout: 10000 });
 
-      console.log('[HANCOM-DOCS] Upload button found, clicking...');
-      await uploadButton.click();
-    } catch (error2) {
-      // Strategy 3: Try CSS selector as fallback
-      console.log('[HANCOM-DOCS] Strategy 2 failed, trying strategy 3 (CSS selector)...');
-      await page.waitForSelector('text=문서 업로드', { state: 'visible', timeout: 10000 });
-      await page.click('text=문서 업로드');
-    }
+    // Wait for file chooser and upload file
+    console.log('[HANCOM-DOCS] Waiting for file chooser...');
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(hwpPath);
+
+    console.log('[HANCOM-DOCS] HWP file uploaded successfully');
+  } catch (error2: any) {
+    throw new Error(`Failed to upload HWP file: ${error2.message}`);
   }
-
-  // Wait for file chooser and upload file
-  console.log('[HANCOM-DOCS] Waiting for file chooser...');
-  const fileChooserPromise = page.waitForEvent('filechooser');
-  const fileChooser = await fileChooserPromise;
-  await fileChooser.setFiles(hwpPath);
-
-  console.log('[HANCOM-DOCS] HWP file uploaded, waiting for editor...');
 }
 
 /**
