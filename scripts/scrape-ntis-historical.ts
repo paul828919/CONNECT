@@ -273,6 +273,10 @@ async function main() {
                 scrapingSource: 'ntis',
                 status, // EXPIRED for all Q1 2025 programs
                 announcementType: 'R_D_PROJECT', // Only save R&D projects
+                // Phase 2 Enhancement Fields (added Oct 29, 2025 for Phase 6 testing)
+                allowedBusinessStructures: details.allowedBusinessStructures || [],
+                attachmentUrls: details.attachmentUrls || [],
+                trlInferred: details.trlInferred || false,
               },
             });
           }
