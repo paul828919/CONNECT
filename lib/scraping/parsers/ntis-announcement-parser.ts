@@ -730,14 +730,53 @@ async function downloadAndExtractAttachmentText(
 
         console.log(`[NTIS-ATTACHMENT] Downloading ${fileName}...`);
 
-        // Find and click the download link
+        // Race between download starting OR "File Not Found" dialog appearing
+        // NTIS sometimes shows alert dialog for missing files instead of starting download
         const downloadPromise = page.waitForEvent('download', { timeout: 15000 });
+
+        // Set up dialog listener for "File Not Found" alerts
+        // Note: NTIS may trigger multiple dialogs in rapid succession for same file
+        let dialogHandled = false; // Guard flag to prevent double-handling
+        const dialogPromise = new Promise<'dialog'>((resolve) => {
+          const handler = async (dialog: any) => {
+            // Prevent double-handling if multiple dialogs appear
+            if (dialogHandled) {
+              await dialog.accept().catch(() => {}); // Silently dismiss duplicate
+              return;
+            }
+
+            const message = dialog.message();
+            // Check for "File Not Found" in Korean or English
+            if (message.includes('File Not Found') || message.includes('파일을 찾을 수 없습니다')) {
+              dialogHandled = true;
+              console.log(`[NTIS-ATTACHMENT] ⚠️  NTIS reports: ${message}`);
+              await dialog.accept(); // Click "확인" button
+              resolve('dialog');
+            }
+          };
+          page.on('dialog', handler); // Use 'on' not 'once' to handle multiple dialogs
+
+          // Clean up listener after 20 seconds to prevent memory leak
+          setTimeout(() => page.off('dialog', handler), 20000);
+        });
 
         // Click the attachment link (find by text content)
         await page.click(`a:has-text("${fileName}")`);
 
-        // Wait for download to start
-        const download = await downloadPromise;
+        // Wait for either download to start OR dialog to appear
+        const result = await Promise.race([
+          downloadPromise.then((download) => ({ type: 'download' as const, download })),
+          dialogPromise.then(() => ({ type: 'dialog' as const })),
+        ]);
+
+        // Handle "File Not Found" dialog
+        if (result.type === 'dialog') {
+          console.log(`[NTIS-ATTACHMENT] ✗ File not available on server: ${fileName}`);
+          continue; // Skip to next file
+        }
+
+        // Download succeeded - proceed with extraction
+        const download = result.download;
 
         // Save to temporary buffer
         const fileBuffer = await download.createReadStream().then((stream) => {
