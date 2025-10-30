@@ -70,6 +70,40 @@ import {
 } from '../lib/scraping/parsers/agency-mapper';
 
 // ================================================================
+// HTML Parsing Utility
+// ================================================================
+
+/**
+ * Convert HTML to plain text by stripping tags and normalizing whitespace
+ */
+function htmlToText(html: string): string {
+  if (!html || html.trim().length === 0) return '';
+
+  // Remove script and style tags and their contents
+  let text = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ');
+  text = text.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ');
+
+  // Remove HTML tags
+  text = text.replace(/<[^>]+>/g, ' ');
+
+  // Decode common HTML entities
+  text = text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&mdash;/g, '—')
+    .replace(/&ndash;/g, '–');
+
+  // Normalize whitespace: collapse multiple spaces/newlines into single space
+  text = text.replace(/\s+/g, ' ');
+
+  return text.trim();
+}
+
+// ================================================================
 // Configuration
 // ================================================================
 
@@ -259,10 +293,10 @@ async function fetchAndLockNextJob(config: ProcessorConfig): Promise<any | null>
       // SELECT FOR UPDATE SKIP LOCKED (atomic row-level lock)
       const jobs = await tx.$queryRaw<any[]>`
         SELECT * FROM scraping_jobs
-        WHERE scraping_status = 'SCRAPED'
-          AND processing_status = 'PENDING'
-          AND processing_attempts < ${config.maxRetries}
-        ORDER BY created_at ASC
+        WHERE "scrapingStatus" = 'SCRAPED'
+          AND "processingStatus" = 'PENDING'
+          AND "processingAttempts" < ${config.maxRetries}
+        ORDER BY "createdAt" ASC
         LIMIT 1
         FOR UPDATE SKIP LOCKED
       `;
@@ -344,12 +378,30 @@ async function processJob(
     );
 
     // STEP 3: Combine text sources for field extraction
-    const combinedText = `${detailData.description || ''}\n\n${attachmentText}`;
+    // Parse rawHtml to extract text (fallback when description is empty and no attachments)
+    const rawHtmlText = detailData.rawHtml ? htmlToText(detailData.rawHtml) : '';
+
+    // Priority: description > attachments > rawHtml
+    const textSources = [
+      detailData.description || '',
+      attachmentText,
+      rawHtmlText
+    ].filter(t => t.trim().length > 0);
+
+    const combinedText = textSources.join('\n\n');
+
+    console.log(
+      `   📝 Combined text: description=${detailData.description?.length || 0} chars, ` +
+      `attachments=${attachmentText.length} chars, rawHtml=${rawHtmlText.length} chars, ` +
+      `total=${combinedText.length} chars`
+    );
 
     // STEP 4: Classify announcement type (skip non-R&D)
+    // IMPORTANT: Use job.announcementTitle (from list page) instead of detailData.title (generic page header)
+    // and combinedText (includes attachments + rawHtml) for comprehensive survey detection
     const announcementType = classifyAnnouncement({
-      title: detailData.title,
-      description: detailData.description || '',
+      title: job.announcementTitle,
+      description: combinedText,
       url: job.announcementUrl,
       source: 'ntis',
     });
@@ -451,7 +503,7 @@ async function processJob(
         data: {
           agencyId: 'NTIS' as AgencyId,
           title: detailData.title,
-          description: detailData.description || null,
+          description: combinedText || null,
           announcementUrl: job.announcementUrl,
           deadline: deadline || null,
           budgetAmount: budgetAmount || null,
@@ -468,7 +520,7 @@ async function processJob(
           scrapedAt: new Date(),
           scrapingSource: 'ntis',
           status,
-          announcementType: 'R_D_PROJECT',
+          announcementType, // From classification (always R_D_PROJECT at this point due to line 409 check)
           // Phase 2 Enhancement Fields
           allowedBusinessStructures: allowedBusinessStructures || [],
           attachmentUrls: detailData.attachmentUrls || [],
