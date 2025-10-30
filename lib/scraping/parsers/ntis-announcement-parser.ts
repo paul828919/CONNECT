@@ -189,7 +189,7 @@ export async function parseNTISAnnouncementDetails(
 
     // 6. Download and extract text from announcement documents
     // This text contains critical details (budget, TRL, eligibility) often missing from HTML
-    const attachmentText = await downloadAndExtractAttachmentText(page, attachmentUrls);
+    const attachmentText = await downloadAndExtractAttachmentText(page, attachmentUrls, url);
 
     // 7. Create combined text for enhanced field extraction
     const combinedText = cleanText + '\n\n' + attachmentText;
@@ -660,7 +660,8 @@ async function extractAttachmentUrls(page: Page): Promise<string[]> {
  */
 async function downloadAndExtractAttachmentText(
   page: Page,
-  attachmentFileNames: string[]
+  attachmentFileNames: string[],
+  detailPageUrl: string
 ): Promise<string> {
   if (attachmentFileNames.length === 0) {
     return '';
@@ -694,8 +695,20 @@ async function downloadAndExtractAttachmentText(
       `[NTIS-ATTACHMENT] Filtered ${announcementFiles.length}/${attachmentFileNames.length} announcement documents`
     );
 
+    // CRITICAL FIX (Oct 30, 2025): Deduplicate filenames
+    // NTIS lists same filename multiple times in HTML (e.g., "공고.hwp" appears twice)
+    // Clicking duplicate triggers "File Not Found" dialog only ONCE - second click times out
+    // Solution: Deduplicate before processing to prevent timeout crashes
+    const deduplicatedFiles = [...new Set(announcementFiles)];
+
+    if (deduplicatedFiles.length < announcementFiles.length) {
+      console.log(
+        `[NTIS-ATTACHMENT] Removed ${announcementFiles.length - deduplicatedFiles.length} duplicate filenames`
+      );
+    }
+
     // Sort filtered files by priority: PDF > HWPX > HWP > others
-    const sortedFiles = [...announcementFiles].sort((a, b) => {
+    const sortedFiles = [...deduplicatedFiles].sort((a, b) => {
       const getPriority = (fileName: string): number => {
         if (fileName.endsWith('.pdf')) return 1;
         if (fileName.endsWith('.hwpx')) return 2;
@@ -732,47 +745,96 @@ async function downloadAndExtractAttachmentText(
 
         // Race between download starting OR "File Not Found" dialog appearing
         // NTIS sometimes shows alert dialog for missing files instead of starting download
-        const downloadPromise = page.waitForEvent('download', { timeout: 15000 });
+        let dialogHandler: ((dialog: any) => Promise<void>) | null = null;
+        let result: { type: 'download'; download: any } | { type: 'dialog' } | null = null;
 
-        // Set up dialog listener for "File Not Found" alerts
-        // Note: NTIS may trigger multiple dialogs in rapid succession for same file
-        let dialogHandled = false; // Guard flag to prevent double-handling
-        const dialogPromise = new Promise<'dialog'>((resolve) => {
-          const handler = async (dialog: any) => {
-            // Prevent double-handling if multiple dialogs appear
-            if (dialogHandled) {
-              await dialog.accept().catch(() => {}); // Silently dismiss duplicate
-              return;
-            }
+        try {
+          const downloadPromise = page.waitForEvent('download', { timeout: 15000 });
 
-            const message = dialog.message();
-            // Check for "File Not Found" in Korean or English
-            if (message.includes('File Not Found') || message.includes('파일을 찾을 수 없습니다')) {
-              dialogHandled = true;
-              console.log(`[NTIS-ATTACHMENT] ⚠️  NTIS reports: ${message}`);
-              await dialog.accept(); // Click "확인" button
-              resolve('dialog');
-            }
-          };
-          page.on('dialog', handler); // Use 'on' not 'once' to handle multiple dialogs
+          // Set up dialog listener for "File Not Found" alerts
+          // Note: NTIS may trigger multiple dialogs in rapid succession for same file
+          let dialogHandled = false; // Guard flag to prevent double-handling
+          const dialogPromise = new Promise<'dialog'>((resolve) => {
+            dialogHandler = async (dialog: any) => {
+              // Prevent double-handling if multiple dialogs appear
+              if (dialogHandled) {
+                await dialog.accept().catch(() => {}); // Silently dismiss duplicate
+                return;
+              }
 
-          // Clean up listener after 20 seconds to prevent memory leak
-          setTimeout(() => page.off('dialog', handler), 20000);
-        });
+              const message = dialog.message();
+              // Check for "File Not Found" in Korean or English
+              if (message.includes('File Not Found') || message.includes('파일을 찾을 수 없습니다')) {
+                dialogHandled = true;
+                console.log(`[NTIS-ATTACHMENT] ⚠️  NTIS reports: ${message}`);
+                await dialog.accept(); // Click "확인" button
+                resolve('dialog');
+              }
+            };
+            page.on('dialog', dialogHandler); // Use 'on' not 'once' to handle multiple dialogs
+          });
 
-        // Click the attachment link (find by text content)
-        await page.click(`a:has-text("${fileName}")`);
+          // Click the attachment link (find by text content)
+          await page.click(`a:has-text("${fileName}")`);
 
-        // Wait for either download to start OR dialog to appear
-        const result = await Promise.race([
-          downloadPromise.then((download) => ({ type: 'download' as const, download })),
-          dialogPromise.then(() => ({ type: 'dialog' as const })),
-        ]);
+          // Wait for either download to start OR dialog to appear
+          result = await Promise.race([
+            downloadPromise.then((download) => ({ type: 'download' as const, download })),
+            dialogPromise.then(() => ({ type: 'dialog' as const })),
+          ]);
+        } catch (error: any) {
+          // Handle timeout or click errors gracefully
+          if (error.message?.includes('Timeout') || error.name === 'TimeoutError') {
+            console.log(`[NTIS-ATTACHMENT] ⏱️  Timeout waiting for ${fileName} - skipping`);
+          } else {
+            console.warn(`[NTIS-ATTACHMENT] ⚠️  Error downloading ${fileName}:`, error.message);
+          }
+          continue; // Skip to next file
+        } finally {
+          // CRITICAL: Clean up dialog handler immediately (prevent memory leaks)
+          if (dialogHandler) {
+            page.off('dialog', dialogHandler);
+          }
+        }
 
         // Handle "File Not Found" dialog
-        if (result.type === 'dialog') {
+        if (result?.type === 'dialog') {
           console.log(`[NTIS-ATTACHMENT] ✗ File not available on server: ${fileName}`);
+
+          // CRITICAL FIX (Oct 30, 2025): After dialog dismiss, page navigates to about:blank
+          // Root Cause Analysis:
+          // - NTIS links have onclick="fn_fileDownload('ID'); return false;"
+          // - When file doesn't exist, fn_fileDownload() shows alert("File Not Found")
+          // - After accepting alert, "return false" fails to prevent default href navigation
+          // - Browser navigates to href="/rndgate/eg/cmm/file/download.do" → about:blank
+          // - Next attachment click fails with timeout (download event never fires on wrong page)
+          //
+          // Solution: Detect navigation and restore detail page before processing next attachment
+          // IMPORTANT: Navigation happens asynchronously after dialog dismiss, so wait briefly
+          await page.waitForTimeout(500); // Allow navigation to complete
+
+          const currentUrl = page.url();
+          if (!currentUrl.includes('ntis.go.kr') || currentUrl.includes('about:blank')) {
+            console.log(
+              `[NTIS-ATTACHMENT] 🔄 Page navigated away (${currentUrl}) - restoring detail page...`
+            );
+            try {
+              await page.goto(detailPageUrl, { waitUntil: 'networkidle', timeout: 30000 });
+              await page.waitForTimeout(1000); // Allow page to stabilize
+              console.log(`[NTIS-ATTACHMENT] ✓ Detail page restored`);
+            } catch (error: any) {
+              console.warn(`[NTIS-ATTACHMENT] ⚠️  Failed to restore page: ${error.message}`);
+              // Continue anyway - deduplication ensures we won't retry same file
+            }
+          }
+
           continue; // Skip to next file
+        }
+
+        // Verify download succeeded
+        if (!result || result.type !== 'download') {
+          console.log(`[NTIS-ATTACHMENT] ⚠️  No download or dialog for ${fileName} - skipping`);
+          continue;
         }
 
         // Download succeeded - proceed with extraction
