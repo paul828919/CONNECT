@@ -28,6 +28,17 @@ function isRunningInDocker(): boolean {
 }
 
 /**
+ * Get the appropriate scraper container name based on environment
+ *
+ * Development: connect_dev_scraper
+ * Production: connect_scraper
+ */
+function getScraperContainerName(): string {
+  const isDev = process.env.NODE_ENV === 'development';
+  return isDev ? 'connect_dev_scraper' : 'connect_scraper';
+}
+
+/**
  * Sanitize filename for safe use in Docker commands
  * Docker cp doesn't handle non-ASCII characters well, so use only alphanumeric + random suffix
  */
@@ -154,8 +165,10 @@ async function convertHWPToPDFDockerExec(
     console.log(`[DOCKER-LIBREOFFICE-DEBUG] Host temp dir: ${hostTempDir}`);
 
     // 3. Copy HWP file to Docker container
-    const containerName = 'connect_dev_app'; // From docker-compose.dev.yml
+    const containerName = getScraperContainerName(); // Use scraper container (has LibreOffice + Java)
     const containerTempDir = '/tmp/hwp-conversion';
+
+    console.log(`[DOCKER-LIBREOFFICE-DEBUG] Using container: ${containerName}`);
 
     // Create temp dir in container
     try {
@@ -316,7 +329,7 @@ export function checkDockerContainerAccessible(): boolean {
   }
 
   try {
-    const containerName = 'connect_dev_app';
+    const containerName = getScraperContainerName();
     execSync(`docker exec ${containerName} echo "test"`, {
       stdio: 'pipe',
       timeout: 5000,
