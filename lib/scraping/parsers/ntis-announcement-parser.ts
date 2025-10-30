@@ -12,7 +12,7 @@
  * Primary data source for all Korean R&D funding announcements
  */
 
-import { Page, Browser } from 'playwright';
+import { Page } from 'playwright';
 import {
   parseKoreanDate,
   parseBudgetAmount,
@@ -30,10 +30,6 @@ import {
   extractTextFromAttachment,
   extractKeywordsFromAttachmentText,
 } from '../utils/attachment-parser';
-import {
-  createHancomDocsBrowser,
-  hasHancomDocsCredentials,
-} from '../utils/hancom-docs-converter';
 
 export interface NTISAnnouncementDetails {
   description: string | null;
@@ -367,7 +363,7 @@ function extractDeadline(bodyText: string): Date | null {
  * 3. Korea-Germany: "과제당 연간 (한국측) 300백만원" ✓
  * 4. Nuclear MSR: "40백만원" ✓
  */
-function extractBudget(bodyText: string): number | null {
+export function extractBudget(bodyText: string): number | null {
   try {
     // Try all budget synonyms
     for (const synonym of FIELD_SYNONYMS.budget) {
@@ -524,7 +520,7 @@ function extractFieldValue(bodyText: string, fieldLabel: string): string | null 
 /**
  * Extract eligibility criteria from announcement content
  */
-function extractEligibilityCriteria(text: string): Record<string, any> | null {
+export function extractEligibilityCriteria(text: string): Record<string, any> | null {
   const criteria: Record<string, any> = {};
 
   // Check for research institute focus
@@ -554,7 +550,7 @@ function extractEligibilityCriteria(text: string): Record<string, any> | null {
  * Extract business structure requirements from announcement content
  * Returns array of allowed business structures based on Korean terminology patterns
  */
-function extractBusinessStructures(
+export function extractBusinessStructures(
   bodyText: string
 ): ('CORPORATION' | 'SOLE_PROPRIETOR')[] | null {
   try {
@@ -671,7 +667,6 @@ async function downloadAndExtractAttachmentText(
 
   let combinedText = '';
   let processedCount = 0;
-  let sharedBrowser: Browser | null = null;
 
   try {
     // Filter to only process announcement documents (공고문, 신청안내, etc.)
@@ -721,17 +716,6 @@ async function downloadAndExtractAttachmentText(
 
     // Process up to 2 announcement documents (to avoid excessive processing time)
     const filesToProcess = sortedFiles.slice(0, 2);
-
-    // Check if we have HWP files to process
-    const hasHWPFiles = filesToProcess.some((f) => f.endsWith('.hwp'));
-
-    // Create shared browser session ONCE if we have HWP files (avoids rate limiting)
-    if (hasHWPFiles && hasHancomDocsCredentials()) {
-      sharedBrowser = await createHancomDocsBrowser();
-      if (!sharedBrowser) {
-        console.warn('[NTIS-ATTACHMENT] Failed to create shared browser for HWP conversion');
-      }
-    }
 
     for (const fileName of filesToProcess) {
       try {
@@ -847,11 +831,10 @@ async function downloadAndExtractAttachmentText(
 
         console.log(`[NTIS-ATTACHMENT] Downloaded ${fileName} (${fileBuffer.length} bytes)`);
 
-        // Extract text from downloaded file - pass shared browser for HWP conversions
+        // Extract text from downloaded file (LibreOffice handles HWP conversion automatically)
         const extractedText = await extractTextFromAttachment(
           fileName,
-          fileBuffer,
-          sharedBrowser || undefined
+          fileBuffer
         );
 
         if (extractedText && extractedText.length > 0) {
@@ -874,16 +857,9 @@ async function downloadAndExtractAttachmentText(
 
     // Return first 10,000 characters (sufficient for keyword extraction)
     return combinedText.substring(0, 10000).trim();
-  } finally {
-    // Clean up shared browser
-    if (sharedBrowser) {
-      try {
-        await sharedBrowser.close();
-        console.log('[NTIS-ATTACHMENT] Closed shared browser session');
-      } catch (error: any) {
-        console.warn('[NTIS-ATTACHMENT] Failed to close shared browser:', error.message);
-      }
-    }
+  } catch (error: any) {
+    console.error('[NTIS-ATTACHMENT] Fatal error processing attachments:', error.message);
+    return '';
   }
 }
 

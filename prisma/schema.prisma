@@ -272,35 +272,39 @@ model funding_matches {
 }
 
 model funding_programs {
-  id                  String                @id @default(uuid())
-  agencyId            AgencyId
-  title               String
-  description         String?
-  announcementUrl     String
-  targetType          OrganizationType[]
-  minTrl              Int?                  @db.SmallInt
-  maxTrl              Int?                  @db.SmallInt
-  eligibilityCriteria Json?
-  budgetAmount        BigInt?
-  fundingPeriod       String?
-  deadline            DateTime?
-  category            String?
-  keywords            String[]
-  contentHash         String                @unique
-  status              ProgramStatus         @default(ACTIVE)
-  publishedAt         DateTime?
-  scrapedAt           DateTime
-  lastCheckedAt       DateTime              @default(now())
-  scrapingSource      String?
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-  announcementType    AnnouncementType      @default(R_D_PROJECT)
-  announcingAgency    String?
-  ministry            String?
-  trlClassification   Json?
-  trlConfidence       String?
-  consortium_projects consortium_projects[]
-  funding_matches     funding_matches[]
+  id                        String                @id @default(uuid())
+  agencyId                  AgencyId
+  title                     String
+  description               String?
+  announcementUrl           String
+  targetType                OrganizationType[]
+  minTrl                    Int?                  @db.SmallInt
+  maxTrl                    Int?                  @db.SmallInt
+  eligibilityCriteria       Json?
+  budgetAmount              BigInt?
+  fundingPeriod             String?
+  deadline                  DateTime?
+  category                  String?
+  keywords                  String[]
+  contentHash               String                @unique
+  status                    ProgramStatus         @default(ACTIVE)
+  publishedAt               DateTime?
+  scrapedAt                 DateTime
+  lastCheckedAt             DateTime              @default(now())
+  scrapingSource            String?
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime              @updatedAt
+  announcementType          AnnouncementType      @default(R_D_PROJECT)
+  announcingAgency          String?
+  ministry                  String?
+  trlClassification         Json?
+  trlConfidence             String?
+  allowedBusinessStructures BusinessStructure[]
+  attachmentUrls            String[]              @default([])
+  trlInferred               Boolean               @default(false)
+  consortium_projects       consortium_projects[]
+  funding_matches           funding_matches[]
+  scraping_job              scraping_jobs?
 
   @@index([agencyId])
   @@index([announcementType])
@@ -427,6 +431,39 @@ model payments {
   @@index([paidAt])
   @@index([status])
   @@index([subscriptionId])
+}
+
+model scraping_jobs {
+  id                   String           @id @default(uuid())
+  announcementUrl      String           @unique
+  announcementTitle    String
+  dateRange            String
+  pageNumber           Int
+  announcementIndex    Int
+  detailPageData       Json
+  attachmentFolder     String
+  attachmentCount      Int              @default(0)
+  attachmentFilenames  String[]         @default([])
+  scrapingStatus       ScrapingStatus
+  scrapingError        String?
+  scrapedAt            DateTime         @default(now())
+  processingStatus     ProcessingStatus @default(PENDING)
+  processingAttempts   Int              @default(0) @db.SmallInt
+  processingError      String?
+  processingWorker     String?
+  processingStartedAt  DateTime?
+  processedAt          DateTime?
+  fundingProgramId     String?          @unique
+  fundingProgram       funding_programs? @relation(fields: [fundingProgramId], references: [id])
+  contentHash          String           @unique
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([scrapingStatus, processingStatus])
+  @@index([dateRange])
+  @@index([processingStatus, processingAttempts])
+  @@index([createdAt])
+  @@map("scraping_jobs")
 }
 
 model scraping_logs {
@@ -730,4 +767,17 @@ enum UserRole {
   USER
   ADMIN
   SUPER_ADMIN
+}
+
+enum ScrapingStatus {
+  SCRAPED
+  SCRAPING_FAILED
+}
+
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  SKIPPED
 }

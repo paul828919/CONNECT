@@ -4,11 +4,11 @@
  * Extracts text from Korean government R&D announcement attachments:
  * - PDF: Direct text extraction using pdf-parse
  * - HWPX: ZIP-based XML format (similar to DOCX)
- * - HWP: Binary format → Hancom Docs web conversion → PDF → text extraction
+ * - HWP: Binary format → LibreOffice CLI conversion → PDF → text extraction
  *
- * Strategy (updated October 29, 2025):
+ * Strategy (updated October 31, 2025):
  * 1. Prefer alternate formats (PDF > HWPX > DOCX > HWP)
- * 2. HWP: Convert using Hancom Docs web service (https://www.hancomdocs.com)
+ * 2. HWP: Convert using LibreOffice headless mode (soffice --headless --convert-to pdf)
  * 3. Fallback: OCR (future enhancement)
  */
 
@@ -18,21 +18,18 @@ import * as os from 'os';
 import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
 import pdfParse from 'pdf-parse';
-import { Browser } from 'playwright';
-import { convertHWPViaPDFHandomDocs, hasHancomDocsCredentials } from './hancom-docs-converter';
+import { convertHWPAndExtractText } from './docker-libreoffice';
 
 /**
  * Extract text from attachment based on file type
  *
  * @param fileName - Attachment file name (e.g., "application_guide.pdf")
  * @param fileBuffer - File contents as Buffer
- * @param sharedBrowser - Optional pre-authenticated browser for HWP conversions
  * @returns Extracted text (up to 5000 characters for performance)
  */
 export async function extractTextFromAttachment(
   fileName: string,
-  fileBuffer: Buffer,
-  sharedBrowser?: Browser
+  fileBuffer: Buffer
 ): Promise<string | null> {
   try {
     const ext = path.extname(fileName).toLowerCase();
@@ -47,7 +44,7 @@ export async function extractTextFromAttachment(
         return await extractTextFromHWPX(fileBuffer);
 
       case '.hwp':
-        return await extractTextFromHWP(fileBuffer, fileName, sharedBrowser);
+        return await extractTextFromHWP(fileBuffer, fileName);
 
       case '.doc':
       case '.docx':
@@ -180,38 +177,30 @@ function extractTextFromHWPXSection(obj: any): string {
 /**
  * Extract text from HWP files (Korean Hangul Word Processor format)
  *
- * Strategy (updated October 29, 2025):
- * Uses Hancom Docs web service (https://www.hancomdocs.com) for HWP → PDF conversion.
- * This provides 100% compatibility with all HWP versions as Hancom is the official HWP creator.
+ * Strategy (updated October 31, 2025):
+ * Uses LibreOffice CLI for HWP → PDF conversion (replaces Hancom Docs browser automation).
+ * LibreOffice provides reliable conversion via headless command-line interface.
  *
  * Process:
- * 1. Check if Hancom Docs credentials are available
- * 2. Upload HWP to Hancom Docs via Playwright browser automation
- * 3. Download converted PDF from Hancom Docs editor
- * 4. Extract text from PDF using pdf-parse
+ * 1. Convert HWP → PDF using LibreOffice headless mode
+ * 2. Extract text from PDF using pdf-parse
+ *
+ * Benefits over Hancom Docs:
+ * - No browser automation (faster, more reliable)
+ * - No authentication required
+ * - 2-5 seconds per file vs 60-second timeouts
+ * - Works in Docker container without external dependencies
  *
  * @param fileBuffer - HWP file contents
  * @param fileName - Original file name (for logging)
- * @param sharedBrowser - Optional pre-authenticated browser (reuses session for batch conversions)
  */
 async function extractTextFromHWP(
   fileBuffer: Buffer,
-  fileName: string,
-  sharedBrowser?: Browser
+  fileName: string
 ): Promise<string | null> {
   try {
-    // 1. Check if Hancom Docs credentials are configured
-    if (!hasHancomDocsCredentials()) {
-      console.warn(
-        '[ATTACHMENT-PARSER] Hancom Docs credentials not configured - HWP conversion skipped. ' +
-          'Set HANCOM_EMAIL and HANCOM_PASSWORD environment variables.'
-      );
-      return null;
-    }
-
-    // 2. Convert HWP → PDF using Hancom Docs web service
-    // Pass shared browser to reuse authenticated session (avoids rate limiting)
-    const extractedText = await convertHWPViaPDFHandomDocs(fileBuffer, fileName, sharedBrowser);
+    // Convert HWP → PDF → text using LibreOffice CLI
+    const extractedText = await convertHWPAndExtractText(fileBuffer, fileName);
 
     return extractedText;
   } catch (error: any) {
