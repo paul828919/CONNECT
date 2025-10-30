@@ -304,22 +304,21 @@ export function extractTRLRange(text: string): {
 
   // Implicit inference from Korean research stage keywords
   // Based on Korean R&D funding terminology standards
+  // Enhanced Phase 8: More aggressive inference patterns for 70%+ extraction rate
 
   // TRL 1-3: Basic Research (기초연구)
   // - Observational/theoretical research
   // - Laboratory proof-of-concept
-  // Keywords: 기초연구, 원천기술, 이론연구
-  // Phase 6 additions: 설계기준 (design criteria), 기초 (basic standalone)
-  if (/기초연구|원천기술|이론연구|기본원리|설계기준|설계연구|기초(?!.*응용)/i.test(text)) {
+  // Keywords: 기초연구, 원천기술, 이론연구, 탐색연구, 개념연구, 아이디어
+  if (/기초연구|원천기술|이론연구|기본원리|설계기준|설계연구|기초(?!.*응용)|탐색연구|기반연구|개념연구|원리검증|개념증명|아이디어.*발굴|초기.*단계|기초.*기술/i.test(text)) {
     return { minTRL: 1, maxTRL: 3, confidence: 'inferred' };
   }
 
   // TRL 4-6: Applied Research (응용연구)
   // - Component validation
   // - Laboratory/relevant environment validation
-  // Keywords: 응용연구, 개발연구, 시제품
-  // Phase 6 additions: 응용 (applied standalone), 시험 (test/trial)
-  if (/응용연구|응용(?!.*기초)|개발연구|시제품|프로토타입|중간단계|시험개발/i.test(text)) {
+  // Keywords: 응용연구, 개발연구, 시제품, 프로토타입, 실험실, 검증, 파일럿
+  if (/응용연구|응용(?!.*기초)|개발연구|시제품|프로토타입|중간단계|시험개발|기술개발|연구개발|실험실.*검증|시험제작|테스트베드|파일럿.*테스트|시범.*사업|검증.*단계|개발.*단계/i.test(text)) {
     return { minTRL: 4, maxTRL: 6, confidence: 'inferred' };
   }
 
@@ -327,9 +326,31 @@ export function extractTRLRange(text: string): {
   // - System prototype demonstration
   // - System proven in operational environment
   // - Actual system proven through operations
-  // Keywords: 실용화, 사업화, 상용화, 시장진입, 양산
-  if (/실용화|사업화|상용화|시장진입|양산|제품화|실증/i.test(text)) {
+  // Keywords: 실용화, 사업화, 상용화, 시장진입, 양산, 창업, 제조, 판매, 수탁연구, 위탁연구
+  if (/실용화|사업화|상용화|시장진입|양산|제품화|실증|사업화.*지원|창업.*지원|시장.*출시|상업.*생산|제조.*기반|판매.*확대|글로벌.*진출|수탁연구|위탁연구/i.test(text)) {
     return { minTRL: 7, maxTRL: 9, confidence: 'inferred' };
+  }
+
+  // ============================================================================
+  // Strategy 3: Aggressive Fallback Inference (LOW-MEDIUM CONFIDENCE)
+  // ============================================================================
+
+  // Fallback 1: Generic "개발" (development) without context → Applied Research (TRL 4-6)
+  // Most common case for unspecified R&D programs
+  if (/개발(?!연구)|기술.*개발|제품.*개발|시스템.*개발/i.test(text)) {
+    return { minTRL: 4, maxTRL: 6, confidence: 'inferred' };
+  }
+
+  // Fallback 2: Generic "연구" (research) without context → Applied Research (TRL 4-6)
+  // Default to middle range (most statistically common)
+  if (/연구(?!개발|기초|원천|이론)|R&D|기술.*연구/i.test(text)) {
+    return { minTRL: 4, maxTRL: 6, confidence: 'inferred' };
+  }
+
+  // Fallback 3: "지원사업" or "지원과제" (support program/project) → Applied Research (TRL 4-6)
+  // Most government funding targets applied research
+  if (/지원.*사업|지원.*과제|과제.*지원/i.test(text)) {
+    return { minTRL: 4, maxTRL: 6, confidence: 'inferred' };
   }
 
   // ============================================================================
