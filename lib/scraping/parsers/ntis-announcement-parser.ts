@@ -801,31 +801,26 @@ async function downloadAndExtractAttachmentText(
         if (result?.type === 'dialog') {
           console.log(`[NTIS-ATTACHMENT] ✗ File not available on server: ${fileName}`);
 
-          // CRITICAL FIX (Oct 30, 2025): After dialog dismiss, page navigates to about:blank
+          // CRITICAL FIX (Oct 30, 2025 - v2): ALWAYS restore page after dialog
           // Root Cause Analysis:
           // - NTIS links have onclick="fn_fileDownload('ID'); return false;"
           // - When file doesn't exist, fn_fileDownload() shows alert("File Not Found")
           // - After accepting alert, "return false" fails to prevent default href navigation
           // - Browser navigates to href="/rndgate/eg/cmm/file/download.do" → about:blank
+          // - Navigation timing is unpredictable (500ms-2000ms after dialog dismiss)
           // - Next attachment click fails with timeout (download event never fires on wrong page)
           //
-          // Solution: Detect navigation and restore detail page before processing next attachment
-          // IMPORTANT: Navigation happens asynchronously after dialog dismiss, so wait briefly
-          await page.waitForTimeout(500); // Allow navigation to complete
-
-          const currentUrl = page.url();
-          if (!currentUrl.includes('ntis.go.kr') || currentUrl.includes('about:blank')) {
-            console.log(
-              `[NTIS-ATTACHMENT] 🔄 Page navigated away (${currentUrl}) - restoring detail page...`
-            );
-            try {
-              await page.goto(detailPageUrl, { waitUntil: 'networkidle', timeout: 30000 });
-              await page.waitForTimeout(1000); // Allow page to stabilize
-              console.log(`[NTIS-ATTACHMENT] ✓ Detail page restored`);
-            } catch (error: any) {
-              console.warn(`[NTIS-ATTACHMENT] ⚠️  Failed to restore page: ${error.message}`);
-              // Continue anyway - deduplication ensures we won't retry same file
-            }
+          // Solution v1 (FAILED): Check URL after 500ms → Navigation can happen later
+          // Solution v2 (CURRENT): Always restore page after dialog → Guarantees clean state
+          // Trade-off: ~1-2 seconds per missing file vs 100% reliability
+          console.log(`[NTIS-ATTACHMENT] 🔄 Restoring detail page to ensure clean state...`);
+          try {
+            await page.goto(detailPageUrl, { waitUntil: 'networkidle', timeout: 30000 });
+            await page.waitForTimeout(1000); // Allow page to stabilize
+            console.log(`[NTIS-ATTACHMENT] ✓ Detail page restored`);
+          } catch (error: any) {
+            console.warn(`[NTIS-ATTACHMENT] ⚠️  Failed to restore page: ${error.message}`);
+            // Continue anyway - deduplication ensures we won't retry same file
           }
 
           continue; // Skip to next file
