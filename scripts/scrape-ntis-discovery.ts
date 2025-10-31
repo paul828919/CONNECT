@@ -65,7 +65,7 @@ interface RawDetailPageData {
   description: string | null;
   deadline: string | null; // Raw Korean date string
   publishedAt: string | null; // Raw Korean date string
-  attachmentUrls: string[];
+  attachments: Array<{ url: string; filename: string }>;
   rawHtml: string; // Full detail page HTML for processor to parse
 }
 
@@ -85,7 +85,7 @@ async function main() {
       ? parseInt(getArgValue(args, '--maxPages')!, 10)
       : undefined,
     dryRun: args.includes('--dry-run'),
-    attachmentBaseDir: '/opt/connect/data/ntis-attachments',
+    attachmentBaseDir: process.env.NTIS_ATTACHMENT_DIR || path.join(process.cwd(), 'data/ntis-attachments'),
   };
 
   console.log('\n╔════════════════════════════════════════════════════════════╗');
@@ -101,6 +101,36 @@ async function main() {
   if (config.maxPages) {
     console.log(`⚠️  Testing Mode: Limited to ${config.maxPages} pages\n`);
   }
+
+  // ================================================================
+  // Graceful Shutdown Handlers (Zero Runtime Overhead)
+  // ================================================================
+
+  process.on('SIGTERM', async () => {
+    console.log('\n⚠️  Received SIGTERM - saving checkpoint and exiting...');
+    await saveCheckpoint(checkpoint);
+    console.log('💾 Checkpoint saved. Resume with --resume flag');
+    await db.$disconnect();
+    if (browser) await browser.close();
+    process.exit(0);
+  });
+
+  process.on('SIGINT', async () => {
+    console.log('\n⚠️  Received SIGINT (Ctrl+C) - saving checkpoint and exiting...');
+    await saveCheckpoint(checkpoint);
+    console.log('💾 Checkpoint saved. Resume with --resume flag');
+    await db.$disconnect();
+    if (browser) await browser.close();
+    process.exit(0);
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('\n❌ Unhandled Promise Rejection:', reason);
+    console.error('   Promise:', promise);
+    saveCheckpoint(checkpoint).finally(() => {
+      db.$disconnect().finally(() => process.exit(1));
+    });
+  });
 
   // Load or initialize checkpoint
   let checkpoint: Checkpoint = config.resume
@@ -212,11 +242,12 @@ async function main() {
           let downloadedFilenames: string[] = [];
           let attachmentCount = 0;
 
-          if (!config.dryRun && detailData.attachmentUrls.length > 0) {
+          if (!config.dryRun && detailData.attachments.length > 0) {
             const downloadResult = await downloadAttachments(
               page,
-              detailData.attachmentUrls,
-              attachmentFolder
+              detailData.attachments,
+              attachmentFolder,
+              announcement.link
             );
             downloadedFilenames = downloadResult.filenames;
             attachmentCount = downloadResult.count;
@@ -559,27 +590,55 @@ async function fetchDetailPageRawData(
   await page.goto(detailUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForTimeout(2000);
 
-  // Extract basic metadata from detail page
-  const title =
-    (await page.textContent('h2, h3, .subject, .title'))?.trim() || '';
-  const ministry =
-    (await page.textContent('th:has-text("부처명") + td'))?.trim() || null;
-  const announcingAgency =
-    (await page.textContent('th:has-text("공고기관명") + td'))?.trim() || null;
-  const description =
-    (await page.textContent('.content, .description, .summary'))?.trim() ||
-    null;
-  const deadline =
-    (await page.textContent('th:has-text("접수마감일") + td'))?.trim() || null;
-  const publishedAt =
-    (await page.textContent('th:has-text("공고일") + td'))?.trim() || null;
+  // Extract basic metadata from detail page with timeout handling
+  const safeTextContent = async (selector: string, timeoutMs: number = 5000): Promise<string | null> => {
+    try {
+      return (await page.textContent(selector, { timeout: timeoutMs }))?.trim() || null;
+    } catch (error) {
+      return null;
+    }
+  };
 
-  // Extract attachment URLs
-  const attachmentUrls = await page.$$eval(
-    'a[href*="/file/download"]',
-    (links) =>
-      links.map((link) => (link as HTMLAnchorElement).href).filter(Boolean)
-  );
+  const title = (await safeTextContent('h2, h3, .subject, .title')) || '';
+  const ministry = await safeTextContent('th:has-text("부처명") + td');
+  const announcingAgency = await safeTextContent('th:has-text("공고기관명") + td');
+  const description = await safeTextContent('.content, .description, .summary');
+  const deadline = await safeTextContent('th:has-text("접수마감일") + td');
+  const publishedAt = await safeTextContent('th:has-text("공고일") + td');
+
+  // Extract attachment filenames from "첨부파일" section
+  // NTIS stores attachments in a dedicated section with header text "첨부파일"
+  const attachments = await page.evaluate(() => {
+    // Find the element containing "첨부파일" text
+    const allElements = Array.from(document.querySelectorAll('*'));
+    const attachmentHeader = allElements.find((el) => el.textContent?.trim() === '첨부파일');
+
+    if (!attachmentHeader) {
+      return [];
+    }
+
+    // Find the parent container and then the list of attachments
+    const container = attachmentHeader.parentElement;
+    if (!container) {
+      return [];
+    }
+
+    // Find all links in the attachment section
+    const links = container.querySelectorAll('a');
+    const attachmentList: Array<{ url: string; filename: string }> = [];
+
+    links.forEach((link) => {
+      const filename = link.textContent?.trim() || '';
+      const url = (link as HTMLAnchorElement).href;
+
+      // Only include files with recognized extensions
+      if (filename && /\.(pdf|hwp|hwpx|zip|doc|docx)$/i.test(filename)) {
+        attachmentList.push({ url, filename });
+      }
+    });
+
+    return attachmentList;
+  });
 
   // Capture full HTML for processor to parse later
   const rawHtml = await page.content();
@@ -591,22 +650,26 @@ async function fetchDetailPageRawData(
     description,
     deadline,
     publishedAt,
-    attachmentUrls,
+    attachments,
     rawHtml,
   };
 }
 
 /**
- * Download attachments to organized folder structure
+ * Download attachments using Playwright download events (preserves NTIS session)
+ *
+ * CRITICAL: NTIS downloads require clicking links, not direct URL navigation.
+ * Direct page.goto() loses session context → HTTP 404.
  *
  * Folder structure: /opt/connect/data/ntis-attachments/{dateRange}/page-{N}/announcement-{N}/
  */
 async function downloadAttachments(
   page: Page,
-  attachmentUrls: string[],
-  attachmentFolder: string
+  attachments: Array<{ url: string; filename: string }>,
+  attachmentFolder: string,
+  detailPageUrl: string
 ): Promise<{ filenames: string[]; count: number }> {
-  if (attachmentUrls.length === 0) {
+  if (attachments.length === 0) {
     return { filenames: [], count: 0 };
   }
 
@@ -615,43 +678,117 @@ async function downloadAttachments(
 
   const downloadedFilenames: string[] = [];
 
-  for (const url of attachmentUrls) {
-    try {
-      // Navigate to download URL
-      const response = await page.goto(url, {
-        waitUntil: 'domcontentloaded',
-        timeout: 30000,
-      });
+  // Deduplicate filenames (NTIS often lists same file multiple times)
+  const uniqueAttachments = Array.from(
+    new Map(attachments.map((att) => [att.filename, att])).values()
+  );
 
-      if (!response || !response.ok()) {
-        console.warn(`   ⚠️  Failed to download: ${url} (status ${response?.status()})`);
+  if (uniqueAttachments.length < attachments.length) {
+    console.log(
+      `      Removed ${attachments.length - uniqueAttachments.length} duplicate attachment(s)`
+    );
+  }
+
+  for (const attachment of uniqueAttachments) {
+    try {
+      console.log(`      📎 Downloading: ${attachment.filename}...`);
+
+      // Set up download event listener + dialog handler (race condition)
+      let dialogHandler: ((dialog: any) => Promise<void>) | null = null;
+      let result: { type: 'download'; download: any } | { type: 'dialog' } | null = null;
+
+      try {
+        const downloadPromise = page.waitForEvent('download', { timeout: 15000 });
+
+        // Handle "File Not Found" dialogs
+        let dialogHandled = false;
+        const dialogPromise = new Promise<'dialog'>((resolve) => {
+          dialogHandler = async (dialog: any) => {
+            if (dialogHandled) {
+              await dialog.accept().catch(() => {});
+              return;
+            }
+
+            const message = dialog.message();
+            if (
+              message.includes('File Not Found') ||
+              message.includes('파일을 찾을 수 없습니다')
+            ) {
+              dialogHandled = true;
+              console.log(`      ⚠️  NTIS reports: ${message}`);
+              await dialog.accept();
+              resolve('dialog');
+            }
+          };
+          page.on('dialog', dialogHandler);
+        });
+
+        // Click the attachment link (CRITICAL: preserves session context)
+        await page.click(`a:has-text("${attachment.filename}")`);
+
+        // Wait for either download to start OR dialog to appear
+        result = await Promise.race([
+          downloadPromise.then((download) => ({ type: 'download' as const, download })),
+          dialogPromise.then(() => ({ type: 'dialog' as const })),
+        ]);
+      } catch (error: any) {
+        if (error.message?.includes('Timeout') || error.name === 'TimeoutError') {
+          console.log(`      ⏱️  Timeout: ${attachment.filename} - skipping`);
+        } else {
+          console.warn(`      ⚠️  Error: ${attachment.filename}: ${error.message}`);
+        }
+        continue;
+      } finally {
+        // Clean up dialog handler
+        if (dialogHandler) {
+          page.off('dialog', dialogHandler);
+        }
+      }
+
+      // Handle "File Not Found" dialog
+      if (result?.type === 'dialog') {
+        console.log(`      ✗ File not available: ${attachment.filename}`);
+
+        // Restore page to prevent navigation to about:blank
+        console.log(`      🔄 Restoring detail page...`);
+        try {
+          await page.goto(detailPageUrl, { waitUntil: 'networkidle', timeout: 30000 });
+          await page.waitForTimeout(1000);
+          console.log(`      ✓ Page restored`);
+        } catch (error: any) {
+          console.warn(`      ⚠️  Failed to restore page: ${error.message}`);
+        }
+
         continue;
       }
 
-      // Extract filename from Content-Disposition header or URL
-      const contentDisposition = response.headers()['content-disposition'];
-      let filename = 'unknown';
-      if (contentDisposition) {
-        const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-        if (match && match[1]) {
-          filename = match[1].replace(/['"]/g, '');
-        }
-      } else {
-        filename = path.basename(url.split('?')[0]);
+      // Verify download succeeded
+      if (!result || result.type !== 'download') {
+        console.log(`      ⚠️  No download or dialog for ${attachment.filename} - skipping`);
+        continue;
       }
 
-      // Download file
-      const fileBuffer = await response.body();
-      const filePath = path.join(attachmentFolder, filename);
+      // Save downloaded file
+      const download = result.download;
+      const fileBuffer = await download.createReadStream().then((stream) => {
+        return new Promise<Buffer>((resolve, reject) => {
+          const chunks: Buffer[] = [];
+          stream.on('data', (chunk) => chunks.push(chunk));
+          stream.on('end', () => resolve(Buffer.concat(chunks)));
+          stream.on('error', reject);
+        });
+      });
+
+      const filePath = path.join(attachmentFolder, attachment.filename);
       await fs.writeFile(filePath, fileBuffer);
 
-      downloadedFilenames.push(filename);
-      console.log(`      📎 Downloaded: ${filename}`);
+      downloadedFilenames.push(attachment.filename);
+      console.log(`      ✓ Downloaded: ${attachment.filename} (${fileBuffer.length} bytes)`);
 
       // Rate limiting between downloads
       await page.waitForTimeout(1000);
     } catch (err: any) {
-      console.warn(`   ⚠️  Error downloading ${url}: ${err.message}`);
+      console.warn(`      ⚠️  Error downloading ${attachment.filename}: ${err.message}`);
     }
   }
 

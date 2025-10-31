@@ -163,6 +163,39 @@ async function main() {
   console.log(`🔁 Max Retries: ${config.maxRetries}`);
   console.log(`🧪 Dry Run: ${config.dryRun ? 'ON (Preview only)' : 'OFF'}\n`);
 
+  // ================================================================
+  // Graceful Shutdown Handlers (Zero Runtime Overhead)
+  // ================================================================
+
+  let isShuttingDown = false;
+
+  process.on('SIGTERM', async () => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+    console.log('\n⚠️  Received SIGTERM - gracefully shutting down...');
+    console.log(`📊 Final Stats: ${stats.totalProcessed} processed (${stats.totalSuccess} success, ${stats.totalFailed} failed, ${stats.totalSkipped} skipped)`);
+    console.log('💾 Current job will be released back to queue');
+    await db.$disconnect();
+    process.exit(0);
+  });
+
+  process.on('SIGINT', async () => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+    console.log('\n⚠️  Received SIGINT (Ctrl+C) - gracefully shutting down...');
+    console.log(`📊 Final Stats: ${stats.totalProcessed} processed (${stats.totalSuccess} success, ${stats.totalFailed} failed, ${stats.totalSkipped} skipped)`);
+    console.log('💾 Current job will be released back to queue');
+    await db.$disconnect();
+    process.exit(0);
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('\n❌ Unhandled Promise Rejection:', reason);
+    console.error('   Promise:', promise);
+    console.error(`   Current job: ${stats.currentJob || 'none'}`);
+    db.$disconnect().finally(() => process.exit(1));
+  });
+
   try {
     // Main processing loop
     while (true) {
