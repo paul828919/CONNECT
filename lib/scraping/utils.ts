@@ -310,7 +310,8 @@ export function extractTRLRange(text: string): {
   // - Observational/theoretical research
   // - Laboratory proof-of-concept
   // Keywords: 기초연구, 원천기술, 이론연구, 탐색연구, 개념연구, 아이디어
-  if (/기초연구|원천기술|이론연구|기본원리|설계기준|설계연구|기초(?!.*응용)|탐색연구|기반연구|개념연구|원리검증|개념증명|아이디어.*발굴|초기.*단계|기초.*기술/i.test(text)) {
+  // Enhancement: Added 선행연구 (preliminary research), 핵심원천기술 (core fundamental technology)
+  if (/기초연구|원천기술|이론연구|기본원리|설계기준|설계연구|기초(?!.*응용)|탐색연구|기반연구|개념연구|원리검증|개념증명|아이디어.*발굴|초기.*단계|기초.*기술|선행연구|핵심원천기술|원천.*개발/i.test(text)) {
     return { minTRL: 1, maxTRL: 3, confidence: 'inferred' };
   }
 

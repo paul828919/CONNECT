@@ -103,6 +103,94 @@ function htmlToText(html: string): string {
   return text.trim();
 }
 
+/**
+ * Extract deadline from NTIS raw HTML text using comprehensive synonym matching
+ * NTIS format: "마감일 : 2025.10.24" or "신청마감일 : 2025.10.31"
+ *
+ * Strategy:
+ * 1. Try all deadline synonyms (마감일, 신청마감일, 접수마감일, etc.)
+ * 2. Support multiple date formats (YYYY.MM.DD, YYYY-MM-DD, YYYY년 MM월 DD일)
+ * 3. Return first valid match
+ *
+ * @param rawText - Plain text converted from rawHtml
+ * @returns Parsed Date object or null
+ */
+function extractDeadlineFromRawHtml(rawText: string): Date | null {
+  if (!rawText || rawText.trim().length === 0) return null;
+
+  // Comprehensive deadline synonyms (from ntis-announcement-parser.ts)
+  const deadlineSynonyms = [
+    '마감일',
+    '신청마감일',
+    '지원마감일',
+    '모집마감일',
+    '접수마감일',
+    '신청기한',
+    '접수기한',
+    '제출마감',
+  ];
+
+  // Try each synonym with date pattern matching
+  for (const synonym of deadlineSynonyms) {
+    // Pattern: "마감일 : 2025.10.31" or "마감일 : 2025-10-31" or "마감일 : 2025년 10월 31일"
+    // Support both dot and dash separators, plus Korean date format
+    const patterns = [
+      new RegExp(`${synonym}\\s*:\\s*(\\d{4}[.-]\\d{1,2}[.-]\\d{1,2})`, 'i'),
+      new RegExp(`${synonym}\\s*:\\s*(\\d{4}년\\s*\\d{1,2}월\\s*\\d{1,2}일)`, 'i'),
+    ];
+
+    for (const pattern of patterns) {
+      const match = rawText.match(pattern);
+      if (match && match[1]) {
+        const parsed = parseKoreanDate(match[1]);
+        if (parsed) {
+          console.log(`   ✓ Extracted deadline: ${match[1]} → ${parsed.toISOString().split('T')[0]} (synonym: ${synonym})`);
+          return parsed;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Extract publishedAt (공고일) from NTIS raw HTML text
+ * NTIS format: "공고일 : 2025.10.20" or "공고일 : 2025-10-20"
+ *
+ * Strategy:
+ * 1. Match pattern "공고일 : YYYY.MM.DD" or "공고일 : YYYY-MM-DD"
+ * 2. Validate date is not in the future (sanity check)
+ * 3. Return parsed Date object
+ *
+ * @param rawText - Plain text converted from rawHtml
+ * @returns Parsed Date object or null
+ */
+function extractPublishedAtFromRawHtml(rawText: string): Date | null {
+  if (!rawText || rawText.trim().length === 0) return null;
+
+  // Pattern: "공고일 : 2025.10.20" or "공고일 : 2025-10-20"
+  const patterns = [
+    /공고일\s*:\s*(\d{4}[.-]\d{1,2}[.-]\d{1,2})/i,
+    /공고일\s*:\s*(\d{4}년\s*\d{1,2}월\s*\d{1,2}일)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = rawText.match(pattern);
+    if (match && match[1]) {
+      const parsed = parseKoreanDate(match[1]);
+
+      // Only return if date is valid and not in the future (sanity check)
+      if (parsed && parsed <= new Date()) {
+        console.log(`   ✓ Extracted publishedAt: ${match[1]} → ${parsed.toISOString().split('T')[0]}`);
+        return parsed;
+      }
+    }
+  }
+
+  return null;
+}
+
 // ================================================================
 // Configuration
 // ================================================================
@@ -478,11 +566,13 @@ async function processJob(
     );
     const keywords = getCombinedKeywords(detailData.ministry, detailData.announcingAgency);
 
-    // STEP 8: Parse dates
-    const deadline = detailData.deadline ? parseKoreanDate(detailData.deadline) : null;
-    const publishedAt = detailData.publishedAt
-      ? parseKoreanDate(detailData.publishedAt)
-      : null;
+    // STEP 8: Parse dates from rawHtml (Discovery scraper CSS selectors don't work for NTIS)
+    // NTIS uses plain-text format: "마감일 : 2025.10.31" instead of HTML tables
+    // Extract directly from rawHtml using regex patterns
+    const deadline = extractDeadlineFromRawHtml(rawHtmlText) ||
+      (detailData.deadline ? parseKoreanDate(detailData.deadline) : null);
+    const publishedAt = extractPublishedAtFromRawHtml(rawHtmlText) ||
+      (detailData.publishedAt ? parseKoreanDate(detailData.publishedAt) : null);
 
     // STEP 9: Determine status (ACTIVE vs EXPIRED)
     const status = deadline && deadline < new Date() ? 'EXPIRED' : 'ACTIVE';
