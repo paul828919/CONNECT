@@ -32,6 +32,7 @@
 import { chromium, Browser, Page } from 'playwright';
 import { db } from '@/lib/db';
 import { ntisConfig } from '../lib/scraping/config';
+import { filterAnnouncementFiles } from '../lib/scraping/announcement-file-filter';
 import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -210,6 +211,25 @@ async function main() {
         try {
           // STEP 1: Generate content hash for deduplication
           const contentHash = generateContentHash(announcement.link);
+
+          // STEP 1.5: Skip non-research announcements (Technology Demand Survey, etc.)
+          const NON_RESEARCH_PATTERNS = [
+            /기술수요조사/i,  // Technology Demand Survey
+            /수요조사/i,      // Demand Survey
+          ];
+
+          const isNonResearch = NON_RESEARCH_PATTERNS.some(pattern =>
+            pattern.test(announcement.title)
+          );
+
+          if (isNonResearch) {
+            console.log(
+              `   ⊘ SKIPPED (Non-Research): ${announcement.title.substring(0, 60)}...`
+            );
+            checkpoint.totalSkipped++;
+            checkpoint.totalProcessed++;
+            continue;
+          }
 
           // STEP 2: Check if already exists (skip duplicates)
           if (!config.dryRun) {
@@ -623,6 +643,12 @@ async function fetchDetailPageRawData(
       return [];
     }
 
+    // Check for "등록된 파일이 없습니다" (No registered files) message
+    const containerText = container.textContent?.trim() || '';
+    if (containerText.includes('등록된 파일이 없습니다') || containerText.includes('파일이 없습니다')) {
+      return [];
+    }
+
     // Find all links in the attachment section
     const links = container.querySelectorAll('a');
     const attachmentList: Array<{ url: string; filename: string }> = [];
@@ -639,6 +665,11 @@ async function fetchDetailPageRawData(
 
     return attachmentList;
   });
+
+  // Log if no attachments found
+  if (attachments.length === 0) {
+    console.log(`      ⓘ No attachments section found or no files registered`);
+  }
 
   // Capture full HTML for processor to parse later
   const rawHtml = await page.content();
@@ -661,6 +692,10 @@ async function fetchDetailPageRawData(
  * CRITICAL: NTIS downloads require clicking links, not direct URL navigation.
  * Direct page.goto() loses session context → HTTP 404.
  *
+ * UPDATE (Nov 1, 2025): Only download announcement files (공고, 공모, 신규과제)
+ * - Filter using announcement-file-filter.ts before downloading
+ * - Skip application forms, templates, and other non-announcement files
+ *
  * Folder structure: /opt/connect/data/ntis-attachments/{dateRange}/page-{N}/announcement-{N}/
  */
 async function downloadAttachments(
@@ -670,6 +705,7 @@ async function downloadAttachments(
   detailPageUrl: string
 ): Promise<{ filenames: string[]; count: number }> {
   if (attachments.length === 0) {
+    console.log(`      ⓘ No attachments to download`);
     return { filenames: [], count: 0 };
   }
 
@@ -689,7 +725,26 @@ async function downloadAttachments(
     );
   }
 
-  for (const attachment of uniqueAttachments) {
+  // Filter for announcement files only (공고, 공모, 신규과제 patterns)
+  const allFilenames = uniqueAttachments.map((att) => att.filename);
+  const announcementFilenames = filterAnnouncementFiles(allFilenames);
+  const filteredAttachments = uniqueAttachments.filter((att) =>
+    announcementFilenames.includes(att.filename)
+  );
+
+  const skippedCount = uniqueAttachments.length - filteredAttachments.length;
+  if (skippedCount > 0) {
+    console.log(
+      `      🎯 Filtered to ${filteredAttachments.length} announcement file(s) (skipped ${skippedCount} non-announcement files)`
+    );
+  }
+
+  if (filteredAttachments.length === 0) {
+    console.log(`      ⚠️  No announcement files found in attachment list`);
+    return { filenames: [], count: 0 };
+  }
+
+  for (const attachment of filteredAttachments) {
     try {
       console.log(`      📎 Downloading: ${attachment.filename}...`);
 
@@ -700,7 +755,7 @@ async function downloadAttachments(
       try {
         const downloadPromise = page.waitForEvent('download', { timeout: 15000 });
 
-        // Handle "File Not Found" dialogs
+        // Handle "File Not Found" dialogs (파일을 찾을 수 없습니다)
         let dialogHandled = false;
         const dialogPromise = new Promise<'dialog'>((resolve) => {
           dialogHandler = async (dialog: any) => {
@@ -712,11 +767,13 @@ async function downloadAttachments(
             const message = dialog.message();
             if (
               message.includes('File Not Found') ||
-              message.includes('파일을 찾을 수 없습니다')
+              message.includes('파일을 찾을 수 없습니다') ||
+              message.includes('파일이 존재하지 않습니다')
             ) {
               dialogHandled = true;
-              console.log(`      ⚠️  NTIS reports: ${message}`);
-              await dialog.accept();
+              console.log(`      ⚠️  File Not Found popup: "${message}"`);
+              console.log(`      🔘 Clicking confirmation button...`);
+              await dialog.accept(); // Click "확인" button
               resolve('dialog');
             }
           };
@@ -745,21 +802,23 @@ async function downloadAttachments(
         }
       }
 
-      // Handle "File Not Found" dialog
+      // Handle "File Not Found" dialog - navigate to next announcement
       if (result?.type === 'dialog') {
-        console.log(`      ✗ File not available: ${attachment.filename}`);
+        console.log(`      ✗ File not available on NTIS server`);
+        console.log(`      ➜ Proceeding to next announcement (dialog redirects to list page)`);
 
-        // Restore page to prevent navigation to about:blank
-        console.log(`      🔄 Restoring detail page...`);
+        // After clicking "확인", NTIS redirects to list page automatically
+        // Wait for navigation to complete
         try {
-          await page.goto(detailPageUrl, { waitUntil: 'networkidle', timeout: 30000 });
+          await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
           await page.waitForTimeout(1000);
-          console.log(`      ✓ Page restored`);
+          console.log(`      ✓ Redirected to list page by NTIS`);
         } catch (error: any) {
-          console.warn(`      ⚠️  Failed to restore page: ${error.message}`);
+          console.warn(`      ⚠️  Navigation timeout after dialog: ${error.message}`);
         }
 
-        continue;
+        // Break out of attachment loop - we've been redirected away from detail page
+        break;
       }
 
       // Verify download succeeded
