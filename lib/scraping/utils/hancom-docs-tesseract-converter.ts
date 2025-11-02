@@ -39,20 +39,82 @@ const UPLOAD_TIMEOUT = 60000; // 60 seconds
 const EDITOR_TIMEOUT = 30000; // 30 seconds
 
 /**
+ * Create and authenticate a browser session for Hancom Docs
+ *
+ * This function creates a persistent browser session that can be shared
+ * across multiple HWP file conversions, reducing logins from N (one per file)
+ * to 1 (one per batch).
+ *
+ * Usage:
+ * const sharedBrowser = await createAuthenticatedHancomBrowser();
+ * for (const hwpFile of allHWPFiles) {
+ *   await convertHWPViaHancomTesseract(buffer, filename, sharedBrowser);
+ * }
+ * await sharedBrowser.close();
+ *
+ * @returns Authenticated Browser instance
+ */
+export async function createAuthenticatedHancomBrowser(): Promise<Browser> {
+  console.log('[HANCOM-BROWSER] Creating shared authenticated browser session...');
+
+  const browser = await chromium.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-blink-features=AutomationControlled',
+      '--disable-dev-shm-usage',
+    ],
+  });
+
+  const context = await browser.newContext({
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    viewport: { width: 1920, height: 1080 },
+    locale: 'ko-KR',
+    timezoneId: 'Asia/Seoul',
+  });
+
+  const page = await context.newPage();
+
+  // Login to Hancom Docs
+  console.log('[HANCOM-BROWSER] Logging in to Hancom Docs...');
+  await page.goto('https://www.hancomdocs.com/ko/', {
+    waitUntil: 'domcontentloaded',
+    timeout: LOGIN_TIMEOUT,
+  });
+  await page.waitForTimeout(3000);
+
+  await page.getByRole('button', { name: '로그인' }).click();
+  await page.waitForURL('**/oauth2/authorize**', { timeout: 30000 });
+
+  await page.getByRole('textbox', { name: '이메일' }).fill(HANCOM_EMAIL);
+  await page.getByRole('textbox', { name: '비밀번호' }).fill(HANCOM_PASSWORD);
+  await page.getByRole('button', { name: '로그인', exact: true }).click();
+  await page.waitForURL('**/ko/home', { timeout: 30000 });
+
+  console.log('[HANCOM-BROWSER] ✅ Shared browser authenticated and ready');
+
+  return browser;
+}
+
+/**
  * Convert HWP file to text using Hancom Docs + Tesseract OCR
  *
  * @param hwpBuffer - HWP file content as Buffer
  * @param fileName - Original HWP filename (for logging and temp file)
+ * @param sharedBrowser - Optional shared browser session for batch processing (prevents repeated logins)
  * @returns Extracted text from screenshot, or null if conversion fails
  */
 export async function convertHWPViaHancomTesseract(
   hwpBuffer: Buffer,
-  fileName: string
+  fileName: string,
+  sharedBrowser?: Browser
 ): Promise<string | null> {
   let browser: Browser | null = null;
   let context: BrowserContext | null = null;
   let tempHwpPath: string | null = null;
   let screenshotPath: string | null = null;
+  const shouldCloseBrowser = !sharedBrowser; // Only close if we created it (not shared)
 
   try {
     console.log(`[HANCOM-TESSERACT] Converting HWP → Screenshot → Text: ${fileName}`);
@@ -64,17 +126,22 @@ export async function convertHWPViaHancomTesseract(
     fs.writeFileSync(tempHwpPath, hwpBuffer);
     console.log(`[HANCOM-TESSERACT] Saved to: ${tempHwpPath}`);
 
-    // 2. Launch browser
-    console.log('[HANCOM-TESSERACT] Launching browser...');
-    browser = await chromium.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-blink-features=AutomationControlled',
-        '--disable-dev-shm-usage',
-      ],
-    });
+    // 2. Use shared browser or launch new one
+    if (sharedBrowser) {
+      console.log('[HANCOM-TESSERACT] ✓ Using shared authenticated browser session');
+      browser = sharedBrowser;
+    } else {
+      console.log('[HANCOM-TESSERACT] Launching new browser...');
+      browser = await chromium.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-blink-features=AutomationControlled',
+          '--disable-dev-shm-usage',
+        ],
+      });
+    }
 
     context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
@@ -85,22 +152,30 @@ export async function convertHWPViaHancomTesseract(
 
     const page = await context.newPage();
 
-    // 3. Login to Hancom Docs
-    console.log('[HANCOM-TESSERACT] Logging in...');
-    await page.goto('https://www.hancomdocs.com/ko/', {
-      waitUntil: 'domcontentloaded',
-      timeout: LOGIN_TIMEOUT,
-    });
-    await page.waitForTimeout(3000);
+    // 3. Login to Hancom Docs (only if using new browser, not shared)
+    if (!sharedBrowser) {
+      console.log('[HANCOM-TESSERACT] Logging in...');
+      await page.goto('https://www.hancomdocs.com/ko/', {
+        waitUntil: 'domcontentloaded',
+        timeout: LOGIN_TIMEOUT,
+      });
+      await page.waitForTimeout(3000);
 
-    await page.getByRole('button', { name: '로그인' }).click();
-    await page.waitForURL('**/oauth2/authorize**', { timeout: 30000 });
+      await page.getByRole('button', { name: '로그인' }).click();
+      await page.waitForURL('**/oauth2/authorize**', { timeout: 30000 });
 
-    await page.getByRole('textbox', { name: '이메일' }).fill(HANCOM_EMAIL);
-    await page.getByRole('textbox', { name: '비밀번호' }).fill(HANCOM_PASSWORD);
-    await page.getByRole('button', { name: '로그인', exact: true }).click();
-    await page.waitForURL('**/ko/home', { timeout: 30000 });
-    console.log('[HANCOM-TESSERACT] ✓ Login successful');
+      await page.getByRole('textbox', { name: '이메일' }).fill(HANCOM_EMAIL);
+      await page.getByRole('textbox', { name: '비밀번호' }).fill(HANCOM_PASSWORD);
+      await page.getByRole('button', { name: '로그인', exact: true }).click();
+      await page.waitForURL('**/ko/home', { timeout: 30000 });
+      console.log('[HANCOM-TESSERACT] ✓ Login successful');
+    } else {
+      console.log('[HANCOM-TESSERACT] ✓ Skipping login (using authenticated shared session)');
+      await page.goto('https://www.hancomdocs.com/ko/home', {
+        waitUntil: 'domcontentloaded',
+        timeout: LOGIN_TIMEOUT,
+      });
+    }
 
     // 4. Upload HWP file
     console.log('[HANCOM-TESSERACT] Uploading file...');
@@ -167,10 +242,14 @@ export async function convertHWPViaHancomTesseract(
     const screenshotSize = fs.statSync(screenshotPath).size;
     console.log(`[HANCOM-TESSERACT] ✓ Screenshot saved: ${(screenshotSize / 1024).toFixed(2)} KB`);
 
-    // 8. Close browser (don't need it anymore)
-    await browser.close();
-    browser = null;
-    console.log('[HANCOM-TESSERACT] ✓ Browser closed');
+    // 8. Close browser (only if we created it, not if shared)
+    if (shouldCloseBrowser) {
+      await browser.close();
+      browser = null;
+      console.log('[HANCOM-TESSERACT] ✓ Browser closed');
+    } else {
+      console.log('[HANCOM-TESSERACT] ✓ Keeping shared browser open for next file');
+    }
 
     // 9. Extract text using Tesseract OCR
     console.log('[HANCOM-TESSERACT] Starting OCR (Korean language)...');
@@ -217,9 +296,9 @@ export async function convertHWPViaHancomTesseract(
     console.error('[HANCOM-TESSERACT] Stack trace:', error.stack);
     return null;
   } finally {
-    // Ensure cleanup
+    // Ensure cleanup (but never close shared browser on error)
     try {
-      if (browser) await browser.close();
+      if (browser && shouldCloseBrowser) await browser.close();
       if (tempHwpPath && fs.existsSync(tempHwpPath)) fs.unlinkSync(tempHwpPath);
       if (screenshotPath && fs.existsSync(screenshotPath)) fs.unlinkSync(screenshotPath);
     } catch {}

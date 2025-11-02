@@ -25,17 +25,22 @@
  *   npx tsx scripts/scrape-ntis-processor.ts
  *   npx tsx scripts/scrape-ntis-processor.ts --workerId worker-1
  *   npx tsx scripts/scrape-ntis-processor.ts --maxJobs 50
+ *   npx tsx scripts/scrape-ntis-processor.ts --dateRange "2025-07-01 to 2025-07-10"
  *   npx tsx scripts/scrape-ntis-processor.ts --dryRun
+ *
+ * Date Range Filtering (NEW):
+ *   # Process only jobs from a specific Discovery Scraper run
+ *   npx tsx scripts/scrape-ntis-processor.ts --dateRange "2025-07-01 to 2025-07-10" --maxJobs 50
  *
  * Multi-Worker Setup:
  *   # Terminal 1
- *   npx tsx scripts/scrape-ntis-processor.ts --workerId worker-1
+ *   npx tsx scripts/scrape-ntis-processor.ts --workerId worker-1 --dateRange "2025-07-01 to 2025-07-10"
  *
  *   # Terminal 2
- *   npx tsx scripts/scrape-ntis-processor.ts --workerId worker-2
+ *   npx tsx scripts/scrape-ntis-processor.ts --workerId worker-2 --dateRange "2025-07-01 to 2025-07-10"
  *
  *   # Terminal 3
- *   npx tsx scripts/scrape-ntis-processor.ts --workerId worker-3
+ *   npx tsx scripts/scrape-ntis-processor.ts --workerId worker-3 --dateRange "2025-07-01 to 2025-07-10"
  */
 
 import { db } from '@/lib/db';
@@ -46,6 +51,8 @@ import { parseKoreanDate, generateProgramHash } from '../lib/scraping/utils';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
+import type { Browser } from 'playwright';
+import { createAuthenticatedHancomBrowser } from '../lib/scraping/utils/hancom-docs-tesseract-converter';
 
 // Import two-tier extraction system
 import { TwoTierExtractor } from '../lib/scraping/two-tier-extractor';
@@ -245,6 +252,7 @@ interface ProcessorConfig {
   pollInterval: number; // Seconds between polling for new jobs
   maxRetries: number; // Max processing attempts per job
   dryRun: boolean; // Preview mode (no database writes)
+  dateRange: string | null; // Filter jobs by specific date range (e.g., "2025-07-01 to 2025-07-10")
 }
 
 interface ProcessingStats {
@@ -273,6 +281,7 @@ async function main() {
     pollInterval: parseInt(getArgValue(args, '--pollInterval') || '5', 10),
     maxRetries: parseInt(getArgValue(args, '--maxRetries') || '3', 10),
     dryRun: args.includes('--dryRun') || args.includes('--dry-run'),
+    dateRange: getArgValue(args, '--dateRange') || null,
   };
 
   const stats: ProcessingStats = {
@@ -291,6 +300,7 @@ async function main() {
   console.log('╚════════════════════════════════════════════════════════════╝\n');
   console.log(`🆔 Worker ID: ${config.workerId}`);
   console.log(`📊 Max Jobs: ${config.maxJobs || 'Unlimited'}`);
+  console.log(`📅 Date Range Filter: ${config.dateRange || 'All jobs (no filter)'}`);
   console.log(`⏱️  Poll Interval: ${config.pollInterval} seconds`);
   console.log(`🔁 Max Retries: ${config.maxRetries}`);
   console.log(`🧪 Dry Run: ${config.dryRun ? 'ON (Preview only)' : 'OFF'}\n`);
@@ -446,6 +456,7 @@ async function fetchAndLockNextJob(config: ProcessorConfig): Promise<any | null>
         scrapingStatus: 'SCRAPED',
         processingStatus: 'PENDING',
         processingAttempts: { lt: config.maxRetries },
+        ...(config.dateRange ? { dateRange: config.dateRange } : {}),
       },
       orderBy: { createdAt: 'asc' },
     });
@@ -456,15 +467,27 @@ async function fetchAndLockNextJob(config: ProcessorConfig): Promise<any | null>
   try {
     const job = await db.$transaction(async (tx) => {
       // SELECT FOR UPDATE SKIP LOCKED (atomic row-level lock)
-      const jobs = await tx.$queryRaw<any[]>`
-        SELECT * FROM scraping_jobs
-        WHERE "scrapingStatus" = 'SCRAPED'
-          AND "processingStatus" = 'PENDING'
-          AND "processingAttempts" < ${config.maxRetries}
-        ORDER BY "createdAt" ASC
-        LIMIT 1
-        FOR UPDATE SKIP LOCKED
-      `;
+      // Dynamic query based on whether dateRange filter is provided
+      const jobs = config.dateRange
+        ? await tx.$queryRaw<any[]>`
+            SELECT * FROM scraping_jobs
+            WHERE "scrapingStatus" = 'SCRAPED'
+              AND "processingStatus" = 'PENDING'
+              AND "processingAttempts" < ${config.maxRetries}
+              AND "dateRange" = ${config.dateRange}
+            ORDER BY "createdAt" ASC
+            LIMIT 1
+            FOR UPDATE SKIP LOCKED
+          `
+        : await tx.$queryRaw<any[]>`
+            SELECT * FROM scraping_jobs
+            WHERE "scrapingStatus" = 'SCRAPED'
+              AND "processingStatus" = 'PENDING'
+              AND "processingAttempts" < ${config.maxRetries}
+            ORDER BY "createdAt" ASC
+            LIMIT 1
+            FOR UPDATE SKIP LOCKED
+          `;
 
       if (jobs.length === 0) {
         return null;
@@ -506,8 +529,20 @@ async function processJob(
   error?: string;
   fundingProgramId?: string;
 }> {
+  let sharedBrowser: Browser | null = null;
+
   try {
-    // STEP 1: Parse raw detail page data
+    // STEP 1: Create shared browser if job has HWP files
+    const hwpFileCount = job.attachmentFilenames.filter((f: string) =>
+      f.toLowerCase().endsWith('.hwp')
+    ).length;
+
+    if (hwpFileCount > 0) {
+      console.log(`   🌐 Creating shared browser for ${hwpFileCount} HWP file(s)...`);
+      sharedBrowser = await createAuthenticatedHancomBrowser();
+    }
+
+    // STEP 2: Parse raw detail page data
     const detailData = job.detailPageData as {
       title: string;
       ministry: string | null;
@@ -538,7 +573,7 @@ async function processJob(
           try {
             const filePath = path.join(job.attachmentFolder, filename);
             const fileBuffer = await fs.readFile(filePath);
-            const extractedText = await extractTextFromAttachment(filename, fileBuffer);
+            const extractedText = await extractTextFromAttachment(filename, fileBuffer, sharedBrowser || undefined);
             return { filename, text: extractedText || '' };
           } catch (err: any) {
             console.warn(`   ⚠️  Failed to extract text from ${filename}: ${err.message}`);
@@ -557,7 +592,7 @@ async function processJob(
           try {
             const filePath = path.join(job.attachmentFolder, filename);
             const fileBuffer = await fs.readFile(filePath);
-            const extractedText = await extractTextFromAttachment(filename, fileBuffer);
+            const extractedText = await extractTextFromAttachment(filename, fileBuffer, sharedBrowser || undefined);
             return { filename, text: extractedText || '' };
           } catch (err: any) {
             console.warn(`   ⚠️  Failed to extract text from ${filename}: ${err.message}`);
@@ -765,6 +800,16 @@ async function processJob(
     }
 
     return { success: false, error: error.message };
+  } finally {
+    // IMPORTANT: Always close shared browser to prevent memory leaks
+    if (sharedBrowser) {
+      try {
+        await sharedBrowser.close();
+        console.log(`   🌐 Shared browser closed`);
+      } catch (err) {
+        console.warn(`   ⚠️  Failed to close shared browser:`, err);
+      }
+    }
   }
 }
 
