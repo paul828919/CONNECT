@@ -620,11 +620,26 @@ async function fetchDetailPageRawData(
   };
 
   const title = (await safeTextContent('h2, h3, .subject, .title')) || '';
-  const ministry = await safeTextContent('th:has-text("부처명") + td');
-  const announcingAgency = await safeTextContent('th:has-text("공고기관명") + td');
+
+  // NTIS uses <li><span>LABEL : </span>VALUE</li> structure, not table rows
+  const ministryRaw = await safeTextContent('li:has-text("부처명")');
+  const ministry = ministryRaw?.replace('부처명 :', '').trim() || null;
+
+  const agencyRaw = await safeTextContent('li:has-text("공고기관명")');
+  const announcingAgency = agencyRaw?.replace('공고기관명 :', '').trim() || null;
+
+  const publishedAtRaw = await safeTextContent('li:has-text("공고일")');
+  const publishedAt = publishedAtRaw?.replace('공고일 :', '').trim() || null;
+
+  // Description is in content section with header "공고내용"
   const description = await safeTextContent('.content, .description, .summary');
-  const deadline = await safeTextContent('th:has-text("접수마감일") + td');
-  const publishedAt = await safeTextContent('th:has-text("공고일") + td');
+
+  // Deadline might be in different formats (마감일, 접수마감일, etc.)
+  let deadline: string | null = null;
+  const deadlineRaw = await safeTextContent('li:has-text("마감일")');
+  if (deadlineRaw) {
+    deadline = deadlineRaw.replace('마감일 :', '').trim();
+  }
 
   // Extract attachment filenames from "첨부파일" section
   // NTIS stores attachments in a dedicated section with header text "첨부파일"
