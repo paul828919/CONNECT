@@ -20,12 +20,14 @@
  * - Fault tolerance: Failed jobs automatically retry
  * - Isolation: Each worker processes independent jobs
  * - Progress tracking: Real-time statistics per worker
+ * - Graceful termination: Auto-exits after idle timeout (prevents resource accumulation)
  *
  * Usage:
  *   npx tsx scripts/scrape-ntis-processor.ts
  *   npx tsx scripts/scrape-ntis-processor.ts --workerId worker-1
  *   npx tsx scripts/scrape-ntis-processor.ts --maxJobs 50
  *   npx tsx scripts/scrape-ntis-processor.ts --dateRange "2025-07-01 to 2025-07-10"
+ *   npx tsx scripts/scrape-ntis-processor.ts --maxIdlePolls 5 --pollInterval 10
  *   npx tsx scripts/scrape-ntis-processor.ts --dryRun
  *
  * Date Range Filtering (NEW):
@@ -41,6 +43,21 @@
  *
  *   # Terminal 3
  *   npx tsx scripts/scrape-ntis-processor.ts --workerId worker-3 --dateRange "2025-07-01 to 2025-07-10"
+ *
+ * Idle Timeout (Graceful Termination):
+ *   Workers automatically exit when no jobs remain to prevent resource accumulation.
+ *   Default: Exit after 3 consecutive "no jobs" polls (15 seconds with 5s poll interval).
+ *
+ *   Problem Solved:
+ *   - Before: Scheduled workers (10 AM, 4 PM daily) ran indefinitely → 14+ workers after 7 days
+ *   - After: Workers auto-terminate when idle → Only 1 active worker at a time
+ *
+ *   Custom Configuration:
+ *   # Exit after 5 empty polls (50 seconds idle with 10s poll interval)
+ *   npx tsx scripts/scrape-ntis-processor.ts --maxIdlePolls 5 --pollInterval 10
+ *
+ *   # Disable idle timeout (process indefinitely until manual stop)
+ *   npx tsx scripts/scrape-ntis-processor.ts --maxIdlePolls 999999
  */
 
 import { db } from '@/lib/db';
@@ -253,6 +270,7 @@ interface ProcessorConfig {
   maxRetries: number; // Max processing attempts per job
   dryRun: boolean; // Preview mode (no database writes)
   dateRange: string | null; // Filter jobs by specific date range (e.g., "2025-07-01 to 2025-07-10")
+  maxIdlePolls: number; // Exit after N consecutive "no jobs" polls (prevents infinite waiting)
 }
 
 interface ProcessingStats {
@@ -282,6 +300,7 @@ async function main() {
     maxRetries: parseInt(getArgValue(args, '--maxRetries') || '3', 10),
     dryRun: args.includes('--dryRun') || args.includes('--dry-run'),
     dateRange: getArgValue(args, '--dateRange') || null,
+    maxIdlePolls: parseInt(getArgValue(args, '--maxIdlePolls') || '3', 10), // Exit after 3 empty polls by default
   };
 
   const stats: ProcessingStats = {
@@ -302,6 +321,7 @@ async function main() {
   console.log(`📊 Max Jobs: ${config.maxJobs || 'Unlimited'}`);
   console.log(`📅 Date Range Filter: ${config.dateRange || 'All jobs (no filter)'}`);
   console.log(`⏱️  Poll Interval: ${config.pollInterval} seconds`);
+  console.log(`⏰ Idle Timeout: ${config.maxIdlePolls} empty polls (${config.maxIdlePolls * config.pollInterval}s total)`);
   console.log(`🔁 Max Retries: ${config.maxRetries}`);
   console.log(`🧪 Dry Run: ${config.dryRun ? 'ON (Preview only)' : 'OFF'}\n`);
 
@@ -339,6 +359,9 @@ async function main() {
   });
 
   try {
+    // Track consecutive "no jobs" polls for idle timeout
+    let consecutiveEmptyPolls = 0;
+
     // Main processing loop
     while (true) {
       // Check if max jobs reached
@@ -351,12 +374,27 @@ async function main() {
       const job = await fetchAndLockNextJob(config);
 
       if (!job) {
-        // No jobs available - wait and poll again
-        console.log(`⏸️  No pending jobs - waiting ${config.pollInterval}s...`);
+        consecutiveEmptyPolls++;
+        const totalIdleTime = consecutiveEmptyPolls * config.pollInterval;
+        console.log(
+          `⏸️  No pending jobs - waiting ${config.pollInterval}s... ` +
+          `(${consecutiveEmptyPolls}/${config.maxIdlePolls} empty polls, ${totalIdleTime}s idle)`
+        );
+
+        // Exit if idle timeout reached
+        if (consecutiveEmptyPolls >= config.maxIdlePolls) {
+          console.log(
+            `\n✅ No jobs found after ${config.maxIdlePolls} consecutive polls (${totalIdleTime}s idle) - stopping worker gracefully`
+          );
+          break;
+        }
+
         await sleep(config.pollInterval * 1000);
         continue;
       }
 
+      // Reset counter when job is found
+      consecutiveEmptyPolls = 0;
       stats.currentJob = job.announcementTitle;
       console.log(`\n${'='.repeat(70)}`);
       console.log(`🔧 Processing Job: ${job.id}`);
