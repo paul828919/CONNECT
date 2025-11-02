@@ -47,18 +47,13 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
 
-// Import field extraction functions
-import {
-  extractBudget,
-  extractEligibilityCriteria,
-  extractBusinessStructures,
-} from '../lib/scraping/parsers/ntis-announcement-parser';
+// Import two-tier extraction system
+import { TwoTierExtractor } from '../lib/scraping/two-tier-extractor';
+import { ExtractionLogger } from '../lib/scraping/extraction-logger';
+import { filterAnnouncementFiles } from '../lib/scraping/announcement-file-filter';
 
 // Import utility functions
-import {
-  determineTargetType,
-  extractTRLRange,
-} from '../lib/scraping/utils';
+import { determineTargetType } from '../lib/scraping/utils';
 
 // Import TRL classifier
 import { classifyTRL } from '../lib/matching/trl-classifier';
@@ -475,49 +470,74 @@ async function processJob(
       rawHtml: string;
     };
 
-    // STEP 2: Read and extract text from attachments
-    let attachmentText = '';
-    if (job.attachmentCount > 0 && job.attachmentFilenames.length > 0) {
-      const attachmentTexts = await Promise.all(
-        job.attachmentFilenames.map(async (filename: string) => {
+    // STEP 2: Separate announcement files from other attachments
+    const announcementFilenames = filterAnnouncementFiles(job.attachmentFilenames);
+    const otherFilenames = job.attachmentFilenames.filter(
+      (f) => !announcementFilenames.includes(f)
+    );
+
+    console.log(
+      `   📄 Attachment breakdown: ${announcementFilenames.length} announcement files, ` +
+      `${otherFilenames.length} other files (total: ${job.attachmentCount})`
+    );
+
+    // STEP 3: Extract text from announcement files (priority source)
+    const announcementFiles: Array<{ filename: string; text: string }> = [];
+    if (announcementFilenames.length > 0) {
+      const results = await Promise.all(
+        announcementFilenames.map(async (filename: string) => {
           try {
             const filePath = path.join(job.attachmentFolder, filename);
             const fileBuffer = await fs.readFile(filePath);
             const extractedText = await extractTextFromAttachment(filename, fileBuffer);
-            return extractedText || '';
+            return { filename, text: extractedText || '' };
           } catch (err: any) {
             console.warn(`   ⚠️  Failed to extract text from ${filename}: ${err.message}`);
-            return '';
+            return { filename, text: '' };
           }
         })
       );
-      attachmentText = attachmentTexts.filter((t) => t).join('\n\n');
+      announcementFiles.push(...results.filter((r) => r.text.length > 0));
     }
 
+    // STEP 4: Extract text from other files (for reference)
+    const otherFiles: Array<{ filename: string; text: string }> = [];
+    if (otherFilenames.length > 0) {
+      const results = await Promise.all(
+        otherFilenames.map(async (filename: string) => {
+          try {
+            const filePath = path.join(job.attachmentFolder, filename);
+            const fileBuffer = await fs.readFile(filePath);
+            const extractedText = await extractTextFromAttachment(filename, fileBuffer);
+            return { filename, text: extractedText || '' };
+          } catch (err: any) {
+            console.warn(`   ⚠️  Failed to extract text from ${filename}: ${err.message}`);
+            return { filename, text: '' };
+          }
+        })
+      );
+      otherFiles.push(...results.filter((r) => r.text.length > 0));
+    }
+
+    const totalAnnouncementChars = announcementFiles.reduce((sum, f) => sum + f.text.length, 0);
+    const totalOtherChars = otherFiles.reduce((sum, f) => sum + f.text.length, 0);
+
     console.log(
-      `   📄 Extracted ${attachmentText.length} characters from ${job.attachmentCount} attachments`
+      `   📝 Extracted text: ${totalAnnouncementChars} chars from announcement files, ` +
+      `${totalOtherChars} chars from other files`
     );
 
-    // STEP 3: Combine text sources for field extraction
-    // Parse rawHtml to extract text (fallback when description is empty and no attachments)
+    // STEP 5: Combine all text for announcement type classification only
+    // Note: Field extraction will use TwoTierExtractor with priority fallback
     const rawHtmlText = detailData.rawHtml ? htmlToText(detailData.rawHtml) : '';
+    const allAttachmentText = [...announcementFiles, ...otherFiles]
+      .map((f) => f.text)
+      .join('\n\n');
+    const combinedText = [detailData.description || '', allAttachmentText, rawHtmlText]
+      .filter((t) => t.trim().length > 0)
+      .join('\n\n');
 
-    // Priority: description > attachments > rawHtml
-    const textSources = [
-      detailData.description || '',
-      attachmentText,
-      rawHtmlText
-    ].filter(t => t.trim().length > 0);
-
-    const combinedText = textSources.join('\n\n');
-
-    console.log(
-      `   📝 Combined text: description=${detailData.description?.length || 0} chars, ` +
-      `attachments=${attachmentText.length} chars, rawHtml=${rawHtmlText.length} chars, ` +
-      `total=${combinedText.length} chars`
-    );
-
-    // STEP 4: Classify announcement type (skip non-R&D)
+    // STEP 6: Classify announcement type (skip non-R&D)
     // IMPORTANT: Use job.announcementTitle (from list page) instead of detailData.title (generic page header)
     // and combinedText (includes attachments + rawHtml) for comprehensive survey detection
     const announcementType = classifyAnnouncement({
@@ -542,14 +562,27 @@ async function processJob(
       return { success: false, skipped: true, reason: `Non-R&D (${announcementType})` };
     }
 
-    // STEP 5: Extract enhancement fields from combined text
-    const budgetAmount = extractBudget(combinedText);
-    const targetType = determineTargetType(combinedText);
-    const trlRange = extractTRLRange(combinedText);
-    const eligibilityCriteria = extractEligibilityCriteria(combinedText);
-    const allowedBusinessStructures = extractBusinessStructures(combinedText);
+    // STEP 7: Initialize two-tier extraction system
+    const extractionLogger = new ExtractionLogger(job.id);
+    const extractor = new TwoTierExtractor(
+      job.id,
+      detailData,
+      { filenames: job.attachmentFilenames, announcementFiles, otherFiles },
+      extractionLogger
+    );
 
-    // STEP 6: Classify TRL stage and keywords
+    // STEP 8: Extract enhancement fields using two-tier priority system
+    const deadline = await extractor.extractDeadline();
+    const publishedAt = await extractor.extractPublishedAt();
+    const budgetAmount = await extractor.extractBudget();
+    const trlRange = await extractor.extractTRL();
+    const eligibilityCriteria = await extractor.extractEligibility();
+    const allowedBusinessStructures = await extractor.extractBusinessStructures();
+
+    // STEP 9: Extract fields not yet handled by TwoTierExtractor
+    const targetType = determineTargetType(combinedText);
+
+    // STEP 10: Classify TRL stage and keywords
     let trlClassification = null;
     if (trlRange) {
       try {
@@ -559,22 +592,18 @@ async function processJob(
       }
     }
 
-    // STEP 7: Extract category and keywords from ministry/agency
+    // STEP 11: Extract category and keywords from ministry/agency
     const categoryResult = extractCategoryFromMinistryAndAgency(
       detailData.ministry,
       detailData.announcingAgency
     );
     const keywords = getCombinedKeywords(detailData.ministry, detailData.announcingAgency);
 
-    // STEP 8: Parse dates from rawHtml (Discovery scraper CSS selectors don't work for NTIS)
-    // NTIS uses plain-text format: "마감일 : 2025.10.31" instead of HTML tables
-    // Extract directly from rawHtml using regex patterns
-    const deadline = extractDeadlineFromRawHtml(rawHtmlText) ||
-      (detailData.deadline ? parseKoreanDate(detailData.deadline) : null);
-    const publishedAt = extractPublishedAtFromRawHtml(rawHtmlText) ||
-      (detailData.publishedAt ? parseKoreanDate(detailData.publishedAt) : null);
+    // STEP 12: Save extraction logs to database and print summary
+    await extractionLogger.flush();
+    extractionLogger.printSummary();
 
-    // STEP 9: Determine status (ACTIVE vs EXPIRED)
+    // STEP 13: Determine status (ACTIVE vs EXPIRED)
     const status = deadline && deadline < new Date() ? 'EXPIRED' : 'ACTIVE';
 
     // STEP 10: Generate content hash for deduplication
@@ -625,7 +654,7 @@ async function processJob(
       const fundingProgram = await db.funding_programs.create({
         data: {
           agencyId: 'NTIS' as AgencyId,
-          title: detailData.title,
+          title: job.announcementTitle, // Use list page title, not detail page header
           description: combinedText || null,
           announcementUrl: job.announcementUrl,
           deadline: deadline || null,
@@ -647,7 +676,7 @@ async function processJob(
           // Phase 2 Enhancement Fields
           allowedBusinessStructures: allowedBusinessStructures || [],
           attachmentUrls: detailData.attachmentUrls || [],
-          trlInferred: trlRange ? trlRange.confidence === 'inferred' : false,
+          trlInferred: false, // TRL confidence tracking moved to extraction_logs table
           trlClassification: trlClassification || undefined,
         },
       });
