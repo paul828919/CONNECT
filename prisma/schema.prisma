@@ -289,6 +289,7 @@ model funding_programs {
   contentHash               String                @unique
   status                    ProgramStatus         @default(ACTIVE)
   publishedAt               DateTime?
+  applicationStart          DateTime?
   scrapedAt                 DateTime
   lastCheckedAt             DateTime              @default(now())
   scrapingSource            String?
@@ -434,30 +435,31 @@ model payments {
 }
 
 model scraping_jobs {
-  id                   String           @id @default(uuid())
-  announcementUrl      String           @unique
+  id                   String             @id @default(uuid())
+  announcementUrl      String             @unique
   announcementTitle    String
   dateRange            String
   pageNumber           Int
   announcementIndex    Int
   detailPageData       Json
   attachmentFolder     String
-  attachmentCount      Int              @default(0)
-  attachmentFilenames  String[]         @default([])
+  attachmentCount      Int                @default(0)
+  attachmentFilenames  String[]           @default([])
   scrapingStatus       ScrapingStatus
   scrapingError        String?
-  scrapedAt            DateTime         @default(now())
-  processingStatus     ProcessingStatus @default(PENDING)
-  processingAttempts   Int              @default(0) @db.SmallInt
+  scrapedAt            DateTime           @default(now())
+  processingStatus     ProcessingStatus   @default(PENDING)
+  processingAttempts   Int                @default(0) @db.SmallInt
   processingError      String?
   processingWorker     String?
   processingStartedAt  DateTime?
   processedAt          DateTime?
-  fundingProgramId     String?          @unique
-  fundingProgram       funding_programs? @relation(fields: [fundingProgramId], references: [id])
-  contentHash          String           @unique
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  fundingProgramId     String?            @unique
+  fundingProgram       funding_programs?  @relation(fields: [fundingProgramId], references: [id])
+  contentHash          String             @unique
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  extraction_logs      extraction_logs[]
 
   @@index([scrapingStatus, processingStatus])
   @@index([dateRange])
@@ -780,4 +782,47 @@ enum ProcessingStatus {
   COMPLETED
   FAILED
   SKIPPED
+}
+
+model extraction_logs {
+  id                 String             @id @default(uuid())
+  scrapingJobId      String
+  field              ExtractionField
+  value              String?
+  dataSource         DataSource
+  confidence         ConfidenceLevel
+  extractionPattern  String?
+  attemptedSources   String[]           @default([])
+  failureReason      String?
+  contextSnippet     String?
+  createdAt          DateTime           @default(now())
+  scrapingJob        scraping_jobs      @relation(fields: [scrapingJobId], references: [id], onDelete: Cascade)
+
+  @@index([scrapingJobId])
+  @@index([field])
+  @@index([dataSource])
+  @@index([createdAt])
+}
+
+enum ExtractionField {
+  DEADLINE
+  PUBLISHED_AT
+  APPLICATION_START
+  BUDGET
+  TRL_RANGE
+  ELIGIBILITY
+  DESCRIPTION
+  KEYWORDS
+}
+
+enum DataSource {
+  ANNOUNCEMENT_FILE
+  DETAIL_PAGE
+  FAILED
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
 }

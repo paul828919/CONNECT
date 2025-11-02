@@ -186,6 +186,55 @@ function extractPublishedAtFromRawHtml(rawText: string): Date | null {
   return null;
 }
 
+/**
+ * Extract applicationStart (접수일/신청일) from NTIS raw HTML text
+ * NTIS format: "접수일 : 2025.10.27" or "신청일 : 2025.10.20"
+ *
+ * Strategy:
+ * 1. Try all application start synonyms (접수일, 신청일, 모집일, 접수시작일, 신청시작일)
+ * 2. Support multiple date formats (YYYY.MM.DD, YYYY-MM-DD, YYYY년 MM월 DD일)
+ * 3. Return first valid match
+ *
+ * @param rawText - Plain text converted from rawHtml
+ * @returns Parsed Date object or null
+ */
+function extractApplicationStartFromRawHtml(rawText: string): Date | null {
+  if (!rawText || rawText.trim().length === 0) return null;
+
+  // Comprehensive application start synonyms
+  const applicationStartSynonyms = [
+    '접수일',
+    '신청일',
+    '모집일',
+    '접수시작일',
+    '신청시작일',
+  ];
+
+  // Try each synonym with date pattern matching
+  for (const synonym of applicationStartSynonyms) {
+    // Pattern: "접수일 : 2025.10.27" or "접수일 : 2025-10-27" or "접수일 : 2025년 10월 27일"
+    const patterns = [
+      new RegExp(`${synonym}\\s*:\\s*(\\d{4}[.-]\\d{1,2}[.-]\\d{1,2})`, 'i'),
+      new RegExp(`${synonym}\\s*:\\s*(\\d{4}년\\s*\\d{1,2}월\\s*\\d{1,2}일)`, 'i'),
+    ];
+
+    for (const pattern of patterns) {
+      const match = rawText.match(pattern);
+      if (match && match[1]) {
+        const parsed = parseKoreanDate(match[1]);
+
+        // Only return if date is valid and not in the future (sanity check)
+        if (parsed && parsed <= new Date()) {
+          console.log(`   ✓ Extracted applicationStart: ${match[1]} → ${parsed.toISOString().split('T')[0]} (synonym: ${synonym})`);
+          return parsed;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 // ================================================================
 // Configuration
 // ================================================================
@@ -574,6 +623,7 @@ async function processJob(
     // STEP 8: Extract enhancement fields using two-tier priority system
     const deadline = await extractor.extractDeadline();
     const publishedAt = await extractor.extractPublishedAt();
+    const applicationStart = await extractor.extractApplicationStart();
     const budgetAmount = await extractor.extractBudget();
     const trlRange = await extractor.extractTRL();
     const eligibilityCriteria = await extractor.extractEligibility();
@@ -664,6 +714,7 @@ async function processJob(
           maxTrl: trlRange?.maxTRL || null,
           eligibilityCriteria: eligibilityCriteria || undefined,
           publishedAt: publishedAt || null,
+          applicationStart: applicationStart || null,
           ministry: detailData.ministry || null,
           announcingAgency: detailData.announcingAgency || null,
           category: categoryResult.category || null,
