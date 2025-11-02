@@ -26,17 +26,20 @@ import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
 import pdfParse from 'pdf-parse';
 import { convertHWPViaHancomTesseract } from './hancom-docs-tesseract-converter';
+import type { Browser } from 'playwright';
 
 /**
  * Extract text from attachment based on file type
  *
  * @param fileName - Attachment file name (e.g., "application_guide.pdf")
  * @param fileBuffer - File contents as Buffer
+ * @param sharedBrowser - Optional shared browser for HWP conversion (reduces logins)
  * @returns Extracted text (up to 5000 characters for performance)
  */
 export async function extractTextFromAttachment(
   fileName: string,
-  fileBuffer: Buffer
+  fileBuffer: Buffer,
+  sharedBrowser?: Browser
 ): Promise<string | null> {
   try {
     const ext = path.extname(fileName).toLowerCase();
@@ -51,7 +54,7 @@ export async function extractTextFromAttachment(
         return await extractTextFromHWPX(fileBuffer);
 
       case '.hwp':
-        return await extractTextFromHWP(fileBuffer, fileName);
+        return await extractTextFromHWP(fileBuffer, fileName, sharedBrowser);
 
       case '.doc':
       case '.docx':
@@ -200,6 +203,7 @@ function extractTextFromHWPXSection(obj: any): string {
  * - Works in Docker/Linux (production-ready)
  * - 90%+ accuracy for Korean printed text
  * - No PDF conversion artifacts
+ * - Shared browser sessions reduce logins (100 files = 1 login instead of 100)
  *
  * Replaced approaches:
  * - LibreOffice CLI (poor Korean text quality)
@@ -208,16 +212,18 @@ function extractTextFromHWPXSection(obj: any): string {
  *
  * @param fileBuffer - HWP file contents
  * @param fileName - Original file name (for logging)
+ * @param sharedBrowser - Optional shared browser for batch processing
  */
 async function extractTextFromHWP(
   fileBuffer: Buffer,
-  fileName: string
+  fileName: string,
+  sharedBrowser?: Browser
 ): Promise<string | null> {
   try {
     console.log(`[ATTACHMENT-PARSER] Converting HWP using Hancom Docs + Tesseract: ${fileName}`);
 
-    // Convert using Hancom Docs screenshot + Tesseract OCR
-    const extractedText = await convertHWPViaHancomTesseract(fileBuffer, fileName);
+    // Convert using Hancom Docs screenshot + Tesseract OCR (with optional shared browser)
+    const extractedText = await convertHWPViaHancomTesseract(fileBuffer, fileName, sharedBrowser);
 
     if (extractedText && extractedText.length > 0) {
       console.log(
