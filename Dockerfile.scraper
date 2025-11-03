@@ -7,14 +7,20 @@ FROM mcr.microsoft.com/playwright:v1.48.0-focal
 
 WORKDIR /app
 
-# Install Node.js 20, Tesseract OCR for HWP text extraction, and Korean fonts
+# Install Node.js 20, Python pip, Tesseract OCR, pyhwp, and Korean fonts
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     apt-get install -y --no-install-recommends \
         tesseract-ocr \
         tesseract-ocr-kor \
         fonts-nanum \
-        fonts-nanum-extra && \
+        fonts-nanum-extra \
+        python3-pip \
+        python3-dev \
+        libxml2-dev \
+        libxslt-dev \
+        build-essential && \
+    pip3 install --no-cache-dir pyhwp six && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
