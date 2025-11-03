@@ -383,8 +383,9 @@ export function extractBudget(bodyText: string): number | null {
 
         // Validate reasonable range (0.01억 to 100,000억)
         if (billionAmount > 0 && billionAmount < 100000) {
-          // Convert to won: 1,764.22억원 → 1,764,220,000,000
-          return Math.round(billionAmount * 1000000000);
+          // Convert to won: 1,764.22억원 → 176,422,000,000
+          // CRITICAL FIX: 억 = 10^8 (100 million), NOT 10^9 (1 billion)
+          return Math.round(billionAmount * 100000000);
         }
       }
 
