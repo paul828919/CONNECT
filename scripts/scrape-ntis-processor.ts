@@ -46,13 +46,16 @@
  *
  * Idle Timeout (Graceful Termination):
  *   Workers automatically exit when no jobs remain to prevent resource accumulation.
- *   Default: Exit after 3 consecutive "no jobs" polls (15 seconds with 5s poll interval).
+ *   Default: Exit after 16 consecutive "no jobs" polls (80 seconds with 5s poll interval).
  *
  *   Problem Solved:
  *   - Before: Scheduled workers (10 AM, 4 PM daily) ran indefinitely → 14+ workers after 7 days
  *   - After: Workers auto-terminate when idle → Only 1 active worker at a time
  *
  *   Custom Configuration:
+ *   # For exactly 180 seconds idle timeout (16 polls × 11s)
+ *   npx tsx scripts/scrape-ntis-processor.ts --maxIdlePolls 16 --pollInterval 11
+ *
  *   # Exit after 5 empty polls (50 seconds idle with 10s poll interval)
  *   npx tsx scripts/scrape-ntis-processor.ts --maxIdlePolls 5 --pollInterval 10
  *
@@ -300,7 +303,7 @@ async function main() {
     maxRetries: parseInt(getArgValue(args, '--maxRetries') || '3', 10),
     dryRun: args.includes('--dryRun') || args.includes('--dry-run'),
     dateRange: getArgValue(args, '--dateRange') || null,
-    maxIdlePolls: parseInt(getArgValue(args, '--maxIdlePolls') || '3', 10), // Exit after 3 empty polls by default
+    maxIdlePolls: parseInt(getArgValue(args, '--maxIdlePolls') || '16', 10), // Exit after 16 empty polls by default
   };
 
   const stats: ProcessingStats = {
@@ -326,6 +329,14 @@ async function main() {
   console.log(`🧪 Dry Run: ${config.dryRun ? 'ON (Preview only)' : 'OFF'}\n`);
 
   // ================================================================
+  // Worker-Level Browser Session (Reused Across All Jobs)
+  // ================================================================
+
+  // Create ONE authenticated browser per worker (not per job)
+  // This prevents simultaneous login attempts when running multiple workers
+  let workerBrowser: Browser | null = null;
+
+  // ================================================================
   // Graceful Shutdown Handlers (Zero Runtime Overhead)
   // ================================================================
 
@@ -337,6 +348,17 @@ async function main() {
     console.log('\n⚠️  Received SIGTERM - gracefully shutting down...');
     console.log(`📊 Final Stats: ${stats.totalProcessed} processed (${stats.totalSuccess} success, ${stats.totalFailed} failed, ${stats.totalSkipped} skipped)`);
     console.log('💾 Current job will be released back to queue');
+
+    // Cleanup browser session
+    if (workerBrowser) {
+      try {
+        await workerBrowser.close();
+        console.log('🌐 Worker browser closed');
+      } catch (err) {
+        console.warn('⚠️  Failed to close worker browser:', err);
+      }
+    }
+
     await db.$disconnect();
     process.exit(0);
   });
@@ -347,6 +369,17 @@ async function main() {
     console.log('\n⚠️  Received SIGINT (Ctrl+C) - gracefully shutting down...');
     console.log(`📊 Final Stats: ${stats.totalProcessed} processed (${stats.totalSuccess} success, ${stats.totalFailed} failed, ${stats.totalSkipped} skipped)`);
     console.log('💾 Current job will be released back to queue');
+
+    // Cleanup browser session
+    if (workerBrowser) {
+      try {
+        await workerBrowser.close();
+        console.log('🌐 Worker browser closed');
+      } catch (err) {
+        console.warn('⚠️  Failed to close worker browser:', err);
+      }
+    }
+
     await db.$disconnect();
     process.exit(0);
   });
@@ -359,6 +392,15 @@ async function main() {
   });
 
   try {
+    // ================================================================
+    // Initialize Worker Browser (if needed)
+    // ================================================================
+
+    // Check if any jobs in the queue have HWP files that would require browser
+    // We'll create the browser lazily on first HWP file encounter to avoid
+    // unnecessary browser creation for workers processing only PDF files
+    console.log('🔍 Worker initialized - browser will be created on first HWP file encounter\n');
+
     // Track consecutive "no jobs" polls for idle timeout
     let consecutiveEmptyPolls = 0;
 
@@ -403,8 +445,14 @@ async function main() {
       console.log(`${'='.repeat(70)}`);
 
       try {
-        // Process the job
-        const result = await processJob(job, config);
+        // Process the job (passing worker browser for reuse)
+        // Worker browser may be created lazily on first HWP file encounter
+        const result = await processJob(job, config, workerBrowser);
+
+        // Update worker browser reference if it was created during this job
+        if (result.updatedBrowser !== undefined) {
+          workerBrowser = result.updatedBrowser;
+        }
 
         if (result.success) {
           stats.totalSuccess++;
@@ -463,6 +511,16 @@ async function main() {
     console.error(error.stack);
     process.exit(1);
   } finally {
+    // Cleanup browser session
+    if (workerBrowser) {
+      try {
+        await workerBrowser.close();
+        console.log('🌐 Worker browser closed');
+      } catch (err) {
+        console.warn('⚠️  Failed to close worker browser:', err);
+      }
+    }
+
     await db.$disconnect();
   }
 }
@@ -556,28 +614,34 @@ async function fetchAndLockNextJob(config: ProcessorConfig): Promise<any | null>
 
 /**
  * Process a single job: extract text, parse fields, classify, save to funding_programs
+ *
+ * @param job - Scraping job to process
+ * @param config - Worker configuration
+ * @param workerBrowser - Mutable reference to worker's browser session (created lazily on first HWP file)
  */
 async function processJob(
   job: any,
-  config: ProcessorConfig
+  config: ProcessorConfig,
+  workerBrowser: Browser | null
 ): Promise<{
   success: boolean;
   skipped?: boolean;
   reason?: string;
   error?: string;
   fundingProgramId?: string;
+  updatedBrowser?: Browser | null; // Return updated browser reference
 }> {
-  let sharedBrowser: Browser | null = null;
-
   try {
-    // STEP 1: Create shared browser if job has HWP files
+    // STEP 1: Initialize browser session if needed (lazy initialization)
     const hwpFileCount = job.attachmentFilenames.filter((f: string) =>
       f.toLowerCase().endsWith('.hwp')
     ).length;
 
-    if (hwpFileCount > 0) {
-      console.log(`   🌐 Creating shared browser for ${hwpFileCount} HWP file(s)...`);
-      sharedBrowser = await createAuthenticatedHancomBrowser();
+    if (hwpFileCount > 0 && !workerBrowser) {
+      console.log(`   🌐 Creating worker browser session for ${hwpFileCount} HWP file(s)...`);
+      console.log(`   [HANCOM-BROWSER] Logging in once per worker - this session will be reused for all jobs`);
+      workerBrowser = await createAuthenticatedHancomBrowser();
+      console.log(`   ✓ Worker browser ready - will be reused for remaining jobs`);
     }
 
     // STEP 2: Parse raw detail page data
@@ -611,7 +675,7 @@ async function processJob(
           try {
             const filePath = path.join(job.attachmentFolder, filename);
             const fileBuffer = await fs.readFile(filePath);
-            const extractedText = await extractTextFromAttachment(filename, fileBuffer, sharedBrowser || undefined);
+            const extractedText = await extractTextFromAttachment(filename, fileBuffer, workerBrowser || undefined);
             return { filename, text: extractedText || '' };
           } catch (err: any) {
             console.warn(`   ⚠️  Failed to extract text from ${filename}: ${err.message}`);
@@ -630,7 +694,7 @@ async function processJob(
           try {
             const filePath = path.join(job.attachmentFolder, filename);
             const fileBuffer = await fs.readFile(filePath);
-            const extractedText = await extractTextFromAttachment(filename, fileBuffer, sharedBrowser || undefined);
+            const extractedText = await extractTextFromAttachment(filename, fileBuffer, workerBrowser || undefined);
             return { filename, text: extractedText || '' };
           } catch (err: any) {
             console.warn(`   ⚠️  Failed to extract text from ${filename}: ${err.message}`);
@@ -681,7 +745,7 @@ async function processJob(
           },
         });
       }
-      return { success: false, skipped: true, reason: `Non-R&D (${announcementType})` };
+      return { success: false, skipped: true, reason: `Non-R&D (${announcementType})`, updatedBrowser: workerBrowser };
     }
 
     // STEP 7: Initialize two-tier extraction system
@@ -820,7 +884,7 @@ async function processJob(
       });
     }
 
-    return { success: true, fundingProgramId };
+    return { success: true, fundingProgramId, updatedBrowser: workerBrowser };
   } catch (error: any) {
     console.error(`   ❌ Processing error: ${error.message}`);
 
@@ -837,18 +901,10 @@ async function processJob(
       });
     }
 
-    return { success: false, error: error.message };
-  } finally {
-    // IMPORTANT: Always close shared browser to prevent memory leaks
-    if (sharedBrowser) {
-      try {
-        await sharedBrowser.close();
-        console.log(`   🌐 Shared browser closed`);
-      } catch (err) {
-        console.warn(`   ⚠️  Failed to close shared browser:`, err);
-      }
-    }
+    return { success: false, error: error.message, updatedBrowser: workerBrowser };
   }
+  // NOTE: Worker browser is NOT closed here - it's reused for all jobs
+  // Browser cleanup happens when worker shuts down (in main loop finally block)
 }
 
 // ================================================================
