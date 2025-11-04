@@ -4,8 +4,14 @@
  * Purpose: Distinguish authoritative announcement files (공고문) from
  * application forms, templates, and other supporting documents
  *
- * Includes: 공고문, 공고, 공모, 모집, 신청안내, 사업안내, 안내문, 요강, 지침, 공
- * Excludes: 신청서, 양식, 집행계획, 정산, 협약서, 신청안내서, 사업계획서, 제안서, 별지, 서식, 작성양식
+ * Updated: November 5, 2025
+ * Changes:
+ * - REMOVED: /공/i pattern (too broad, matched "동의" in consent forms)
+ * - ADDED: Negative lookahead for /공모(?!안내서)/ to exclude application guides
+ * - ADDED: Exclusion patterns for 안내서, 공모안내서, RFP, RF, 개인정보 동의, 동의서, 과업지시서, 품목요약
+ *
+ * Includes: 공고문, 공고, 공모 (not 공모안내서), 모집, 신청안내, 사업안내, 안내문, 요강, 지침, 입찰공고
+ * Excludes: 신청서, 양식, 집행계획, 정산, 협약서, 신청안내서, 공모안내서, 안내서, 사업계획서, 제안서, 제안요청서, RFP, RF, 개인정보 동의, 동의서, 과업지시서, 품목요약, 별지, 서식, 작성양식
  *
  * Usage:
  *   const announcementFiles = filterAnnouncementFiles(allFilenames);
@@ -18,14 +24,15 @@
 const ANNOUNCEMENT_PATTERNS = [
   /공고문/i,
   /공고(?!기관)/i, // "공고" but not "공고기관" (announcing agency)
-  /공모/i,
+  /공모(?!안내서)/i, // "공모" but not "공모안내서" (application guide)
   /모집/i,
   /신청안내/i,
   /사업안내/i,
   /안내문/i,
   /요강/i,
   /지침/i,
-  /공/i, // "공" - short form for public notices/announcements
+  /입찰공고/i, // Bid announcement
+  // REMOVED: /공/i - Too broad, matches "동의" in "개인정보 동의서"
 ];
 
 /**
@@ -39,8 +46,17 @@ const EXCLUSION_PATTERNS = [
   /정산/i,
   /협약서/i,
   /신청안내서/i,
+  /공모안내서/i, // Application guide (not announcement)
+  /안내서/i, // General guides (not announcements)
   /사업계획서/i,
   /제안서/i,
+  /제안요청서/i, // RFP
+  /RFP/i,
+  /RF(?!P)/i, // Research Form (but not RFP which is already covered)
+  /개인정보.*동의/i, // Privacy consent forms
+  /동의서/i, // Consent forms
+  /과업지시서/i, // Task instructions
+  /품목요약/i, // Item summary
   // /첨부서류/i, // REMOVED: Allow files containing "첨부서류" (attachment documents)
   /별지/i,
   /서식/i,
