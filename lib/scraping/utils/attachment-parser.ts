@@ -234,6 +234,7 @@ async function extractTextFromHWPViaHwp5(
     // Extract text using hwp5txt command-line tool from pyhwp
     const { stdout, stderr } = await execAsync(`hwp5txt "${tempHwpPath}"`, {
       maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+      timeout: 10000, // 10-second timeout (prevents hanging on encrypted/legacy HWP files)
     });
 
     if (stderr && stderr.includes('Error')) {
