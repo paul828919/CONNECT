@@ -713,6 +713,37 @@ async function processJob(
       `${totalOtherChars} chars from other files`
     );
 
+    // STEP 4.5: Update detailPageData.attachments with extracted text
+    // This saves the extracted text to the database for debugging and verification
+    const updatedAttachments = (detailData.attachments || []).map((att: any) => {
+      const extracted = [...announcementFiles, ...otherFiles].find(
+        (f) => f.filename === att.filename
+      );
+      return {
+        ...att,
+        text: extracted?.text || null, // Add text field
+      };
+    });
+
+    // Update detailPageData with enriched attachments
+    const updatedDetailPageData = {
+      ...detailData,
+      attachments: updatedAttachments,
+    };
+
+    // Save updated detailPageData back to database immediately (before processing)
+    if (!config.dryRun) {
+      await db.scraping_jobs.update({
+        where: { id: job.id },
+        data: {
+          detailPageData: updatedDetailPageData as any,
+        },
+      });
+      console.log(
+        `   💾 Saved extracted text to database (${updatedAttachments.filter((a: any) => a.text).length}/${updatedAttachments.length} attachments)`
+      );
+    }
+
     // STEP 5: Combine all text for announcement type classification only
     // Note: Field extraction will use TwoTierExtractor with priority fallback
     const rawHtmlText = detailData.rawHtml ? htmlToText(detailData.rawHtml) : '';
