@@ -308,6 +308,9 @@ export class TwoTierExtractor {
 
       const budget = extractBudget(announcementText);
       if (budget !== null) {
+        // P3 Enhancement: Validate budget against title context
+        this.validateBudgetAgainstTitle(budget);
+
         this.logger.logSuccess(
           'BUDGET',
           budget,
@@ -326,6 +329,9 @@ export class TwoTierExtractor {
     if (this.rawHtmlText) {
       const budget = extractBudget(this.rawHtmlText);
       if (budget !== null) {
+        // P3 Enhancement: Validate budget against title context
+        this.validateBudgetAgainstTitle(budget);
+
         this.logger.logSuccess('BUDGET', budget, 'DETAIL_PAGE', 'MEDIUM', 'Extracted from detail page HTML');
         return budget;
       }
@@ -335,6 +341,9 @@ export class TwoTierExtractor {
     if (this.detailPageData.description) {
       const budget = extractBudget(this.detailPageData.description);
       if (budget !== null) {
+        // P3 Enhancement: Validate budget against title context
+        this.validateBudgetAgainstTitle(budget);
+
         this.logger.logSuccess(
           'BUDGET',
           budget,
@@ -554,5 +563,31 @@ export class TwoTierExtractor {
     }
 
     return null;
+  }
+
+  /**
+   * P3 Enhancement: Validate budget against title context
+   *
+   * Logs warnings when extracted budget seems inconsistent with announcement type.
+   * General track programs typically have budgets in 3-10억원 range.
+   * If budget exceeds 20억원 for general track, it may indicate extraction error.
+   */
+  private validateBudgetAgainstTitle(budget: number): void {
+    const title = this.detailPageData.title.toLowerCase();
+
+    // Check for General Track announcements (일반트랙, 일반 트랙, general track)
+    const isGeneralTrack =
+      title.includes('일반트랙') || title.includes('일반 트랙') || title.includes('general track');
+
+    if (isGeneralTrack && budget > 2000000000) {
+      // > 20억원
+      this.logger.logWarning(
+        'BUDGET',
+        `Extracted budget (${budget.toLocaleString()} won) unusually high for General Track`,
+        `Title: ${this.detailPageData.title}, Budget: ${budget.toLocaleString()} won (${
+          budget / 100000000
+        }억원)`
+      );
+    }
   }
 }

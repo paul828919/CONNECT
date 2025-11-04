@@ -433,7 +433,8 @@ export function extractBudget(bodyText: string): number | null {
       const billionAmount = parseFloat(cleanedAmount);
 
       if (billionAmount > 0 && billionAmount < 100000) {
-        return Math.round(billionAmount * 1000000000);
+        // CRITICAL FIX: 억 = 10^8 (100 million), NOT 10^9 (1 billion)
+        return Math.round(billionAmount * 100000000);
       }
     }
 
@@ -443,6 +444,51 @@ export function extractBudget(bodyText: string): number | null {
 
   // Return NULL for missing or TBD budgets (per user guidance)
   return null;
+}
+
+/**
+ * Enhanced budget extraction with track awareness (P2 Enhancement)
+ *
+ * Prevents extraction errors when announcements contain multiple track budgets
+ * by filtering based on track name in title.
+ *
+ * Example: "2025 K-Hero General Track" announcement contains:
+ *   - General Track: 5억원
+ *   - Deep Tech Track: 50억원
+ * → Returns 5억원 (not 50억원) because title specifies "General Track"
+ *
+ * @param bodyText - Full page text
+ * @param announcementTitle - Page title (contains track name)
+ * @returns Budget object with amount and detected track
+ */
+export function extractBudgetWithContext(
+  bodyText: string,
+  announcementTitle: string
+): { amount: number | null; track: string | null } {
+  // Define track-specific patterns with Korean terminology
+  const trackMatches: Record<string, RegExp> = {
+    '일반트랙': /일반\s*트랙[^0-9]*([0-9,\.]+\s*억원)/i,
+    '딥테크': /딥테크[^0-9]*([0-9,\.]+\s*억원)/i,
+    '글로벌': /글로벌[^0-9]*([0-9,\.]+\s*억원)/i,
+  };
+
+  // If title contains specific track name, filter budget extraction
+  for (const [trackName, pattern] of Object.entries(trackMatches)) {
+    if (announcementTitle.includes(trackName)) {
+      const match = bodyText.match(pattern);
+      if (match && match[1]) {
+        // Use parseBudgetAmount utility to parse "5억원" format
+        const amount = parseBudgetAmount(match[1]);
+        if (amount !== null) {
+          console.log(`[BUDGET-CONTEXT] Extracted ${amount} won for track: ${trackName}`);
+          return { amount, track: trackName };
+        }
+      }
+    }
+  }
+
+  // Fallback to existing logic (no track detected)
+  return { amount: extractBudget(bodyText), track: null };
 }
 
 /**
