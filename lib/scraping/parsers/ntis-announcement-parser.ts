@@ -564,11 +564,397 @@ function extractFieldValue(bodyText: string, fieldLabel: string): string | null 
   return null;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Enhanced Eligibility Criteria Extraction
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Enhanced eligibility criteria structure
+ * Captures comprehensive requirements from Korean R&D announcements
+ */
+interface EligibilityCriteria {
+  // A. Organization Requirements
+  organizationRequirements?: {
+    operatingYears?: {
+      minimum?: number;
+      maximum?: number;
+      description?: string;
+    };
+    organizationType?: string[];
+    employeeCount?: {
+      minimum?: number;
+      maximum?: number;
+    };
+  };
+
+  // B. Financial Requirements
+  financialRequirements?: {
+    rdInvestmentRatio?: {
+      minimum?: number;
+      period?: string;
+      calculationMethod?: string;
+    };
+    revenue?: {
+      minimum?: number;
+      maximum?: number;
+    };
+  };
+
+  // C. Certification Requirements
+  certificationRequirements?: {
+    required?: string[];
+    documents?: string[];
+  };
+
+  // D. Geographic/Industry Requirements
+  geographicRequirements?: {
+    regions?: string[];
+    restrictions?: string;
+  };
+  industryRequirements?: {
+    sectors?: string[];
+  };
+
+  // E. Consortium Requirements (enhanced)
+  consortiumRequirements?: {
+    required?: boolean;
+    composition?: {
+      leadOrganization?: string[];
+      participants?: string[];
+    };
+    type?: string[];
+  };
+
+  // F. Government Relationship
+  governmentRelationship?: {
+    requiredAgreements?: string[];
+    preferredStatus?: string[];
+    targetCountry?: string;
+  };
+
+  // G. Legacy fields (backward compatibility)
+  researchInstituteFocus?: boolean;
+  smeEligible?: boolean;
+  consortiumRequired?: boolean;
+  commercializationFocus?: boolean;
+
+  // H. Raw text for debugging
+  rawText?: string;
+}
+
+/**
+ * Korean keyword patterns for eligibility extraction
+ */
+const ELIGIBILITY_PATTERNS = {
+  operatingYears: {
+    keywords: [/창업\s*(\d+)\s*년/i, /사업자\s*등록\s*(\d+)\s*년/i, /업력\s*(\d+)\s*년/i],
+    qualifiers: {
+      minimum: [/(\d+)\s*년\s*이상/i, /(\d+)\s*년\s*초과/i],
+      maximum: [/(\d+)\s*년\s*이하/i, /(\d+)\s*년\s*이내/i, /(\d+)\s*년\s*미만/i],
+    },
+  },
+  rdInvestmentRatio: [
+    /R&D\s*투자비율\s*(\d+(?:\.\d+)?)\s*%\s*이상/i,
+    /매출액\s*대비\s*R&D\s*투자비율\s*(\d+(?:\.\d+)?)\s*%/i,
+    /연구개발비\s*(\d+(?:\.\d+)?)\s*%\s*이상/i,
+  ],
+  certifications: {
+    required: [
+      'INNO-BIZ',
+      '이노비즈',
+      '벤처기업',
+      '경영혁신형기업',
+      'Main-Biz',
+      '메인비즈',
+    ],
+    documents: [
+      '법인등기부등본',
+      '사업자등록증',
+      '창업기업 확인서',
+      '재무제표',
+      '중소기업 확인서',
+    ],
+  },
+  government: {
+    agreements: ['MOU', 'NDA', '양해각서', '비밀유지협약'],
+    preferredStatus: ['우선협상대상자', '우선 선정'],
+    targetEntity: ['상대국 정부 기관', '방산업체'],
+  },
+  organizationType: {
+    sme: ['중소기업', '중기'],
+    venture: ['벤처기업', '스타트업'],
+    corporation: ['법인사업자', '법인', '주식회사'],
+    soleProprietor: ['개인사업자'],
+    startup: ['창업기업'],
+  },
+  industry: {
+    defense: ['방산분야', '방위산업', '국방'],
+    bio: ['바이오', '생명공학'],
+    it: ['정보통신', 'ICT', 'IT'],
+  },
+} as const;
+
+/**
+ * Extract numeric value from Korean text pattern
+ * Handles patterns like "7년", "2.5%", "10억원"
+ */
+function extractNumericValue(text: string, pattern: RegExp): number | null {
+  const match = text.match(pattern);
+  if (!match || !match[1]) return null;
+
+  const value = parseFloat(match[1]);
+  return isNaN(value) ? null : value;
+}
+
+/**
+ * Extract organization requirements
+ * Captures: operating years, org type, employee count
+ */
+function extractOrganizationRequirements(text: string): EligibilityCriteria['organizationRequirements'] {
+  const requirements: NonNullable<EligibilityCriteria['organizationRequirements']> = {};
+
+  // Operating years
+  const operatingYears: NonNullable<EligibilityCriteria['organizationRequirements']>['operatingYears'] = {};
+
+  // Check maximum years (e.g., "창업 7년 이내")
+  for (const pattern of ELIGIBILITY_PATTERNS.operatingYears.qualifiers.maximum) {
+    const years = extractNumericValue(text, pattern);
+    if (years !== null) {
+      operatingYears.maximum = years;
+      break;
+    }
+  }
+
+  // Check minimum years (e.g., "3년 이상")
+  for (const pattern of ELIGIBILITY_PATTERNS.operatingYears.qualifiers.minimum) {
+    const years = extractNumericValue(text, pattern);
+    if (years !== null) {
+      operatingYears.minimum = years;
+      break;
+    }
+  }
+
+  // Extract description if found
+  if (/중소기업창업\s*지원법|중소기업기본법/i.test(text)) {
+    const match = text.match(/(중소기업창업\s*지원법\s*제\s*\d+조|중소기업기본법\s*제\s*\d+조)/i);
+    if (match) {
+      operatingYears.description = match[1];
+    }
+  }
+
+  if (Object.keys(operatingYears).length > 0) {
+    requirements.operatingYears = operatingYears;
+  }
+
+  // Organization type
+  const organizationType: string[] = [];
+  Object.entries(ELIGIBILITY_PATTERNS.organizationType).forEach(([type, keywords]) => {
+    if (keywords.some(keyword => text.includes(keyword))) {
+      organizationType.push(type);
+    }
+  });
+  if (organizationType.length > 0) {
+    requirements.organizationType = organizationType;
+  }
+
+  return Object.keys(requirements).length > 0 ? requirements : undefined;
+}
+
+/**
+ * Extract financial requirements
+ * Captures: R&D investment ratio, revenue ranges
+ */
+function extractFinancialRequirements(text: string): EligibilityCriteria['financialRequirements'] {
+  const requirements: NonNullable<EligibilityCriteria['financialRequirements']> = {};
+
+  // R&D investment ratio
+  for (const pattern of ELIGIBILITY_PATTERNS.rdInvestmentRatio) {
+    const ratio = extractNumericValue(text, pattern);
+    if (ratio !== null) {
+      requirements.rdInvestmentRatio = {
+        minimum: ratio,
+        period: text.includes('최근 3년') ? '최근 3년간' : undefined,
+        calculationMethod: text.includes('매출액 대비') ? '매출액 대비 R&D 투자비율' : undefined,
+      };
+      break;
+    }
+  }
+
+  return Object.keys(requirements).length > 0 ? requirements : undefined;
+}
+
+/**
+ * Extract certification requirements
+ * Captures: required certifications and documents
+ */
+function extractCertificationRequirements(text: string): EligibilityCriteria['certificationRequirements'] {
+  const requirements: NonNullable<EligibilityCriteria['certificationRequirements']> = {};
+
+  // Required certifications
+  const required: string[] = [];
+  ELIGIBILITY_PATTERNS.certifications.required.forEach(cert => {
+    if (text.includes(cert)) {
+      required.push(cert);
+    }
+  });
+  if (required.length > 0) {
+    requirements.required = required;
+  }
+
+  // Required documents
+  const documents: string[] = [];
+  ELIGIBILITY_PATTERNS.certifications.documents.forEach(doc => {
+    if (text.includes(doc)) {
+      documents.push(doc);
+    }
+  });
+  if (documents.length > 0) {
+    requirements.documents = documents;
+  }
+
+  return Object.keys(requirements).length > 0 ? requirements : undefined;
+}
+
+/**
+ * Extract consortium requirements
+ * Captures: lead organization, participants, consortium type
+ */
+function extractConsortiumRequirements(text: string): EligibilityCriteria['consortiumRequirements'] {
+  const requirements: NonNullable<EligibilityCriteria['consortiumRequirements']> = {};
+
+  // Check if consortium is required
+  if (/컨소시엄|공동연구|산학연/i.test(text)) {
+    requirements.required = true;
+
+    // Extract composition
+    const composition: NonNullable<NonNullable<EligibilityCriteria['consortiumRequirements']>['composition']> = {};
+
+    if (/주관기관/i.test(text)) {
+      composition.leadOrganization = [];
+      // Bidirectional matching: "주관기관 중소기업" or "중소기업 주관기관"
+      if (/주관기관.*중소기업/i.test(text) || /중소기업.*주관기관/i.test(text)) {
+        composition.leadOrganization.push('중소기업');
+      }
+    }
+
+    if (/참여기관/i.test(text)) {
+      composition.participants = [];
+      if (/참여기관.*중소기업/i.test(text)) {
+        composition.participants.push('중소기업');
+      }
+    }
+
+    if (Object.keys(composition).length > 0) {
+      requirements.composition = composition;
+    }
+
+    // Extract type
+    const type: string[] = [];
+    if (text.includes('산학연')) type.push('산학연');
+    if (text.includes('방산분야 컨소시엄')) type.push('방산분야 컨소시엄');
+    if (type.length > 0) {
+      requirements.type = type;
+    }
+  }
+
+  return Object.keys(requirements).length > 0 ? requirements : undefined;
+}
+
+/**
+ * Extract government relationship requirements
+ * Captures: MOU/NDA, preferred status, target countries
+ */
+function extractGovernmentRelationship(text: string): EligibilityCriteria['governmentRelationship'] {
+  const requirements: NonNullable<EligibilityCriteria['governmentRelationship']> = {};
+
+  // Required agreements
+  const agreements: string[] = [];
+  ELIGIBILITY_PATTERNS.government.agreements.forEach(agreement => {
+    if (text.includes(agreement)) {
+      agreements.push(agreement);
+    }
+  });
+  if (agreements.length > 0) {
+    requirements.requiredAgreements = agreements;
+  }
+
+  // Preferred status
+  const preferredStatus: string[] = [];
+  ELIGIBILITY_PATTERNS.government.preferredStatus.forEach(status => {
+    if (text.includes(status)) {
+      preferredStatus.push(status);
+    }
+  });
+  if (preferredStatus.length > 0) {
+    requirements.preferredStatus = preferredStatus;
+  }
+
+  // Target entity/country (use first match to avoid overwriting with lower-priority items)
+  for (const entity of ELIGIBILITY_PATTERNS.government.targetEntity) {
+    if (text.includes(entity)) {
+      requirements.targetCountry = entity;
+      break; // Stop at first match
+    }
+  }
+
+  return Object.keys(requirements).length > 0 ? requirements : undefined;
+}
+
 /**
  * Extract eligibility criteria from announcement content
+ * Enhanced version with comprehensive requirement extraction
  */
 export function extractEligibilityCriteria(text: string): Record<string, any> | null {
-  const criteria: Record<string, any> = {};
+  const criteria: EligibilityCriteria = {};
+
+  // ══════════════════════════════════════════════════════════════════
+  // NEW: Enhanced extraction with 6 helper functions
+  // ══════════════════════════════════════════════════════════════════
+
+  // 1. Organization requirements (operating years, org type)
+  const orgReqs = extractOrganizationRequirements(text);
+  if (orgReqs) {
+    criteria.organizationRequirements = orgReqs;
+  }
+
+  // 2. Financial requirements (R&D ratio)
+  const financialReqs = extractFinancialRequirements(text);
+  if (financialReqs) {
+    criteria.financialRequirements = financialReqs;
+  }
+
+  // 3. Certification requirements (INNO-BIZ, documents)
+  const certReqs = extractCertificationRequirements(text);
+  if (certReqs) {
+    criteria.certificationRequirements = certReqs;
+  }
+
+  // 4. Consortium requirements (lead/participating orgs)
+  const consortiumReqs = extractConsortiumRequirements(text);
+  if (consortiumReqs) {
+    criteria.consortiumRequirements = consortiumReqs;
+  }
+
+  // 5. Government relationship (MOU/NDA, priority status)
+  const govReqs = extractGovernmentRelationship(text);
+  if (govReqs) {
+    criteria.governmentRelationship = govReqs;
+  }
+
+  // 6. Industry requirements (defense, bio, IT)
+  const industryReqs: string[] = [];
+  Object.entries(ELIGIBILITY_PATTERNS.industry).forEach(([sector, keywords]) => {
+    if (keywords.some(keyword => text.includes(keyword))) {
+      industryReqs.push(sector);
+    }
+  });
+  if (industryReqs.length > 0) {
+    criteria.industryRequirements = { sectors: industryReqs };
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  // LEGACY: Maintain backward compatibility with existing boolean flags
+  // ══════════════════════════════════════════════════════════════════
 
   // Check for research institute focus
   if (/연구기관|출연연|대학/i.test(text)) {
