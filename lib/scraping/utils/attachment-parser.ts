@@ -143,8 +143,9 @@ async function extractTextFromHWPX(fileBuffer: Buffer): Promise<string | null> {
 
     console.log(`[ATTACHMENT-PARSER] Extracted ${extractedText.length} characters from HWPX`);
 
-    // Return first 5000 characters
-    return extractedText.substring(0, 5000).trim();
+    // Return up to 50,000 characters (budget info can appear anywhere in document)
+    // Increased from 5,000 to 50,000 on Nov 5, 2025 - budget data often at end of file
+    return extractedText.substring(0, 50000).trim();
   } catch (error: any) {
     console.error('[ATTACHMENT-PARSER] HWPX parsing failed:', error.message);
     return null;
@@ -154,6 +155,16 @@ async function extractTextFromHWPX(fileBuffer: Buffer): Promise<string | null> {
 /**
  * Extract text from HWPX section XML
  * Recursively traverses XML tree to find all text nodes
+ *
+ * HWPX XML Structure:
+ * - Root: hs:sec (section)
+ * - Contains: hp:p (paragraphs)
+ * - Each paragraph contains: hp:run (text runs)
+ * - Each run contains: hp:t (text content)
+ *
+ * Fixed: November 5, 2025
+ * - Added hp:t extraction (HWPX uses hp:t, not #text)
+ * - Prioritize hp:t over #text for HWPX compatibility
  */
 function extractTextFromHWPXSection(obj: any): string {
   let text = '';
@@ -173,14 +184,24 @@ function extractTextFromHWPXSection(obj: any): string {
     return text;
   }
 
-  // If object has text content (common property name: #text, text, t, hp:t)
+  // CRITICAL FIX: HWPX files store text in hp:t nodes, not #text
+  // Extract text from hp:t (HWPX primary text node)
+  if (obj['hp:t']) {
+    const textContent = obj['hp:t'];
+    if (typeof textContent === 'string') {
+      text += textContent + ' ';
+    }
+  }
+
+  // Fallback: Extract from #text (generic XML text node)
   if (obj['#text']) {
     text += obj['#text'] + ' ';
   }
 
   // Recursively process all properties
   for (const key of Object.keys(obj)) {
-    if (key !== '#text' && typeof obj[key] === 'object') {
+    // Skip already processed text nodes and attributes
+    if (key !== 'hp:t' && key !== '#text' && !key.startsWith('@_') && typeof obj[key] === 'object') {
       text += extractTextFromHWPXSection(obj[key]) + ' ';
     }
   }

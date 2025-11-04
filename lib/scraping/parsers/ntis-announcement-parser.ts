@@ -365,6 +365,35 @@ function extractDeadline(bodyText: string): Date | null {
  */
 export function extractBudget(bodyText: string): number | null {
   try {
+    // ========================================================================
+    // PRIORITY Pattern: Year-based budget ("2025년 256백만원")
+    // November 5, 2025: Added to prioritize annual total budget over per-project amounts
+    // CRITICAL FIX: Use \d not \\d in regex literals!
+    // ========================================================================
+    const yearBudgetBillionPattern = /['']?(\d{2}|20\d{2})년\s*([\d,\.]+)\s*억원/i;
+    const yearBudgetBillionMatch = bodyText.match(yearBudgetBillionPattern);
+
+    if (yearBudgetBillionMatch && yearBudgetBillionMatch[2]) {
+      const cleanedAmount = yearBudgetBillionMatch[2].replace(/,/g, '');
+      const billionAmount = parseFloat(cleanedAmount);
+
+      if (billionAmount > 0 && billionAmount < 100000) {
+        return Math.round(billionAmount * 100000000);
+      }
+    }
+
+    const yearBudgetMillionPattern = /['']?(\d{2}|20\d{2})년\s*([\d,\.]+)\s*백만원/i;
+    const yearBudgetMillionMatch = bodyText.match(yearBudgetMillionPattern);
+
+    if (yearBudgetMillionMatch && yearBudgetMillionMatch[2]) {
+      const cleanedAmount = yearBudgetMillionMatch[2].replace(/,/g, '');
+      const millionAmount = parseFloat(cleanedAmount);
+
+      if (millionAmount > 0 && millionAmount < 100000) {
+        return Math.round(millionAmount * 1000000);
+      }
+    }
+
     // Try all budget synonyms
     for (const synonym of FIELD_SYNONYMS.budget) {
       // ========================================================================
@@ -435,6 +464,78 @@ export function extractBudget(bodyText: string): number | null {
       if (billionAmount > 0 && billionAmount < 100000) {
         // CRITICAL FIX: 억 = 10^8 (100 million), NOT 10^9 (1 billion)
         return Math.round(billionAmount * 100000000);
+      }
+    }
+
+    // ========================================================================
+    // TABLE-AWARE PATTERNS (November 5, 2025)
+    // Handles table formats where unit is in header, value is in cell
+    // Example: "총연구비(억원) ... 48.75" → 4,875,000,000
+    // ========================================================================
+
+    // Try all budget synonyms with table header format
+    for (const synonym of FIELD_SYNONYMS.budget) {
+      // Pattern: "총연구비(억원)" header followed by number within 100 chars
+      const tableHeaderBillionPattern = new RegExp(
+        `${synonym}\\s*\\(\\s*억\\s*원\\s*\\)[^\\d]{0,100}([\\d,\\.]+)`,
+        'i'
+      );
+      const tableHeaderBillionMatch = bodyText.match(tableHeaderBillionPattern);
+
+      if (tableHeaderBillionMatch && tableHeaderBillionMatch[1]) {
+        const cleanedAmount = tableHeaderBillionMatch[1].replace(/,/g, '');
+        const billionAmount = parseFloat(cleanedAmount);
+
+        if (billionAmount > 0 && billionAmount < 100000) {
+          return Math.round(billionAmount * 100000000);
+        }
+      }
+
+      // Pattern: "총연구비(백만원)" header followed by number within 100 chars
+      const tableHeaderMillionPattern = new RegExp(
+        `${synonym}\\s*\\(\\s*백\\s*만\\s*원\\s*\\)[^\\d]{0,100}([\\d,\\.]+)`,
+        'i'
+      );
+      const tableHeaderMillionMatch = bodyText.match(tableHeaderMillionPattern);
+
+      if (tableHeaderMillionMatch && tableHeaderMillionMatch[1]) {
+        const cleanedAmount = tableHeaderMillionMatch[1].replace(/,/g, '');
+        const millionAmount = parseFloat(cleanedAmount);
+
+        if (millionAmount > 0 && millionAmount < 100000) {
+          return Math.round(millionAmount * 1000000);
+        }
+      }
+    }
+
+    // ========================================================================
+    // STANDALONE PATTERNS (for tables without prefix)
+    // Example: Column shows just "48.75억원" or "875백만원"
+    // ========================================================================
+
+    // Standalone billion pattern (more permissive)
+    const standaloneBillionPattern = /([\d,\.]+)\s*억원/;
+    const standaloneBillionMatch = bodyText.match(standaloneBillionPattern);
+
+    if (standaloneBillionMatch && standaloneBillionMatch[1]) {
+      const cleanedAmount = standaloneBillionMatch[1].replace(/,/g, '');
+      const billionAmount = parseFloat(cleanedAmount);
+
+      if (billionAmount > 0 && billionAmount < 100000) {
+        return Math.round(billionAmount * 100000000);
+      }
+    }
+
+    // Standalone million pattern (more permissive)
+    const standaloneMillionPattern = /([\d,\.]+)\s*백만원/;
+    const standaloneMillionMatch = bodyText.match(standaloneMillionPattern);
+
+    if (standaloneMillionMatch && standaloneMillionMatch[1]) {
+      const cleanedAmount = standaloneMillionMatch[1].replace(/,/g, '');
+      const millionAmount = parseFloat(cleanedAmount);
+
+      if (millionAmount > 0 && millionAmount < 100000) {
+        return Math.round(millionAmount * 1000000);
       }
     }
 
