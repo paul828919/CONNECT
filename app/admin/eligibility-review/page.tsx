@@ -23,8 +23,7 @@
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 interface EligibilityProgram {
   id: string;
@@ -175,53 +174,16 @@ export default function AdminEligibilityReviewPage() {
   const filteredPrograms = programs;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            {/* Left: Logo + Title */}
-            <div className="flex items-center gap-3">
-              <Link href="/dashboard" className="flex items-center gap-1">
-                <Image
-                  src="/logo.svg"
-                  alt="Connect Logo"
-                  width={40}
-                  height={40}
-                  className="w-[40px] h-[40px]"
-                />
-                <span className="text-xl font-bold text-blue-600">Connect</span>
-              </Link>
-              <span className="text-gray-300">|</span>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  자격 요건 검토 대시보드
-                </h1>
-                <p className="text-xs text-gray-600 mt-0.5">
-                  모호한 자격 요건을 가진 프로그램의 수동 검토
-                </p>
-              </div>
-            </div>
-
-            {/* Right: Admin Info + Back Button */}
-            <div className="flex flex-col items-end gap-2">
-              <div className="text-sm text-gray-600">
-                관리자: <span className="font-medium text-gray-900">{session?.user?.name || session?.user?.email}</span>
-              </div>
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="px-3 py-1.5 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                대시보드로 돌아가기
-              </button>
-            </div>
-          </div>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div>
+          <h1 className="text-3xl font-bold">자격 요건 검토 대시보드</h1>
+          <p className="text-muted-foreground">모호한 자격 요건을 가진 프로그램의 수동 검토</p>
         </div>
-      </div>
 
-      {/* Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        {/* Filters */}
+        <div className="p-6 bg-white rounded-lg border border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Confidence Filter */}
             <div>
@@ -274,7 +236,7 @@ export default function AdminEligibilityReviewPage() {
         </div>
 
         {/* Stats */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="text-sm text-gray-600">총 프로그램</div>
             <div className="text-3xl font-bold text-gray-900 mt-1">{programs.length}</div>
@@ -300,7 +262,7 @@ export default function AdminEligibilityReviewPage() {
         </div>
 
         {/* Program List */}
-        <div className="mt-6 space-y-4">
+        <div className="space-y-4">
           {filteredPrograms.length === 0 ? (
             <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
               <p className="text-gray-500">No programs requiring review</p>
@@ -523,6 +485,6 @@ export default function AdminEligibilityReviewPage() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 }
