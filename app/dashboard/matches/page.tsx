@@ -7,6 +7,8 @@ import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { MatchExplanation } from '@/components/match-explanation';
 import { HistoricalMatchesPrompt } from '@/components/HistoricalMatchesPrompt';
+import { EligibilityBadge, type EligibilityLevel } from '@/components/matches/EligibilityBadge';
+import { InvestmentPrompt } from '@/components/profile/InvestmentPrompt';
 
 interface Match {
   id: string;
@@ -30,6 +32,16 @@ interface Match {
   };
   isExpired?: boolean; // Flag for historical matches
   createdAt: string;
+  // Phase 4: Eligibility information
+  eligibilityLevel?: EligibilityLevel;
+  eligibilityDetails?: {
+    hardRequirementsMet: boolean;
+    softRequirementsMet: boolean;
+    failedRequirements: string[];
+    metRequirements: string[];
+    needsManualReview: boolean;
+    manualReviewReason?: string;
+  };
 }
 
 const agencyNames: Record<string, string> = {
@@ -65,6 +77,10 @@ export default function MatchesPage() {
   const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
   const [historicalMatches, setHistoricalMatches] = useState<Match[]>([]);
   const [showHistorical, setShowHistorical] = useState(false);
+  // Phase 4: Track investment verification needs
+  const [needsInvestmentVerification, setNeedsInvestmentVerification] = useState(false);
+  const [hasInvestmentHistory, setHasInvestmentHistory] = useState(false);
+  const [requiredInvestmentAmount, setRequiredInvestmentAmount] = useState<number | undefined>();
 
   const fetchMatches = useCallback(async () => {
     try {
@@ -84,6 +100,32 @@ export default function MatchesPage() {
 
       const data = await res.json();
       setMatches(data.matches || []);
+
+      // Phase 4: Check if any matches need investment verification
+      const matchesNeedingInvestment = (data.matches || []).filter(
+        (m: Match) =>
+          m.eligibilityDetails?.failedRequirements?.some((req: string) =>
+            req.includes('투자 유치')
+          )
+      );
+
+      if (matchesNeedingInvestment.length > 0) {
+        setNeedsInvestmentVerification(true);
+
+        // Extract required investment amount from failed requirement
+        const firstMatch = matchesNeedingInvestment[0];
+        const investmentReq = firstMatch.eligibilityDetails?.failedRequirements?.find(
+          (req: string) => req.includes('투자 유치')
+        );
+        if (investmentReq) {
+          // Parse amount from string like "투자 유치 실적 미확인 (필요: ₩200,000,000)"
+          const amountMatch = investmentReq.match(/₩([\d,]+)/);
+          if (amountMatch) {
+            const amount = parseInt(amountMatch[1].replace(/,/g, ''), 10);
+            setRequiredInvestmentAmount(amount);
+          }
+        }
+      }
     } catch (err) {
       console.error('Error fetching matches:', err);
       setError('매칭 결과를 불러오는데 실패했습니다.');
@@ -234,6 +276,16 @@ export default function MatchesPage() {
           </>
         )}
 
+        {/* Phase 4: Investment Verification Prompt (Conditional) */}
+        {(session?.user as any)?.organizationId && matches.length > 0 && (
+          <InvestmentPrompt
+            organizationId={(session?.user as any).organizationId}
+            hasInvestmentHistory={hasInvestmentHistory}
+            needsInvestmentVerification={needsInvestmentVerification}
+            requiredInvestmentAmount={requiredInvestmentAmount}
+          />
+        )}
+
         {/* Current Match Cards */}
         <div className="space-y-6">
           {matches.map((match) => (
@@ -244,7 +296,16 @@ export default function MatchesPage() {
               {/* Match Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
+                    {/* Phase 4: Eligibility Badge (Priority Display) */}
+                    {match.eligibilityLevel && (
+                      <EligibilityBadge
+                        level={match.eligibilityLevel}
+                        failedRequirements={match.eligibilityDetails?.failedRequirements}
+                        metRequirements={match.eligibilityDetails?.metRequirements}
+                        showTooltip={true}
+                      />
+                    )}
                     <h2 className="text-xl font-bold text-gray-900">
                       {match.program.title}
                     </h2>
