@@ -718,6 +718,10 @@ interface EligibilityCriteria {
       minimum?: number;
       maximum?: number;
     };
+    investmentThreshold?: {
+      minimumAmount: number; // KRW amount (e.g., 200000000 for 2억원)
+      description?: string; // Original matched text for debugging
+    };
   };
 
   // C. Certification Requirements
@@ -777,6 +781,32 @@ const ELIGIBILITY_PATTERNS = {
     /R&D\s*투자비율\s*(\d+(?:\.\d+)?)\s*%\s*이상/i,
     /매출액\s*대비\s*R&D\s*투자비율\s*(\d+(?:\.\d+)?)\s*%/i,
     /연구개발비\s*(\d+(?:\.\d+)?)\s*%\s*이상/i,
+  ],
+  investmentThreshold: [
+    // Phase 3: Investment threshold patterns (NO AI - pure regex)
+    // Captures requirements like "투자 유치 2억원 이상", "200만원 이상 투자"
+
+    // Pattern 1: "투자 유치 [amount] 이상" (investment raised X or more)
+    /투자\s*유치\s*([\d,\.]+)\s*(억|백만|만)원\s*이상/i,
+    /투자\s*유치\s*금액\s*([\d,\.]+)\s*(억|백만|만)원\s*이상/i,
+
+    // Pattern 2: "벤처투자 [amount] 이상" (venture investment X or more)
+    /벤처\s*투자\s*([\d,\.]+)\s*(억|백만|만)원\s*이상/i,
+
+    // Pattern 3: "[amount] 이상 투자" (X or more investment - reverse order)
+    /([\d,\.]+)\s*(억|백만|만)원\s*이상\s*투자/i,
+
+    // Pattern 4: "투자 실적 [amount]" (investment track record)
+    /투자\s*실적\s*([\d,\.]+)\s*(억|백만|만)원/i,
+
+    // Pattern 5: "투자금 [amount] 이상" (investment amount X or more)
+    /투자금\s*([\d,\.]+)\s*(억|백만|만)원\s*이상/i,
+
+    // Pattern 6: "투자받은 금액 [amount] 이상" (received investment of X or more)
+    /투자받은\s*금액\s*([\d,\.]+)\s*(억|백만|만)원\s*이상/i,
+
+    // Pattern 7: "투자 유치 실적 [amount]" (investment raising track record)
+    /투자\s*유치\s*실적\s*([\d,\.]+)\s*(억|백만|만)원/i,
   ],
   certifications: {
     required: [
@@ -894,7 +924,8 @@ function extractOrganizationRequirements(text: string): EligibilityCriteria['org
 
 /**
  * Extract financial requirements
- * Captures: R&D investment ratio, revenue ranges
+ * Captures: R&D investment ratio, revenue ranges, investment thresholds
+ * Phase 3 Enhancement: Added investment threshold extraction (NO AI)
  */
 function extractFinancialRequirements(text: string): EligibilityCriteria['financialRequirements'] {
   const requirements: NonNullable<EligibilityCriteria['financialRequirements']> = {};
@@ -909,6 +940,48 @@ function extractFinancialRequirements(text: string): EligibilityCriteria['financ
         calculationMethod: text.includes('매출액 대비') ? '매출액 대비 R&D 투자비율' : undefined,
       };
       break;
+    }
+  }
+
+  // Phase 3: Investment threshold extraction (NO AI - pure regex)
+  // Extracts requirements like "투자 유치 2억원 이상" → 200,000,000 won
+  for (const pattern of ELIGIBILITY_PATTERNS.investmentThreshold) {
+    const match = text.match(pattern);
+    if (match && match[1] && match[2]) {
+      // Extract numeric value (remove commas)
+      const cleanedAmount = match[1].replace(/,/g, '');
+      const numericValue = parseFloat(cleanedAmount);
+
+      if (isNaN(numericValue) || numericValue <= 0) {
+        continue; // Skip invalid amounts
+      }
+
+      // Extract unit (억, 백만, 만)
+      const unit = match[2];
+
+      // Convert to won (KRW)
+      let amountInWon: number;
+      if (unit === '억') {
+        // 1억 = 100,000,000 won
+        amountInWon = Math.round(numericValue * 100000000);
+      } else if (unit === '백만') {
+        // 1백만 = 1,000,000 won
+        amountInWon = Math.round(numericValue * 1000000);
+      } else if (unit === '만') {
+        // 1만 = 10,000 won
+        amountInWon = Math.round(numericValue * 10000);
+      } else {
+        continue; // Unknown unit
+      }
+
+      // Validate reasonable range (10만원 to 100억원)
+      if (amountInWon >= 100000 && amountInWon <= 10000000000) {
+        requirements.investmentThreshold = {
+          minimumAmount: amountInWon,
+          description: match[0], // Store original matched text for debugging
+        };
+        break; // Use first valid match
+      }
     }
   }
 
