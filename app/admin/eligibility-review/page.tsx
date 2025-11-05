@@ -23,6 +23,8 @@
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
 
 interface EligibilityProgram {
   id: string;
@@ -37,7 +39,7 @@ interface EligibilityProgram {
   manualReviewCompletedBy: string | null;
   requiredCertifications: string[] | null;
   preferredCertifications: string[] | null;
-  minInvestmentAmount: number | null;
+  requiredInvestmentAmount: number | null;
   requiredOperatingYears: number | null;
   maxOperatingYears: number | null;
   createdAt: string;
@@ -178,16 +180,40 @@ export default function AdminEligibilityReviewPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                🔍 Eligibility Review Dashboard
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Manual review of programs with ambiguous eligibility criteria
-              </p>
+            {/* Left: Logo + Title */}
+            <div className="flex items-center gap-3">
+              <Link href="/dashboard" className="flex items-center gap-1">
+                <Image
+                  src="/logo.svg"
+                  alt="Connect Logo"
+                  width={40}
+                  height={40}
+                  className="w-[40px] h-[40px]"
+                />
+                <span className="text-xl font-bold text-blue-600">Connect</span>
+              </Link>
+              <span className="text-gray-300">|</span>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  자격 요건 검토 대시보드
+                </h1>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  모호한 자격 요건을 가진 프로그램의 수동 검토
+                </p>
+              </div>
             </div>
-            <div className="text-sm text-gray-500">
-              Admin: {session?.user?.name || session?.user?.email}
+
+            {/* Right: Admin Info + Back Button */}
+            <div className="flex flex-col items-end gap-2">
+              <div className="text-sm text-gray-600">
+                관리자: <span className="font-medium text-gray-900">{session?.user?.name || session?.user?.email}</span>
+              </div>
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="px-3 py-1.5 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                대시보드로 돌아가기
+              </button>
             </div>
           </div>
         </div>
@@ -200,51 +226,48 @@ export default function AdminEligibilityReviewPage() {
             {/* Confidence Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confidence Level
+                신뢰도 수준
               </label>
               <select
                 value={confidenceFilter}
                 onChange={(e) => setConfidenceFilter(e.target.value)}
                 className="block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
               >
-                <option value="ALL">All Confidence Levels</option>
-                <option value="LOW">Low Confidence</option>
-                <option value="MEDIUM">Medium Confidence</option>
-                <option value="HIGH">High Confidence</option>
+                <option value="ALL">모든 신뢰도</option>
+                <option value="LOW">낮음</option>
+                <option value="MEDIUM">보통</option>
+                <option value="HIGH">높음</option>
               </select>
             </div>
 
             {/* Agency Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Agency
+                출처 기관
               </label>
               <select
                 value={agencyFilter}
                 onChange={(e) => setAgencyFilter(e.target.value)}
                 className="block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
               >
-                <option value="ALL">All Agencies</option>
-                <option value="NTIS">NTIS</option>
-                <option value="IITP">IITP</option>
-                <option value="KIAT">KIAT</option>
-                <option value="KOTRA">KOTRA</option>
+                <option value="ALL">모든 기관</option>
+                <option value="NTIS">NTIS (국가과학기술지식정보서비스)</option>
               </select>
             </div>
 
             {/* Status Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Review Status
+                검토 상태
               </label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as 'PENDING' | 'COMPLETED' | 'ALL')}
                 className="block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
               >
-                <option value="PENDING">Pending Review</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="ALL">All</option>
+                <option value="PENDING">검토 대기 중</option>
+                <option value="COMPLETED">검토 완료</option>
+                <option value="ALL">전체</option>
               </select>
             </div>
           </div>
@@ -253,23 +276,23 @@ export default function AdminEligibilityReviewPage() {
         {/* Stats */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <div className="text-sm text-gray-600">Total Programs</div>
+            <div className="text-sm text-gray-600">총 프로그램</div>
             <div className="text-3xl font-bold text-gray-900 mt-1">{programs.length}</div>
           </div>
           <div className="bg-white rounded-lg border border-yellow-200 p-4">
-            <div className="text-sm text-yellow-700">Pending Review</div>
+            <div className="text-sm text-yellow-700">검토 대기 중</div>
             <div className="text-3xl font-bold text-yellow-600 mt-1">
               {programs.filter((p) => !p.manualReviewCompletedAt).length}
             </div>
           </div>
           <div className="bg-white rounded-lg border border-green-200 p-4">
-            <div className="text-sm text-green-700">Completed</div>
+            <div className="text-sm text-green-700">검토 완료</div>
             <div className="text-3xl font-bold text-green-600 mt-1">
               {programs.filter((p) => p.manualReviewCompletedAt).length}
             </div>
           </div>
           <div className="bg-white rounded-lg border border-red-200 p-4">
-            <div className="text-sm text-red-700">Low Confidence</div>
+            <div className="text-sm text-red-700">낮은 신뢰도</div>
             <div className="text-3xl font-bold text-red-600 mt-1">
               {programs.filter((p) => p.eligibilityConfidence === 'LOW').length}
             </div>
@@ -311,31 +334,36 @@ export default function AdminEligibilityReviewPage() {
                       )}
                     </div>
 
-                    <div className="text-sm text-gray-700 space-y-1">
+                    <div className="text-sm text-gray-700 space-y-2">
+                      {/* Review Notes - Always shown for flagged programs */}
+                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <span className="text-yellow-600 font-semibold text-xs flex-shrink-0">⚠️ 검토 필요:</span>
+                          <span className="text-yellow-800 text-xs leading-relaxed">
+                            복잡한 자격 요건으로 인해 신뢰도가 낮은 추출 결과
+                          </span>
+                        </div>
+                      </div>
+
                       {program.requiredCertifications && program.requiredCertifications.length > 0 && (
                         <div>
-                          <strong>Required Certs:</strong> {program.requiredCertifications.join(', ')}
+                          <strong>필수 인증:</strong> {program.requiredCertifications.join(', ')}
                         </div>
                       )}
                       {program.preferredCertifications && program.preferredCertifications.length > 0 && (
                         <div>
-                          <strong>Preferred Certs:</strong> {program.preferredCertifications.join(', ')}
+                          <strong>우대 인증:</strong> {program.preferredCertifications.join(', ')}
                         </div>
                       )}
-                      {program.minInvestmentAmount && (
+                      {program.requiredInvestmentAmount && (
                         <div>
-                          <strong>Min Investment:</strong> ₩{program.minInvestmentAmount.toLocaleString()}
+                          <strong>최소 투자액:</strong> ₩{program.requiredInvestmentAmount.toLocaleString()}
                         </div>
                       )}
                       {program.requiredOperatingYears && (
                         <div>
-                          <strong>Operating Years:</strong> {program.requiredOperatingYears}
-                          {program.maxOperatingYears ? ` - ${program.maxOperatingYears}` : '+'} years
-                        </div>
-                      )}
-                      {program.manualReviewNotes && (
-                        <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
-                          <strong>Review Notes:</strong> {program.manualReviewNotes}
+                          <strong>운영 연수:</strong> {program.requiredOperatingYears}
+                          {program.maxOperatingYears ? ` - ${program.maxOperatingYears}` : '+'} 년
                         </div>
                       )}
                     </div>
@@ -349,7 +377,7 @@ export default function AdminEligibilityReviewPage() {
                     }}
                     className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
                   >
-                    Review
+                    검토하기
                   </button>
                 </div>
               </div>
@@ -404,9 +432,9 @@ export default function AdminEligibilityReviewPage() {
                         </ul>
                       </div>
                     )}
-                    {selectedProgram.minInvestmentAmount && (
+                    {selectedProgram.requiredInvestmentAmount && (
                       <div>
-                        <strong>Minimum Investment Amount:</strong> ₩{selectedProgram.minInvestmentAmount.toLocaleString()}
+                        <strong>Minimum Investment Amount:</strong> ₩{selectedProgram.requiredInvestmentAmount.toLocaleString()}
                       </div>
                     )}
                     {selectedProgram.requiredOperatingYears && (

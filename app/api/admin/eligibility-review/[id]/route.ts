@@ -24,6 +24,10 @@ import { authOptions } from '@/lib/auth.config';
 import { PrismaClient, ConfidenceLevel } from '@prisma/client';
 import { notifyEligibilityVerification } from '@/lib/notifications/eligibility-verified';
 
+// Force dynamic rendering (prevents static generation errors)
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Direct Prisma Client instantiation (bypasses lib/db module resolution issue)
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
