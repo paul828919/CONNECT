@@ -20,6 +20,7 @@
 import { organizations, funding_programs, ProgramStatus, EmployeeCountRange } from '@prisma/client';
 import { scoreIndustryKeywordsEnhanced } from './keywords';
 import { scoreTRLEnhanced } from './trl';
+import { checkEligibility, EligibilityLevel } from './eligibility';
 
 // Type aliases for cleaner code
 type Organization = organizations;
@@ -37,6 +38,15 @@ export interface MatchScore {
     deadlineScore: number;
   };
   reasons: string[]; // Keys for explanation generator
+  eligibilityLevel?: EligibilityLevel; // Phase 2: Three-tier eligibility
+  eligibilityDetails?: {
+    hardRequirementsMet: boolean;
+    softRequirementsMet: boolean;
+    failedRequirements: string[];
+    metRequirements: string[];
+    needsManualReview: boolean;
+    manualReviewReason?: string;
+  };
 }
 
 export interface GenerateMatchesOptions {
@@ -95,15 +105,51 @@ export function generateMatches(
       }
     }
 
-    // TODO (Future): Add revenue range requirements filtering
-    // - Revenue range requirements (e.g., program.minRevenue, program.maxRevenue)
+    // ============================================================================
+    // Enhanced Eligibility Checking (Phase 2)
+    // ============================================================================
+    // Check comprehensive eligibility (certifications, investment, revenue, employees, operating years)
+    // Uses three-tier classification: FULLY_ELIGIBLE, CONDITIONALLY_ELIGIBLE, INELIGIBLE
+    const eligibilityResult = checkEligibility(program, organization);
+
+    // CRITICAL: Skip INELIGIBLE programs entirely (hidden from results)
+    if (eligibilityResult.level === EligibilityLevel.INELIGIBLE) {
+      continue;
+    }
+
+    // NOTE: FULLY_ELIGIBLE and CONDITIONALLY_ELIGIBLE programs proceed to scoring
+    // They can be distinguished later in the UI with badges/indicators
 
     const matchScore = calculateMatchScore(organization, program);
+
+    // Attach eligibility information to match result (Phase 2)
+    matchScore.eligibilityLevel = eligibilityResult.level;
+    matchScore.eligibilityDetails = {
+      hardRequirementsMet: eligibilityResult.hardRequirementsMet,
+      softRequirementsMet: eligibilityResult.softRequirementsMet,
+      failedRequirements: eligibilityResult.failedRequirements,
+      metRequirements: eligibilityResult.metRequirements,
+      needsManualReview: eligibilityResult.needsManualReview,
+      manualReviewReason: eligibilityResult.manualReviewReason,
+    };
+
     matches.push(matchScore);
   }
 
-  // Sort by score (highest first) and limit results
-  return matches.sort((a, b) => b.score - a.score).slice(0, limit);
+  // Sort by eligibility level first (FULLY_ELIGIBLE > CONDITIONALLY_ELIGIBLE), then by score
+  return matches
+    .sort((a, b) => {
+      // Primary sort: Eligibility level
+      if (a.eligibilityLevel !== b.eligibilityLevel) {
+        // FULLY_ELIGIBLE ranks higher than CONDITIONALLY_ELIGIBLE
+        if (a.eligibilityLevel === EligibilityLevel.FULLY_ELIGIBLE) return -1;
+        if (b.eligibilityLevel === EligibilityLevel.FULLY_ELIGIBLE) return 1;
+      }
+
+      // Secondary sort: Match score (highest first)
+      return b.score - a.score;
+    })
+    .slice(0, limit);
 }
 
 /**
