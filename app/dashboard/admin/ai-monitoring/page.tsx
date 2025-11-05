@@ -14,10 +14,6 @@
 
 'use client';
 
-// Prevent static generation at build time
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';

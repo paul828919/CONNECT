@@ -17,6 +17,10 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
 import { PrismaClient, ConfidenceLevel, AgencyId } from '@prisma/client';
 
+// Force dynamic rendering (prevents static generation errors)
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Direct Prisma Client instantiation (bypasses lib/db module resolution issue)
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -99,7 +103,7 @@ export async function GET(request: NextRequest) {
         manualReviewCompletedBy: true,
         requiredCertifications: true,
         preferredCertifications: true,
-        minInvestmentAmount: true,
+        requiredInvestmentAmount: true,
         requiredOperatingYears: true,
         maxOperatingYears: true,
         createdAt: true,

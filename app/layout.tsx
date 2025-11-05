@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import SessionProvider from './providers/SessionProvider'
+import QueryClientProvider from './providers/QueryClientProvider'
 import { FeedbackWidget } from '@/components/feedback-widget'
 import StructuredData from './components/StructuredData'
 
@@ -92,10 +93,12 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <SessionProvider>
-          <div className="min-h-screen bg-background">
-            {children}
-          </div>
-          <FeedbackWidget />
+          <QueryClientProvider>
+            <div className="min-h-screen bg-background">
+              {children}
+            </div>
+            <FeedbackWidget />
+          </QueryClientProvider>
         </SessionProvider>
       </body>
     </html>
