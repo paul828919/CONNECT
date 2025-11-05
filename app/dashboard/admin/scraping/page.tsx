@@ -2,7 +2,7 @@
  * Admin Scraping Dashboard
  *
  * Monitoring and control interface for the scraping system:
- * - Manual trigger controls (per-agency + "Scrape All")
+ * - Manual trigger controls for NTIS scraping
  * - Queue status monitoring (waiting/active/completed/failed jobs)
  * - Recent scraping logs table
  * - Statistics and trends
@@ -99,20 +99,20 @@ export default function AdminScrapingDashboard() {
     },
   });
 
-  const agencies = [
-    { id: 'iitp', name: 'IITP (정보통신기획평가원)', color: 'bg-blue-500' },
-    { id: 'keit', name: 'KEIT (한국산업기술평가관리원)', color: 'bg-green-500' },
-    { id: 'tipa', name: 'TIPA (중소기업기술정보진흥원)', color: 'bg-purple-500' },
-    { id: 'kimst', name: 'KIMST (해양수산과학기술진흥원)', color: 'bg-cyan-500' },
-  ];
+  // NTIS scraping - aggregates all Korean R&D programs
+  const ntisSource = {
+    id: 'ntis',
+    name: 'NTIS (국가과학기술지식정보서비스)',
+    description: '모든 한국 연구기관의 R&D 프로그램 통합 스크래핑'
+  };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Scraping Dashboard</h1>
-          <p className="text-muted-foreground">Monitor and control funding program scraping</p>
+          <h1 className="text-3xl font-bold">스크래핑 대시보드</h1>
+          <p className="text-muted-foreground">연구 지원 프로그램 스크래핑 모니터링 및 제어</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -122,50 +122,38 @@ export default function AdminScrapingDashboard() {
             onClick={() => setIsAutoRefresh(!isAutoRefresh)}
           >
             <RefreshCcw className={`h-4 w-4 mr-2 ${isAutoRefresh ? 'animate-spin' : ''}`} />
-            {isAutoRefresh ? 'Auto-Refresh ON' : 'Auto-Refresh OFF'}
+            {isAutoRefresh ? '자동 새로고침 ON' : '자동 새로고침 OFF'}
           </Button>
         </div>
       </div>
 
       {/* Manual Trigger Controls */}
       <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Manual Scrape Triggers</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {agencies.map((agency) => (
-            <Button
-              key={agency.id}
-              onClick={() => scrapeMutation.mutate(agency.id)}
-              disabled={scrapeMutation.isPending}
-              className="w-full"
-            >
-              {scrapeMutation.isPending && scrapeMutation.variables === agency.id ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <PlayCircle className="h-4 w-4 mr-2" />
-              )}
-              Scrape {agency.id.toUpperCase()}
-            </Button>
-          ))}
-
+        <h2 className="text-xl font-semibold mb-4">수동 스크래핑 트리거</h2>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {ntisSource.description}
+          </p>
           <Button
-            onClick={() => scrapeMutation.mutate(undefined)}
+            onClick={() => scrapeMutation.mutate(ntisSource.id)}
             disabled={scrapeMutation.isPending}
             variant="default"
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600"
+            className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            size="lg"
           >
-            {scrapeMutation.isPending && scrapeMutation.variables === undefined ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            {scrapeMutation.isPending ? (
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
             ) : (
-              <PlayCircle className="h-4 w-4 mr-2" />
+              <PlayCircle className="h-5 w-5 mr-2" />
             )}
-            Scrape All Agencies
+            {ntisSource.name} 스크래핑 시작
           </Button>
         </div>
       </Card>
 
       {/* Queue Status */}
       <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Queue Status</h2>
+        <h2 className="text-xl font-semibold mb-4">큐 상태</h2>
         {statsLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -175,36 +163,36 @@ export default function AdminScrapingDashboard() {
             <div className="text-center p-4 border rounded-lg">
               <Clock className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
               <div className="text-2xl font-bold">{queueStats.waiting}</div>
-              <div className="text-sm text-muted-foreground">Waiting</div>
+              <div className="text-sm text-muted-foreground">대기 중</div>
             </div>
             <div className="text-center p-4 border rounded-lg">
               <Loader2 className="h-8 w-8 mx-auto mb-2 text-blue-500 animate-spin" />
               <div className="text-2xl font-bold">{queueStats.active}</div>
-              <div className="text-sm text-muted-foreground">Active</div>
+              <div className="text-sm text-muted-foreground">실행 중</div>
             </div>
             <div className="text-center p-4 border rounded-lg">
               <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
               <div className="text-2xl font-bold">{queueStats.completed}</div>
-              <div className="text-sm text-muted-foreground">Completed</div>
+              <div className="text-sm text-muted-foreground">완료</div>
             </div>
             <div className="text-center p-4 border rounded-lg">
               <XCircle className="h-8 w-8 mx-auto mb-2 text-red-500" />
               <div className="text-2xl font-bold">{queueStats.failed}</div>
-              <div className="text-sm text-muted-foreground">Failed</div>
+              <div className="text-sm text-muted-foreground">실패</div>
             </div>
             <div className="text-center p-4 border rounded-lg bg-primary/5">
               <div className="text-2xl font-bold">{queueStats.total}</div>
-              <div className="text-sm text-muted-foreground">Total Jobs</div>
+              <div className="text-sm text-muted-foreground">전체 작업</div>
             </div>
           </div>
         ) : (
-          <p className="text-muted-foreground">No queue stats available</p>
+          <p className="text-muted-foreground">사용 가능한 큐 통계 없음</p>
         )}
       </Card>
 
       {/* Recent Scraping Logs */}
       <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Recent Scraping Logs</h2>
+        <h2 className="text-xl font-semibold mb-4">최근 스크래핑 로그</h2>
         {logsLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -214,24 +202,24 @@ export default function AdminScrapingDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Agency</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Found</TableHead>
-                  <TableHead className="text-right">New</TableHead>
-                  <TableHead className="text-right">Updated</TableHead>
-                  <TableHead className="text-right">Duration</TableHead>
-                  <TableHead>Timestamp</TableHead>
+                  <TableHead>소스</TableHead>
+                  <TableHead>상태</TableHead>
+                  <TableHead className="text-right">발견</TableHead>
+                  <TableHead className="text-right">신규</TableHead>
+                  <TableHead className="text-right">업데이트</TableHead>
+                  <TableHead className="text-right">소요 시간</TableHead>
+                  <TableHead>타임스탬프</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {logs.slice(0, 20).map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="font-medium">{log.agencyId}</TableCell>
+                    <TableCell className="font-medium">{log.agencyId.toUpperCase()}</TableCell>
                     <TableCell>
                       {log.success ? (
-                        <Badge variant="default" className="bg-green-500">Success</Badge>
+                        <Badge variant="default" className="bg-green-500">성공</Badge>
                       ) : (
-                        <Badge variant="destructive">Failed</Badge>
+                        <Badge variant="destructive">실패</Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-right">{log.programsFound}</TableCell>
@@ -242,7 +230,7 @@ export default function AdminScrapingDashboard() {
                       {log.programsUpdated}
                     </TableCell>
                     <TableCell className="text-right">
-                      {(log.duration / 1000).toFixed(1)}s
+                      {(log.duration / 1000).toFixed(1)}초
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(log.completedAt).toLocaleString('ko-KR')}
@@ -253,7 +241,7 @@ export default function AdminScrapingDashboard() {
             </Table>
           </div>
         ) : (
-          <p className="text-muted-foreground text-center py-8">No scraping logs available</p>
+          <p className="text-muted-foreground text-center py-8">사용 가능한 스크래핑 로그 없음</p>
         )}
       </Card>
       </div>
