@@ -303,6 +303,22 @@ model funding_programs {
   allowedBusinessStructures BusinessStructure[]
   attachmentUrls            String[]              @default([])
   trlInferred               Boolean               @default(false)
+  // New Structured Eligibility Fields (Phase 1)
+  requiredCertifications    String[]              @default([])
+  preferredCertifications   String[]              @default([])
+  requiredMinEmployees      Int?
+  requiredMaxEmployees      Int?
+  requiredMinRevenue        BigInt?
+  requiredMaxRevenue        BigInt?
+  requiredInvestmentAmount  Decimal?
+  requiredOperatingYears    Int?
+  maxOperatingYears         Int?
+  eligibilityConfidence     ConfidenceLevel       @default(LOW)
+  manualReviewRequired      Boolean               @default(false)
+  manualReviewNotes         String?
+  manualReviewCompletedAt   DateTime?
+  manualReviewCompletedBy   String?
+  eligibilityLastUpdated    DateTime?
   consortium_projects       consortium_projects[]
   funding_matches           funding_matches[]
   scraping_job              scraping_jobs?
@@ -313,6 +329,8 @@ model funding_programs {
   @@index([scrapedAt])
   @@index([status])
   @@index([targetType])
+  @@index([eligibilityConfidence])
+  @@index([manualReviewRequired])
 }
 
 model match_notifications {
@@ -395,6 +413,19 @@ model organizations {
   verifiedAt                                                     DateTime?
   createdAt                                                      DateTime              @default(now())
   updatedAt                                                      DateTime              @updatedAt
+  // Enhanced Verification Fields (Phase 1)
+  certifications                                                 String[]              @default([])
+  businessEstablishedDate                                        DateTime?
+  investmentHistory                                              Json?
+  patentCount                                                    Int?
+  priorGrantWins                                                 Int?
+  priorGrantTotalAmount                                          BigInt?
+  rdInvestmentRatio                                              Decimal?              @db.Decimal(5, 2)
+  lastFinancialYear                                              Int?
+  governmentCertifications                                       String[]              @default([])
+  industryAwards                                                 String[]              @default([])
+  verificationDocumentsUploaded                                  Boolean               @default(false)
+  verificationNotes                                              String?
   ai_cost_logs                                                   ai_cost_logs[]
   consortium_members                                             consortium_members[]
   consortium_projects                                            consortium_projects[]
