@@ -372,11 +372,11 @@ export default function AdminEligibilityReviewPage() {
               {/* Eligibility Details */}
               <div className="space-y-4 mb-6">
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">Extracted Eligibility Criteria</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">추출된 자격 요건</h3>
                   <div className="text-sm text-gray-700 space-y-2">
                     {selectedProgram.requiredCertifications && selectedProgram.requiredCertifications.length > 0 && (
                       <div>
-                        <strong>Required Certifications:</strong>
+                        <strong>필수 인증:</strong>
                         <ul className="list-disc list-inside ml-2">
                           {selectedProgram.requiredCertifications.map((cert, idx) => (
                             <li key={idx}>{cert}</li>
@@ -386,7 +386,7 @@ export default function AdminEligibilityReviewPage() {
                     )}
                     {selectedProgram.preferredCertifications && selectedProgram.preferredCertifications.length > 0 && (
                       <div>
-                        <strong>Preferred Certifications:</strong>
+                        <strong>우대 인증:</strong>
                         <ul className="list-disc list-inside ml-2">
                           {selectedProgram.preferredCertifications.map((cert, idx) => (
                             <li key={idx}>{cert}</li>
@@ -396,13 +396,13 @@ export default function AdminEligibilityReviewPage() {
                     )}
                     {selectedProgram.requiredInvestmentAmount && (
                       <div>
-                        <strong>Minimum Investment Amount:</strong> ₩{selectedProgram.requiredInvestmentAmount.toLocaleString()}
+                        <strong>최소 투자액:</strong> ₩{selectedProgram.requiredInvestmentAmount.toLocaleString()}
                       </div>
                     )}
                     {selectedProgram.requiredOperatingYears && (
                       <div>
-                        <strong>Operating Years Required:</strong> {selectedProgram.requiredOperatingYears}
-                        {selectedProgram.maxOperatingYears ? ` - ${selectedProgram.maxOperatingYears}` : '+'} years
+                        <strong>운영 연수:</strong> {selectedProgram.requiredOperatingYears}
+                        {selectedProgram.maxOperatingYears ? ` - ${selectedProgram.maxOperatingYears}` : '+'} 년
                       </div>
                     )}
                   </div>
@@ -416,37 +416,37 @@ export default function AdminEligibilityReviewPage() {
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                   >
-                    📄 View Original Announcement →
+                    📄 원본 공고 보기 →
                   </a>
                 </div>
 
                 {/* Confidence Level Selector */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Updated Confidence Level
+                    수정된 신뢰도 수준
                   </label>
                   <select
                     value={newConfidence}
                     onChange={(e) => setNewConfidence(e.target.value as 'LOW' | 'MEDIUM' | 'HIGH')}
                     className="block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
                   >
-                    <option value="LOW">Low Confidence</option>
-                    <option value="MEDIUM">Medium Confidence</option>
-                    <option value="HIGH">High Confidence</option>
+                    <option value="LOW">낮음</option>
+                    <option value="MEDIUM">보통</option>
+                    <option value="HIGH">높음</option>
                   </select>
                 </div>
 
                 {/* Review Notes */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Review Notes (Required)
+                    검토 노트 (필수)
                   </label>
                   <textarea
                     value={reviewNotes}
                     onChange={(e) => setReviewNotes(e.target.value)}
                     rows={4}
                     className="block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="Enter your review notes (e.g., 'Confirmed investment threshold is ₩200M', 'Ambiguous certification requirement - need to verify with agency')"
+                    placeholder="검토 노트를 입력하세요 (예: '투자액 기준 ₩200M 확인 완료', '인증 요구사항 모호 - 기관 확인 필요')"
                   />
                 </div>
               </div>
@@ -458,21 +458,21 @@ export default function AdminEligibilityReviewPage() {
                   disabled={isSubmitting || !reviewNotes.trim()}
                   className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  ✓ Approve (High Confidence)
+                  ✓ 승인 (높은 신뢰도)
                 </button>
                 <button
                   onClick={() => handleReview('REQUEST_INFO')}
                   disabled={isSubmitting || !reviewNotes.trim()}
                   className="flex-1 px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  ⚠️ Request More Info
+                  ⚠️ 추가 정보 요청
                 </button>
                 <button
                   onClick={() => handleReview('REJECT')}
                   disabled={isSubmitting || !reviewNotes.trim()}
                   className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  ✗ Mark as Low Confidence
+                  ✗ 낮은 신뢰도로 표시
                 </button>
               </div>
 
