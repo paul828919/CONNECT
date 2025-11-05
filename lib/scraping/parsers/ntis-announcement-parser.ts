@@ -366,6 +366,23 @@ function extractDeadline(bodyText: string): Date | null {
 export function extractBudget(bodyText: string): number | null {
   try {
     // ========================================================================
+    // HIGHEST PRIORITY: Direct amount format "금액 : 45,000,000원" or "금 액 : 45,000,000원"
+    // November 5, 2025: Added for government tender announcements
+    // Handles Korean spacing variations: "금액", "금 액"
+    // ========================================================================
+    const directAmountPattern = /금\s*액\s*[:：]\s*([\d,]+)원/i;
+    const directAmountMatch = bodyText.match(directAmountPattern);
+
+    if (directAmountMatch && directAmountMatch[1]) {
+      const cleanedAmount = directAmountMatch[1].replace(/,/g, '');
+      const amount = parseInt(cleanedAmount, 10);
+
+      if (amount > 0 && amount < 1000000000000) { // Validate < 1 trillion won
+        return amount;
+      }
+    }
+
+    // ========================================================================
     // PRIORITY Pattern: Year-based budget ("2025년 256백만원")
     // November 5, 2025: Added to prioritize annual total budget over per-project amounts
     // CRITICAL FIX: Use \d not \\d in regex literals!
@@ -767,6 +784,9 @@ const ELIGIBILITY_PATTERNS = {
       '경영혁신형기업',
       'Main-Biz',
       '메인비즈',
+      '국가종합전자조달시스템',
+      '학술·연구용역',
+      '학술연구용역',
     ],
     documents: [
       '법인등기부등본',
@@ -774,12 +794,21 @@ const ELIGIBILITY_PATTERNS = {
       '창업기업 확인서',
       '재무제표',
       '중소기업 확인서',
+      '중소기업확인서',
+      '입찰참가자격등록',
     ],
   },
   government: {
     agreements: ['MOU', 'NDA', '양해각서', '비밀유지협약'],
     preferredStatus: ['우선협상대상자', '우선 선정'],
     targetEntity: ['상대국 정부 기관', '방산업체'],
+    exclusions: [
+      '금품·향응 등',
+      '금품향응',
+      '부정한 청탁',
+      '사전 협의 또는 특정인의 낙찰',
+      '공정한 경쟁',
+    ],
   },
   organizationType: {
     sme: ['중소기업', '중기'],
@@ -909,6 +938,14 @@ function extractCertificationRequirements(text: string): EligibilityCriteria['ce
       documents.push(doc);
     }
   });
+
+  // Additional pattern-based document detection (November 5, 2025)
+  // Catches phrases like "중소기업 법인 및 확인에 관한 규정" → "중소기업확인서"
+  // Also matches "중소기업확인서" or "중소기업 확인서"
+  if (/중소기업.{0,30}확인/i.test(text) && !documents.includes('중소기업확인서')) {
+    documents.push('중소기업확인서');
+  }
+
   if (documents.length > 0) {
     requirements.documents = documents;
   }
@@ -996,6 +1033,17 @@ function extractGovernmentRelationship(text: string): EligibilityCriteria['gover
       requirements.targetCountry = entity;
       break; // Stop at first match
     }
+  }
+
+  // Exclusion criteria (November 5, 2025: Added for government tender announcements)
+  const exclusions: string[] = [];
+  ELIGIBILITY_PATTERNS.government.exclusions.forEach(exclusion => {
+    if (text.includes(exclusion)) {
+      exclusions.push(exclusion);
+    }
+  });
+  if (exclusions.length > 0) {
+    requirements.exclusions = exclusions;
   }
 
   return Object.keys(requirements).length > 0 ? requirements : undefined;
