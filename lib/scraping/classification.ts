@@ -126,9 +126,19 @@ export function classifyAnnouncement(input: ClassificationInput): AnnouncementTy
   const noticePatterns = [
     /^공지/,              // Notice (at start of title)
     /시행계획\s*안내/,    // Implementation plan announcement
+    /시행계획\s*공고/,    // Implementation plan announcement (공고 variant)
+    /추진계획/,           // Promotion/implementation plan
+    /실행계획/,           // Execution plan
+    /주요업무\s*추진계획/, // Key task implementation plan
+    /과제\s*추진/,        // Project implementation (not announcement)
     /변경사항/,           // Changes
     /일정변경/,           // Schedule change
     /연기/,               // Postponement
+    /온라인.*시스템.*안내/, // Online system guidelines (e.g., JAMS)
+    /제출.*시스템/,       // Submission system
+    /입찰.*공고/,         // Bid announcement (procurement, not R&D)
+    /용역.*입찰/,         // Service bidding
+    /정책연구.*입찰/,     // Policy research bidding (procurement)
   ];
 
   // Special case: Titles ending with "안내" (announcement) are often general notices
