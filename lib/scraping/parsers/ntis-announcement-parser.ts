@@ -415,16 +415,17 @@ export function extractBudget(bodyText: string): number | null {
     for (const synonym of FIELD_SYNONYMS.budget) {
       // ========================================================================
       // Pattern 1: Billions with decimals/commas "1,764.22억원" or "1,234억원"
+      // Enhanced Nov 5, 2025: Handle "총 215.6억원" format (total prefix)
       // ========================================================================
       const billionPattern = new RegExp(
-        `${synonym}[^\\d]*([\\d,\\.]+)\\s*억원`,
+        `${synonym}[^\\d]*(총\\s*)?([\\d,\\.]+)\\s*억원`,
         'i'
       );
       const billionMatch = bodyText.match(billionPattern);
 
-      if (billionMatch && billionMatch[1]) {
-        // Remove commas and parse: "1,764.22" → 1764.22
-        const cleanedAmount = billionMatch[1].replace(/,/g, '');
+      if (billionMatch && billionMatch[2]) {
+        // Remove commas and parse: "1,764.22" → 1764.22 or "215.6" → 215.6
+        const cleanedAmount = billionMatch[2].replace(/,/g, '');
         const billionAmount = parseFloat(cleanedAmount);
 
         // Validate reasonable range (0.01억 to 100,000억)
@@ -437,16 +438,17 @@ export function extractBudget(bodyText: string): number | null {
 
       // ========================================================================
       // Pattern 2: Millions "300백만원" or "40백만원"
+      // Enhanced Nov 5, 2025: Handle "총 300백만원" format (total prefix)
       // ========================================================================
       const millionPattern = new RegExp(
-        `${synonym}[^\\d]*([\\d,\\.]+)\\s*백만원`,
+        `${synonym}[^\\d]*(총\\s*)?([\\d,\\.]+)\\s*백만원`,
         'i'
       );
       const millionMatch = bodyText.match(millionPattern);
 
-      if (millionMatch && millionMatch[1]) {
+      if (millionMatch && millionMatch[2]) {
         // Remove commas and parse: "300" → 300
-        const cleanedAmount = millionMatch[1].replace(/,/g, '');
+        const cleanedAmount = millionMatch[2].replace(/,/g, '');
         const millionAmount = parseFloat(cleanedAmount);
 
         // Validate reasonable range (1백만 to 100,000백만)
