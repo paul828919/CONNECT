@@ -22,6 +22,15 @@ else
   exit 1
 fi
 
+# Regenerate Prisma Client to match current schema
+echo "🔄 Regenerating Prisma Client..."
+if npx prisma generate 2>&1; then
+  echo "✅ Prisma Client regenerated"
+else
+  echo "❌ Failed to regenerate Prisma Client"
+  exit 1
+fi
+
 echo "✅ Database ready. Starting application..."
 echo "---"
 
