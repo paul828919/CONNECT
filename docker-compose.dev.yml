@@ -135,6 +135,11 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5-20250929}
 
+      # Hancom Docs (HWP to PDF Converter)
+      HANCOM_DOCS_URL: ${HANCOM_DOCS_URL:-https://www.hancomdocs.com/ko/}
+      HANCOM_DOCS_ID: ${HANCOM_DOCS_ID}
+      HANCOM_DOCS_PW: ${HANCOM_DOCS_PW}
+
       # Agency URLs
       IITP_URL: https://www.iitp.kr
       KEIT_URL: https://www.keit.re.kr

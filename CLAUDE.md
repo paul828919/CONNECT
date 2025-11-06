@@ -4,10 +4,10 @@ This file provides guidelines for using Claude Code (claude.ai/code) when workin
 ## ⚠️ Important Work Rules - Read First
 ### 1. Local verification is mandatory
 **Do not commit or push without local verification.**
-- **Rule**: When executing a task, always verify it locally after completion. Commit and push only after local verification is complete. After completing all updates to script files, databases, and architecture, be sure to commit and push, then ask me whether to proceed with deployment. Always run npx prisma db push after modifying schema.prisma or use npx prisma migrate dev for production-like environments (creates migration history).
+- **Rule**: When executing a task, always verify it locally after completion. Commit and push only after local verification is complete. After completing all updates to script files, databases, and architecture, be sure to commit and push, then ask me whether to proceed with deployment. Always run npx prisma db push after modifying schema.prisma or use npx prisma migrate dev for production-like environments (creates migration history). 
 - **Avoid the mistake of “assuming rather than verifying”**: Especially for infrastructure-related matters like authentication or caching, always explore the actual architecture of the existing codebase before creating imports.
 - **Preventing schema field name mismatches**: When modifying or updating Prisma schemas, avoid assuming field naming conventions. Always verify field names against the actual Prisma schema (schema.prisma) and examine patterns in similar existing routes.
-
+- **Deploy to the production environment**: When a single task—such as a detailed task or a single item on your to-do list—is completed, commit and push it.
 - **Time**: Production deployment takes approximately 12 minutes. Local verification takes 2-5 minutes. Always verify first.
 **Never use browser automation tools (Playwright) when inspecting GitHub Actions pages.**
 - **Rule**: I(user) will personally visit the pagehttps://github.com/paul828919/CONNECT/actions를 to check and share the latest run results. 
