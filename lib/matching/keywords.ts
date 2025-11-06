@@ -65,6 +65,23 @@ export function scoreIndustryKeywordsEnhanced(
     return result;
   }
 
+  // ============================================================================
+  // STAGE 2.2: Exact Category Match Bonus (+10 points)
+  // ============================================================================
+  // Award bonus for exact string match between org.industrySector and program.category
+  // This ensures highly relevant programs rank above fuzzy taxonomy matches
+  // Example: "제조업" org → "제조업" program category = +10 points (before keyword analysis)
+  if (org.industrySector && program.category) {
+    const normalizedOrgSector = normalizeKoreanKeyword(org.industrySector);
+    const normalizedProgramCategory = normalizeKoreanKeyword(program.category);
+
+    if (normalizedOrgSector === normalizedProgramCategory) {
+      result.score += 10;
+      result.details.sectorMatches++;
+      result.reasons.push('EXACT_CATEGORY_MATCH');
+    }
+  }
+
   // 1. Exact keyword matching (up to 15 points)
   const exactMatchScore = scoreExactKeywordMatches(orgKeywords, programKeywords, result);
   result.score += exactMatchScore;
