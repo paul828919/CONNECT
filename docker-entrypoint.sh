@@ -22,6 +22,10 @@ else
   exit 1
 fi
 
+# Remove old Prisma Client to avoid permission conflicts
+echo "🧹 Removing old Prisma Client..."
+rm -rf node_modules/.prisma || true
+
 # Regenerate Prisma Client to match current schema
 echo "🔄 Regenerating Prisma Client..."
 if npx prisma generate 2>&1; then
