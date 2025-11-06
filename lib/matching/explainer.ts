@@ -226,6 +226,10 @@ function getReasonExplanation(
     case 'EXACT_KEYWORD_MATCH':
       return '귀하의 기술 분야와 프로그램 키워드가 정확히 일치합니다.';
 
+    // Stage 2.2: Exact category match bonus
+    case 'EXACT_CATEGORY_MATCH':
+      return '귀사의 산업 분류가 프로그램 대상 분야와 정확히 일치합니다. 매우 적합한 지원 프로그램입니다.';
+
     case 'SECTOR_MATCH':
       return '산업 분야가 프로그램의 주요 대상 분야와 일치합니다.';
 
