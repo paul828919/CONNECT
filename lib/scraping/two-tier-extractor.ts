@@ -369,8 +369,13 @@ export class TwoTierExtractor {
 
   /**
    * Extract TRL range with two-tier fallback
+   * Returns TRL range with confidence level for Stage 3.2 enhancement
    */
-  async extractTRL(): Promise<{ minTRL: number; maxTRL: number } | null> {
+  async extractTRL(): Promise<{
+    minTRL: number;
+    maxTRL: number;
+    confidence: 'explicit' | 'inferred';
+  } | null> {
     const attemptedSources: Array<'ANNOUNCEMENT_FILE' | 'DETAIL_PAGE'> = [];
 
     // Priority 1: Announcement files (if available)
@@ -384,12 +389,12 @@ export class TwoTierExtractor {
       if (trlRange) {
         this.logger.logSuccess(
           'TRL_RANGE',
-          `${trlRange.minTRL}-${trlRange.maxTRL}`,
+          `${trlRange.minTRL}-${trlRange.maxTRL} (${trlRange.confidence})`,
           'ANNOUNCEMENT_FILE',
           'HIGH',
           `From ${this.attachmentData.announcementFiles[0].filename}`
         );
-        return trlRange;
+        return trlRange; // Includes confidence field
       }
     }
 
@@ -402,12 +407,12 @@ export class TwoTierExtractor {
       if (trlRange) {
         this.logger.logSuccess(
           'TRL_RANGE',
-          `${trlRange.minTRL}-${trlRange.maxTRL}`,
+          `${trlRange.minTRL}-${trlRange.maxTRL} (${trlRange.confidence})`,
           'DETAIL_PAGE',
           'MEDIUM',
           'Extracted from detail page HTML'
         );
-        return trlRange;
+        return trlRange; // Includes confidence field
       }
     }
 
@@ -417,12 +422,12 @@ export class TwoTierExtractor {
       if (trlRange) {
         this.logger.logSuccess(
           'TRL_RANGE',
-          `${trlRange.minTRL}-${trlRange.maxTRL}`,
+          `${trlRange.minTRL}-${trlRange.maxTRL} (${trlRange.confidence})`,
           'DETAIL_PAGE',
           'MEDIUM',
           'From Discovery description field'
         );
-        return trlRange;
+        return trlRange; // Includes confidence field
       }
     }
 

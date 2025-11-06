@@ -869,6 +869,13 @@ async function processJob(
           ? ['RESEARCH_INSTITUTE' as const]
           : ['COMPANY' as const, 'RESEARCH_INSTITUTE' as const];
 
+      // Stage 3.2: Determine trlConfidence and trlInferred from extracted TRL data
+      // - 'explicit': TRL explicitly stated (e.g., "TRL 4-6", "기술성숙도 7-9")
+      // - 'inferred': TRL inferred from Korean keywords (e.g., "응용연구" → TRL 4-6)
+      // - 'missing': No TRL data detected
+      const trlConfidence = trlRange ? trlRange.confidence : 'missing';
+      const trlInferred = trlRange ? (trlRange.confidence === 'inferred') : false;
+
       const fundingProgram = await db.funding_programs.create({
         data: {
           agencyId: 'NTIS' as AgencyId,
@@ -880,6 +887,7 @@ async function processJob(
           targetType: targetTypeArray,
           minTrl: trlRange?.minTRL || null,
           maxTrl: trlRange?.maxTRL || null,
+          trlConfidence, // Stage 3.2: Now populated from extraction confidence
           eligibilityCriteria: eligibilityCriteria || undefined,
           publishedAt: publishedAt || null,
           applicationStart: applicationStart || null,
@@ -895,7 +903,7 @@ async function processJob(
           // Phase 2 Enhancement Fields
           allowedBusinessStructures: allowedBusinessStructures || [],
           attachmentUrls: detailData.attachmentUrls || [],
-          trlInferred: false, // TRL confidence tracking moved to extraction_logs table
+          trlInferred, // Stage 3.2: Now derived from confidence (true if 'inferred', false otherwise)
           trlClassification: trlClassification || undefined,
         },
       });
