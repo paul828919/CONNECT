@@ -22,20 +22,9 @@ else
   exit 1
 fi
 
-# Remove old Prisma Client to avoid permission conflicts
-echo "🧹 Removing old Prisma Client..."
-rm -rf node_modules/.prisma || true
-
-# Regenerate Prisma Client to match current schema
-echo "🔄 Regenerating Prisma Client..."
-if npx prisma generate 2>&1; then
-  echo "✅ Prisma Client regenerated"
-else
-  echo "❌ Failed to regenerate Prisma Client"
-  exit 1
-fi
-
-echo "✅ Database ready. Starting application..."
+# Note: Prisma Client was generated during Docker build and is already available
+# Runtime regeneration is not needed since schema changes trigger new builds
+echo "✅ Using build-time Prisma Client. Database ready. Starting application..."
 echo "---"
 
 # Start the application
