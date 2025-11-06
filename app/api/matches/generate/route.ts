@@ -42,6 +42,7 @@ import {
   getOrgCacheKey,
   getProgramsCacheKey,
   CACHE_TTL,
+  invalidateOrgMatches,
 } from '@/lib/cache/redis-cache';
 import { logMatchQualityBulk } from '@/lib/analytics/match-performance';
 
