@@ -13,13 +13,13 @@ export npm_config_loglevel=error
 mkdir -p /tmp/.npm
 chmod 777 /tmp/.npm
 
-# Run database migrations (allow failure for existing schemas)
-echo "📦 Running database migrations..."
-if npx prisma migrate deploy 2>&1; then
-  echo "✅ Migrations applied successfully"
+# Sync database schema with Prisma schema
+echo "📦 Syncing database schema..."
+if npx prisma db push --skip-generate --accept-data-loss 2>&1; then
+  echo "✅ Database schema synchronized"
 else
-  echo "⚠️  Migration skipped (database may already be up to date)"
-  echo "    This is normal for existing production databases"
+  echo "❌ Failed to sync database schema"
+  exit 1
 fi
 
 echo "✅ Database ready. Starting application..."

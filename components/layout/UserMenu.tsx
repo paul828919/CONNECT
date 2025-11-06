@@ -45,10 +45,15 @@ export default function UserMenu() {
           알림 설정
         </DropdownMenuItem>
         {/* Admin only */}
-        {(session.user as any)?.role === 'ADMIN' && (
-          <DropdownMenuItem onClick={() => router.push('/dashboard/admin/scraping')}>
-            관리자
-          </DropdownMenuItem>
+        {((session.user as any)?.role === 'ADMIN' || (session.user as any)?.role === 'SUPER_ADMIN') && (
+          <>
+            <DropdownMenuItem onClick={() => router.push('/dashboard/admin/scraping')}>
+              스크래핑 관리
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/admin/eligibility-review')}>
+              자격 요건 검토
+            </DropdownMenuItem>
+          </>
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
