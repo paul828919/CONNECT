@@ -81,6 +81,8 @@ export default function MatchesPage() {
   const [needsInvestmentVerification, setNeedsInvestmentVerification] = useState(false);
   const [hasInvestmentHistory, setHasInvestmentHistory] = useState(false);
   const [requiredInvestmentAmount, setRequiredInvestmentAmount] = useState<number | undefined>();
+  // Stage 2.1: Force regeneration state
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   const fetchMatches = useCallback(async () => {
     try {
@@ -154,6 +156,38 @@ export default function MatchesPage() {
     }
   }, [session]);
 
+  // Stage 2.1: Force regenerate matches (clears cache + deletes old matches)
+  const handleRegenerateMatches = useCallback(async () => {
+    try {
+      setIsRegenerating(true);
+      setError(null);
+
+      const orgId = (session?.user as any)?.organizationId;
+      if (!orgId) {
+        setError('조직 정보를 찾을 수 없습니다.');
+        return;
+      }
+
+      const res = await fetch(
+        `/api/matches/generate?organizationId=${orgId}&forceRegenerate=true`,
+        { method: 'POST' }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to regenerate matches');
+      }
+
+      // Success - reload matches
+      await fetchMatches();
+    } catch (err) {
+      console.error('Error regenerating matches:', err);
+      setError('매칭 재생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setIsRegenerating(false);
+    }
+  }, [session, fetchMatches]);
+
   useEffect(() => {
     if (status === 'loading') return;
 
@@ -222,10 +256,63 @@ export default function MatchesPage() {
   return (
     <DashboardLayout>
       <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">매칭 결과</h1>
-          <p className="mt-2 text-gray-600">
-            귀하의 조직 프로필과 적합한 지원 프로그램을 찾았습니다.
-          </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">매칭 결과</h1>
+              <p className="mt-2 text-gray-600">
+                귀하의 조직 프로필과 적합한 지원 프로그램을 찾았습니다.
+              </p>
+            </div>
+            {matches.length > 0 && (
+              <button
+                onClick={handleRegenerateMatches}
+                disabled={isRegenerating}
+                className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {isRegenerating ? (
+                  <>
+                    <svg
+                      className="mr-2 w-4 h-4 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    재생성 중...
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="mr-2 w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    매칭 재생성
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         {error && (
