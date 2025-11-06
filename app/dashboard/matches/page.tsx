@@ -213,6 +213,14 @@ export default function MatchesPage() {
     return '참고용';
   };
 
+  // Stage 2.3: Check if match is "fresh" (created within 48 hours)
+  const isFreshMatch = (createdAt: string): boolean => {
+    const created = new Date(createdAt);
+    const now = new Date();
+    const hoursDiff = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
+    return hoursDiff <= 48;
+  };
+
   const formatBudget = (amount: string | null) => {
     // Enhanced NULL value display with Korean message
     if (!amount) return '💰 미정 (공고문 확인 필요)';
@@ -392,6 +400,12 @@ export default function MatchesPage() {
                         metRequirements={match.eligibilityDetails?.metRequirements}
                         showTooltip={true}
                       />
+                    )}
+                    {/* Stage 2.3: Fresh Match Badge (New within 48h) */}
+                    {isFreshMatch(match.createdAt) && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700 border-2 border-green-300">
+                        ✨ New
+                      </span>
                     )}
                     <h2 className="text-xl font-bold text-gray-900">
                       {match.program.title}
