@@ -796,6 +796,7 @@ async function processJob(
     const trlRange = await extractor.extractTRL();
     const eligibilityCriteria = await extractor.extractEligibility();
     const allowedBusinessStructures = await extractor.extractBusinessStructures();
+    const requiredInvestmentAmount = await extractor.extractInvestment();
 
     // STEP 9: Extract fields not yet handled by TwoTierExtractor
     const targetType = determineTargetType(combinedText);
@@ -876,6 +877,11 @@ async function processJob(
       const trlConfidence = trlRange ? trlRange.confidence : 'missing';
       const trlInferred = trlRange ? (trlRange.confidence === 'inferred') : false;
 
+      // Extract top-level eligibility fields from JSONB for matching algorithm
+      // The matching algorithm checks these top-level fields (e.g., requiredInvestmentAmount)
+      // while the extracted data is in eligibilityCriteria JSONB
+      const eligibilityFields = extractEligibilityFields(eligibilityCriteria);
+
       const fundingProgram = await db.funding_programs.create({
         data: {
           agencyId: 'NTIS' as AgencyId,
@@ -905,6 +911,14 @@ async function processJob(
           attachmentUrls: detailData.attachmentUrls || [],
           trlInferred, // Stage 3.2: Now derived from confidence (true if 'inferred', false otherwise)
           trlClassification: trlClassification || undefined,
+          // Top-level eligibility fields extracted from JSONB for matching algorithm
+          requiredInvestmentAmount: eligibilityFields.requiredInvestmentAmount || undefined,
+          requiredOperatingYears: eligibilityFields.requiredOperatingYears || undefined,
+          maxOperatingYears: eligibilityFields.maxOperatingYears || undefined,
+          requiredMinEmployees: eligibilityFields.requiredMinEmployees || undefined,
+          requiredMaxEmployees: eligibilityFields.requiredMaxEmployees || undefined,
+          requiredCertifications: eligibilityFields.requiredCertifications || undefined,
+          preferredCertifications: eligibilityFields.preferredCertifications || undefined,
         },
       });
 
@@ -949,6 +963,62 @@ async function processJob(
 // ================================================================
 // Helper Functions
 // ================================================================
+
+/**
+ * Extract top-level eligibility fields from JSONB for matching algorithm
+ *
+ * The matching algorithm checks top-level fields (e.g., requiredInvestmentAmount)
+ * while the extracted data is in eligibilityCriteria JSONB
+ * (e.g., eligibilityCriteria.financialRequirements.investmentThreshold.minimumAmount)
+ */
+function extractEligibilityFields(eligibilityCriteria: any) {
+  const fields = {
+    requiredInvestmentAmount: null as number | null,
+    requiredOperatingYears: null as number | null,
+    maxOperatingYears: null as number | null,
+    requiredMinEmployees: null as number | null,
+    requiredMaxEmployees: null as number | null,
+    requiredCertifications: null as string[] | null,
+    preferredCertifications: null as string[] | null,
+  };
+
+  if (!eligibilityCriteria) {
+    return fields;
+  }
+
+  try {
+    // Extract investment threshold from financialRequirements
+    const financialReqs = eligibilityCriteria.financialRequirements;
+    if (financialReqs?.investmentThreshold?.minimumAmount) {
+      fields.requiredInvestmentAmount = financialReqs.investmentThreshold.minimumAmount;
+    }
+
+    // Extract operating years from organizationRequirements
+    const orgReqs = eligibilityCriteria.organizationRequirements;
+    if (orgReqs?.operatingYears) {
+      if (orgReqs.operatingYears.minimum) {
+        fields.requiredOperatingYears = orgReqs.operatingYears.minimum;
+      }
+      if (orgReqs.operatingYears.maximum) {
+        fields.maxOperatingYears = orgReqs.operatingYears.maximum;
+      }
+    }
+
+    // Extract certifications from certificationRequirements
+    const certReqs = eligibilityCriteria.certificationRequirements;
+    if (certReqs?.required && Array.isArray(certReqs.required) && certReqs.required.length > 0) {
+      fields.requiredCertifications = certReqs.required;
+    }
+    if (certReqs?.preferred && Array.isArray(certReqs.preferred) && certReqs.preferred.length > 0) {
+      fields.preferredCertifications = certReqs.preferred;
+    }
+  } catch (error) {
+    console.error('[WORKER] Failed to extract eligibility fields from JSONB:', error);
+    // Return empty fields on error (safer than failing the entire program creation)
+  }
+
+  return fields;
+}
 
 /**
  * Print real-time processing statistics
