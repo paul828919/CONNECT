@@ -32,6 +32,7 @@ const ANNOUNCEMENT_PATTERNS = [
   /요강/i,
   /지침/i,
   /입찰공고/i, // Bid announcement
+  /지원계획/i, // Support plan (used in DCP and government R&D programs)
   // REMOVED: /공/i - Too broad, matches "동의" in "개인정보 동의서"
 ];
 

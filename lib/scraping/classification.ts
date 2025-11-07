@@ -103,9 +103,36 @@ export function classifyAnnouncement(input: ClassificationInput): AnnouncementTy
     return 'SURVEY';
   }
 
+  // --- R&D PROJECT Detection (CHECK THIS FIRST!) ---
+  // IMPORTANT: R&D detection runs BEFORE EVENT detection to prevent false positives.
+  // Many R&D announcements mention "설명회" (application briefing) as part of the process,
+  // but they are legitimate R&D funding opportunities, not events.
+  //
+  // Keywords: 연구과제 (research project), 과제공고 (project announcement),
+  //           R&D (research & development), 지원사업 (support program),
+  //           기술개발 (technology development)
+  const rdProjectPatterns = [
+    /연구과제/,           // Research project
+    /과제공고/,           // Project announcement
+    /과제선정/,           // Project selection
+    /연구개발/,           // Research & Development
+    /R&D/i,               // R&D (case insensitive)
+    /지원사업/,           // Support program
+    /기술개발/,           // Technology development
+    /개발과제/,           // Development project
+    /연구지원/,           // Research support
+    /사업화\s*지원/,      // Commercialization support
+  ];
+
+  if (rdProjectPatterns.some(pattern => pattern.test(combinedText))) {
+    return 'R_D_PROJECT';
+  }
+
   // --- EVENT Detection ---
   // Keywords: 설명회 (briefing), 세미나 (seminar), 행사 (event),
   //           워크샵 (workshop), 컨퍼런스 (conference)
+  // NOTE: This check runs AFTER R&D detection to avoid misclassifying R&D programs
+  // that mention briefings/info sessions as events.
   const eventPatterns = [
     /설명회/,             // Briefing/info session
     /세미나/,             // Seminar
@@ -153,27 +180,6 @@ export function classifyAnnouncement(input: ClassificationInput): AnnouncementTy
 
   if (noticePatterns.some(pattern => pattern.test(combinedText))) {
     return 'NOTICE';
-  }
-
-  // --- R&D PROJECT Detection ---
-  // Keywords: 연구과제 (research project), 과제공고 (project announcement),
-  //           R&D (research & development), 지원사업 (support program),
-  //           기술개발 (technology development)
-  const rdProjectPatterns = [
-    /연구과제/,           // Research project
-    /과제공고/,           // Project announcement
-    /과제선정/,           // Project selection
-    /연구개발/,           // Research & Development
-    /R&D/i,               // R&D (case insensitive)
-    /지원사업/,           // Support program
-    /기술개발/,           // Technology development
-    /개발과제/,           // Development project
-    /연구지원/,           // Research support
-    /사업화\s*지원/,      // Commercialization support
-  ];
-
-  if (rdProjectPatterns.some(pattern => pattern.test(combinedText))) {
-    return 'R_D_PROJECT';
   }
 
   // ================================================================
