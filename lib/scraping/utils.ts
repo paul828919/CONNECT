@@ -186,6 +186,153 @@ export function parseBudgetAmount(text: string): number | null {
 }
 
 /**
+ * Extract investment requirement amount from Korean text
+ * Examples:
+ *  - "투자 유치 20억원 이상" → 2000000000
+ *  - "투자금 5억원 이상" → 500000000
+ *  - "투자 실적 10억원 이상" → 1000000000
+ *  - "자기자본 3억원 이상" → 300000000
+ *
+ * @returns Minimum investment amount in Korean won, or null if not found
+ */
+export function extractInvestmentRequirement(text: string): number | null {
+  if (!text) return null;
+
+  // Remove spaces and normalize text
+  const cleaned = text.replace(/\s+/g, ' ');
+
+  // ================================================================
+  // ✅ ENHANCED FIX (2025-11-08): Proximity-Based Section Detection
+  // ================================================================
+  // PROBLEM: DCP announcements have TWO types of investment amounts:
+  // 1. Private investment requirement (20억원) - in "지원조건" (eligibility section)
+  // 2. Government funding provided (36억원) - in "지원내용" (funding section)
+  //
+  // PREVIOUS APPROACH: Document-wide section detection
+  // - Checked if ENTIRE text contains "지원조건" headers
+  // - Worked for structured announcements, failed for HTML/description
+  //
+  // NEW APPROACH: Proximity-based context analysis
+  // - For EACH investment match, examine surrounding 200 characters
+  // - Score based on nearby keywords (eligibility vs funding)
+  // - Only extract if clearly in funding context
+  // ================================================================
+
+  // Define context keywords for scoring
+  const ELIGIBILITY_KEYWORDS = [
+    '지원조건',    // Support conditions
+    '신청조건',    // Application conditions
+    '신청자격',    // Application qualifications
+    '참여요건',    // Participation requirements
+    '지원대상',    // Support target
+    '선정요건',    // Selection requirements
+    '참여자격',    // Participation qualifications
+    '대상기업',    // Target companies
+    '필수요건',    // Required conditions
+  ];
+
+  const FUNDING_KEYWORDS = [
+    '지원내용',    // Support content (what's provided)
+    '지원금액',    // Support amount
+    '지원규모',    // Support scale
+    '과제당',      // Per project
+    '총사업비',    // Total project cost
+    '정부출연금',  // Government contribution
+  ];
+
+  // Investment-related keywords in Korean
+  const investmentPatterns = [
+    // Pattern 1: "투자 유치 20억원 이상"
+    /투자\s*유치\s*([\d.]+)\s*(조|억|천만|백만|만)\s*원?\s*이상/,
+    // Pattern 2: "투자금 5억원 이상"
+    /투자금\s*([\d.]+)\s*(조|억|천만|백만|만)\s*원?\s*이상/,
+    // Pattern 3: "투자 실적 10억원 이상"
+    /투자\s*실적\s*([\d.]+)\s*(조|억|천만|백만|만)\s*원?\s*이상/,
+    // Pattern 4: "자기자본 3억원 이상"
+    /자기자본\s*([\d.]+)\s*(조|억|천만|백만|만)\s*원?\s*이상/,
+    // Pattern 5: "자본금 2억원 이상"
+    /자본금\s*([\d.]+)\s*(조|억|천만|백만|만)\s*원?\s*이상/,
+  ];
+
+  for (const pattern of investmentPatterns) {
+    const match = cleaned.match(pattern);
+
+    if (match) {
+      const matchIndex = cleaned.indexOf(match[0]);
+      if (matchIndex === -1) continue; // Safety check
+
+      // Examine 200 characters before and after the match
+      const contextStart = Math.max(0, matchIndex - 200);
+      const contextEnd = Math.min(cleaned.length, matchIndex + match[0].length + 200);
+      const context = cleaned.substring(contextStart, contextEnd);
+
+      // ✅ FIX 1: Skip if in example/reference context
+      const isExample = /예시|예제|예:|참고:|예를\s*들어|예시로|샘플|sample|example/i.test(context);
+      if (isExample) {
+        continue;
+      }
+
+      // ✅ FIX 2: Proximity-based context scoring
+      // Count eligibility vs funding keywords in surrounding context
+      let eligibilityScore = 0;
+      let fundingScore = 0;
+
+      for (const keyword of ELIGIBILITY_KEYWORDS) {
+        if (context.includes(keyword)) {
+          eligibilityScore += 1;
+        }
+      }
+
+      for (const keyword of FUNDING_KEYWORDS) {
+        if (context.includes(keyword)) {
+          fundingScore += 1;
+        }
+      }
+
+      // Decision logic (INVERTED - Fixed 2025-11-08):
+      // - If funding keywords found AND no eligibility keywords → SKIP (funding description)
+      // - If eligibility keywords found → EXTRACT (legitimate requirement)
+      // - If neither found → EXTRACT (default to extraction for backward compatibility)
+      //
+      // RATIONALE:
+      // - Eligibility sections describe what APPLICANTS must have (extract these ✅)
+      // - Funding sections describe what the PROGRAM provides (skip these ❌)
+      if (fundingScore > 0 && eligibilityScore === 0) {
+        // This match is in a funding description section (what program provides)
+        continue; // Skip this match, try next pattern
+      }
+
+      // Extract the investment amount
+      const number = parseFloat(match[1]);
+      const unit = match[2];
+
+      let multiplier = 1;
+      switch (unit) {
+        case '조':
+          multiplier = 1000000000000; // 1 trillion
+          break;
+        case '억':
+          multiplier = 100000000; // 100 million
+          break;
+        case '천만':
+          multiplier = 10000000; // 10 million
+          break;
+        case '백만':
+          multiplier = 1000000; // 1 million
+          break;
+        case '만':
+          multiplier = 10000; // 10 thousand
+          break;
+      }
+
+      return Math.round(number * multiplier);
+    }
+  }
+
+  return null;
+}
+
+/**
  * Determine target type from Korean text
  */
 export function determineTargetType(text: string): 'COMPANY' | 'RESEARCH_INSTITUTE' | 'BOTH' {

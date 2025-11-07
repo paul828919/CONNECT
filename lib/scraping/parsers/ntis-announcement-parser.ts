@@ -850,9 +850,19 @@ const ELIGIBILITY_PATTERNS = {
     startup: ['창업기업'],
   },
   industry: {
-    defense: ['방산분야', '방위산업', '국방'],
-    bio: ['바이오', '생명공학'],
-    it: ['정보통신', 'ICT', 'IT'],
+    // November 8, 2025: Converted to regex patterns with word boundaries
+    // to prevent over-matching (100% of programs were incorrectly tagged as "IT")
+    // Inspired by classification.ts best practices
+    defense: [/\b(방산분야|방위산업|국방|군사|방산)\b/gi],
+    bio: [/\b(바이오|생명공학|의료기술|헬스케어|제약|신약)\b/gi],
+    it: [
+      // CRITICAL: Only match in industry-specific contexts to prevent false positives
+      // "정보통신" removed - too generic (appears in academic research titles)
+      // "IT" removed - too short, causes partial word matches
+      /\b(ICT|소프트웨어|SW|인공지능|AI)\b/gi,
+      /\b(디지털\s*전환|디지털화|스마트\s*시티)\b/gi,
+      /\b(사물인터넷|IoT|빅데이터|클라우드)\b/gi,
+    ],
   },
 } as const;
 
@@ -945,9 +955,25 @@ function extractFinancialRequirements(text: string): EligibilityCriteria['financ
 
   // Phase 3: Investment threshold extraction (NO AI - pure regex)
   // Extracts requirements like "투자 유치 2억원 이상" → 200,000,000 won
+  // CRITICAL FIX (2025-11-08): Added example text exclusion to prevent fabricated criteria
   for (const pattern of ELIGIBILITY_PATTERNS.investmentThreshold) {
     const match = text.match(pattern);
     if (match && match[1] && match[2]) {
+      // ✅ NEW: Check if match appears in example/reference context
+      // Look at 100 characters before the match to detect example indicators
+      const matchIndex = text.indexOf(match[0]);
+      if (matchIndex === -1) continue; // Safety check
+
+      const contextBefore = text.substring(Math.max(0, matchIndex - 100), matchIndex);
+
+      // Skip if match appears in example context
+      // Common example indicators: 예시 (example), 예제 (example case), 예: (example:),
+      //                           참고: (reference:), 예를 들어 (for example)
+      const isExample = /예시|예제|예:|참고:|예를\s*들어|예시로|샘플|sample|example/i.test(contextBefore);
+      if (isExample) {
+        continue; // Skip this match, try next pattern
+      }
+
       // Extract numeric value (remove commas)
       const cleanedAmount = match[1].replace(/,/g, '');
       const numericValue = parseFloat(cleanedAmount);
@@ -980,7 +1006,7 @@ function extractFinancialRequirements(text: string): EligibilityCriteria['financ
           minimumAmount: amountInWon,
           description: match[0], // Store original matched text for debugging
         };
-        break; // Use first valid match
+        break; // Use first valid match (that's not in example context)
       }
     }
   }
@@ -1125,6 +1151,67 @@ function extractGovernmentRelationship(text: string): EligibilityCriteria['gover
 }
 
 /**
+ * Extract eligibility/qualification section from announcement text
+ *
+ * November 8, 2025: Added for section-aware industry extraction
+ * Reduces false positives by focusing on relevant text sections
+ *
+ * Searches for Korean eligibility section headers:
+ * - 지원대상 (support target)
+ * - 신청자격 (application qualification)
+ * - 참여요건 (participation requirements)
+ * - 지원요건 (support requirements)
+ *
+ * Returns: Text between section header and next major section (or null if not found)
+ */
+function extractEligibilitySection(text: string): string | null {
+  try {
+    // Section header patterns
+    const sectionPatterns = [
+      /[가-힣]*지원\s*[요대]?상[가-힣]*/gi,  // 지원대상, 지원요상
+      /[가-힣]*신청\s*자격[가-힣]*/gi,        // 신청자격
+      /[가-힣]*참여\s*[요자]건[가-힣]*/gi,    // 참여요건, 참여자건
+      /[가-힣]*지원\s*요건[가-힣]*/gi,        // 지원요건
+    ];
+
+    let earliestMatch: { index: number; text: string } | null = null;
+
+    // Find the earliest eligibility section header
+    for (const pattern of sectionPatterns) {
+      const match = text.match(pattern);
+      if (match && match.index !== undefined) {
+        if (!earliestMatch || match.index < earliestMatch.index) {
+          earliestMatch = { index: match.index, text: match[0] };
+        }
+      }
+    }
+
+    if (!earliestMatch) {
+      return null; // No eligibility section found
+    }
+
+    // Extract text starting from section header
+    const sectionStart = earliestMatch.index;
+
+    // Find next major section (or end of text)
+    // Major sections: 제출서류, 접수기간, 문의처, 기타, etc.
+    const nextSectionPattern = /(제출\s*서류|접수\s*기간|신청\s*방법|문의처|기타|유의사항|첨부파일)/gi;
+    nextSectionPattern.lastIndex = sectionStart + earliestMatch.text.length;
+
+    const nextSectionMatch = nextSectionPattern.exec(text);
+    const sectionEnd = nextSectionMatch ? nextSectionMatch.index : text.length;
+
+    // Extract section text (limit to 2000 chars for performance)
+    const sectionText = text.substring(sectionStart, Math.min(sectionEnd, sectionStart + 2000));
+
+    return sectionText.length > 50 ? sectionText : null; // Require minimum length
+  } catch (error) {
+    console.warn('[ELIGIBILITY-SECTION] Extraction failed:', error);
+    return null;
+  }
+}
+
+/**
  * Extract eligibility criteria from announcement content
  * Enhanced version with comprehensive requirement extraction
  */
@@ -1166,12 +1253,23 @@ export function extractEligibilityCriteria(text: string): Record<string, any> | 
   }
 
   // 6. Industry requirements (defense, bio, IT)
+  // November 8, 2025: Enhanced with regex patterns + section-aware filtering
+  // Prevents over-matching that caused 100% of programs to be tagged as "IT"
   const industryReqs: string[] = [];
-  Object.entries(ELIGIBILITY_PATTERNS.industry).forEach(([sector, keywords]) => {
-    if (keywords.some(keyword => text.includes(keyword))) {
+
+  // Extract eligibility section for focused matching (reduces false positives)
+  // Look for sections containing keywords like: 지원대상, 신청자격, 참여요건
+  const eligibilitySection = extractEligibilitySection(text);
+  const searchText = eligibilitySection || text; // Fallback to full text if no section found
+
+  Object.entries(ELIGIBILITY_PATTERNS.industry).forEach(([sector, patterns]) => {
+    // Patterns is now an array of RegExp objects (not strings)
+    const hasMatch = patterns.some((pattern: RegExp) => pattern.test(searchText));
+    if (hasMatch) {
       industryReqs.push(sector);
     }
   });
+
   if (industryReqs.length > 0) {
     criteria.industryRequirements = { sectors: industryReqs };
   }

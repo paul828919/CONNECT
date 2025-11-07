@@ -26,7 +26,7 @@
 
 import { ExtractionLogger } from './extraction-logger';
 import { extractBudget, extractEligibilityCriteria, extractBusinessStructures } from './parsers/ntis-announcement-parser';
-import { extractTRLRange } from './utils';
+import { extractTRLRange, extractInvestmentRequirement } from './utils';
 import { parseKoreanDate } from './utils';
 
 export interface DetailPageData {
@@ -479,6 +479,86 @@ export class TwoTierExtractor {
         : `${this.detailPageData.description || ''}\n\n${this.rawHtmlText}`;
 
     return extractBusinessStructures(announcementText);
+  }
+
+  /**
+   * Extract investment requirement with two-tier fallback
+   *
+   * Detects minimum investment requirements for eligibility screening.
+   * Common patterns:
+   * - "투자 유치 20억원 이상" → Companies must have raised ≥2B won
+   * - "자기자본 5억원 이상" → Companies must have ≥500M won equity
+   *
+   * Critical for preventing mismatches (e.g., DCP programs requiring 2B+ investment
+   * should not match with companies that have no investment history)
+   */
+  async extractInvestment(): Promise<number | null> {
+    const attemptedSources: Array<'ANNOUNCEMENT_FILE' | 'DETAIL_PAGE'> = [];
+
+    // Priority 1: Announcement files (if available)
+    if (this.attachmentData.announcementFiles.length > 0) {
+      attemptedSources.push('ANNOUNCEMENT_FILE');
+      const announcementText = this.attachmentData.announcementFiles
+        .map((f) => f.text)
+        .join('\n\n');
+
+      const investment = extractInvestmentRequirement(announcementText);
+      if (investment !== null) {
+        this.logger.logSuccess(
+          'INVESTMENT_REQUIREMENT',
+          investment,
+          'ANNOUNCEMENT_FILE',
+          'HIGH',
+          `From ${this.attachmentData.announcementFiles[0].filename}`
+        );
+        return investment;
+      }
+    }
+
+    // Priority 2: Detail page (rawHtml and description)
+    attemptedSources.push('DETAIL_PAGE');
+
+    // Try rawHtml text extraction
+    if (this.rawHtmlText) {
+      const investment = extractInvestmentRequirement(this.rawHtmlText);
+      if (investment !== null) {
+        this.logger.logSuccess(
+          'INVESTMENT_REQUIREMENT',
+          investment,
+          'DETAIL_PAGE',
+          'MEDIUM',
+          'Extracted from detail page HTML'
+        );
+        return investment;
+      }
+    }
+
+    // Try description as fallback
+    if (this.detailPageData.description) {
+      const investment = extractInvestmentRequirement(this.detailPageData.description);
+      if (investment !== null) {
+        this.logger.logSuccess(
+          'INVESTMENT_REQUIREMENT',
+          investment,
+          'DETAIL_PAGE',
+          'MEDIUM',
+          'From Discovery description field'
+        );
+        return investment;
+      }
+    }
+
+    // All failed: Log with context snippet
+    // Note: This is not an error - most programs don't have investment requirements
+    const contextSnippet = this.rawHtmlText.substring(0, 1000);
+    this.logger.logFailure(
+      'INVESTMENT_REQUIREMENT',
+      attemptedSources,
+      'No investment requirement matched (this is normal for most programs)',
+      contextSnippet
+    );
+
+    return null;
   }
 
   /**

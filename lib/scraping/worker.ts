@@ -55,6 +55,72 @@ interface ScrapingResult {
 }
 
 /**
+ * Extract top-level eligibility fields from JSONB eligibilityCriteria
+ *
+ * The matching algorithm requires eligibility data in top-level fields
+ * (e.g., requiredInvestmentAmount as Decimal) while the parser saves extracted
+ * data to nested JSONB structure (e.g., eligibilityCriteria.financialRequirements.investmentThreshold.minimumAmount).
+ *
+ * This function bridges the gap by extracting values from JSONB and promoting
+ * them to top-level fields for the matching algorithm.
+ *
+ * @param eligibilityCriteria - JSONB object from parser (may be undefined)
+ * @returns Object with top-level eligibility fields for database insertion
+ */
+function extractEligibilityFields(eligibilityCriteria: any) {
+  const fields = {
+    requiredInvestmentAmount: null as number | null,
+    requiredOperatingYears: null as number | null,
+    maxOperatingYears: null as number | null,
+    requiredMinEmployees: null as number | null,
+    requiredMaxEmployees: null as number | null,
+    requiredCertifications: null as string[] | null,
+    preferredCertifications: null as string[] | null,
+  };
+
+  if (!eligibilityCriteria) {
+    return fields;
+  }
+
+  try {
+    // Extract investment threshold from financialRequirements
+    const financialReqs = eligibilityCriteria.financialRequirements;
+    if (financialReqs?.investmentThreshold?.minimumAmount) {
+      fields.requiredInvestmentAmount = financialReqs.investmentThreshold.minimumAmount;
+    }
+
+    // Extract operating years from organizationRequirements
+    const orgReqs = eligibilityCriteria.organizationRequirements;
+    if (orgReqs?.operatingYears) {
+      if (orgReqs.operatingYears.minimum) {
+        fields.requiredOperatingYears = orgReqs.operatingYears.minimum;
+      }
+      if (orgReqs.operatingYears.maximum) {
+        fields.maxOperatingYears = orgReqs.operatingYears.maximum;
+      }
+    }
+
+    // Extract employee count from organizationRequirements
+    // Note: Employee count constraints are not in current JSONB structure
+    // Future enhancement if needed
+
+    // Extract certifications from certificationRequirements
+    const certReqs = eligibilityCriteria.certificationRequirements;
+    if (certReqs?.required && Array.isArray(certReqs.required) && certReqs.required.length > 0) {
+      fields.requiredCertifications = certReqs.required;
+    }
+    if (certReqs?.preferred && Array.isArray(certReqs.preferred) && certReqs.preferred.length > 0) {
+      fields.preferredCertifications = certReqs.preferred;
+    }
+  } catch (error) {
+    console.error('[WORKER] Failed to extract eligibility fields from JSONB:', error);
+    // Return empty fields on error (safer than failing the entire program creation)
+  }
+
+  return fields;
+}
+
+/**
  * Main scraping worker
  */
 export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
@@ -218,6 +284,11 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
                 ? ['RESEARCH_INSTITUTE' as const]
                 : ['COMPANY' as const, 'RESEARCH_INSTITUTE' as const]; // Default to BOTH
 
+            // Extract top-level eligibility fields from JSONB for matching algorithm
+            // The matching algorithm checks these top-level fields (e.g., requiredInvestmentAmount)
+            // while the extracted data is in eligibilityCriteria JSONB (e.g., eligibilityCriteria.financialRequirements.investmentThreshold.minimumAmount)
+            const eligibilityFields = extractEligibilityFields(details.eligibilityCriteria);
+
             // Create new program
             const newProgram = await db.funding_programs.create({
               data: {
@@ -236,6 +307,14 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
                 // @ts-ignore - trlClassification added via migration but not yet in Prisma types
                 trlClassification: details.trlClassification || undefined,
                 eligibilityCriteria: details.eligibilityCriteria || undefined,
+                // Top-level eligibility fields extracted from JSONB for matching algorithm
+                requiredInvestmentAmount: eligibilityFields.requiredInvestmentAmount,
+                requiredOperatingYears: eligibilityFields.requiredOperatingYears,
+                maxOperatingYears: eligibilityFields.maxOperatingYears,
+                requiredMinEmployees: eligibilityFields.requiredMinEmployees,
+                requiredMaxEmployees: eligibilityFields.requiredMaxEmployees,
+                requiredCertifications: eligibilityFields.requiredCertifications,
+                preferredCertifications: eligibilityFields.preferredCertifications,
                 publishedAt: details.publishedAt ?? null, // 공고일 (only NTIS provides this)
                 ministry: details.ministry || null, // 부처명 (extracted from NTIS announcements)
                 announcingAgency: details.announcingAgency || null, // 공고기관명 (extracted from NTIS announcements)

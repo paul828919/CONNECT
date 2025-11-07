@@ -87,26 +87,11 @@ export function classifyAnnouncement(input: ClassificationInput): AnnouncementTy
   // PRIORITY 3: Keyword Matching (Case-Insensitive)
   // ================================================================
 
-  // --- SURVEY Detection ---
-  // Keywords: 수요조사 (demand survey), 설문 (questionnaire),
-  //           의견수렴 (opinion gathering), 참여기업모집 (participant recruitment)
-  const surveyPatterns = [
-    /수요조사/,           // Demand survey
-    /설문/,               // Questionnaire/survey
-    /의견수렴/,           // Opinion gathering
-    /참여기업\s*모집/,    // Participant company recruitment
-    /참여기업모집/,       // (without space)
-    /기술수요/,           // Technology demand
-  ];
-
-  if (surveyPatterns.some(pattern => pattern.test(combinedText))) {
-    return 'SURVEY';
-  }
-
   // --- R&D PROJECT Detection (CHECK THIS FIRST!) ---
-  // IMPORTANT: R&D detection runs BEFORE EVENT detection to prevent false positives.
-  // Many R&D announcements mention "설명회" (application briefing) as part of the process,
-  // but they are legitimate R&D funding opportunities, not events.
+  // CRITICAL FIX (2025-11-08): Moved BEFORE SURVEY detection to prevent misclassification
+  // IMPORTANT: R&D detection must run BEFORE SURVEY detection to prevent false negatives.
+  // Many R&D announcements mention surveys/participant recruitment as part of the process
+  // (e.g., "기술개발 사업 참여기업 모집"), but they are legitimate R&D funding opportunities.
   //
   // Keywords: 연구과제 (research project), 과제공고 (project announcement),
   //           R&D (research & development), 지원사업 (support program),
@@ -126,6 +111,24 @@ export function classifyAnnouncement(input: ClassificationInput): AnnouncementTy
 
   if (rdProjectPatterns.some(pattern => pattern.test(combinedText))) {
     return 'R_D_PROJECT';
+  }
+
+  // --- SURVEY Detection ---
+  // Keywords: 수요조사 (demand survey), 설문 (questionnaire),
+  //           의견수렴 (opinion gathering), 참여기업모집 (participant recruitment)
+  // NOTE: This check runs AFTER R&D detection to avoid misclassifying R&D programs
+  // that mention surveys/recruitment as part of the application process.
+  const surveyPatterns = [
+    /수요조사/,           // Demand survey
+    /설문/,               // Questionnaire/survey
+    /의견수렴/,           // Opinion gathering
+    /참여기업\s*모집/,    // Participant company recruitment
+    /참여기업모집/,       // (without space)
+    /기술수요/,           // Technology demand
+  ];
+
+  if (surveyPatterns.some(pattern => pattern.test(combinedText))) {
+    return 'SURVEY';
   }
 
   // --- EVENT Detection ---
