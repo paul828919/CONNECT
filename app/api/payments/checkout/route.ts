@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         success: true,
         mode: 'TEST',
         orderId: mockOrderId,
-        checkoutUrl: `http://localhost:3000/payments/test-checkout?orderId=${mockOrderId}&plan=${plan}&amount=${amount}&billingCycle=${dbBillingCycle}`,
+        checkoutUrl: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/payments/test-checkout?orderId=${mockOrderId}&plan=${plan}&amount=${amount}&billingCycle=${dbBillingCycle}`,
         amount,
         plan,
         billingCycle: dbBillingCycle,
