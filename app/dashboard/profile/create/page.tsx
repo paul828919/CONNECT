@@ -422,43 +422,41 @@ export default function CreateOrganizationProfilePage() {
               </div>
             )}
 
-            {/* Technology Readiness Level (TRL) - Show if R&D experience OR research institute */}
-            {(rdExperience || organizationType === 'RESEARCH_INSTITUTE') && (
-              <div>
-                <label
-                  htmlFor="technologyReadinessLevel"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  기술성숙도 (TRL)
-                </label>
-                <select
-                  id="technologyReadinessLevel"
-                  {...register('technologyReadinessLevel', {
-                    valueAsNumber: true,
-                  })}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
-                >
-                  <option value="">선택해주세요 (선택사항)</option>
-                  <option value="1">TRL 1 - 기초 원리 연구</option>
-                  <option value="2">TRL 2 - 기술 개념 정립</option>
-                  <option value="3">TRL 3 - 개념 증명</option>
-                  <option value="4">TRL 4 - 실험실 환경 검증</option>
-                  <option value="5">TRL 5 - 유사 환경 검증</option>
-                  <option value="6">TRL 6 - 파일럿 실증</option>
-                  <option value="7">TRL 7 - 실제 환경 시연</option>
-                  <option value="8">TRL 8 - 시스템 완성 및 검증</option>
-                  <option value="9">TRL 9 - 상용화</option>
-                </select>
-                <p className="mt-1 text-xs text-gray-500">
-                  현재 보유 중인 기술의 성숙도를 선택해주세요
+            {/* Technology Readiness Level (TRL) - Always visible (independent of R&D experience) */}
+            <div>
+              <label
+                htmlFor="technologyReadinessLevel"
+                className="block text-sm font-medium text-gray-700"
+              >
+                기술성숙도 (TRL) <span className="text-gray-500 text-xs font-normal">(선택사항)</span>
+              </label>
+              <select
+                id="technologyReadinessLevel"
+                {...register('technologyReadinessLevel', {
+                  valueAsNumber: true,
+                })}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value="">선택해주세요</option>
+                <option value="1">TRL 1 - 기초 원리 연구</option>
+                <option value="2">TRL 2 - 기술 개념 정립</option>
+                <option value="3">TRL 3 - 개념 증명</option>
+                <option value="4">TRL 4 - 실험실 환경 검증</option>
+                <option value="5">TRL 5 - 유사 환경 검증</option>
+                <option value="6">TRL 6 - 파일럿 실증</option>
+                <option value="7">TRL 7 - 실제 환경 시연</option>
+                <option value="8">TRL 8 - 시스템 완성 및 검증</option>
+                <option value="9">TRL 9 - 상용화</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                현재 보유 중인 기술의 성숙도를 선택해주세요
+              </p>
+              {errors.technologyReadinessLevel && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.technologyReadinessLevel.message}
                 </p>
-                {errors.technologyReadinessLevel && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.technologyReadinessLevel.message}
-                  </p>
-                )}
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Tier 1B: Research Institute specific fields */}
             {organizationType === 'RESEARCH_INSTITUTE' && (
