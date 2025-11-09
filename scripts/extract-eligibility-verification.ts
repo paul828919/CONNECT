@@ -34,8 +34,9 @@
 import { db } from '@/lib/db';
 import { ConfidenceLevel } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { extractTextFromAttachment } from '@/lib/scraping/utils/attachment-parser';
 
 // ============================================================================
 // EXTRACTION FUNCTIONS (Simplified versions of scraper extraction logic)
@@ -277,16 +278,20 @@ function extractResearchInstituteRequirement(text: string): {
 
 /**
  * Main extraction function
+ *
+ * Updated to read actual attachment files from file system using scraping_jobs metadata
  */
 async function extractEligibilityFromProgram(
   programId: string,
   programTitle: string,
-  attachmentUrls: string[]
+  attachmentFolder: string | null,
+  attachmentFilenames: string[]
 ): Promise<EligibilityExtractionResult> {
   const extractionNotes: string[] = [];
   let confidence: ConfidenceLevel = 'LOW';
   let extractionMethod = 'NONE';
   const sourceFiles: string[] = [];
+  let combinedAnnouncementText = '';
 
   // Initialize result with defaults
   const result: EligibilityExtractionResult = {
@@ -310,61 +315,99 @@ async function extractEligibilityFromProgram(
   // PRIORITY 1: Extract from announcement files (공고문)
   // ============================================================================
 
-  if (attachmentUrls.length > 0) {
-    extractionNotes.push(`Found ${attachmentUrls.length} attachments`);
+  if (attachmentFolder && attachmentFilenames.length > 0) {
+    extractionNotes.push(`Found ${attachmentFilenames.length} attachments in ${attachmentFolder}`);
 
-    for (const attachmentUrl of attachmentUrls) {
-      // Try to find the actual file in the data/scraper/ntis-attachments directory
-      const filename = attachmentUrl.split('/').pop() || '';
-
-      // Skip non-announcement files
+    for (const filename of attachmentFilenames) {
+      // Skip non-announcement files (application forms, templates, execution plans, guides)
       if (/신청서|양식|집행계획|가이드/i.test(filename)) {
+        extractionNotes.push(`Skipped: ${filename} (not an announcement file)`);
         continue;
       }
 
-      // For now, we'll skip actual file reading (requires file path mapping)
-      // In production, this would read from data/scraper/ntis-attachments/
-      extractionNotes.push(`Skipped file reading: ${filename} (not implemented yet)`);
+      // Construct file path (container path, not host path)
+      // In production: /app/data/scraper/ntis-attachments/{attachmentFolder}/{filename}
+      // In development: ./data/scraper/ntis-attachments/{attachmentFolder}/{filename}
+      const isProduction = process.env.NODE_ENV === 'production';
+      const baseDir = isProduction ? '/app/data/scraper' : './data/scraper';
+      const filePath = join(baseDir, 'ntis-attachments', attachmentFolder, filename);
+
+      try {
+        // Check if file exists
+        if (!existsSync(filePath)) {
+          extractionNotes.push(`File not found: ${filename}`);
+          continue;
+        }
+
+        // Read file buffer
+        const fileBuffer = readFileSync(filePath);
+
+        // Extract text using existing attachment parser
+        const extractedText = await extractTextFromAttachment(filename, fileBuffer);
+
+        if (extractedText && extractedText.length > 0) {
+          combinedAnnouncementText += extractedText + '\n';
+          sourceFiles.push(filename);
+          extractionNotes.push(`✓ Extracted ${extractedText.length} chars from ${filename}`);
+        } else {
+          extractionNotes.push(`Failed to extract text from ${filename}`);
+        }
+      } catch (error: any) {
+        extractionNotes.push(`Error reading ${filename}: ${error.message}`);
+      }
     }
+
+    // If we successfully extracted text from announcement files, use it
+    if (combinedAnnouncementText.length > 0) {
+      extractionMethod = 'ANNOUNCEMENT_FILE';
+      extractionNotes.push(`✓ Total announcement text: ${combinedAnnouncementText.length} characters`);
+    }
+  } else {
+    extractionNotes.push('No attachments available for extraction');
   }
 
   // ============================================================================
   // PRIORITY 2: Extract from program title and description (fallback)
   // ============================================================================
 
-  // For this initial version, we'll extract from the title as a simple demonstration
-  const titleText = programTitle;
+  // Use combined announcement text if available, otherwise fall back to title
+  const extractionText = combinedAnnouncementText.length > 0 ? combinedAnnouncementText : programTitle;
+
+  if (combinedAnnouncementText.length === 0) {
+    extractionMethod = 'TITLE_ONLY';
+    extractionNotes.push('⚠ Extracting from title only (no attachment text available)');
+  }
 
   // Extract certifications
-  const { required: reqCerts, preferred: prefCerts } = extractCertifications(titleText);
+  const { required: reqCerts, preferred: prefCerts } = extractCertifications(extractionText);
   result.requiredCertifications = reqCerts;
   result.preferredCertifications = prefCerts;
 
   // Extract employee constraints
-  const { min: minEmp, max: maxEmp, notes: empNotes } = extractEmployeeConstraints(titleText);
+  const { min: minEmp, max: maxEmp, notes: empNotes } = extractEmployeeConstraints(extractionText);
   result.requiredMinEmployees = minEmp;
   result.requiredMaxEmployees = maxEmp;
   extractionNotes.push(...empNotes);
 
   // Extract revenue constraints
-  const { min: minRev, max: maxRev, notes: revNotes } = extractRevenueConstraints(titleText);
+  const { min: minRev, max: maxRev, notes: revNotes } = extractRevenueConstraints(extractionText);
   result.requiredMinRevenue = minRev;
   result.requiredMaxRevenue = maxRev;
   extractionNotes.push(...revNotes);
 
   // Extract investment requirement
-  const { amount: invAmount, notes: invNotes } = extractInvestmentRequirement(titleText);
+  const { amount: invAmount, notes: invNotes } = extractInvestmentRequirement(extractionText);
   result.requiredInvestmentAmount = invAmount;
   extractionNotes.push(...invNotes);
 
   // Extract operating years
-  const { min: minYears, max: maxYears, notes: yearsNotes } = extractOperatingYears(titleText);
+  const { min: minYears, max: maxYears, notes: yearsNotes } = extractOperatingYears(extractionText);
   result.requiredOperatingYears = minYears;
   result.maxOperatingYears = maxYears;
   extractionNotes.push(...yearsNotes);
 
   // Extract research institute requirement
-  const { required: researchReq, notes: researchNotes } = extractResearchInstituteRequirement(titleText);
+  const { required: researchReq, notes: researchNotes } = extractResearchInstituteRequirement(extractionText);
   result.requiresResearchInstitute = researchReq;
   extractionNotes.push(...researchNotes);
 
@@ -380,17 +423,28 @@ async function extractEligibilityFromProgram(
   if (result.requiredOperatingYears !== null || result.maxOperatingYears !== null) fieldsExtracted++;
   if (result.requiresResearchInstitute) fieldsExtracted++;
 
-  // Confidence based on fields extracted
-  if (fieldsExtracted >= 4) {
-    result.confidence = 'HIGH';
-  } else if (fieldsExtracted >= 2) {
-    result.confidence = 'MEDIUM';
+  // Confidence based on:
+  // 1. Number of fields extracted
+  // 2. Whether we had access to announcement files (higher confidence)
+  if (extractionMethod === 'ANNOUNCEMENT_FILE') {
+    if (fieldsExtracted >= 3) {
+      result.confidence = 'HIGH';
+    } else if (fieldsExtracted >= 2) {
+      result.confidence = 'MEDIUM';
+    } else {
+      result.confidence = 'LOW';
+    }
   } else {
-    result.confidence = 'LOW';
+    // Title-only extraction has lower confidence ceiling
+    if (fieldsExtracted >= 4) {
+      result.confidence = 'MEDIUM';
+    } else {
+      result.confidence = 'LOW';
+    }
   }
 
-  result.extractionMethod = attachmentUrls.length > 0 ? 'ANNOUNCEMENT_FILE' : 'TITLE_ONLY';
-  result.sourceFiles = attachmentUrls;
+  result.extractionMethod = extractionMethod;
+  result.sourceFiles = sourceFiles;
   result.extractionNotes = extractionNotes;
 
   return result;
@@ -585,13 +639,12 @@ async function main() {
     }
   }
 
-  // Fetch programs
+  // Fetch programs with scraping_jobs metadata for file access
   const programs = await db.funding_programs.findMany({
     where,
     select: {
       id: true,
       title: true,
-      attachmentUrls: true,
       requiredCertifications: true,
       preferredCertifications: true,
       requiredMinEmployees: true,
@@ -603,6 +656,13 @@ async function main() {
       maxOperatingYears: true,
       requiresResearchInstitute: true,
       eligibilityConfidence: true,
+      scraping_job: {
+        select: {
+          attachmentFolder: true,
+          attachmentFilenames: true,
+          attachmentCount: true,
+        },
+      },
     },
     take: limit > 0 ? limit : undefined,
     orderBy: { scrapedAt: 'desc' },
@@ -619,14 +679,26 @@ async function main() {
     processed++;
     console.log(`\n[${processed}/${programs.length}] ${program.title.substring(0, 80)}...`);
 
+    // Extract attachment metadata from scraping_job
+    const attachmentFolder = program.scraping_job?.attachmentFolder ?? null;
+    const attachmentFilenames = program.scraping_job?.attachmentFilenames ?? [];
+    const attachmentCount = program.scraping_job?.attachmentCount ?? 0;
+
+    if (attachmentFolder && attachmentCount > 0) {
+      console.log(`  📎 ${attachmentCount} attachments in ${attachmentFolder}`);
+    } else {
+      console.log(`  📎 No attachments available`);
+    }
+
     // Extract eligibility data
     const extracted = await extractEligibilityFromProgram(
       program.id,
       program.title,
-      program.attachmentUrls
+      attachmentFolder,
+      attachmentFilenames
     );
 
-    console.log(`  Confidence: ${extracted.confidence} | Fields: ${extracted.extractionNotes.length} notes`);
+    console.log(`  Confidence: ${extracted.confidence} | Method: ${extracted.extractionMethod} | Notes: ${extracted.extractionNotes.length}`);
 
     // Compare with current data if enabled
     let comparison: ComparisonResult | null = null;
