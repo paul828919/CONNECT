@@ -133,6 +133,34 @@ export function generateMatches(
     }
 
     // ============================================================================
+    // Hospital/Medical Institution Filter (병원/의료기관 전용 프로그램 필터)
+    // ============================================================================
+    // Physician-scientist programs require 상급종합병원 (tertiary hospitals - only 47 in Korea)
+    // and M.D.-Ph.D. researchers per 의료법 (Medical Service Act)
+    // Despite having COMPANY in targetType due to extraction limitations,
+    // these programs are exclusively for medical research institutions
+    // Data shows: researchInstituteFocus=true is too broad (98.4% of programs)
+    // Solution: Filter by hospital/medical-specific keywords in title
+    const hospitalOnlyKeywords = [
+      '의사과학자',      // Physician-scientist
+      '상급종합병원',     // Tertiary general hospital
+      'M.D.-Ph.D.',     // Medical doctor with PhD
+      '의료법',         // Medical Service Act
+    ];
+
+    // Check if program title contains hospital/medical-specific keywords
+    const isHospitalOnlyProgram = hospitalOnlyKeywords.some((keyword) =>
+      program.title.includes(keyword)
+    );
+
+    if (isHospitalOnlyProgram) {
+      // Only allow RESEARCH_INSTITUTE organizations for hospital-specific programs
+      if (organization.type !== 'RESEARCH_INSTITUTE') {
+        continue; // Hospital/medical-only program - companies not eligible
+      }
+    }
+
+    // ============================================================================
     // Enhanced Eligibility Checking (Phase 2)
     // ============================================================================
     // Check comprehensive eligibility (certifications, investment, revenue, employees, operating years)
