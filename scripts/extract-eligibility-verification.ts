@@ -325,12 +325,31 @@ async function extractEligibilityFromProgram(
         continue;
       }
 
-      // Construct file path (container path, not host path)
-      // In production: /app/data/scraper/ntis-attachments/{attachmentFolder}/{filename}
-      // In development: ./data/scraper/ntis-attachments/{attachmentFolder}/{filename}
+      // Construct file path, handling BOTH absolute and relative attachment folder paths
+      //
+      // CRITICAL FIX (Nov 10, 2025): Database stores absolute paths like:
+      //   "/app/data/ntis-attachments/20250101_to_20250131/page-1/announcement-1"
+      // But actual files are in:
+      //   "/app/data/scraper/ntis-attachments/20250101_to_20250131/page-1/announcement-1"
+      //
+      // Solution: Strip known prefixes and rebuild the correct path
+      let relativePath = attachmentFolder;
+
+      // Strip absolute path prefixes if present
+      if (relativePath.startsWith('/app/data/ntis-attachments/')) {
+        relativePath = relativePath.replace('/app/data/ntis-attachments/', '');
+      } else if (relativePath.startsWith('/app/data/scraper/ntis-attachments/')) {
+        relativePath = relativePath.replace('/app/data/scraper/ntis-attachments/', '');
+      } else if (relativePath.startsWith('data/ntis-attachments/')) {
+        relativePath = relativePath.replace('data/ntis-attachments/', '');
+      } else if (relativePath.startsWith('data/scraper/ntis-attachments/')) {
+        relativePath = relativePath.replace('data/scraper/ntis-attachments/', '');
+      }
+
+      // Construct the correct absolute path
       const isProduction = process.env.NODE_ENV === 'production';
       const baseDir = isProduction ? '/app/data/scraper' : './data/scraper';
-      const filePath = join(baseDir, 'ntis-attachments', attachmentFolder, filename);
+      const filePath = join(baseDir, 'ntis-attachments', relativePath, filename);
 
       try {
         // Check if file exists

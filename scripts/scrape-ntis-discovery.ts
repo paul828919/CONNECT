@@ -86,7 +86,9 @@ async function main() {
       ? parseInt(getArgValue(args, '--maxPages')!, 10)
       : undefined,
     dryRun: args.includes('--dry-run'),
-    attachmentBaseDir: process.env.NTIS_ATTACHMENT_DIR || path.join(process.cwd(), 'data/ntis-attachments'),
+    // CRITICAL FIX (Nov 10, 2025): Use data/scraper/ntis-attachments to match volume mount
+    // Volume mount: ./data/scraper:/app/data/scraper:ro (line 79/149 in docker-compose.production.yml)
+    attachmentBaseDir: process.env.NTIS_ATTACHMENT_DIR || path.join(process.cwd(), 'data/scraper/ntis-attachments'),
   };
 
   console.log('\n╔════════════════════════════════════════════════════════════╗');
