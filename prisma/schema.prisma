@@ -313,6 +313,7 @@ model funding_programs {
   requiredInvestmentAmount  Decimal?
   requiredOperatingYears    Int?
   maxOperatingYears         Int?
+  requiresResearchInstitute Boolean               @default(false)
   eligibilityConfidence     ConfidenceLevel       @default(LOW)
   manualReviewRequired      Boolean               @default(false)
   manualReviewNotes         String?
@@ -424,6 +425,7 @@ model organizations {
   lastFinancialYear                                              Int?
   governmentCertifications                                       String[]              @default([])
   industryAwards                                                 String[]              @default([])
+  hasResearchInstitute                                           Boolean               @default(false)
   verificationDocumentsUploaded                                  Boolean               @default(false)
   verificationNotes                                              String?
   ai_cost_logs                                                   ai_cost_logs[]
