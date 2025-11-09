@@ -323,6 +323,7 @@ model funding_programs {
   consortium_projects       consortium_projects[]
   funding_matches           funding_matches[]
   scraping_job              scraping_jobs?
+  eligibility_verification  eligibility_verification[]
 
   @@index([agencyId])
   @@index([announcementType])
@@ -835,6 +836,42 @@ model extraction_logs {
   @@index([field])
   @@index([dataSource])
   @@index([createdAt])
+}
+
+model eligibility_verification {
+  id                        String           @id @default(uuid())
+  programId                 String
+  extractionRun             DateTime         @default(now())
+  // Extracted eligibility fields (Phase 2)
+  requiredCertifications    String[]         @default([])
+  preferredCertifications   String[]         @default([])
+  requiredMinEmployees      Int?
+  requiredMaxEmployees      Int?
+  requiredMinRevenue        BigInt?
+  requiredMaxRevenue        BigInt?
+  requiredInvestmentAmount  Decimal?         @db.Decimal(18, 2)
+  requiredOperatingYears    Int?
+  maxOperatingYears         Int?
+  requiresResearchInstitute Boolean          @default(false)
+  // Metadata for verification and comparison
+  confidence                ConfidenceLevel  @default(LOW)
+  extractionMethod          String? // "ANNOUNCEMENT_FILE" or "DETAIL_PAGE"
+  sourceFiles               String[]         @default([])
+  extractionNotes           String? // Issues, warnings, or extraction context
+  verified                  Boolean          @default(false)
+  verifiedBy                String?
+  verifiedAt                DateTime?
+  // Comparison flags (set by comparison script)
+  matchesCurrentData        Boolean? // Does this match current funding_programs data?
+  improvementDetected       Boolean? // Is this better quality than current data?
+  comparisonNotes           String? // Human-readable diff summary
+  funding_program           funding_programs @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@index([programId])
+  @@index([verified])
+  @@index([confidence])
+  @@index([extractionRun])
+  @@index([matchesCurrentData])
 }
 
 enum ExtractionField {
