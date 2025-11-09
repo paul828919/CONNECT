@@ -74,8 +74,8 @@ function extractEligibilityFields(eligibilityCriteria: any) {
     maxOperatingYears: null as number | null,
     requiredMinEmployees: null as number | null,
     requiredMaxEmployees: null as number | null,
-    requiredCertifications: null as string[] | null,
-    preferredCertifications: null as string[] | null,
+    requiredCertifications: [] as string[],
+    preferredCertifications: [] as string[],
   };
 
   if (!eligibilityCriteria) {
