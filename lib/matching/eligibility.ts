@@ -223,6 +223,17 @@ export function checkEligibility(
     }
   }
 
+  // 6. Research Institute Requirement (기업부설연구소 보유 요건)
+  if (program.requiresResearchInstitute) {
+    if (!organization.hasResearchInstitute) {
+      failedRequirements.push('기업부설연구소 미보유 (필수 요건)');
+      needsManualReview = true;
+      manualReviewReason = manualReviewReason || '기업부설연구소 보유 여부 확인 필요';
+    } else {
+      metRequirements.push('기업부설연구소 보유 확인');
+    }
+  }
+
   // ============================================================================
   // SOFT REQUIREMENTS - Preferences, not disqualifiers
   // ============================================================================

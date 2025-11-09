@@ -79,6 +79,17 @@ export function generateMatches(
       continue;
     }
 
+    // ============================================================================
+    // Filter Consolidated Announcements (통합 공고)
+    // ============================================================================
+    // Consolidated announcements lack critical application details and reference
+    // external websites for individual project details. These detailed projects
+    // are re-announced separately with complete information.
+    // Skip if ALL three critical fields are missing: deadline, applicationStart, AND budgetAmount
+    if (!program.deadline && !program.applicationStart && !program.budgetAmount) {
+      continue; // Consolidated announcement - lacks actionable application details
+    }
+
     // Skip if program doesn't target this organization type
     if (program.targetType && !program.targetType.includes(organization.type)) {
       continue;
@@ -102,6 +113,22 @@ export function generateMatches(
       // Conservative approach: Require explicit match when program has restrictions
       if (!orgBusinessStructure) {
         continue;
+      }
+    }
+
+    // ============================================================================
+    // TRL Hard Requirement Filter (기술성숙도 필수 조건)
+    // ============================================================================
+    // TRL (Technology Readiness Level) represents development stage maturity (1-9 scale)
+    // Programs target specific TRL ranges based on research stage (basic research, applied, commercialization)
+    // Organizations outside the TRL range are fundamentally incompatible - not just a scoring penalty
+    // Example: Early-stage research program (TRL 1-3) cannot accept commercialization-ready company (TRL 7-9)
+    if (program.minTrl !== null && program.maxTrl !== null && organization.technologyReadinessLevel) {
+      const orgTRL = organization.technologyReadinessLevel;
+
+      // Skip if organization's TRL is completely outside program's target range
+      if (orgTRL < program.minTrl || orgTRL > program.maxTrl) {
+        continue; // TRL incompatible - organization's development stage doesn't fit this program
       }
     }
 
