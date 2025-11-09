@@ -1,34 +1,18 @@
 /**
- * Separate Eligibility Extraction & Verification Script
+ * Eligibility Extraction V2 - Improved Korean Government Document Parsing
  *
- * Purpose: Extract eligibility data from existing programs and store in verification table
- * for iterative improvement without affecting production matching.
+ * CRITICAL FIXES (Nov 10, 2025):
  *
- * Key Features:
- * 1. Independent of scraper - uses already-scraped data (attachments, detail pages)
- * 2. Separate storage - writes to eligibility_verification table (not funding_programs)
- * 3. Comparison mode - can compare new extraction vs current production data
- * 4. Iterative refinement - run multiple times to test extraction improvements
+ * Problem: V1 patterns fail on Korean government documents because:
+ * 1. No whitespace in Korean text: "기업부설연구소를보유하고" (no spaces)
+ * 2. Descriptive verbs, not keywords: "보유" (possess) vs "필수" (required)
+ * 3. Narrative prose, not bullet points
  *
- * Usage:
- *   npx tsx scripts/extract-eligibility-verification.ts [options]
- *
- * Options:
- *   --program-id <id>       Extract single program by ID
- *   --date-range <days>     Extract programs scraped in last N days (default: 30)
- *   --compare               Compare extraction with current funding_programs data
- *   --limit <n>             Limit to N programs (default: all)
- *   --confidence <level>    Only extract programs with current confidence <= level (LOW/MEDIUM/HIGH)
- *
- * Examples:
- *   # Extract all programs from last 30 days
- *   npx tsx scripts/extract-eligibility-verification.ts
- *
- *   # Extract and compare single program
- *   npx tsx scripts/extract-eligibility-verification.ts --program-id abc123 --compare
- *
- *   # Extract 100 low-confidence programs
- *   npx tsx scripts/extract-eligibility-verification.ts --limit 100 --confidence LOW
+ * Solution: Section-based extraction with flexible patterns
+ * 1. Extract eligibility sections first (지원대상, 신청자격, etc.)
+ * 2. Use Korean grammatical particles (를/을, 이/가)
+ * 3. Match descriptive verbs (보유, 인정, 확인, 해당)
+ * 4. Context-aware extraction (within eligibility sections only)
  */
 
 import { db } from '@/lib/db';
@@ -39,7 +23,7 @@ import { join } from 'path';
 import { extractTextFromAttachment } from '@/lib/scraping/utils/attachment-parser';
 
 // ============================================================================
-// EXTRACTION FUNCTIONS (Simplified versions of scraper extraction logic)
+// IMPROVED EXTRACTION FUNCTIONS (V2)
 // ============================================================================
 
 interface EligibilityExtractionResult {
@@ -60,51 +44,231 @@ interface EligibilityExtractionResult {
 }
 
 /**
- * Extract certifications from text
+ * Extract eligibility sections from text
+ *
+ * Korean government documents structure eligibility in sections with headers like:
+ * - 지원대상 (Support Target)
+ * - 신청자격 (Application Qualification)
+ * - 신청요건 (Application Requirements)
+ * - 참여요건 (Participation Requirements)
+ */
+function extractEligibilitySections(text: string): {
+  sections: Array<{ header: string; content: string; startIndex: number }>;
+  notes: string[];
+} {
+  const notes: string[] = [];
+  const sections: Array<{ header: string; content: string; startIndex: number }> = [];
+
+  // Section headers to look for
+  const sectionHeaders = [
+    '지원대상',
+    '신청자격',
+    '신청요건',
+    '참여요건',
+    '참여자격',
+    '지원요건',
+  ];
+
+  for (const header of sectionHeaders) {
+    // Find all occurrences of this header
+    const regex = new RegExp(header, 'gi');
+    const matches = [...text.matchAll(regex)];
+
+    for (const match of matches) {
+      const startIndex = match.index!;
+
+      // Extract up to 2000 characters after the header
+      // (most eligibility criteria are within 1000-2000 chars of the header)
+      const content = text.substring(startIndex, startIndex + 2000);
+
+      sections.push({
+        header,
+        content,
+        startIndex
+      });
+
+      notes.push(`Found "${header}" section at position ${startIndex}`);
+    }
+  }
+
+  // Sort sections by position in document
+  sections.sort((a, b) => a.startIndex - b.startIndex);
+
+  return { sections, notes };
+}
+
+/**
+ * Extract certifications from text - V2 with improved Korean patterns
+ *
+ * Changes from V1:
+ * 1. No whitespace requirement (\s* removed)
+ * 2. Match Korean grammatical particles (를, 을, 이, 가, 의, 에)
+ * 3. Descriptive verb matching (보유, 인정, 확인, 해당, 필요)
+ * 4. Section-aware extraction (prioritize eligibility sections)
  */
 function extractCertifications(text: string): {
   required: string[];
   preferred: string[];
+  notes: string[];
 } {
   const required: string[] = [];
   const preferred: string[] = [];
+  const notes: string[] = [];
 
-  // Required certification patterns
+  // First, try to extract eligibility sections for better accuracy
+  const { sections, notes: sectionNotes } = extractEligibilitySections(text);
+  notes.push(...sectionNotes);
+
+  // Use eligibility sections if available, otherwise use full text
+  const searchText = sections.length > 0
+    ? sections.map(s => s.content).join('\n')
+    : text;
+
+  if (sections.length > 0) {
+    notes.push(`✓ Searching within ${sections.length} eligibility sections`);
+  } else {
+    notes.push(`⚠ No eligibility sections found, searching full text`);
+  }
+
+  // ============================================================================
+  // REQUIRED CERTIFICATION PATTERNS (V2)
+  // ============================================================================
+
+  // Pattern explanation:
+  // - No \s* (whitespace) requirement
+  // - Matches Korean particles: [를을이가의에]?
+  // - Matches descriptive verbs: (보유|인정|확인|해당|필수|요구|설치|필요)
+  // - Optional suffix: (된|한|하고|하여|임|기업|자)?
+
   const requiredPatterns = [
-    { keyword: '벤처기업', pattern: /벤처기업\s*(인증|확인서|필수|요구)/ },
-    { keyword: 'INNO-BIZ', pattern: /INNO-?BIZ\s*(인증|필수|요구)/ },
-    { keyword: '연구개발전담부서', pattern: /연구개발전담부서\s*(인증|설치|필수)/ },
-    { keyword: '기업부설연구소', pattern: /기업부설연구소\s*(인정|설치|필수|요구)/ },
-    { keyword: '중소기업', pattern: /중소기업\s*(확인서|필수|한정)/ },
+    {
+      keyword: '벤처기업',
+      // Matches: "벤처기업인증", "벤처기업을확인", "벤처기업에해당"
+      pattern: /벤처기업[를을이가의에]?(인증|확인서|확인|해당|필수|요구|필요)[된한하고하여임기업자]?/,
+      description: 'Venture company certification'
+    },
+    {
+      keyword: 'INNO-BIZ',
+      // Matches: "INNO-BIZ인증", "이노비즈기업", "INNOBIZ확인"
+      pattern: /(?:INNO-?BIZ|이노비즈)[를을이가의에]?(인증|확인|해당|필수|요구|기업)?/i,
+      description: 'INNO-BIZ certification'
+    },
+    {
+      keyword: '연구개발전담부서',
+      // Matches: "연구개발전담부서를보유", "연구개발전담부서인정", "연구전담부서설치"
+      pattern: /연구(?:개발)?전담부서[를을이가의에]?(인증|인정|설치|보유|필수|필요)[하고하여된임]?/,
+      description: 'Dedicated R&D department'
+    },
+    {
+      keyword: '기업부설연구소',
+      // Matches: "기업부설연구소를보유", "기업부설연구소인정서", "기업부설연구소설치"
+      pattern: /기업부설연구소[를을이가의에]?(인정|인증|설치|보유|필수|요구|필요)[서하고하여된임]?/,
+      description: 'Corporate research institute'
+    },
+    {
+      keyword: '중소기업',
+      // Matches: "중소기업확인서", "중소기업에해당", "중소기업필수"
+      pattern: /중소기업[를을이가의에]?(확인서|확인|해당|필수|한정|대상)[하고하여된임기업]?/,
+      description: 'SME (Small and Medium Enterprise)'
+    },
+    {
+      keyword: '기술혁신형중소기업',
+      // Matches: "기술혁신형중소기업", "기술혁신형(INNO-BIZ)"
+      pattern: /기술혁신형\s?중소기업/,
+      description: 'Technology innovative SME'
+    },
+    {
+      keyword: 'DCP',
+      // Matches: "DCP인증", "직접생산확인"
+      pattern: /(?:DCP|직접생산확인)[를을이가의에]?(인증|확인|필수)?/,
+      description: 'Direct Production Confirmation'
+    },
   ];
 
-  // Preferred certification patterns (우대)
+  // ============================================================================
+  // PREFERRED CERTIFICATION PATTERNS (V2)
+  // ============================================================================
+
   const preferredPatterns = [
-    { keyword: '벤처기업', pattern: /벤처기업\s*(우대|가점)/ },
-    { keyword: 'INNO-BIZ', pattern: /INNO-?BIZ\s*(우대|가점)/ },
-    { keyword: '메인비즈', pattern: /메인비즈|Main-?Biz/ },
-    { keyword: 'ISO 인증', pattern: /ISO\s*\d+\s*(인증|우대)/ },
+    {
+      keyword: '벤처기업',
+      // Matches: "벤처기업우대", "벤처기업가점"
+      pattern: /벤처기업[를을이가의에]?(우대|가점|우선)[받|함]?/,
+      description: 'Venture company (preferred)'
+    },
+    {
+      keyword: 'INNO-BIZ',
+      // Matches: "INNO-BIZ우대", "이노비즈가점"
+      pattern: /(?:INNO-?BIZ|이노비즈)[를을이가의에]?(우대|가점|우선)/i,
+      description: 'INNO-BIZ (preferred)'
+    },
+    {
+      keyword: '메인비즈',
+      // Matches: "메인비즈", "Main-Biz", "MAIN-BIZ"
+      pattern: /(?:메인비즈|Main-?Biz)/i,
+      description: 'Main-Biz certification'
+    },
+    {
+      keyword: 'ISO 인증',
+      // Matches: "ISO9001인증", "ISO 14001 우대"
+      pattern: /ISO\s*\d+[를을이가의에]?(인증|우대|가점)?/,
+      description: 'ISO certification'
+    },
   ];
+
+  // ============================================================================
+  // EXTRACTION LOGIC
+  // ============================================================================
 
   // Extract required certifications
-  for (const { keyword, pattern } of requiredPatterns) {
-    if (pattern.test(text)) {
+  for (const { keyword, pattern, description } of requiredPatterns) {
+    if (pattern.test(searchText)) {
       required.push(keyword);
+
+      // Find the actual match for logging
+      const match = searchText.match(pattern);
+      if (match) {
+        notes.push(`✓ Required: ${keyword} - matched "${match[0]}"`);
+      }
     }
   }
 
   // Extract preferred certifications
-  for (const { keyword, pattern } of preferredPatterns) {
-    if (pattern.test(text) && !required.includes(keyword)) {
+  for (const { keyword, pattern, description } of preferredPatterns) {
+    if (pattern.test(searchText) && !required.includes(keyword)) {
       preferred.push(keyword);
+
+      // Find the actual match for logging
+      const match = searchText.match(pattern);
+      if (match) {
+        notes.push(`✓ Preferred: ${keyword} - matched "${match[0]}"`);
+      }
     }
   }
 
-  return { required, preferred };
+  // Additional heuristics for better accuracy
+
+  // If "중소기업" is mentioned in context of "대상" but no other patterns match,
+  // it's likely a general SME requirement
+  if (required.length === 0 && /중소기업.{0,50}대상/.test(searchText)) {
+    required.push('중소기업');
+    notes.push('✓ Required: 중소기업 - inferred from "대상" context');
+  }
+
+  // If both 기업부설연구소 and 연구개발전담부서 are mentioned,
+  // check if it's an OR condition (보유 or 인정)
+  const hasResearchInstitute = /기업부설연구소[를을이가의에]?보유/.test(searchText);
+  const hasRnDDept = /연구전담부서[를을이가의에]?보유/.test(searchText);
+
+  if (hasResearchInstitute && hasRnDDept) {
+    notes.push('ℹ Both research institute and R&D dept mentioned (likely OR condition)');
+  }
+
+  return { required, preferred, notes };
 }
 
 /**
- * Extract employee count constraints
+ * Extract employee count constraints (unchanged from V1 - already works well)
  */
 function extractEmployeeConstraints(text: string): {
   min: number | null;
@@ -144,7 +308,7 @@ function extractEmployeeConstraints(text: string): {
 }
 
 /**
- * Extract revenue constraints
+ * Extract revenue constraints (unchanged from V1)
  */
 function extractRevenueConstraints(text: string): {
   min: bigint | null;
@@ -177,7 +341,7 @@ function extractRevenueConstraints(text: string): {
 }
 
 /**
- * Extract investment requirement
+ * Extract investment requirement (unchanged from V1)
  */
 function extractInvestmentRequirement(text: string): {
   amount: Decimal | null;
@@ -214,7 +378,7 @@ function extractInvestmentRequirement(text: string): {
 }
 
 /**
- * Extract operating years requirement
+ * Extract operating years requirement (unchanged from V1)
  */
 function extractOperatingYears(text: string): {
   min: number | null;
@@ -251,7 +415,7 @@ function extractOperatingYears(text: string): {
 }
 
 /**
- * Extract research institute requirement
+ * Extract research institute requirement - V2 with improved patterns
  */
 function extractResearchInstituteRequirement(text: string): {
   required: boolean;
@@ -259,11 +423,12 @@ function extractResearchInstituteRequirement(text: string): {
 } {
   const notes: string[] = [];
 
-  // Required patterns
+  // V2 patterns - match Korean grammatical particles and descriptive verbs
   const requiredPatterns = [
-    /기업부설연구소\s*(?:인정서|설치|필수)/,
-    /연구전담부서\s*(?:인정서|설치|필수)/,
-    /연구소\s*보유\s*(?:필수|기업)/,
+    /기업부설연구소[를을이가의에]?(?:인정서|인정|설치|보유)[하고하여된한]?/,
+    /연구전담부서[를을이가의에]?(?:인정서|인정|설치|보유)[하고하여된한]?/,
+    /연구소[를을이가의에]?보유[하고하여된한]?/,
+    /연구개발전담부서[를을이가의에]?(?:인정|설치|보유)/,
   ];
 
   for (const pattern of requiredPatterns) {
@@ -277,9 +442,7 @@ function extractResearchInstituteRequirement(text: string): {
 }
 
 /**
- * Main extraction function
- *
- * Updated to read actual attachment files from file system using scraping_jobs metadata
+ * Main extraction function - updated to use V2 functions
  */
 async function extractEligibilityFromProgram(
   programId: string,
@@ -325,14 +488,7 @@ async function extractEligibilityFromProgram(
         continue;
       }
 
-      // Construct file path, handling BOTH absolute and relative attachment folder paths
-      //
-      // CRITICAL FIX (Nov 10, 2025): Database stores absolute paths like:
-      //   "/app/data/ntis-attachments/20250101_to_20250131/page-1/announcement-1"
-      // But actual files are in:
-      //   "/app/data/scraper/ntis-attachments/20250101_to_20250131/page-1/announcement-1"
-      //
-      // Solution: Strip known prefixes and rebuild the correct path
+      // Construct file path with proper normalization
       let relativePath = attachmentFolder;
 
       // Strip absolute path prefixes if present
@@ -397,10 +553,15 @@ async function extractEligibilityFromProgram(
     extractionNotes.push('⚠ Extracting from title only (no attachment text available)');
   }
 
-  // Extract certifications
-  const { required: reqCerts, preferred: prefCerts } = extractCertifications(extractionText);
+  // ============================================================================
+  // EXTRACTION USING V2 FUNCTIONS
+  // ============================================================================
+
+  // Extract certifications with V2 improved patterns
+  const { required: reqCerts, preferred: prefCerts, notes: certNotes } = extractCertifications(extractionText);
   result.requiredCertifications = reqCerts;
   result.preferredCertifications = prefCerts;
+  extractionNotes.push(...certNotes);
 
   // Extract employee constraints
   const { min: minEmp, max: maxEmp, notes: empNotes } = extractEmployeeConstraints(extractionText);
@@ -425,7 +586,7 @@ async function extractEligibilityFromProgram(
   result.maxOperatingYears = maxYears;
   extractionNotes.push(...yearsNotes);
 
-  // Extract research institute requirement
+  // Extract research institute requirement with V2 patterns
   const { required: researchReq, notes: researchNotes } = extractResearchInstituteRequirement(extractionText);
   result.requiresResearchInstitute = researchReq;
   extractionNotes.push(...researchNotes);
@@ -470,154 +631,7 @@ async function extractEligibilityFromProgram(
 }
 
 // ============================================================================
-// COMPARISON FUNCTIONS
-// ============================================================================
-
-interface ComparisonResult {
-  matchesCurrentData: boolean;
-  improvementDetected: boolean;
-  comparisonNotes: string;
-}
-
-function compareWithCurrentData(
-  extracted: EligibilityExtractionResult,
-  current: {
-    requiredCertifications: string[];
-    preferredCertifications: string[];
-    requiredMinEmployees: number | null;
-    requiredMaxEmployees: number | null;
-    requiredMinRevenue: bigint | null;
-    requiredMaxRevenue: bigint | null;
-    requiredInvestmentAmount: Decimal | null;
-    requiredOperatingYears: number | null;
-    maxOperatingYears: number | null;
-    requiresResearchInstitute: boolean;
-    eligibilityConfidence: ConfidenceLevel;
-  }
-): ComparisonResult {
-  const diffs: string[] = [];
-
-  // Compare certifications
-  const reqCertsMatch =
-    JSON.stringify(extracted.requiredCertifications.sort()) ===
-    JSON.stringify(current.requiredCertifications.sort());
-  if (!reqCertsMatch) {
-    diffs.push(
-      `Required certs: [${current.requiredCertifications.join(', ')}] → [${extracted.requiredCertifications.join(', ')}]`
-    );
-  }
-
-  const prefCertsMatch =
-    JSON.stringify(extracted.preferredCertifications.sort()) ===
-    JSON.stringify(current.preferredCertifications.sort());
-  if (!prefCertsMatch) {
-    diffs.push(
-      `Preferred certs: [${current.preferredCertifications.join(', ')}] → [${extracted.preferredCertifications.join(', ')}]`
-    );
-  }
-
-  // Compare employee constraints
-  if (extracted.requiredMinEmployees !== current.requiredMinEmployees) {
-    diffs.push(
-      `Min employees: ${current.requiredMinEmployees} → ${extracted.requiredMinEmployees}`
-    );
-  }
-  if (extracted.requiredMaxEmployees !== current.requiredMaxEmployees) {
-    diffs.push(
-      `Max employees: ${current.requiredMaxEmployees} → ${extracted.requiredMaxEmployees}`
-    );
-  }
-
-  // Compare revenue
-  if (extracted.requiredMinRevenue?.toString() !== current.requiredMinRevenue?.toString()) {
-    diffs.push(`Min revenue changed`);
-  }
-  if (extracted.requiredMaxRevenue?.toString() !== current.requiredMaxRevenue?.toString()) {
-    diffs.push(`Max revenue changed`);
-  }
-
-  // Compare investment amount
-  if (extracted.requiredInvestmentAmount?.toString() !== current.requiredInvestmentAmount?.toString()) {
-    diffs.push(`Investment amount changed`);
-  }
-
-  // Compare operating years
-  if (extracted.requiredOperatingYears !== current.requiredOperatingYears) {
-    diffs.push(
-      `Min operating years: ${current.requiredOperatingYears} → ${extracted.requiredOperatingYears}`
-    );
-  }
-  if (extracted.maxOperatingYears !== current.maxOperatingYears) {
-    diffs.push(
-      `Max operating years: ${current.maxOperatingYears} → ${extracted.maxOperatingYears}`
-    );
-  }
-
-  // Compare research institute
-  if (extracted.requiresResearchInstitute !== current.requiresResearchInstitute) {
-    diffs.push(
-      `Research institute: ${current.requiresResearchInstitute} → ${extracted.requiresResearchInstitute}`
-    );
-  }
-
-  const matchesCurrentData = diffs.length === 0;
-
-  // Detect improvements: higher confidence or more fields extracted
-  const currentFieldCount = [
-    current.requiredCertifications.length > 0,
-    current.preferredCertifications.length > 0,
-    current.requiredMinEmployees !== null,
-    current.requiredMaxEmployees !== null,
-    current.requiredMinRevenue !== null,
-    current.requiredMaxRevenue !== null,
-    current.requiredInvestmentAmount !== null,
-    current.requiredOperatingYears !== null,
-    current.maxOperatingYears !== null,
-    current.requiresResearchInstitute,
-  ].filter(Boolean).length;
-
-  const newFieldCount = [
-    extracted.requiredCertifications.length > 0,
-    extracted.preferredCertifications.length > 0,
-    extracted.requiredMinEmployees !== null,
-    extracted.requiredMaxEmployees !== null,
-    extracted.requiredMinRevenue !== null,
-    extracted.requiredMaxRevenue !== null,
-    extracted.requiredInvestmentAmount !== null,
-    extracted.requiredOperatingYears !== null,
-    extracted.maxOperatingYears !== null,
-    extracted.requiresResearchInstitute,
-  ].filter(Boolean).length;
-
-  const confidenceImproved =
-    (extracted.confidence === 'HIGH' && current.eligibilityConfidence !== 'HIGH') ||
-    (extracted.confidence === 'MEDIUM' && current.eligibilityConfidence === 'LOW');
-
-  const improvementDetected = newFieldCount > currentFieldCount || confidenceImproved;
-
-  let comparisonNotes = '';
-  if (matchesCurrentData) {
-    comparisonNotes = '✅ Matches current data exactly';
-  } else {
-    comparisonNotes = `📝 ${diffs.length} differences detected:\n${diffs.map(d => `  - ${d}`).join('\n')}`;
-  }
-
-  if (improvementDetected) {
-    comparisonNotes += `\n🎯 Improvement: ${currentFieldCount} → ${newFieldCount} fields`;
-    if (confidenceImproved) {
-      comparisonNotes += ` | Confidence: ${current.eligibilityConfidence} → ${extracted.confidence}`;
-    }
-  }
-
-  return {
-    matchesCurrentData,
-    improvementDetected,
-    comparisonNotes,
-  };
-}
-
-// ============================================================================
-// MAIN EXECUTION
+// MAIN EXECUTION (Same as V1)
 // ============================================================================
 
 async function main() {
@@ -626,20 +640,17 @@ async function main() {
   // Parse arguments
   const programId = args.find((arg, i) => args[i - 1] === '--program-id');
   const daysBack = parseInt(args.find((arg, i) => args[i - 1] === '--date-range') || '30', 10);
-  const compareMode = args.includes('--compare');
   const limit = parseInt(args.find((arg, i) => args[i - 1] === '--limit') || '0', 10);
-  const confidenceFilter = (args.find((arg, i) => args[i - 1] === '--confidence') || null) as ConfidenceLevel | null;
 
-  console.log('🔍 Eligibility Extraction & Verification Script\n');
+  console.log('🔍 Eligibility Extraction V2 - Improved Korean Document Parsing\n');
   console.log('Configuration:');
   if (programId) {
     console.log(`  - Program ID: ${programId}`);
   } else {
     console.log(`  - Date range: Last ${daysBack} days`);
     if (limit > 0) console.log(`  - Limit: ${limit} programs`);
-    if (confidenceFilter) console.log(`  - Confidence filter: <= ${confidenceFilter}`);
   }
-  console.log(`  - Comparison mode: ${compareMode ? 'ENABLED' : 'DISABLED'}\n`);
+  console.log('');
 
   // Build query
   const where: any = {};
@@ -650,12 +661,6 @@ async function main() {
     const dateThreshold = new Date();
     dateThreshold.setDate(dateThreshold.getDate() - daysBack);
     where.scrapedAt = { gte: dateThreshold };
-
-    if (confidenceFilter) {
-      const confidenceLevels: ConfidenceLevel[] = ['LOW', 'MEDIUM', 'HIGH'];
-      const filterIndex = confidenceLevels.indexOf(confidenceFilter);
-      where.eligibilityConfidence = { in: confidenceLevels.slice(0, filterIndex + 1) };
-    }
   }
 
   // Fetch programs with scraping_jobs metadata for file access
@@ -664,17 +669,6 @@ async function main() {
     select: {
       id: true,
       title: true,
-      requiredCertifications: true,
-      preferredCertifications: true,
-      requiredMinEmployees: true,
-      requiredMaxEmployees: true,
-      requiredMinRevenue: true,
-      requiredMaxRevenue: true,
-      requiredInvestmentAmount: true,
-      requiredOperatingYears: true,
-      maxOperatingYears: true,
-      requiresResearchInstitute: true,
-      eligibilityConfidence: true,
       scraping_job: {
         select: {
           attachmentFolder: true,
@@ -691,8 +685,8 @@ async function main() {
 
   let processed = 0;
   let created = 0;
-  let improved = 0;
-  let matched = 0;
+  let totalRequired = 0;
+  let totalPreferred = 0;
 
   for (const program of programs) {
     processed++;
@@ -709,7 +703,7 @@ async function main() {
       console.log(`  📎 No attachments available`);
     }
 
-    // Extract eligibility data
+    // Extract eligibility data with V2
     const extracted = await extractEligibilityFromProgram(
       program.id,
       program.title,
@@ -717,17 +711,12 @@ async function main() {
       attachmentFilenames
     );
 
-    console.log(`  Confidence: ${extracted.confidence} | Method: ${extracted.extractionMethod} | Notes: ${extracted.extractionNotes.length}`);
+    console.log(`  Confidence: ${extracted.confidence} | Method: ${extracted.extractionMethod}`);
+    console.log(`  Required Certs: [${extracted.requiredCertifications.join(', ')}]`);
+    console.log(`  Preferred Certs: [${extracted.preferredCertifications.join(', ')}]`);
 
-    // Compare with current data if enabled
-    let comparison: ComparisonResult | null = null;
-    if (compareMode) {
-      comparison = compareWithCurrentData(extracted, program);
-      console.log(`  ${comparison.comparisonNotes.split('\n')[0]}`);
-
-      if (comparison.matchesCurrentData) matched++;
-      if (comparison.improvementDetected) improved++;
-    }
+    if (extracted.requiredCertifications.length > 0) totalRequired++;
+    if (extracted.preferredCertifications.length > 0) totalPreferred++;
 
     // Save to verification table
     await db.eligibility_verification.create({
@@ -748,9 +737,9 @@ async function main() {
         sourceFiles: extracted.sourceFiles,
         extractionNotes: extracted.extractionNotes.join('\n'),
         verified: false,
-        matchesCurrentData: comparison?.matchesCurrentData ?? null,
-        improvementDetected: comparison?.improvementDetected ?? null,
-        comparisonNotes: comparison?.comparisonNotes ?? null,
+        matchesCurrentData: null,
+        improvementDetected: null,
+        comparisonNotes: null,
       },
     });
 
@@ -758,14 +747,12 @@ async function main() {
   }
 
   console.log('\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('📊 EXTRACTION SUMMARY');
+  console.log('📊 EXTRACTION SUMMARY (V2)');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`Processed: ${processed} programs`);
   console.log(`Created: ${created} verification records`);
-  if (compareMode) {
-    console.log(`Matched: ${matched} (${((matched / processed) * 100).toFixed(1)}%)`);
-    console.log(`Improved: ${improved} (${((improved / processed) * 100).toFixed(1)}%)`);
-  }
+  console.log(`Programs with required certs: ${totalRequired} (${((totalRequired / processed) * 100).toFixed(1)}%)`);
+  console.log(`Programs with preferred certs: ${totalPreferred} (${((totalPreferred / processed) * 100).toFixed(1)}%)`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
   await db.$disconnect();
