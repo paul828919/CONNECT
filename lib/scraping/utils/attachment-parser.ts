@@ -94,8 +94,9 @@ async function extractTextFromPDF(fileBuffer: Buffer): Promise<string | null> {
 
     console.log(`[ATTACHMENT-PARSER] Extracted ${text.length} characters from PDF`);
 
-    // Return first 5000 characters for performance (keyword extraction doesn't need full text)
-    return text.substring(0, 5000);
+    // Return full text for eligibility extraction (V2 patterns need complete document)
+    // Limit to 50,000 chars max to prevent memory issues with extremely large PDFs
+    return text.substring(0, 50000);
   } catch (error: any) {
     console.error('[ATTACHMENT-PARSER] PDF parsing failed:', error.message);
     return null;
