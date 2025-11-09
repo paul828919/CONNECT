@@ -76,6 +76,7 @@ services:
     volumes:
       - ./uploads:/app/uploads
       - ./logs/app1:/app/logs
+      - ./data/scraper:/app/data/scraper:ro  # Read-only access to scraped attachments
     networks:
       connect_net:
         ipv4_address: 172.25.0.21
@@ -145,6 +146,7 @@ services:
     volumes:
       - ./uploads:/app/uploads
       - ./logs/app2:/app/logs
+      - ./data/scraper:/app/data/scraper:ro  # Read-only access to scraped attachments
     networks:
       connect_net:
         ipv4_address: 172.25.0.22
