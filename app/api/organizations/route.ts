@@ -74,7 +74,13 @@ export async function POST(request: NextRequest) {
       // Tier 1A: Company eligibility fields
       revenueRange,
       businessStructure,
+      businessEstablishedDate,
       rdExperience,
+      // Phase 2: Eligibility fields
+      certifications,
+      investmentHistory,
+      patentCount,
+      hasResearchInstitute,
       // Tier 1B: Algorithm enhancement fields
       collaborationCount,
       instituteType,
@@ -119,7 +125,7 @@ export async function POST(request: NextRequest) {
     // 4. Encrypt sensitive data (PIPA compliance)
     const businessNumberEncrypted = encrypt(businessNumber);
 
-    // 5. Calculate profile score (enhanced scoring with Tier 1A + 1B)
+    // 5. Calculate profile score (enhanced scoring with Tier 1A + 1B + Phase 2)
     let profileScore = 50; // Base score
     if (name) profileScore += 10;
     if (industrySector) profileScore += 10;
@@ -131,6 +137,13 @@ export async function POST(request: NextRequest) {
     // Tier 1A: Company eligibility fields
     if (revenueRange) profileScore += 5;
     if (businessStructure) profileScore += 5;
+    if (businessEstablishedDate) profileScore += 3;
+
+    // Phase 2: Eligibility fields (critical for matching accuracy)
+    if (certifications && certifications.length > 0) profileScore += 10;
+    if (investmentHistory && investmentHistory.trim().length > 0) profileScore += 8;
+    if (patentCount && patentCount > 0) profileScore += 5;
+    if (hasResearchInstitute) profileScore += 7;
 
     // Tier 1B: Algorithm enhancement fields
     // collaborationCount: Stepwise scoring (1=+2pts, 2-3=+4pts, 4+=+5pts)
@@ -159,6 +172,16 @@ export async function POST(request: NextRequest) {
         // Tier 1A: Company eligibility fields
         revenueRange: revenueRange || null,
         businessStructure: businessStructure || null,
+        businessEstablishedDate: businessEstablishedDate
+          ? new Date(businessEstablishedDate)
+          : null,
+        // Phase 2: Eligibility fields
+        certifications: certifications || [],
+        investmentHistory: investmentHistory
+          ? { manualEntry: investmentHistory, verified: false }
+          : undefined,
+        patentCount: patentCount || null,
+        hasResearchInstitute: hasResearchInstitute || false,
         // Tier 1B: Algorithm enhancement fields
         collaborationCount: collaborationCount || null,
         instituteType: instituteType || null,
@@ -166,14 +189,14 @@ export async function POST(request: NextRequest) {
         researchFocusAreas: researchFocusAreas
           ? researchFocusAreas
               .split(',')
-              .map((area) => area.trim())
-              .filter((area) => area.length > 0)
+              .map((area: string) => area.trim())
+              .filter((area: string) => area.length > 0)
           : [],
         keyTechnologies: keyTechnologies
           ? keyTechnologies
               .split(',')
-              .map((tech) => tech.trim())
-              .filter((tech) => tech.length > 0)
+              .map((tech: string) => tech.trim())
+              .filter((tech: string) => tech.length > 0)
           : [],
         profileCompleted: true,
         profileScore,
