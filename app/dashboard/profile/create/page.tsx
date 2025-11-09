@@ -34,6 +34,7 @@ const organizationSchema = z.object({
     .enum(['UNDER_1B', 'FROM_1B_TO_10B', 'FROM_10B_TO_50B', 'FROM_50B_TO_100B', 'OVER_100B'])
     .optional(),
   businessStructure: z.enum(['CORPORATION', 'SOLE_PROPRIETOR']).optional(),
+  businessEstablishedDate: z.string().optional(), // ISO date string, will be converted to Date in API
   rdExperience: z.boolean(),
   // Tier 1B: Algorithm enhancement fields
   collaborationCount: z
@@ -41,6 +42,15 @@ const organizationSchema = z.object({
     .min(0, '협력 횟수는 0 이상이어야 합니다')
     .max(99, '협력 횟수는 99 이하여야 합니다')
     .optional(),
+  // Phase 2: Eligibility fields (certifications, investment, patents, research institute)
+  certifications: z.array(z.string()).optional(),
+  investmentHistory: z.string().optional(), // JSON string of investment records
+  patentCount: z
+    .number()
+    .min(0, '특허 수는 0 이상이어야 합니다')
+    .max(999, '특허 수는 999 이하여야 합니다')
+    .optional(),
+  hasResearchInstitute: z.boolean().optional(),
   // Tier 1B: Research institute specific fields
   instituteType: z.enum(['UNIVERSITY', 'GOVERNMENT', 'PRIVATE']).optional(),
   researchFocusAreas: z.string().optional(), // Comma-separated string
@@ -68,37 +78,72 @@ const industrySectors = [
   { value: 'OTHER', label: '기타' },
 ];
 
+// Common certifications for eligibility filtering
+const commonCertifications = [
+  { value: '벤처기업', label: '벤처기업' },
+  { value: 'INNO-BIZ', label: 'INNO-BIZ (기술혁신형 중소기업)' },
+  { value: '연구개발전담부서', label: '연구개발전담부서' },
+  { value: '기업부설연구소', label: '기업부설연구소' },
+  { value: '메인비즈', label: '메인비즈 (Main-Biz)' },
+  { value: '중소기업', label: '중소기업 확인서' },
+  { value: '스타트업', label: '창업기업 (7년 이내)' },
+];
+
 export default function CreateOrganizationProfilePage() {
   const router = useRouter();
   const { update } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<OrganizationFormData>({
     resolver: zodResolver(organizationSchema),
     defaultValues: {
       type: 'COMPANY',
       rdExperience: false,
+      hasResearchInstitute: false,
+      certifications: [],
     },
   });
 
   const organizationType = watch('type');
   const rdExperience = watch('rdExperience');
 
+  // Handler for certification checkbox toggle
+  const handleCertificationToggle = (certValue: string) => {
+    setSelectedCertifications((prev) => {
+      const newCerts = prev.includes(certValue)
+        ? prev.filter((c) => c !== certValue)
+        : [...prev, certValue];
+      setValue('certifications', newCerts);
+      return newCerts;
+    });
+  };
+
   const onSubmit = async (data: OrganizationFormData) => {
     setIsSubmitting(true);
     setError(null);
 
     try {
+      // Prepare payload with proper type conversions
+      const payload = {
+        ...data,
+        certifications: selectedCertifications,
+        businessEstablishedDate: data.businessEstablishedDate
+          ? new Date(data.businessEstablishedDate).toISOString()
+          : undefined,
+      };
+
       const response = await fetch('/api/organizations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
@@ -231,6 +276,30 @@ export default function CreateOrganizationProfilePage() {
               {errors.businessNumber && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.businessNumber.message}
+                </p>
+              )}
+            </div>
+
+            {/* Business Established Date */}
+            <div>
+              <label
+                htmlFor="businessEstablishedDate"
+                className="block text-sm font-medium text-gray-700"
+              >
+                사업자 설립일 <span className="text-gray-500 text-xs font-normal">(선택사항)</span>
+              </label>
+              <input
+                type="date"
+                id="businessEstablishedDate"
+                {...register('businessEstablishedDate')}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                일부 프로그램은 업력 기준이 있습니다 (예: 창업 7년 이내)
+              </p>
+              {errors.businessEstablishedDate && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.businessEstablishedDate.message}
                 </p>
               )}
             </div>
@@ -371,6 +440,100 @@ export default function CreateOrganizationProfilePage() {
                   {errors.businessStructure && (
                     <p className="mt-1 text-sm text-red-600">
                       {errors.businessStructure.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Certifications */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    보유 인증 (선택사항)
+                  </label>
+                  <div className="space-y-2">
+                    {commonCertifications.map((cert) => (
+                      <label
+                        key={cert.value}
+                        className="flex items-start cursor-pointer hover:bg-gray-50 p-2 rounded"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedCertifications.includes(cert.value)}
+                          onChange={() => handleCertificationToggle(cert.value)}
+                          className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">{cert.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    보유 인증에 따라 지원 가능한 프로그램이 필터링됩니다
+                  </p>
+                </div>
+
+                {/* Patent Count */}
+                <div>
+                  <label
+                    htmlFor="patentCount"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    보유 특허 수 (선택사항)
+                  </label>
+                  <input
+                    type="number"
+                    id="patentCount"
+                    {...register('patentCount', { valueAsNumber: true })}
+                    min="0"
+                    max="999"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="0"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    등록 특허와 출원 특허를 합산하여 입력해주세요
+                  </p>
+                  {errors.patentCount && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.patentCount.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Has Research Institute */}
+                <div className="flex items-start">
+                  <input
+                    type="checkbox"
+                    id="hasResearchInstitute"
+                    {...register('hasResearchInstitute')}
+                    className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label
+                    htmlFor="hasResearchInstitute"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
+                    기업부설연구소를 보유하고 있습니다
+                  </label>
+                </div>
+
+                {/* Investment History (Simplified) */}
+                <div>
+                  <label
+                    htmlFor="investmentHistory"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    누적 투자 유치 금액 (선택사항)
+                  </label>
+                  <input
+                    type="text"
+                    id="investmentHistory"
+                    {...register('investmentHistory')}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="예: 5억원"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    VC, 정부지원금, 기업 투자 등을 합산하여 입력해주세요 (일부 프로그램은 투자 유치 실적 필수)
+                  </p>
+                  {errors.investmentHistory && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.investmentHistory.message}
                     </p>
                   )}
                 </div>
