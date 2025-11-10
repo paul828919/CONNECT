@@ -28,7 +28,7 @@ import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
 import pdfParse from 'pdf-parse';
 import { convertHWPViaHancomTesseract } from './hancom-docs-tesseract-converter';
-import type { Browser } from 'playwright';
+import type { BrowserContext } from 'playwright';
 
 const execAsync = promisify(exec);
 
@@ -37,13 +37,13 @@ const execAsync = promisify(exec);
  *
  * @param fileName - Attachment file name (e.g., "application_guide.pdf")
  * @param fileBuffer - File contents as Buffer
- * @param sharedBrowser - Optional shared browser for HWP conversion (reduces logins)
+ * @param sharedContext - Optional shared browser context for HWP conversion (preserves authentication)
  * @returns Extracted text (up to 5000 characters for performance)
  */
 export async function extractTextFromAttachment(
   fileName: string,
   fileBuffer: Buffer,
-  sharedBrowser?: Browser
+  sharedContext?: BrowserContext
 ): Promise<string | null> {
   try {
     const ext = path.extname(fileName).toLowerCase();
@@ -58,7 +58,7 @@ export async function extractTextFromAttachment(
         return await extractTextFromHWPX(fileBuffer);
 
       case '.hwp':
-        return await extractTextFromHWP(fileBuffer, fileName, sharedBrowser);
+        return await extractTextFromHWP(fileBuffer, fileName, sharedContext);
 
       case '.doc':
       case '.docx':
@@ -254,7 +254,28 @@ async function extractTextFromHWPViaHwp5(
     fs.writeFileSync(tempHwpPath, fileBuffer);
 
     // Extract text using hwp5txt command-line tool from pyhwp
-    const { stdout, stderr } = await execAsync(`hwp5txt "${tempHwpPath}"`, {
+    // Strategy: Check system PATH first (works in containers), then fall back to Mac-specific path
+    let hwp5txtPath: string;
+
+    if (process.env.HWP5TXT_PATH) {
+      // Explicit environment variable takes precedence
+      hwp5txtPath = process.env.HWP5TXT_PATH;
+      console.log(`[ATTACHMENT-PARSER] Using hwp5txt from env: ${hwp5txtPath}`);
+    } else {
+      try {
+        // Try to find hwp5txt in system PATH (works for containers: /usr/local/bin/hwp5txt)
+        const { stdout: whichOutput } = await execAsync('which hwp5txt', { timeout: 2000 });
+        hwp5txtPath = whichOutput.trim();
+        console.log(`[ATTACHMENT-PARSER] Found hwp5txt in PATH: ${hwp5txtPath}`);
+      } catch {
+        // Fall back to Mac-specific location for local development
+        const homeDir = os.homedir();
+        hwp5txtPath = `${homeDir}/Library/Python/3.9/bin/hwp5txt`;
+        console.log(`[ATTACHMENT-PARSER] Using Mac default path: ${hwp5txtPath}`);
+      }
+    }
+
+    const { stdout, stderr } = await execAsync(`"${hwp5txtPath}" "${tempHwpPath}"`, {
       maxBuffer: 10 * 1024 * 1024, // 10MB buffer
       timeout: 10000, // 10-second timeout (prevents hanging on encrypted/legacy HWP files)
     });
@@ -307,16 +328,16 @@ async function extractTextFromHWPViaHwp5(
  * - Handles encrypted/password-protected HWP files
  * - Supports legacy HWP 3.0 format (pre-2010)
  * - 90%+ OCR accuracy for Korean text
- * - Shared browser sessions reduce logins
+ * - Shared context sessions reduce logins and preserve authentication
  *
  * @param fileBuffer - HWP file contents
  * @param fileName - Original file name (for logging)
- * @param sharedBrowser - Optional shared browser for Hancom fallback
+ * @param sharedContext - Optional shared browser context for Hancom fallback
  */
 async function extractTextFromHWP(
   fileBuffer: Buffer,
   fileName: string,
-  sharedBrowser?: Browser
+  sharedContext?: BrowserContext
 ): Promise<string | null> {
   try {
     // Try pyhwp first (fast, reliable, no OCR errors)
@@ -332,7 +353,7 @@ async function extractTextFromHWP(
       `[ATTACHMENT-PARSER] pyhwp failed, falling back to Hancom Docs + Tesseract: ${fileName}`
     );
 
-    const hancomText = await convertHWPViaHancomTesseract(fileBuffer, fileName, sharedBrowser);
+    const hancomText = await convertHWPViaHancomTesseract(fileBuffer, fileName, sharedContext);
 
     if (hancomText && hancomText.length > 0) {
       console.log(
