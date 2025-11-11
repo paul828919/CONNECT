@@ -129,6 +129,71 @@ function htmlToText(html: string): string {
 }
 
 /**
+ * Sanitize Unicode characters for PostgreSQL JSON storage
+ * Removes lone UTF-16 surrogates that cause "lone leading surrogate" errors
+ *
+ * @param obj - Any JSON-serializable object
+ * @returns Sanitized copy of the object safe for PostgreSQL
+ */
+function sanitizeUnicodeForPostgres(obj: any): any {
+  if (typeof obj === 'string') {
+    // Use TextEncoder/TextDecoder for proper UTF-16 → UTF-8 conversion
+    // TextEncoder automatically replaces lone surrogates (0xD800-0xDFFF) with U+FFFD (�)
+    // during encoding, ensuring PostgreSQL receives only valid UTF-8 sequences
+
+    try {
+      // Step 1: Encode JavaScript UTF-16 string to UTF-8 bytes
+      // Invalid UTF-16 sequences (lone surrogates) are replaced with U+FFFD (�) during encoding
+      const encoder = new TextEncoder();
+      const utf8Bytes = encoder.encode(obj);
+
+      // Step 2: Decode UTF-8 bytes back to JavaScript UTF-16 string
+      // This ensures the string contains only valid UTF-8 sequences
+      const decoder = new TextDecoder('utf-8', { fatal: false }); // fatal: false means replace invalid sequences
+      let sanitized = decoder.decode(utf8Bytes);
+
+      // Step 3: Remove control characters that are valid UTF-8 but cause PostgreSQL JSON issues
+      // eslint-disable-next-line no-control-regex
+      sanitized = sanitized.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+
+      // Step 4: Remove the replacement character (�) if it was inserted
+      // This prevents "�" from appearing in the database
+      sanitized = sanitized.replace(/\uFFFD/g, '');
+
+      // Step 5: Verify the result is valid JSON-serializable
+      JSON.stringify({ test: sanitized });
+
+      return sanitized;
+    } catch (e) {
+      // Fallback: If encoding fails, use aggressive character filtering
+      console.warn('   ⚠️  TextEncoder/TextDecoder sanitization failed, using fallback filtering');
+      return obj.replace(/[^\u0020-\u007E\u00A0-\uD7FF\uE000-\uFFFD]/g, '');
+    }
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => sanitizeUnicodeForPostgres(item));
+  }
+
+  // Preserve Date objects (don't convert to plain objects)
+  if (obj instanceof Date) {
+    return obj;
+  }
+
+  if (obj !== null && typeof obj === 'object') {
+    const sanitized: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        sanitized[key] = sanitizeUnicodeForPostgres(obj[key]);
+      }
+    }
+    return sanitized;
+  }
+
+  return obj;
+}
+
+/**
  * Extract deadline from NTIS raw HTML text using comprehensive synonym matching
  * NTIS format: "마감일 : 2025.10.24" or "신청마감일 : 2025.10.31"
  *
@@ -735,11 +800,13 @@ async function processJob(
     };
 
     // Save updated detailPageData back to database immediately (before processing)
+    // Sanitize Unicode to prevent "lone leading surrogate" errors in PostgreSQL
     if (!config.dryRun) {
+      const sanitizedDetailPageData = sanitizeUnicodeForPostgres(updatedDetailPageData);
       await db.scraping_jobs.update({
         where: { id: job.id },
         data: {
-          detailPageData: updatedDetailPageData as any,
+          detailPageData: sanitizedDetailPageData as any,
         },
       });
       console.log(
@@ -766,6 +833,12 @@ async function processJob(
       url: job.announcementUrl,
       source: 'ntis',
     });
+
+    // DEBUG: Log received classification result
+    if (process.env.DEBUG_CLASSIFICATION) {
+      console.log(`[PROCESSOR] Received announcementType: ${announcementType}`);
+      console.log(`[PROCESSOR] Is R_D_PROJECT? ${announcementType === 'R_D_PROJECT'}`);
+    }
 
     if (announcementType !== 'R_D_PROJECT') {
       // Mark as skipped, not failed
@@ -885,44 +958,50 @@ async function processJob(
       // while the extracted data is in eligibilityCriteria JSONB
       const eligibilityFields = extractEligibilityFields(eligibilityCriteria);
 
+      // Prepare funding program data
+      const fundingProgramData = {
+        agencyId: 'NTIS' as AgencyId,
+        title: job.announcementTitle, // Use list page title, not detail page header
+        description: combinedText || null,
+        announcementUrl: job.announcementUrl,
+        deadline: deadline || null,
+        budgetAmount: budgetAmount || null,
+        targetType: targetTypeArray,
+        minTrl: trlRange?.minTRL || null,
+        maxTrl: trlRange?.maxTRL || null,
+        trlConfidence, // Stage 3.2: Now populated from extraction confidence
+        eligibilityCriteria: eligibilityCriteria || undefined,
+        publishedAt: publishedAt || null,
+        applicationStart: applicationStart || null,
+        ministry: detailData.ministry || null,
+        announcingAgency: detailData.announcingAgency || null,
+        category: categoryResult.category || null,
+        keywords: keywords || [],
+        contentHash,
+        scrapedAt: new Date(),
+        scrapingSource: 'ntis',
+        status,
+        announcementType, // From classification (always R_D_PROJECT at this point due to line 409 check)
+        // Phase 2 Enhancement Fields
+        allowedBusinessStructures: allowedBusinessStructures || [],
+        attachmentUrls: detailData.attachmentUrls || [],
+        trlInferred, // Stage 3.2: Now derived from confidence (true if 'inferred', false otherwise)
+        trlClassification: trlClassification || undefined,
+        // Top-level eligibility fields extracted from JSONB for matching algorithm
+        requiredInvestmentAmount: eligibilityFields.requiredInvestmentAmount || undefined,
+        requiredOperatingYears: eligibilityFields.requiredOperatingYears || undefined,
+        maxOperatingYears: eligibilityFields.maxOperatingYears || undefined,
+        requiredMinEmployees: eligibilityFields.requiredMinEmployees || undefined,
+        requiredMaxEmployees: eligibilityFields.requiredMaxEmployees || undefined,
+        requiredCertifications: eligibilityFields.requiredCertifications || undefined,
+        preferredCertifications: eligibilityFields.preferredCertifications || undefined,
+      };
+
+      // Sanitize Unicode to prevent "lone leading surrogate" errors in PostgreSQL
+      const sanitizedFundingProgramData = sanitizeUnicodeForPostgres(fundingProgramData);
+
       const fundingProgram = await db.funding_programs.create({
-        data: {
-          agencyId: 'NTIS' as AgencyId,
-          title: job.announcementTitle, // Use list page title, not detail page header
-          description: combinedText || null,
-          announcementUrl: job.announcementUrl,
-          deadline: deadline || null,
-          budgetAmount: budgetAmount || null,
-          targetType: targetTypeArray,
-          minTrl: trlRange?.minTRL || null,
-          maxTrl: trlRange?.maxTRL || null,
-          trlConfidence, // Stage 3.2: Now populated from extraction confidence
-          eligibilityCriteria: eligibilityCriteria || undefined,
-          publishedAt: publishedAt || null,
-          applicationStart: applicationStart || null,
-          ministry: detailData.ministry || null,
-          announcingAgency: detailData.announcingAgency || null,
-          category: categoryResult.category || null,
-          keywords: keywords || [],
-          contentHash,
-          scrapedAt: new Date(),
-          scrapingSource: 'ntis',
-          status,
-          announcementType, // From classification (always R_D_PROJECT at this point due to line 409 check)
-          // Phase 2 Enhancement Fields
-          allowedBusinessStructures: allowedBusinessStructures || [],
-          attachmentUrls: detailData.attachmentUrls || [],
-          trlInferred, // Stage 3.2: Now derived from confidence (true if 'inferred', false otherwise)
-          trlClassification: trlClassification || undefined,
-          // Top-level eligibility fields extracted from JSONB for matching algorithm
-          requiredInvestmentAmount: eligibilityFields.requiredInvestmentAmount || undefined,
-          requiredOperatingYears: eligibilityFields.requiredOperatingYears || undefined,
-          maxOperatingYears: eligibilityFields.maxOperatingYears || undefined,
-          requiredMinEmployees: eligibilityFields.requiredMinEmployees || undefined,
-          requiredMaxEmployees: eligibilityFields.requiredMaxEmployees || undefined,
-          requiredCertifications: eligibilityFields.requiredCertifications || undefined,
-          preferredCertifications: eligibilityFields.preferredCertifications || undefined,
-        },
+        data: sanitizedFundingProgramData as any,
       });
 
       fundingProgramId = fundingProgram.id;
