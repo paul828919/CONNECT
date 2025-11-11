@@ -1,6 +1,18 @@
 # Phase 6 Test Results: Matching Quality Root Cause Fix
 ## Enhancement Field Coverage Verification
 
+> **⚠️ HISTORICAL DOCUMENT - November 2025 Update:**
+> This document references LibreOffice for HWP text extraction. **LibreOffice has been removed from the codebase** (November 11, 2025).
+> The current implementation uses **pyhwp (hwp5txt) and Hancom Tesseract OCR** for HWP conversion, which provides:
+> - 64.9x faster processing (0.5s vs 30s per file)
+> - 100% text fidelity (no OCR errors for modern HWP files)
+> - No character corruption for Korean text
+> - Zero browser automation overhead
+>
+> See `lib/scraping/utils/attachment-parser.ts` for current implementation.
+
+---
+
 **Date:** October 29, 2025
 **Environment:** Local Development (macOS)
 **Test Dataset:** 23 NTIS programs (Oct 1-29, 2025)

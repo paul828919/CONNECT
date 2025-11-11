@@ -6,7 +6,7 @@
  *
  * Strategy:
  * 1. Select representative HWP files from NTIS attachments directory
- * 2. Extract text using existing LibreOffice converter
+ * 2. Extract text using pyhwp and Hancom Tesseract OCR
  * 3. Run extractEligibilityCriteria() on extracted text
  * 4. Report any detected investment thresholds
  *
@@ -88,7 +88,7 @@ async function verifyInvestmentExtraction() {
       // Read file buffer
       const fileBuffer = fs.readFileSync(filePath);
 
-      // Extract text using LibreOffice converter (same method used in production)
+      // Extract text using pyhwp and Hancom Tesseract OCR (same method used in production)
       console.log(`   Extracting text from ${path.extname(filePath).toUpperCase()} file...`);
       const extractedText = await extractTextFromAttachment(fileName, fileBuffer);
 
@@ -216,7 +216,7 @@ async function verifyInvestmentExtraction() {
     console.log('⚠️  VERIFICATION INCOMPLETE');
     console.log();
     console.log(`Text extraction failed for ${TEST_FILES.length - successCount} files.`);
-    console.log('Please check LibreOffice converter setup before proceeding.');
+    console.log('Please check pyhwp and Hancom Tesseract OCR setup before proceeding.');
   }
 
   console.log();

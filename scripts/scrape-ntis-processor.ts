@@ -8,7 +8,7 @@
  * 1. Polls scraping_jobs table for records with processingStatus='PENDING'
  * 2. Atomically locks jobs using SQL transactions (prevents duplicate processing)
  * 3. Reads attachment files from disk (/opt/connect/data/ntis-attachments/)
- * 4. Extracts text from HWP/PDF/HWPX files using LibreOffice
+ * 4. Extracts text from HWP/PDF/HWPX files using pyhwp and Hancom Tesseract OCR
  * 5. Parses enhancement fields (budget, TRL, business structures) from text
  * 6. Classifies announcement type (R_D_PROJECT vs SURVEY/EVENT/NOTICE)
  * 7. Inserts parsed data into funding_programs table
@@ -76,6 +76,9 @@ import { createAuthenticatedHancomBrowser } from '../lib/scraping/utils/hancom-d
 
 // Import two-tier extraction system
 import { TwoTierExtractor } from '../lib/scraping/two-tier-extractor';
+
+// Import eligibility extraction with database integration
+import { extractAndSaveEligibility } from '../lib/scraping/eligibility-extractor';
 import { ExtractionLogger } from '../lib/scraping/extraction-logger';
 import { filterAnnouncementFiles } from '../lib/scraping/announcement-file-filter';
 
@@ -924,7 +927,26 @@ async function processJob(
 
       fundingProgramId = fundingProgram.id;
 
-      // STEP 13: Update scraping_jobs record to COMPLETED and link funding program
+      // STEP 13.5: Extract and save eligibility criteria using V2 patterns
+      // This populates requiredCertifications, requiresResearchInstitute, and creates audit trail
+      console.log('   🔍 Extracting eligibility criteria (V2 patterns)...');
+      try {
+        const announcementText = announcementFiles.map((f) => f.text).join('\n\n');
+        const detailPageText = `${detailData.description || ''}\n\n${rawHtmlText}`;
+        const sourceFilenames = announcementFilenames.length > 0 ? announcementFilenames : job.attachmentFilenames;
+
+        await extractAndSaveEligibility(
+          fundingProgram.id,
+          announcementText,
+          detailPageText,
+          sourceFilenames
+        );
+      } catch (eligibilityError: any) {
+        console.warn(`   ⚠️  Eligibility extraction failed: ${eligibilityError.message}`);
+        // Non-fatal: Continue processing even if eligibility extraction fails
+      }
+
+      // STEP 14: Update scraping_jobs record to COMPLETED and link funding program
       await db.scraping_jobs.update({
         where: { id: job.id },
         data: {

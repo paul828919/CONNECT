@@ -46,7 +46,7 @@ RUN npx prisma generate
 COPY docker-entrypoint-scraper.sh ./
 RUN chmod +x docker-entrypoint-scraper.sh
 
-# Create non-root user with home directory for LibreOffice
+# Create non-root user with home directory
 RUN useradd --system --uid 1001 --create-home scraper && \
     mkdir -p /app/logs /app/data /home/scraper/.cache /home/scraper/.config && \
     chown -R scraper:scraper /app /home/scraper
