@@ -88,9 +88,25 @@ export async function POST(request: NextRequest) {
 
     if (cachedMatches) {
       // Cache hit! Return cached matches immediately
+      // But we need to fetch current usage stats for consistent response shape
+      const user = await db.user.findUnique({
+        where: { id: userId },
+        include: { subscriptions: true },
+      });
+
+      const plan = user?.subscriptions?.plan;
+      const subscriptionPlan = (plan ? plan.toLowerCase() : 'free') as 'free' | 'pro' | 'team';
+      const currentUsage = await checkMatchLimit(userId, subscriptionPlan);
+
       return NextResponse.json(
         {
           ...cachedMatches,
+          usage: {
+            plan: subscriptionPlan,
+            matchesUsed: 3 - currentUsage.remaining,
+            matchesRemaining: currentUsage.remaining,
+            resetDate: currentUsage.resetDate.toISOString(),
+          },
           cached: true,
           cacheTimestamp: new Date().toISOString(),
         },
@@ -265,10 +281,15 @@ export async function POST(request: NextRequest) {
     if (matchResults.length === 0) {
       return NextResponse.json(
         {
+          success: true,
           matches: [],
+          usage: {
+            plan: subscriptionPlan,
+            matchesUsed: 3 - rateLimitCheck.remaining + 1, // +1 for current request
+            matchesRemaining: rateLimitCheck.remaining - 1,
+            resetDate: rateLimitCheck.resetDate.toISOString(),
+          },
           message: '귀하의 프로필과 일치하는 프로그램이 없습니다. 프로필을 업데이트하거나 나중에 다시 시도해주세요.',
-          remaining: rateLimitCheck.remaining,
-          resetDate: rateLimitCheck.resetDate.toISOString(),
         },
         { status: 200 }
       );
