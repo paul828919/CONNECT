@@ -21,6 +21,7 @@ import { organizations, funding_programs, ProgramStatus, EmployeeCountRange } fr
 import { scoreIndustryKeywordsEnhanced } from './keywords';
 import { scoreTRLEnhanced } from './trl';
 import { checkEligibility, EligibilityLevel } from './eligibility';
+import { findIndustrySector, INDUSTRY_RELEVANCE } from './taxonomy';
 
 // Type aliases for cleaner code
 type Organization = organizations;
@@ -158,6 +159,39 @@ export function generateMatches(
       if (organization.type !== 'RESEARCH_INSTITUTE') {
         continue; // Hospital/medical-only program - companies not eligible
       }
+    }
+
+    // ============================================================================
+    // Industry Category Compatibility Filter (HARD REQUIREMENT)
+    // ============================================================================
+    // Organizations should only match programs in compatible industry categories
+    // Uses taxonomy cross-industry relevance matrix (minimum threshold: 0.3)
+    //
+    // RATIONALE:
+    // - Prevents fundamentally incompatible matches (e.g., ICT company → DEFENSE program)
+    // - Scoring-based approach alone is insufficient (weak keyword matches can accumulate points)
+    // - Hard filter ensures semantic industry compatibility before any scoring occurs
+    //
+    // THRESHOLD: 0.3 (30% relevance)
+    // - Below 0.3: Industries are fundamentally incompatible (blocked)
+    // - Above 0.3: Industries have meaningful overlap (allowed, then scored)
+    if (organization.industrySector && program.category) {
+      const orgSector = findIndustrySector(organization.industrySector);
+      const programSector = findIndustrySector(program.category);
+
+      // Both sectors must exist in taxonomy for compatibility check
+      if (orgSector && programSector) {
+        // Look up cross-industry relevance score
+        const relevanceScore = INDUSTRY_RELEVANCE[orgSector]?.[programSector] ?? 0;
+
+        // Block match if industries are fundamentally incompatible
+        if (relevanceScore < 0.3) {
+          continue; // Industry mismatch - fundamentally incompatible
+        }
+      }
+      // NOTE: If either sector is not in taxonomy, we allow the match to proceed
+      // This handles edge cases and new categories not yet in taxonomy
+      // The scoring system will still evaluate relevance through keyword matching
     }
 
     // ============================================================================

@@ -198,6 +198,25 @@ export const INDUSTRY_TAXONOMY = {
       },
     },
   },
+
+  DEFENSE: {
+    name: '방위/국방',
+    keywords: ['방위', '국방', '방산', '군사', '안보', '국방산업', 'DEFENSE'],
+    subSectors: {
+      WEAPON_SYSTEM: {
+        name: '무기체계',
+        keywords: ['무기체계', '전투체계', '군수', '병기', '전력증강'],
+      },
+      DEFENSE_TECH: {
+        name: '국방과학기술',
+        keywords: ['국방과학기술', '국방R&D', '방위산업기술', '국방기술'],
+      },
+      MILITARY_ICT: {
+        name: '군사정보통신',
+        keywords: ['군사통신', '군용전자', '지휘통제', 'C4I', '전술통신'],
+      },
+    },
+  },
 } as const;
 
 /**
@@ -235,6 +254,7 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     MARINE: 0.6,
     CONSTRUCTION: 0.6, // Smart construction
     TRANSPORTATION: 0.8, // Autonomous vehicles
+    DEFENSE: 0.2, // Military ICT (low relevance for most ICT companies)
   },
   MANUFACTURING: {
     ICT: 0.8,
@@ -246,6 +266,7 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     MARINE: 0.6, // Shipbuilding
     CONSTRUCTION: 0.6,
     TRANSPORTATION: 0.7, // Automotive
+    DEFENSE: 0.4, // Defense manufacturing (specialized, low general relevance)
   },
   BIO_HEALTH: {
     ICT: 0.7,
@@ -257,6 +278,7 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     MARINE: 0.5, // Marine bio
     CONSTRUCTION: 0.3,
     TRANSPORTATION: 0.4,
+    DEFENSE: 0.1, // Military medicine only (very low general relevance)
   },
   ENERGY: {
     ICT: 0.7,
@@ -268,6 +290,7 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     MARINE: 0.5, // Marine energy
     CONSTRUCTION: 0.5,
     TRANSPORTATION: 0.7, // EV
+    DEFENSE: 0.1, // Military energy systems (very low general relevance)
   },
   ENVIRONMENT: {
     ICT: 0.6,
@@ -279,6 +302,7 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     MARINE: 0.6,
     CONSTRUCTION: 0.6,
     TRANSPORTATION: 0.6,
+    DEFENSE: 0.0, // No relevance
   },
   AGRICULTURE: {
     ICT: 0.7,
@@ -290,6 +314,7 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     MARINE: 0.5,
     CONSTRUCTION: 0.3,
     TRANSPORTATION: 0.3,
+    DEFENSE: 0.0, // No relevance
   },
   MARINE: {
     ICT: 0.6,
@@ -301,6 +326,7 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     MARINE: 1.0,
     CONSTRUCTION: 0.4,
     TRANSPORTATION: 0.5,
+    DEFENSE: 0.3, // Naval systems (specialized, low general relevance)
   },
   CONSTRUCTION: {
     ICT: 0.6,
@@ -312,6 +338,7 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     MARINE: 0.4,
     CONSTRUCTION: 1.0,
     TRANSPORTATION: 0.5,
+    DEFENSE: 0.2, // Military facilities (specialized, low general relevance)
   },
   TRANSPORTATION: {
     ICT: 0.8,
@@ -323,6 +350,20 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     MARINE: 0.5,
     CONSTRUCTION: 0.5,
     TRANSPORTATION: 1.0,
+    DEFENSE: 0.3, // Military vehicles (specialized, low general relevance)
+  },
+
+  DEFENSE: {
+    ICT: 0.2,
+    MANUFACTURING: 0.4,
+    BIO_HEALTH: 0.1,
+    ENERGY: 0.1,
+    ENVIRONMENT: 0.0,
+    AGRICULTURE: 0.0,
+    MARINE: 0.3,
+    CONSTRUCTION: 0.2,
+    TRANSPORTATION: 0.3,
+    DEFENSE: 1.0,
   },
 };
 
