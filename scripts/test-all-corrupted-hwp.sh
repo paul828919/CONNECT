@@ -90,8 +90,8 @@ if [ $FAILED -gt 0 ]; then
   echo "⚠️  Some conversions failed. These HWP files may:"
   echo "   • Be in an unsupported HWP format version"
   echo "   • Be corrupted"
-  echo "   • Require additional LibreOffice filters"
-  echo "   • Need Java Runtime with specific HWP import filters"
+  echo "   • Be encrypted or password-protected"
+  echo "   • Require Hancom Tesseract OCR fallback"
   echo ""
 fi
 

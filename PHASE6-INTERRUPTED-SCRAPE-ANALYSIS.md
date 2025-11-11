@@ -1,4 +1,9 @@
 # Phase 6 Interrupted Scrape Analysis
+
+> **⚠️ HISTORICAL DOCUMENT - November 2025 Update:**
+> This document references LibreOffice as an option for HWP conversion. **LibreOffice is no longer used** (removed November 11, 2025).
+> Current implementation: **pyhwp (hwp5txt) + Hancom Tesseract OCR** - See `lib/scraping/utils/attachment-parser.ts`
+
 **Date:** October 29, 2025
 **Scraping Session:** NTIS Historical Data (October 1-21, 2025)
 **Status:** ❌ **CRITICAL FAILURE - Enhancement Fields Not Populated**

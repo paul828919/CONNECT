@@ -1586,7 +1586,7 @@ async function downloadAndExtractAttachmentText(
 
         console.log(`[NTIS-ATTACHMENT] Downloaded ${fileName} (${fileBuffer.length} bytes)`);
 
-        // Extract text from downloaded file (LibreOffice handles HWP conversion automatically)
+        // Extract text from downloaded file (pyhwp and Hancom Tesseract OCR handle HWP conversion)
         const extractedText = await extractTextFromAttachment(
           fileName,
           fileBuffer
