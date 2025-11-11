@@ -87,19 +87,33 @@ export function classifyAnnouncement(input: ClassificationInput): AnnouncementTy
   // PRIORITY 3: Keyword Matching (Case-Insensitive)
   // ================================================================
 
-  // --- R&D PROJECT Detection (CHECK THIS FIRST!) ---
-  // CRITICAL FIX (2025-11-08): Moved BEFORE SURVEY detection to prevent misclassification
-  // IMPORTANT: R&D detection must run BEFORE SURVEY detection to prevent false negatives.
-  // Many R&D announcements mention surveys/participant recruitment as part of the process
-  // (e.g., "기술개발 사업 참여기업 모집"), but they are legitimate R&D funding opportunities.
+  // --- R&D PROJECT Detection (TITLE-PRIORITY APPROACH) ---
+  // CRITICAL FIX (2025-11-11): Prioritize title over description to prevent false negatives
+  //
+  // PROBLEM IDENTIFIED:
+  // - When description contains NOTICE patterns (e.g., "시행계획 안내" from attachments),
+  //   it can override clear R&D patterns in the title (e.g., "기술개발 신규과제 공고")
+  // - Example false negative: "양자과학기술 플래그십 프로젝트" (R&D title) +
+  //   "시행계획 안내" (description) → incorrectly classified as NOTICE
+  //
+  // SOLUTION:
+  // 1. Check TITLE FIRST for R&D patterns (highest confidence)
+  // 2. If title matches R&D → return R_D_PROJECT immediately (description cannot override)
+  // 3. If title doesn't match → check combinedText for other patterns
+  //
+  // RATIONALE:
+  // - Titles are carefully crafted by government agencies to describe the program type
+  // - Descriptions/attachments often contain procedural text that triggers false patterns
+  // - False negative (hiding real R&D) is worse than false positive (showing non-R&D)
   //
   // Keywords: 연구과제 (research project), 과제공고 (project announcement),
   //           R&D (research & development), 지원사업 (support program),
   //           기술개발 (technology development)
   const rdProjectPatterns = [
     /연구과제/,           // Research project
-    /과제공고/,           // Project announcement
+    /과제\s*공고/,        // Project announcement (with optional space)
     /과제선정/,           // Project selection
+    /신규\s*과제/,        // New project (e.g., "신규과제 공고")
     /연구개발/,           // Research & Development
     /R&D/i,               // R&D (case insensitive)
     /지원사업/,           // Support program
@@ -107,8 +121,16 @@ export function classifyAnnouncement(input: ClassificationInput): AnnouncementTy
     /개발과제/,           // Development project
     /연구지원/,           // Research support
     /사업화\s*지원/,      // Commercialization support
+    /프로젝트.*공고/,     // Project announcement (e.g., "플래그십 프로젝트 공고")
   ];
 
+  // STEP 1: Check title first (highest priority)
+  const titleLower = title.toLowerCase();
+  if (rdProjectPatterns.some(pattern => pattern.test(titleLower))) {
+    return 'R_D_PROJECT';
+  }
+
+  // STEP 2: If title doesn't match R&D, check combined text
   if (rdProjectPatterns.some(pattern => pattern.test(combinedText))) {
     return 'R_D_PROJECT';
   }
