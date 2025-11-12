@@ -2,6 +2,7 @@
  * Consortium Detail API
  *
  * GET: Fetch single consortium project by ID
+ * PATCH: Update consortium project (Lead organization only)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -101,6 +102,223 @@ export async function GET(
     console.error('Failed to fetch consortium:', error);
     return NextResponse.json(
       { error: 'Failed to fetch consortium' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userId = (session.user as any).id;
+    const consortiumId = params.id;
+
+    // Get user's organization
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true },
+    });
+
+    if (!user?.organizationId) {
+      return NextResponse.json(
+        { error: 'No organization associated with user' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch existing consortium
+    const existingConsortium = await db.consortium_projects.findUnique({
+      where: { id: consortiumId },
+      select: {
+        id: true,
+        leadOrganizationId: true,
+        status: true,
+      },
+    });
+
+    if (!existingConsortium) {
+      return NextResponse.json(
+        { error: 'Consortium not found' },
+        { status: 404 }
+      );
+    }
+
+    // Only lead organization can edit
+    if (existingConsortium.leadOrganizationId !== user.organizationId) {
+      return NextResponse.json(
+        { error: 'Only lead organization can edit consortium' },
+        { status: 403 }
+      );
+    }
+
+    // Parse request body
+    const body = await request.json();
+    const {
+      name,
+      description,
+      targetProgramId,
+      totalBudget,
+      projectDuration,
+      startDate,
+      endDate,
+      status,
+    } = body;
+
+    // Prepare update data with type-safe conversions
+    const updateData: any = {};
+
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (targetProgramId !== undefined) updateData.targetProgramId = targetProgramId;
+    if (projectDuration !== undefined) updateData.projectDuration = projectDuration;
+    if (status !== undefined) updateData.status = status;
+
+    // Handle BigInt for totalBudget
+    if (totalBudget !== undefined) {
+      updateData.totalBudget = totalBudget !== null ? BigInt(totalBudget) : null;
+    }
+
+    // Handle DateTime conversions
+    if (startDate !== undefined) {
+      updateData.startDate = startDate ? new Date(startDate) : null;
+    }
+    if (endDate !== undefined) {
+      updateData.endDate = endDate ? new Date(endDate) : null;
+    }
+
+    // Update consortium
+    const updatedConsortium = await db.consortium_projects.update({
+      where: { id: consortiumId },
+      data: updateData,
+      include: {
+        organizations: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            logoUrl: true,
+          },
+        },
+        funding_programs: {
+          select: {
+            id: true,
+            title: true,
+            agencyId: true,
+            deadline: true,
+          },
+        },
+        consortium_members: {
+          include: {
+            organizations: {
+              select: {
+                id: true,
+                name: true,
+                type: true,
+                logoUrl: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    // Convert BigInt to string for JSON serialization
+    const serializedConsortium = {
+      ...updatedConsortium,
+      totalBudget: updatedConsortium.totalBudget?.toString() || null,
+      consortium_members: updatedConsortium.consortium_members.map((member) => ({
+        ...member,
+        budgetShare: member.budgetShare?.toString() || null,
+      })),
+    };
+
+    return NextResponse.json({
+      success: true,
+      consortium: serializedConsortium,
+      message: 'Consortium updated successfully',
+    });
+  } catch (error: any) {
+    console.error('Failed to update consortium:', error);
+    return NextResponse.json(
+      { error: 'Failed to update consortium' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userId = (session.user as any).id;
+    const consortiumId = params.id;
+
+    // Get user's organization
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true },
+    });
+
+    if (!user?.organizationId) {
+      return NextResponse.json(
+        { error: 'No organization associated with user' },
+        { status: 400 }
+      );
+    }
+
+    // Fetch existing consortium
+    const existingConsortium = await db.consortium_projects.findUnique({
+      where: { id: consortiumId },
+      select: {
+        id: true,
+        name: true,
+        leadOrganizationId: true,
+        status: true,
+      },
+    });
+
+    if (!existingConsortium) {
+      return NextResponse.json(
+        { error: 'Consortium not found' },
+        { status: 404 }
+      );
+    }
+
+    // Only lead organization can delete
+    if (existingConsortium.leadOrganizationId !== user.organizationId) {
+      return NextResponse.json(
+        { error: 'Only lead organization can delete consortium' },
+        { status: 403 }
+      );
+    }
+
+    // Delete consortium (members will be cascade deleted automatically)
+    await db.consortium_projects.delete({
+      where: { id: consortiumId },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `Consortium "${existingConsortium.name}" deleted successfully`,
+    });
+  } catch (error: any) {
+    console.error('Failed to delete consortium:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete consortium' },
       { status: 500 }
     );
   }
