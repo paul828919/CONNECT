@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
       receivedRequests = await db.contact_requests.findMany({
         where: { receiverOrgId: user.organizationId },
         include: {
-          user: {
+          sender: {
             select: {
               id: true,
               name: true,

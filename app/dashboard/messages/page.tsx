@@ -39,7 +39,7 @@ interface ContactRequest {
   respondedAt?: string;
   responseMessage?: string;
   // For received messages
-  user?: UserInfo;
+  sender?: UserInfo;
   organizations_contact_requests_senderOrgIdToorganizations?: OrganizationInfo;
   // For sent messages
   organizations_contact_requests_receiverOrgIdToorganizations?: OrganizationInfo;
@@ -308,9 +308,9 @@ export default function MessagesPage() {
                           {displayOrg?.type === 'COMPANY' ? '기업' : '연구기관'}
                         </span>
                       </div>
-                      {activeTab === 'received' && request.user && (
+                      {activeTab === 'received' && request.sender && (
                         <p className="text-sm text-gray-600">
-                          {request.user.name} ({request.user.email})
+                          {request.sender.name} ({request.sender.email})
                         </p>
                       )}
                       <p className="text-xs text-gray-500 mt-1">
