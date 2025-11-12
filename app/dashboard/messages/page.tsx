@@ -392,7 +392,7 @@ export default function MessagesPage() {
                     </div>
                     {request.responseMessage && (
                       <p className="text-sm text-gray-600 mt-2">
-                        "{request.responseMessage}"
+                        {'"'}{request.responseMessage}{'"'}
                       </p>
                     )}
                   </div>
