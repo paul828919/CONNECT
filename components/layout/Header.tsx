@@ -10,6 +10,8 @@ const navLinks = [
   { href: '/dashboard', label: '대시보드' },
   { href: '/dashboard/matches', label: '매칭 결과' },
   { href: '/dashboard/partners', label: '파트너 검색' },
+  { href: '/dashboard/consortiums', label: '컨소시엄' },
+  { href: '/dashboard/messages', label: '메시지' },
   { href: '/dashboard/help', label: 'AI 어시스턴트' },
 ];
 
