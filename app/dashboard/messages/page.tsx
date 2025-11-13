@@ -12,6 +12,7 @@
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 type ContactRequestStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
 type ContactRequestType = 'COLLABORATION' | 'CONSORTIUM_INVITE' | 'RESEARCH_PARTNER' | 'TECHNOLOGY_TRANSFER' | 'OTHER';
@@ -209,9 +210,10 @@ export default function MessagesPage() {
   const currentRequests = activeTab === 'received' ? receivedRequests : sentRequests;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8">
-      {/* Header */}
-      <div className="mb-8">
+    <DashboardLayout>
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">메시지함</h1>
         <p className="text-gray-600">협력 요청 및 컨소시엄 초대를 관리하세요</p>
       </div>
@@ -402,6 +404,7 @@ export default function MessagesPage() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
