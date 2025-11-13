@@ -621,7 +621,10 @@ async function fetchDetailPageRawData(
     }
   };
 
-  const title = (await safeTextContent('h2, h3, .subject, .title')) || '';
+  // FIX (Nov 14, 2025): Use correct HTML selector for program-specific title
+  // NTIS uses h1.ditail_tit for the actual program title (e.g., "2025년도 하반기 원자력정책연구사업 재공고")
+  // Generic headers like h2 ("국가R&D통합공고") appear on all pages and lack domain keywords
+  const title = (await safeTextContent('h1.ditail_tit')) || '';
 
   // NTIS uses <li><span>LABEL : </span>VALUE</li> structure, not table rows
   const ministryRaw = await safeTextContent('li:has-text("부처명")');

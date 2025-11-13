@@ -156,7 +156,8 @@ function findFieldWithSynonyms(
  */
 export async function parseNTISAnnouncementDetails(
   page: Page,
-  url: string
+  url: string,
+  announcementTitle?: string // Title from listing page (fixes classification bug)
 ): Promise<NTISAnnouncementDetails> {
   try {
     // Navigate to detail page
@@ -216,12 +217,26 @@ export async function parseNTISAnnouncementDetails(
     const eligibilityCriteria = extractEligibilityCriteria(combinedText);
 
     // 12. Extract category from ministry and announcing agency (hierarchical categorization)
-    const categoryResult = extractCategoryFromMinistryAndAgency(ministry, announcingAgency);
+    // Enhancement (Nov 13, 2025): Pass title for domain detection (fixes NRF misclassification)
+    // BUG FIX: Use announcementTitle from listing page instead of page.title() (HTML <title> tag)
+    const title = announcementTitle || await page.title(); // Fall back to page.title() if not provided
+
+    // DEBUG LOGGING (Nov 13, 2025): Trace classification inputs/outputs
+    console.log(`\n[NTIS-PARSER-DEBUG] ═══════════════════════════════════════`);
+    console.log(`[NTIS-PARSER-DEBUG] Title: ${title}`);
+    console.log(`[NTIS-PARSER-DEBUG] Ministry: ${ministry || 'NULL'}`);
+    console.log(`[NTIS-PARSER-DEBUG] Agency: ${announcingAgency || 'NULL'}`);
+
+    const categoryResult = extractCategoryFromMinistryAndAgency(ministry, announcingAgency, title);
     const category = categoryResult.category;
+
+    console.log(`[NTIS-PARSER-DEBUG] Returned Category: ${category}`);
+    console.log(`[NTIS-PARSER-DEBUG] Returned Keywords (${categoryResult.keywords.length}): ${categoryResult.keywords.join(', ')}`);
+    console.log(`[NTIS-PARSER-DEBUG] Confidence: ${categoryResult.confidence}, Source: ${categoryResult.source}`);
+    console.log(`[NTIS-PARSER-DEBUG] ═══════════════════════════════════════\n`);
 
     // Log programs requiring manual review (Case 3: Ministry-only, Case 4: Both NULL)
     if (categoryResult.requiresManualReview) {
-      const title = await page.title();
       console.log(`⚠️  [MANUAL REVIEW] ${title}`);
       console.log(`   Ministry: ${ministry || 'NULL'}`);
       console.log(`   Agency: ${announcingAgency || 'NULL'}`);
@@ -233,24 +248,19 @@ export async function parseNTISAnnouncementDetails(
 
     // Log unmapped agency detection (Enhancement 1: Monitoring)
     if (category === null) {
-      const title = await page.title();
       await logUnmappedAgency({
         ministry,
         agency: announcingAgency,
         programId: url, // Use URL as temporary ID (will be updated by worker)
-        programTitle: title,
+        programTitle: title, // Use title variable already extracted above
       });
       console.log(`🔔 [MONITORING] Unmapped agency detected: ${ministry || 'NULL'} / ${announcingAgency || 'NULL'}`);
     }
 
-    // 13. Extract keywords (ministry + agency defaults + title/description + attachments)
-    const keywords = await extractKeywords(
-      page,
-      ministry,
-      announcingAgency,
-      cleanText,
-      attachmentText
-    );
+    // 13. Use keywords from category classification (includes taxonomy-matched keywords)
+    // FIX (Nov 13, 2025): categoryResult.keywords contains official taxonomy matches (e.g., "원자력" for ENERGY)
+    // Previously used extractKeywords() which only had regex patterns, missing taxonomy keywords
+    const keywords = categoryResult.keywords;
 
     // 14. Extract business structure requirements from combined text
     const allowedBusinessStructures = extractBusinessStructures(combinedText);
@@ -1633,7 +1643,8 @@ async function extractKeywords(
   ministry: string | null,
   announcingAgency: string | null,
   descriptionText: string,
-  attachmentText: string
+  attachmentText: string,
+  announcementTitle?: string // Title from listing page (fixes keyword extraction bug)
 ): Promise<string[]> {
   const keywords = new Set<string>();
 
@@ -1641,9 +1652,11 @@ async function extractKeywords(
   const defaultKeywords = getCombinedKeywords(ministry, announcingAgency);
   defaultKeywords.forEach(keyword => keywords.add(keyword));
 
-  // 2. Extract from page title (program name often contains key technology terms)
+  // 2. Extract from announcement title (program name often contains key technology terms)
+  // BUG FIX (Nov 13, 2025): Use announcementTitle from listing page instead of page.title() (HTML <title> tag)
+  // page.title() returns "NTIS - 공고 상세" instead of actual program title like "2025년도 하반기 원자력정책연구사업 재공고"
   try {
-    const title = await page.title();
+    const title = announcementTitle || await page.title(); // Fall back to page.title() if not provided
     const titleKeywords = extractKeywordsFromText(title);
     titleKeywords.forEach(keyword => keywords.add(keyword));
   } catch (error) {

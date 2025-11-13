@@ -257,7 +257,8 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
               page,
               announcement.link,
               config,
-              agency
+              agency,
+              announcement.title // Pass title for NTIS classification (fixes Nuclear→ICT bug)
             );
 
             // CLASSIFICATION: Determine announcement type (R&D funding vs survey/event/notice)
@@ -540,14 +541,15 @@ async function fetchProgramDetails(
   page: Page,
   link: string,
   config: AgencyConfig,
-  agency: string
+  agency: string,
+  announcementTitle?: string // Title from listing page (needed for NTIS classification)
 ): Promise<ProgramDetails> {
   try {
     // Navigate to detail page
     const fullUrl = link.startsWith('http') ? link : config.baseUrl + link;
 
     // Use agency-specific parser
-    const details = await parseProgramDetails(page, agency, fullUrl);
+    const details = await parseProgramDetails(page, agency, fullUrl, announcementTitle);
 
     logScraping(
       agency,
