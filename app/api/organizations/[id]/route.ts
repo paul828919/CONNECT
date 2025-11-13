@@ -45,6 +45,8 @@ export async function GET(
         // Tier 1A: Company eligibility fields
         revenueRange: true,
         businessStructure: true,
+        certifications: true,
+        governmentCertifications: true,
         // Tier 1B: Algorithm enhancement fields
         collaborationCount: true,
         instituteType: true,
@@ -168,6 +170,7 @@ export async function PATCH(
       // Tier 1A: Company eligibility fields
       revenueRange,
       businessStructure,
+      certifications,
       // Tier 1B: Algorithm enhancement fields
       collaborationCount,
       instituteType,
@@ -197,6 +200,7 @@ export async function PATCH(
     if (revenueRange !== undefined) updateData.revenueRange = revenueRange;
     if (businessStructure !== undefined)
       updateData.businessStructure = businessStructure;
+    if (certifications !== undefined) updateData.certifications = certifications;
 
     // Tier 1B: Algorithm enhancement fields
     if (collaborationCount !== undefined)
@@ -281,6 +285,14 @@ export async function PATCH(
     if (updateData.revenueRange || existingOrg.revenueRange) profileScore += 5;
     if (updateData.businessStructure || existingOrg.businessStructure)
       profileScore += 5;
+    // Certifications: +2 points per certification (max +10)
+    const finalCertifications =
+      updateData.certifications !== undefined
+        ? updateData.certifications
+        : existingOrg.certifications;
+    if (finalCertifications && finalCertifications.length > 0) {
+      profileScore += Math.min(10, finalCertifications.length * 2);
+    }
 
     // Tier 1B: Algorithm enhancement fields
     // collaborationCount: Stepwise scoring (1=+2pts, 2-3=+4pts, 4+=+5pts)
@@ -372,6 +384,8 @@ export async function PATCH(
         // Tier 1A: Company eligibility fields
         revenueRange: true,
         businessStructure: true,
+        certifications: true,
+        governmentCertifications: true,
         // Tier 1B: Algorithm enhancement fields
         collaborationCount: true,
         instituteType: true,
