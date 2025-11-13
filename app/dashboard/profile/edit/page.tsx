@@ -26,6 +26,7 @@ const organizationEditSchema = z.object({
     .nullable(),
   businessStructure: z.enum(['CORPORATION', 'SOLE_PROPRIETOR']).optional().nullable(),
   rdExperience: z.boolean().optional(),
+  certifications: z.array(z.string()).optional(),
   // Tier 1B: Algorithm enhancement fields
   collaborationCount: z
     .number()
@@ -85,6 +86,17 @@ const industrySectors = [
   { value: 'OTHER', label: '기타' },
 ];
 
+// Common certifications for eligibility filtering
+const commonCertifications = [
+  { value: '벤처기업', label: '벤처기업' },
+  { value: 'INNO-BIZ', label: 'INNO-BIZ (기술혁신형 중소기업)' },
+  { value: '연구개발전담부서', label: '연구개발전담부서' },
+  { value: '기업부설연구소', label: '기업부설연구소' },
+  { value: '메인비즈', label: '메인비즈 (Main-Biz)' },
+  { value: '중소기업', label: '중소기업 확인서' },
+  { value: '스타트업', label: '창업기업 (7년 이내)' },
+];
+
 export default function EditOrganizationProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -94,6 +106,7 @@ export default function EditOrganizationProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [organizationData, setOrganizationData] = useState<any>(null);
   const [showConsortiumPreferences, setShowConsortiumPreferences] = useState(false);
+  const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
 
   // Check if redirected from partner search page with preferences flag
   useEffect(() => {
@@ -120,6 +133,17 @@ export default function EditOrganizationProfilePage() {
   });
 
   const rdExperience = watch('rdExperience');
+
+  // Handler for certification checkbox toggle
+  const handleCertificationToggle = (certValue: string) => {
+    setSelectedCertifications((prev) => {
+      const newCerts = prev.includes(certValue)
+        ? prev.filter((c) => c !== certValue)
+        : [...prev, certValue];
+      setValue('certifications', newCerts);
+      return newCerts;
+    });
+  };
 
   // Fetch current organization data
   useEffect(() => {
@@ -179,6 +203,12 @@ export default function EditOrganizationProfilePage() {
         setValue('expectedTRLLevel', data.organization.expectedTRLLevel);
         setValue('targetOrgScale', data.organization.targetOrgScale);
         setValue('targetOrgRevenue', data.organization.targetOrgRevenue);
+
+        // Set certifications
+        if (data.organization.certifications) {
+          setSelectedCertifications(data.organization.certifications);
+          setValue('certifications', data.organization.certifications);
+        }
 
         // Auto-expand consortium preferences if any field has data
         if (
@@ -457,6 +487,32 @@ export default function EditOrganizationProfilePage() {
                       {errors.businessStructure.message}
                     </p>
                   )}
+                </div>
+
+                {/* Certifications */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    보유 인증 (선택사항)
+                  </label>
+                  <div className="space-y-2">
+                    {commonCertifications.map((cert) => (
+                      <label
+                        key={cert.value}
+                        className="flex items-start cursor-pointer hover:bg-gray-50 p-2 rounded"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedCertifications.includes(cert.value)}
+                          onChange={() => handleCertificationToggle(cert.value)}
+                          className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">{cert.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    보유 인증에 따라 지원 가능한 프로그램이 필터링됩니다
+                  </p>
                 </div>
               </>
             )}
