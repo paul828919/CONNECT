@@ -91,7 +91,6 @@ import { classifyTRL } from '../lib/matching/trl-classifier';
 // Import agency mapping functions
 import {
   extractCategoryFromMinistryAndAgency,
-  getCombinedKeywords,
 } from '../lib/scraping/parsers/agency-mapper';
 
 // ================================================================
@@ -888,11 +887,15 @@ async function processJob(
     }
 
     // STEP 11: Extract category and keywords from ministry/agency
+    // FIX (Nov 13, 2025): Pass title for taxonomy-based classification (fixes Nuclear→ICT bug)
+    // FIX (Nov 14, 2025): Use correct field name - detailData.title, not announcementTitle
     const categoryResult = extractCategoryFromMinistryAndAgency(
       detailData.ministry,
-      detailData.announcingAgency
+      detailData.announcingAgency,
+      detailData.title || job.announcementTitle // Pass title for domain detection (e.g., "원자력" → ENERGY)
     );
-    const keywords = getCombinedKeywords(detailData.ministry, detailData.announcingAgency);
+    // FIX (Nov 13, 2025): Use taxonomy keywords from categoryResult instead of agency defaults
+    const keywords = categoryResult.keywords;
 
     // STEP 12: Save extraction logs to database and print summary
     await extractionLogger.flush();

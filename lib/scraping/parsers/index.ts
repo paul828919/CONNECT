@@ -36,7 +36,8 @@ export interface ProgramDetails {
 export async function parseProgramDetails(
   page: Page,
   agencyId: string,
-  url: string
+  url: string,
+  announcementTitle?: string // Title from listing page (needed for NTIS classification)
 ): Promise<ProgramDetails> {
   const agency = agencyId.toLowerCase();
 
@@ -63,7 +64,7 @@ export async function parseProgramDetails(
     }
     case 'ntis': {
       const { parseNTISAnnouncementDetails } = await import('./ntis-announcement-parser');
-      return await parseNTISAnnouncementDetails(page, url);
+      return await parseNTISAnnouncementDetails(page, url, announcementTitle);
     }
     default:
       console.warn(`[Parser] Unknown agency: ${agencyId}, using default parser`);
