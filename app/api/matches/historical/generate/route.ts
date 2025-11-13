@@ -46,13 +46,10 @@ import {
   getCache,
   setCache,
   getOrgCacheKey,
+  getHistoricalMatchCacheKey,
+  invalidateHistoricalMatches,
   CACHE_TTL,
 } from '@/lib/cache/redis-cache';
-
-// Historical match cache key (separate from active matches)
-function getHistoricalMatchCacheKey(organizationId: string): string {
-  return `historical-match:${organizationId}`;
-}
 
 // Historical programs cache key
 function getHistoricalProgramsCacheKey(): string {

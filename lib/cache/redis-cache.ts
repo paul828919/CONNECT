@@ -317,6 +317,16 @@ export function getAIExplanationCacheKey(matchId: string): string {
 }
 
 /**
+ * Helper: Generate cache key for historical matches
+ *
+ * @param organizationId - Organization ID
+ * @returns Cache key for historical match results
+ */
+export function getHistoricalMatchCacheKey(organizationId: string): string {
+  return `historical-match:${organizationId}`;
+}
+
+/**
  * Invalidate all match caches (call after scraping completes)
  *
  * @example
@@ -368,6 +378,20 @@ export async function invalidateProgramsCache(): Promise<void> {
 }
 
 /**
+ * Invalidate historical match cache for specific organization
+ *
+ * @param organizationId - Organization ID
+ *
+ * @example
+ * // After generating or clearing historical matches:
+ * await invalidateHistoricalMatches('org-123');
+ */
+export async function invalidateHistoricalMatches(organizationId: string): Promise<void> {
+  const key = getHistoricalMatchCacheKey(organizationId);
+  await deleteCache(key);
+}
+
+/**
  * Graceful shutdown - close Redis connection
  */
 export async function closeCacheConnection(): Promise<void> {
@@ -394,10 +418,12 @@ const redisCache = {
   getOrgCacheKey,
   getProgramsCacheKey,
   getAIExplanationCacheKey,
+  getHistoricalMatchCacheKey,
   invalidateAllMatches,
   invalidateOrgMatches,
   invalidateOrgProfile,
   invalidateProgramsCache,
+  invalidateHistoricalMatches,
   getCacheStats,
   resetCacheStats,
   closeCacheConnection,
