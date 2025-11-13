@@ -8,17 +8,21 @@
  * - NTIS Agency Scraping Configuration (docs/current/NTIS_Agency_Scraping_Config.md)
  * - Manual agency research (14 agencies, October 24, 2025)
  * - Official agency business introduction pages
+ * - Official Korean taxonomy (KSIC + NSTC) - integrated Jan 13, 2025
  *
- * Strategy:
- * 1. Primary: Use ministry + agency (hierarchical categorization)
- * 2. Fallback (bidirectional with context):
+ * Strategy (Updated Jan 13, 2025):
+ * 1. Primary: Use official taxonomy classifier (KSIC + NSTC, 500+ keywords)
+ * 2. Validation: Cross-check with ministry/agency mappings
+ * 3. Fallback (bidirectional with context):
  *    - If ministry NULL: Use agency + provide domain context
  *    - If agency NULL: Use ministry + provide focus area context
- * 3. Manual review: Flag programs requiring human classification
- * 4. Goal: 0% omission (not 95% or 98%)
+ * 4. Manual review: Flag programs with low confidence or conflicting classifications
+ * 5. Goal: 0% omission (not 95% or 98%)
  *
- * Last updated: 2025-10-24
+ * Last updated: 2025-01-13
  */
+
+import { classifyWithOfficialTaxonomy } from './official-category-mapper';
 
 export interface MinistryMapping {
   /** Full Korean name of the ministry */
@@ -896,16 +900,292 @@ export const AGENCY_MAPPINGS: Record<string, AgencyMapping> = {
 };
 
 /**
+ * Detect category from program title using domain-specific keywords
+ *
+ * November 13, 2025: Fixes NRF misclassification issue
+ * Example: "나노 및 소재기술개발사업" → MATERIALS (not ICT)
+ *
+ * @param title - Program title
+ * @returns Category detection result or null if no strong signal
+ */
+function detectCategoryFromTitle(
+  title: string
+): { category: string; keywords: string[]; confidence: 'high' | 'medium' } | null {
+  const normalized = title.trim().toLowerCase();
+
+  // Define domain-specific keyword patterns (order matters - check most specific first)
+  const domainPatterns = [
+    // ═══════════════════════════════════════════════════════════════════
+    // ENERGY & NUCLEAR (high specificity)
+    // ═══════════════════════════════════════════════════════════════════
+    {
+      category: 'ENERGY',
+      keywords: ['원자력', '에너지'],
+      patterns: ['원자력', '원전', '핵융합', 'smr', '소형모듈원자로', '원자로'],
+      confidence: 'high' as const,
+    },
+    {
+      category: 'ENERGY',
+      keywords: ['에너지', '전력'],
+      patterns: ['에너지', '수소', '태양광', '풍력', '신재생', '전력', '배터리'],
+      confidence: 'high' as const,
+    },
+
+    // ═══════════════════════════════════════════════════════════════════
+    // MATERIALS & MANUFACTURING (high specificity)
+    // ═══════════════════════════════════════════════════════════════════
+    {
+      category: 'MANUFACTURING',
+      keywords: ['나노', '소재', '재료'],
+      patterns: ['나노', '소재', '재료', '부품', '장비', '소부장'],
+      confidence: 'high' as const,
+    },
+    {
+      category: 'MANUFACTURING',
+      keywords: ['제조', '산업기술'],
+      patterns: ['제조', '반도체', '디스플레이', '기계', '로봇', '자동차'],
+      confidence: 'high' as const,
+    },
+
+    // ═══════════════════════════════════════════════════════════════════
+    // BIO & HEALTHCARE (high specificity)
+    // ═══════════════════════════════════════════════════════════════════
+    {
+      category: 'BIO_HEALTH',
+      keywords: ['바이오', '의료', '생명공학'],
+      patterns: ['바이오', '생명공학', '의료', '헬스케어', '제약', '신약', '백신', '진단'],
+      confidence: 'high' as const,
+    },
+
+    // ═══════════════════════════════════════════════════════════════════
+    // DEFENSE (high specificity)
+    // ═══════════════════════════════════════════════════════════════════
+    {
+      category: 'DEFENSE',
+      keywords: ['국방', '방위', '방산'],
+      patterns: ['국방', '방위', '방산', '군사', '무기체계'],
+      confidence: 'high' as const,
+    },
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ENVIRONMENT (high specificity)
+    // ═══════════════════════════════════════════════════════════════════
+    {
+      category: 'ENVIRONMENT',
+      keywords: ['환경', '탄소중립'],
+      patterns: ['환경', '탄소중립', '기후', '녹색', '순환경제', '친환경'],
+      confidence: 'high' as const,
+    },
+
+    // ═══════════════════════════════════════════════════════════════════
+    // AGRICULTURE (high specificity)
+    // ═══════════════════════════════════════════════════════════════════
+    {
+      category: 'AGRICULTURE',
+      keywords: ['농업', '스마트팜'],
+      patterns: ['농업', '농림', '축산', '식품', '스마트팜', '작물'],
+      confidence: 'high' as const,
+    },
+
+    // ═══════════════════════════════════════════════════════════════════
+    // MARINE (high specificity)
+    // ═══════════════════════════════════════════════════════════════════
+    {
+      category: 'MARINE',
+      keywords: ['해양', '수산'],
+      patterns: ['해양', '수산', '조선', '해운', '양식'],
+      confidence: 'high' as const,
+    },
+
+    // ═══════════════════════════════════════════════════════════════════
+    // CONSTRUCTION (high specificity)
+    // ═══════════════════════════════════════════════════════════════════
+    {
+      category: 'CONSTRUCTION',
+      keywords: ['건설', '국토'],
+      patterns: ['건설', '국토', '교통', '인프라', '스마트시티'],
+      confidence: 'high' as const,
+    },
+
+    // ═══════════════════════════════════════════════════════════════════
+    // CONTENT (high specificity)
+    // ═══════════════════════════════════════════════════════════════════
+    {
+      category: 'CONTENT',
+      keywords: ['콘텐츠', '문화'],
+      patterns: ['콘텐츠', '문화', '미디어', '엔터테인먼트', '게임'],
+      confidence: 'high' as const,
+    },
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ICT (medium specificity - only specific ICT terms, not general "정보통신")
+    // ═══════════════════════════════════════════════════════════════════
+    {
+      category: 'ICT',
+      keywords: ['ICT', '소프트웨어', 'AI'],
+      patterns: ['소프트웨어', 'sw개발', '인공지능', '빅데이터', '클라우드', '사이버보안', '5g', '6g', '양자통신'],
+      confidence: 'medium' as const,
+    },
+  ];
+
+  // Check each pattern category
+  for (const pattern of domainPatterns) {
+    for (const keyword of pattern.patterns) {
+      if (normalized.includes(keyword)) {
+        // Found strong domain signal in title
+        return {
+          category: pattern.category,
+          keywords: pattern.keywords,
+          confidence: pattern.confidence,
+        };
+      }
+    }
+  }
+
+  // No strong domain signal found
+  return null;
+}
+
+/**
  * Extract industry category from ministry and announcing agency (Hierarchical Categorization)
+ *
+ * Enhanced with title-based categorization override (November 13, 2025)
+ * Fixes misclassification of NRF programs (Nano/Materials, Nuclear, etc. marked as ICT)
  *
  * @param ministry - Full Korean name of the ministry (e.g., "과학기술정보통신부")
  * @param announcingAgency - Full Korean name of the agency (e.g., "한국환경산업기술원")
+ * @param programTitle - Program title for domain detection (optional but recommended)
  * @returns Categorization result with category, keywords, confidence, and context
  */
 export function extractCategoryFromMinistryAndAgency(
   ministry: string | null,
-  announcingAgency: string | null
+  announcingAgency: string | null,
+  programTitle?: string | null
 ): CategorizationResult {
+  // ═══════════════════════════════════════════════════════════════════════
+  // PHASE 1 (Jan 13, 2025): Official Taxonomy Classification (Primary)
+  // Uses KSIC + NSTC standards with 500+ keywords
+  // ═══════════════════════════════════════════════════════════════════════
+
+  if (programTitle) {
+    const officialResult = classifyWithOfficialTaxonomy(
+      programTitle,
+      ministry || undefined,
+      announcingAgency || undefined
+    );
+
+    // High confidence from official taxonomy - use it directly
+    if (officialResult.confidence === 'high') {
+      const agencyMapping = announcingAgency ? getAgencyMapping(announcingAgency) : null;
+      const ministryMapping = ministry ? getMinistryMapping(ministry) : null;
+
+      return {
+        category: officialResult.category,
+        keywords: [
+          ...officialResult.matchedKeywords,
+          ...(agencyMapping?.defaultKeywords || []),
+          ...(ministryMapping?.defaultKeywords || []),
+        ],
+        source: officialResult.source,
+        confidence: 'high',
+        requiresManualReview: false,
+        context: `Official taxonomy classification (${officialResult.source}, ${officialResult.matchedKeywords.length} keywords)`,
+      };
+    }
+
+    // Medium confidence - cross-check with agency/ministry mappings
+    if (officialResult.confidence === 'medium') {
+      const agencyCategory = announcingAgency ? lookupAgencyCategory(announcingAgency) : null;
+      const ministryCategory = ministry ? lookupMinistryCategory(ministry) : null;
+
+      // If agency/ministry agrees with official taxonomy, boost confidence
+      if (agencyCategory === officialResult.category || ministryCategory === officialResult.category) {
+        const agencyMapping = announcingAgency ? getAgencyMapping(announcingAgency) : null;
+        const ministryMapping = ministry ? getMinistryMapping(ministry) : null;
+
+        return {
+          category: officialResult.category,
+          keywords: [
+            ...officialResult.matchedKeywords,
+            ...(agencyMapping?.defaultKeywords || []),
+            ...(ministryMapping?.defaultKeywords || []),
+          ],
+          source: 'both',
+          confidence: 'high',
+          requiresManualReview: false,
+          context: `Official taxonomy + agency/ministry validation (${officialResult.source})`,
+        };
+      }
+
+      // Agency/ministry conflicts with official taxonomy - need to determine which is more reliable
+      if (agencyCategory && agencyCategory !== officialResult.category) {
+        const agencyMapping = getAgencyMapping(announcingAgency!);
+        const ministryMapping = ministry ? getMinistryMapping(ministry) : null;
+
+        // Check if this is a cross-domain agency (NRF, KISTEP, etc.)
+        // Cross-domain agencies have generic defaults but publish across all domains
+        // For these, the taxonomy (based on title keywords) is more accurate
+        const isCrossDomainAgency = ['한국연구재단', 'NRF', '한국과학기술기획평가원', 'KISTEP'].some(
+          name => announcingAgency!.includes(name)
+        );
+
+        if (isCrossDomainAgency) {
+          // For cross-domain agencies, trust the taxonomy over the generic agency default
+          return {
+            category: officialResult.category,
+            keywords: [
+              ...officialResult.matchedKeywords,
+              ...(agencyMapping?.defaultKeywords || []),
+              ...(ministryMapping?.defaultKeywords || []),
+            ],
+            source: 'nstc',
+            confidence: 'high', // Boost confidence - taxonomy is reliable for cross-domain agencies
+            requiresManualReview: false,
+            context: `Cross-domain agency (${announcingAgency}) - taxonomy override (${officialResult.category} vs default ${agencyCategory})`,
+          };
+        }
+
+        // For specialized agencies, the agency category is usually more specific than taxonomy
+        return {
+          category: agencyCategory,
+          keywords: [
+            ...(agencyMapping?.defaultKeywords || []),
+            ...(ministryMapping?.defaultKeywords || []),
+            ...officialResult.matchedKeywords,
+          ],
+          source: 'both',
+          confidence: 'medium',
+          requiresManualReview: true,
+          context: `Specialized agency override (agency: ${agencyCategory} vs taxonomy: ${officialResult.category})`,
+        };
+      }
+
+      // No agency mapping - use official taxonomy medium confidence
+      const agencyMapping = announcingAgency ? getAgencyMapping(announcingAgency) : null;
+      const ministryMapping = ministry ? getMinistryMapping(ministry) : null;
+
+      return {
+        category: officialResult.category,
+        keywords: [
+          ...officialResult.matchedKeywords,
+          ...(agencyMapping?.defaultKeywords || []),
+          ...(ministryMapping?.defaultKeywords || []),
+        ],
+        source: officialResult.source,
+        confidence: 'medium',
+        requiresManualReview: false,
+        context: `Official taxonomy classification (${officialResult.source}, medium confidence)`,
+      };
+    }
+
+    // Low confidence from official taxonomy - fall back to legacy logic below
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // PHASE 2: Legacy Agency/Ministry Logic (Fallback)
+  // Used when title unavailable or official taxonomy has low confidence
+  // ═══════════════════════════════════════════════════════════════════════
+
   // Case 1: Both ministry and agency available (IDEAL)
   if (ministry && announcingAgency) {
     const agencyCategory = lookupAgencyCategory(announcingAgency);
@@ -915,6 +1195,37 @@ export function extractCategoryFromMinistryAndAgency(
       // Agency found - use agency category with ministry keywords as supplement
       const agencyMapping = getAgencyMapping(announcingAgency);
       const ministryMapping = getMinistryMapping(ministry);
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // ENHANCEMENT (Nov 13, 2025): Title-based override for cross-domain agencies
+      // Problem: NRF (한국연구재단) defaults to ICT but publishes programs across all domains
+      // Solution: Detect domain keywords in title and override default classification
+      // ═══════════════════════════════════════════════════════════════════════
+
+      // Check if this is a cross-domain agency (NRF, KISTEP, etc.)
+      const isCrossDomainAgency = ['한국연구재단', 'NRF', '한국과학기술기획평가원', 'KISTEP'].some(
+        name => announcingAgency.includes(name)
+      );
+
+      if (isCrossDomainAgency && programTitle) {
+        const titleBasedCategory = detectCategoryFromTitle(programTitle);
+
+        if (titleBasedCategory) {
+          // Title provides strong domain signal - override agency default
+          return {
+            category: titleBasedCategory.category,
+            keywords: [
+              ...titleBasedCategory.keywords,
+              ...(agencyMapping?.defaultKeywords || []),
+              ...(ministryMapping?.defaultKeywords || []),
+            ],
+            source: 'both',
+            confidence: titleBasedCategory.confidence,
+            requiresManualReview: false,
+            context: `Title-based override for cross-domain agency (detected: ${titleBasedCategory.category})`,
+          };
+        }
+      }
 
       return {
         category: agencyCategory,

@@ -307,7 +307,7 @@ export const NSTC_TO_INTERNAL: NSTCMapping[] = [
     researchField: '인공물',
     nstcCategory: '에너지/자원',
     internalCategory: 'ENERGY',
-    domainKeywords: ['원자력', '신재생', '배터리', '핵융합', '태양전지', '수소연료'],
+    domainKeywords: ['원자력', '신재생', '배터리', '핵융합', '태양전지', '수소연료', '수소에너지', '그린수소', '청정에너지'],
     genericKeywords: ['에너지', '자원', 'Energy', 'Resources', '전력'],
   },
   {
@@ -424,7 +424,10 @@ export function classifyWithOfficialTaxonomy(
   source: 'nstc' | 'ksic' | 'ministry' | 'fallback';
   matchedKeywords: string[];
 } {
-  const searchText = [title, ministry, agency].filter(Boolean).join(' ').toLowerCase();
+  // IMPORTANT: Only use title for keyword matching, not ministry/agency names
+  // Ministry/agency names contain domain keywords (e.g., 과학기술정보통신부 contains "정보통신")
+  // but these ministries fund programs across ALL domains, not just their namesake
+  const searchText = title.toLowerCase();
   const ministryLower = ministry?.toLowerCase() || '';
 
   // ═══════════════════════════════════════════════════════════════
