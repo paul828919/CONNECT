@@ -21,7 +21,7 @@
  */
 
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
@@ -76,13 +76,8 @@ export default function AdminEligibilityReviewPage() {
     }
   }, [session, status, router]);
 
-  // Fetch programs requiring review
-  useEffect(() => {
-    if (status !== 'authenticated') return;
-    fetchPrograms();
-  }, [status, confidenceFilter, agencyFilter, statusFilter]);
-
-  const fetchPrograms = async () => {
+  // Fetch programs function
+  const fetchPrograms = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -105,7 +100,13 @@ export default function AdminEligibilityReviewPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [confidenceFilter, agencyFilter, statusFilter]);
+
+  // Fetch programs requiring review
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    fetchPrograms();
+  }, [status, fetchPrograms]);
 
   const handleReview = async (action: 'APPROVE' | 'REJECT' | 'REQUEST_INFO') => {
     if (!selectedProgram) return;
