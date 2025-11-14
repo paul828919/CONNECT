@@ -734,6 +734,130 @@ async function processJob(
       `${otherFilenames.length} other files (total: ${job.attachmentCount})`
     );
 
+    // ⚠️ SPECIAL CASE: Handle programs with no attachments
+    // These programs require manual verification of the announcement page
+    if (job.attachmentCount === 0) {
+      console.log('   ⚠️  No attachments available - creating manual review record');
+
+      // Use only detail page data for classification (no attachment text available)
+      const rawHtmlText = detailData.rawHtml ? htmlToText(detailData.rawHtml) : '';
+      const detailPageOnlyText = [detailData.description || '', rawHtmlText]
+        .filter((t) => t.trim().length > 0)
+        .join('\n\n');
+
+      // Classify announcement type using only detail page content
+      const announcementType = classifyAnnouncement({
+        title: job.announcementTitle,
+        description: detailPageOnlyText,
+        url: job.announcementUrl,
+        source: 'ntis',
+      });
+
+      // Skip non-R&D announcements
+      if (announcementType !== 'R_D_PROJECT') {
+        if (!config.dryRun) {
+          await db.scraping_jobs.update({
+            where: { id: job.id },
+            data: {
+              processingStatus: 'SKIPPED',
+              processingError: `Non-R&D announcement type: ${announcementType}`,
+              processingWorker: null,
+            },
+          });
+        }
+        return { success: false, skipped: true, reason: `Non-R&D (${announcementType})`, updatedBrowser: workerBrowser };
+      }
+
+      // Extract category from ministry/agency
+      const categoryResult = extractCategoryFromMinistryAndAgency(
+        detailData.ministry,
+        detailData.announcingAgency,
+        detailData.title || job.announcementTitle
+      );
+
+      // Determine deadline and status
+      const deadline = detailData.deadline ? new Date(detailData.deadline) : null;
+      const status = deadline && deadline < new Date() ? 'EXPIRED' : 'ACTIVE';
+
+      // Generate content hash for deduplication
+      const contentHash = generateProgramHash({
+        agencyId: 'NTIS',
+        title: detailData.title,
+        announcementUrl: job.announcementUrl,
+      });
+
+      // Check for duplicates
+      if (!config.dryRun) {
+        const existingProgram = await db.funding_programs.findFirst({
+          where: { contentHash },
+        });
+
+        if (existingProgram) {
+          await db.scraping_jobs.update({
+            where: { id: job.id },
+            data: {
+              processingStatus: 'COMPLETED',
+              fundingProgramId: existingProgram.id,
+              processedAt: new Date(),
+              processingWorker: null,
+            },
+          });
+          return {
+            success: false,
+            skipped: true,
+            reason: 'Duplicate program (already exists)',
+            updatedBrowser: workerBrowser,
+          };
+        }
+
+        // Create funding program with manual review required
+        const fundingProgram = await db.funding_programs.create({
+          data: {
+            agencyId: 'NTIS' as AgencyId,
+            title: job.announcementTitle,
+            description: '공고문 확인 필요 (Announcement Verification Required)',
+            announcementUrl: job.announcementUrl,
+            deadline: deadline,
+            ministry: detailData.ministry || null,
+            announcingAgency: detailData.announcingAgency || null,
+            category: categoryResult.category || null,
+            keywords: categoryResult.keywords || [],
+            contentHash,
+            scrapedAt: new Date(),
+            scrapingSource: 'ntis',
+            status,
+            announcementType,
+            attachmentUrls: detailData.attachmentUrls || [],
+            targetType: ['COMPANY', 'RESEARCH_INSTITUTE'],
+            manualReviewRequired: true,
+            manualReviewNotes: '첨부파일 없음 - 공고문 페이지에서 직접 확인 필요',
+            publishedAt: detailData.publishedAt ? new Date(detailData.publishedAt) : null,
+          },
+        });
+
+        // Update scraping job to COMPLETED
+        await db.scraping_jobs.update({
+          where: { id: job.id },
+          data: {
+            processingStatus: 'COMPLETED',
+            fundingProgramId: fundingProgram.id,
+            processedAt: new Date(),
+            processingWorker: null,
+          },
+        });
+
+        console.log(`   ✓ Created manual review record (ID: ${fundingProgram.id})`);
+        return {
+          success: true,
+          fundingProgramId: fundingProgram.id,
+          updatedBrowser: workerBrowser,
+        };
+      } else {
+        console.log('   [DRY RUN] Would create manual review record');
+        return { success: true, updatedBrowser: workerBrowser };
+      }
+    }
+
     // STEP 3: Extract text from announcement files (priority source)
     const announcementFiles: Array<{ filename: string; text: string }> = [];
     if (announcementFilenames.length > 0) {
