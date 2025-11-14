@@ -103,6 +103,8 @@ export async function GET(request: NextRequest) {
           budgetAmount: match.funding_programs.budgetAmount?.toString(),
           deadline: match.funding_programs.deadline?.toISOString(),
           announcementUrl: match.funding_programs.announcementUrl,
+          manualReviewRequired: match.funding_programs.manualReviewRequired,
+          manualReviewNotes: match.funding_programs.manualReviewNotes,
         },
         score: match.score,
         explanation: match.explanation,

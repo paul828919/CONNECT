@@ -112,6 +112,8 @@ export async function GET(request: NextRequest) {
           announcementUrl: match.funding_programs.announcementUrl,
           status: match.funding_programs.status, // Will be "EXPIRED"
           publishedAt: match.funding_programs.publishedAt?.toISOString(),
+          manualReviewRequired: match.funding_programs.manualReviewRequired,
+          manualReviewNotes: match.funding_programs.manualReviewNotes,
         },
         score: match.score,
         explanation: match.explanation,
