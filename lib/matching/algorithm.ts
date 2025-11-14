@@ -92,8 +92,12 @@ export function generateMatches(
     }
 
     // Skip if program doesn't target this organization type
+    // EXCEPTION: For historical matches (EXPIRED programs), allow all types for reference learning
     if (program.targetType && !program.targetType.includes(organization.type)) {
-      continue;
+      if (!options?.includeExpired) {
+        continue; // Strict filter for ACTIVE programs (application eligibility)
+      }
+      // Allow mismatch for EXPIRED programs (users want to learn from all types)
     }
 
     // ============================================================================
@@ -124,12 +128,27 @@ export function generateMatches(
     // Programs target specific TRL ranges based on research stage (basic research, applied, commercialization)
     // Organizations outside the TRL range are fundamentally incompatible - not just a scoring penalty
     // Example: Early-stage research program (TRL 1-3) cannot accept commercialization-ready company (TRL 7-9)
+    //
+    // RELAXATION FOR HISTORICAL MATCHES:
+    // For EXPIRED programs (historical reference), expand TRL range by ±3
+    // Rationale: Users want to learn from adjacent TRL programs to understand funding landscape
     if (program.minTrl !== null && program.maxTrl !== null && organization.technologyReadinessLevel) {
       const orgTRL = organization.technologyReadinessLevel;
 
-      // Skip if organization's TRL is completely outside program's target range
-      if (orgTRL < program.minTrl || orgTRL > program.maxTrl) {
-        continue; // TRL incompatible - organization's development stage doesn't fit this program
+      if (options?.includeExpired) {
+        // RELAXED TRL for historical reference: ±3 range
+        // Example: Program TRL 4-6 → Accept org TRL 1-9 (relaxedMin=1, relaxedMax=9)
+        const relaxedMin = Math.max(1, program.minTrl - 3);
+        const relaxedMax = Math.min(9, program.maxTrl + 3);
+
+        if (orgTRL < relaxedMin || orgTRL > relaxedMax) {
+          continue; // Still outside extended range
+        }
+      } else {
+        // STRICT TRL for active applications: exact range
+        if (orgTRL < program.minTrl || orgTRL > program.maxTrl) {
+          continue; // TRL incompatible - organization's development stage doesn't fit this program
+        }
       }
     }
 
@@ -172,9 +191,13 @@ export function generateMatches(
     // - Scoring-based approach alone is insufficient (weak keyword matches can accumulate points)
     // - Hard filter ensures semantic industry compatibility before any scoring occurs
     //
-    // THRESHOLD: 0.3 (30% relevance)
+    // THRESHOLD: 0.3 (30% relevance) for ACTIVE programs
     // - Below 0.3: Industries are fundamentally incompatible (blocked)
     // - Above 0.3: Industries have meaningful overlap (allowed, then scored)
+    //
+    // RELAXATION FOR HISTORICAL MATCHES:
+    // For EXPIRED programs (historical reference), BYPASS industry filter entirely
+    // Rationale: Users want to learn from cross-industry examples regardless of relevance
     if (organization.industrySector && program.category) {
       const orgSector = findIndustrySector(organization.industrySector);
       const programSector = findIndustrySector(program.category);
@@ -184,10 +207,14 @@ export function generateMatches(
         // Look up cross-industry relevance score
         const relevanceScore = INDUSTRY_RELEVANCE[orgSector]?.[programSector] ?? 0;
 
-        // Block match if industries are fundamentally incompatible
-        if (relevanceScore < 0.3) {
-          continue; // Industry mismatch - fundamentally incompatible
+        if (!options?.includeExpired) {
+          // STRICT industry filter for ACTIVE programs (application eligibility)
+          if (relevanceScore < 0.3) {
+            continue; // Industry mismatch - fundamentally incompatible
+          }
         }
+        // For EXPIRED programs: Allow all cross-industry matches for learning purposes
+        // Users benefit from seeing historical programs across diverse sectors
       }
       // NOTE: If either sector is not in taxonomy, we allow the match to proceed
       // This handles edge cases and new categories not yet in taxonomy

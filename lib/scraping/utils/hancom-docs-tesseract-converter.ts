@@ -35,26 +35,29 @@ const HANCOM_PASSWORD = process.env.HANCOM_DOCS_PW || process.env.HANCOM_PASSWOR
 
 // Timeouts
 const LOGIN_TIMEOUT = 60000; // 60 seconds
-const UPLOAD_TIMEOUT = 60000; // 60 seconds
+const UPLOAD_TIMEOUT = 50000; // 50 seconds (increased from 30s due to large file uploads)
 const EDITOR_TIMEOUT = 30000; // 30 seconds
 
 /**
  * Create and authenticate a browser session for Hancom Docs
  *
- * This function creates a persistent browser session that can be shared
+ * This function creates a persistent authenticated browser context that can be shared
  * across multiple HWP file conversions, reducing logins from N (one per file)
  * to 1 (one per batch).
  *
- * Usage:
- * const sharedBrowser = await createAuthenticatedHancomBrowser();
- * for (const hwpFile of allHWPFiles) {
- *   await convertHWPViaHancomTesseract(buffer, filename, sharedBrowser);
- * }
- * await sharedBrowser.close();
+ * IMPORTANT: Returns BrowserContext (which contains authentication cookies), not Browser.
+ * Sharing Browser objects without contexts loses authentication state.
  *
- * @returns Authenticated Browser instance
+ * Usage:
+ * const sharedContext = await createAuthenticatedHancomBrowser();
+ * for (const hwpFile of allHWPFiles) {
+ *   await convertHWPViaHancomTesseract(buffer, filename, sharedContext);
+ * }
+ * await sharedContext.close();
+ *
+ * @returns Authenticated BrowserContext instance (contains cookies and auth state)
  */
-export async function createAuthenticatedHancomBrowser(): Promise<Browser> {
+export async function createAuthenticatedHancomBrowser(): Promise<BrowserContext> {
   console.log('[HANCOM-BROWSER] Creating shared authenticated browser session...');
 
   const browser = await chromium.launch({
@@ -94,7 +97,7 @@ export async function createAuthenticatedHancomBrowser(): Promise<Browser> {
 
   console.log('[HANCOM-BROWSER] ✅ Shared browser authenticated and ready');
 
-  return browser;
+  return context;  // Return context (with cookies), not browser
 }
 
 /**
@@ -102,19 +105,19 @@ export async function createAuthenticatedHancomBrowser(): Promise<Browser> {
  *
  * @param hwpBuffer - HWP file content as Buffer
  * @param fileName - Original HWP filename (for logging and temp file)
- * @param sharedBrowser - Optional shared browser session for batch processing (prevents repeated logins)
+ * @param sharedContext - Optional shared browser context for batch processing (preserves authentication)
  * @returns Extracted text from screenshot, or null if conversion fails
  */
 export async function convertHWPViaHancomTesseract(
   hwpBuffer: Buffer,
   fileName: string,
-  sharedBrowser?: Browser
+  sharedContext?: BrowserContext
 ): Promise<string | null> {
   let browser: Browser | null = null;
   let context: BrowserContext | null = null;
   let tempHwpPath: string | null = null;
   let screenshotPath: string | null = null;
-  const shouldCloseBrowser = !sharedBrowser; // Only close if we created it (not shared)
+  const shouldCloseContext = !sharedContext; // Only close if we created it (not shared)
 
   try {
     console.log(`[HANCOM-TESSERACT] Converting HWP → Screenshot → Text: ${fileName}`);
@@ -126,12 +129,12 @@ export async function convertHWPViaHancomTesseract(
     fs.writeFileSync(tempHwpPath, hwpBuffer);
     console.log(`[HANCOM-TESSERACT] Saved to: ${tempHwpPath}`);
 
-    // 2. Use shared browser or launch new one
-    if (sharedBrowser) {
-      console.log('[HANCOM-TESSERACT] ✓ Using shared authenticated browser session');
-      browser = sharedBrowser;
+    // 2. Use shared context or create new browser + context
+    if (sharedContext) {
+      console.log('[HANCOM-TESSERACT] ✓ Using shared authenticated context (cookies preserved)');
+      context = sharedContext;
     } else {
-      console.log('[HANCOM-TESSERACT] Launching new browser...');
+      console.log('[HANCOM-TESSERACT] Creating new browser + context + login...');
       browser = await chromium.launch({
         headless: true,
         args: [
@@ -141,19 +144,20 @@ export async function convertHWPViaHancomTesseract(
           '--disable-dev-shm-usage',
         ],
       });
+
+      context = await browser.newContext({
+        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        viewport: { width: 1920, height: 1080 },
+        locale: 'ko-KR',
+        timezoneId: 'Asia/Seoul',
+      });
     }
 
-    context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-      viewport: { width: 1920, height: 1080 },
-      locale: 'ko-KR',
-      timezoneId: 'Asia/Seoul',
-    });
-
     const page = await context.newPage();
+    page.setDefaultTimeout(UPLOAD_TIMEOUT); // Set default timeout for all actions (especially file uploads)
 
-    // 3. Login to Hancom Docs (only if using new browser, not shared)
-    if (!sharedBrowser) {
+    // 3. Login to Hancom Docs (only if NOT using shared context)
+    if (!sharedContext) {
       console.log('[HANCOM-TESSERACT] Logging in...');
       await page.goto('https://www.hancomdocs.com/ko/', {
         waitUntil: 'domcontentloaded',
@@ -170,7 +174,7 @@ export async function convertHWPViaHancomTesseract(
       await page.waitForURL('**/ko/home', { timeout: 30000 });
       console.log('[HANCOM-TESSERACT] ✓ Login successful');
     } else {
-      console.log('[HANCOM-TESSERACT] ✓ Skipping login (using authenticated shared session)');
+      console.log('[HANCOM-TESSERACT] ✓ Skipping login (using authenticated shared context)');
       await page.goto('https://www.hancomdocs.com/ko/home', {
         waitUntil: 'domcontentloaded',
         timeout: LOGIN_TIMEOUT,
@@ -179,7 +183,13 @@ export async function convertHWPViaHancomTesseract(
 
     // 4. Upload HWP file
     console.log('[HANCOM-TESSERACT] Uploading file...');
+
+    // Wait for file input to be visible (important for shared browser sessions)
+    console.log('[HANCOM-TESSERACT] Waiting for file input element...');
     const fileInput = page.locator('#contained-button-file');
+    await fileInput.waitFor({ state: 'attached', timeout: 15000 });
+    console.log('[HANCOM-TESSERACT] File input element found');
+
     await fileInput.setInputFiles(tempHwpPath);
     await page.waitForSelector('text=/.*업로드.*완료.*/', {
       state: 'visible',
@@ -242,13 +252,15 @@ export async function convertHWPViaHancomTesseract(
     const screenshotSize = fs.statSync(screenshotPath).size;
     console.log(`[HANCOM-TESSERACT] ✓ Screenshot saved: ${(screenshotSize / 1024).toFixed(2)} KB`);
 
-    // 8. Close browser (only if we created it, not if shared)
-    if (shouldCloseBrowser) {
-      await browser.close();
-      browser = null;
-      console.log('[HANCOM-TESSERACT] ✓ Browser closed');
+    // 8. Close browser + context (only if we created them, not if shared)
+    if (shouldCloseContext) {
+      if (browser) {
+        await browser.close();
+        browser = null;
+      }
+      console.log('[HANCOM-TESSERACT] ✓ Browser + context closed');
     } else {
-      console.log('[HANCOM-TESSERACT] ✓ Keeping shared browser open for next file');
+      console.log('[HANCOM-TESSERACT] ✓ Keeping shared context open for next file');
     }
 
     // 9. Extract text using Tesseract OCR
@@ -296,9 +308,9 @@ export async function convertHWPViaHancomTesseract(
     console.error('[HANCOM-TESSERACT] Stack trace:', error.stack);
     return null;
   } finally {
-    // Ensure cleanup (but never close shared browser on error)
+    // Ensure cleanup (but never close shared context on error)
     try {
-      if (browser && shouldCloseBrowser) await browser.close();
+      if (browser && shouldCloseContext) await browser.close();
       if (tempHwpPath && fs.existsSync(tempHwpPath)) fs.unlinkSync(tempHwpPath);
       if (screenshotPath && fs.existsSync(screenshotPath)) fs.unlinkSync(screenshotPath);
     } catch {}
