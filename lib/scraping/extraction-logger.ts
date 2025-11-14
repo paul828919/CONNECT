@@ -116,8 +116,31 @@ export class ExtractionLogger {
     if (this.logs.length === 0) return;
 
     try {
+      // Valid ExtractionField enum values (from schema.prisma)
+      const validFields = new Set([
+        'DEADLINE',
+        'PUBLISHED_AT',
+        'APPLICATION_START',
+        'BUDGET',
+        'TRL_RANGE',
+        'ELIGIBILITY',
+        'DESCRIPTION',
+        'KEYWORDS',
+      ]);
+
+      // Filter out invalid enum values to prevent Prisma validation errors
+      const validLogs = this.logs.filter((log) => validFields.has(log.field as string));
+      const skippedCount = this.logs.length - validLogs.length;
+
+      if (validLogs.length === 0) {
+        if (skippedCount > 0) {
+          console.log(`   ⚠️  Skipped ${skippedCount} extraction logs with invalid fields`);
+        }
+        return;
+      }
+
       await db.extraction_logs.createMany({
-        data: this.logs.map((log) => ({
+        data: validLogs.map((log) => ({
           scrapingJobId: this.jobId,
           field: log.field,
           value: log.value,
@@ -130,7 +153,9 @@ export class ExtractionLogger {
         })),
       });
 
-      console.log(`   💾 Saved ${this.logs.length} extraction logs to database`);
+      console.log(
+        `   💾 Saved ${validLogs.length} extraction logs to database${skippedCount > 0 ? ` (skipped ${skippedCount} invalid)` : ''}`
+      );
     } catch (error: any) {
       console.error(`   ❌ Failed to save extraction logs: ${error.message}`);
     }
