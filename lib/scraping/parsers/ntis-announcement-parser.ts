@@ -192,7 +192,9 @@ export async function parseNTISAnnouncementDetails(
     const combinedText = cleanText + '\n\n' + attachmentText;
 
     // 8. Extract budget amount from combined text (body + attachments)
-    const budgetAmount = extractBudget(combinedText);
+    // ENHANCEMENT (Nov 14, 2025): Use semantic extraction to distinguish investment vs R&D support
+    // Example: TIPS "1억원 투자" (eligibility) vs "최대 5억원 R&D 지원" (program benefit)
+    const budgetAmount = extractBudgetSemantic(combinedText);
 
     // 9. Determine target type from combined text
     const targetType = determineTargetType(combinedText);
@@ -680,9 +682,12 @@ function extractAllBudgetCandidates(bodyText: string): BudgetCandidate[] {
       const matchIndex = match.index;
       const matchText = match[0];
 
-      // Extract surrounding context (150 chars before and after for better precision)
-      const contextStart = Math.max(0, matchIndex - 150);
-      const contextEnd = Math.min(bodyText.length, matchIndex + matchText.length + 150);
+      // Extract surrounding context (80 chars before and after to prevent keyword leakage)
+      // CRITICAL FIX (Nov 14, 2025): Reduced from 150 to 80 chars
+      // Prevents R&D keywords from one section bleeding into nearby investment amounts
+      // Example: "1억원 이상 투자" near "R&D 자금 최대 5억원" no longer share context
+      const contextStart = Math.max(0, matchIndex - 80);
+      const contextEnd = Math.min(bodyText.length, matchIndex + matchText.length + 80);
       const context = bodyText.substring(contextStart, contextEnd);
 
       // Parse amount
@@ -722,6 +727,8 @@ function classifyBudgetCandidate(
   matchText: string
 ): Pick<BudgetCandidate, 'isRd' | 'isNonRd' | 'isPerApplicant' | 'isTotal'> {
   // R&D keywords (Korean variations)
+  // ENHANCED (Nov 14, 2025): Added government support keywords for TIPS programs
+  // "정부지원", "매칭 지원", "정부는" → Government R&D grants (actual program benefit)
   const rdKeywords = [
     'R&D', 'r&d', 'R & D',
     '연구개발', '연구 개발',
@@ -731,9 +738,17 @@ function classifyBudgetCandidate(
     '개발비', '개발 비',
     '기술혁신',
     '연구',
+    // Government support indicators (TIPS program benefits)
+    '정부지원', '정부 지원', '정부는',
+    '매칭 지원', '매칭지원', '매칭',
+    '지원금', '지원 금액',
+    'R&D 자금', 'R&D자금',
+    '정부출연금', '출연금',
   ];
 
   // Non-R&D keywords (exclusion indicators)
+  // ENHANCED (Nov 14, 2025): Added investment-related keywords for TIPS programs
+  // "투자", "엔젤투자", "벤처투자" → Investment requirements (not R&D support)
   const nonRdKeywords = [
     '비R&D', '비 R&D', 'non-R&D', 'Non-R&D',
     '연계사업', '연계 사업',
@@ -744,6 +759,12 @@ function classifyBudgetCandidate(
     '인증', '인증지원',
     '특허', '특허출원',
     '시제품', '시제품 제작',
+    // Investment-related (TIPS eligibility requirements)
+    '투자', '투자 유치', '투자유치', '투자 후',
+    '엔젤투자', '엔젤 투자', '엔젤투자금',
+    '벤처투자', '벤처 투자',
+    'VC', 'VC협회', '엔젤협회',
+    '투자금액', '투자 금액',
   ];
 
   // Per-applicant keywords
@@ -827,9 +848,18 @@ export function extractBudgetSemantic(bodyText: string): number | null {
     const perApplicantBudgets = rdCandidates.filter(c => c.isPerApplicant);
 
     if (perApplicantBudgets.length > 0) {
-      // Sort by amount (ascending) and take the smallest per-applicant budget
-      // Rationale: For TIPS, "최대 5억원" (일반트랙) is more commonly applicable than "최대 15억원" (딥테크)
-      perApplicantBudgets.sort((a, b) => a.amount - b.amount);
+      // FIXED (Nov 14, 2025): Prioritize explicit R&D markers first, then by amount
+      // Example: "최대 5억원 R&D 지원" (isRd=true) > "최대 3억원" (neutral)
+      // Then within same R&D level, prefer smaller amounts (일반트랙 vs 딥테크)
+      perApplicantBudgets.sort((a, b) => {
+        // Primary sort: Explicit R&D markers first (isRd=true)
+        if (a.isRd && !b.isRd) return -1; // a has R&D marker, prioritize a
+        if (!a.isRd && b.isRd) return 1; // b has R&D marker, prioritize b
+
+        // Secondary sort: Within same R&D level, prefer smaller amounts
+        // Rationale: "최대 5억원" (일반트랙) more common than "최대 15억원" (딥테크)
+        return a.amount - b.amount;
+      });
       const selected = perApplicantBudgets[0];
 
       console.log(

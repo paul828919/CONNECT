@@ -349,6 +349,14 @@ async function extractTextFromHWP(
     }
 
     // Fallback to Hancom Docs + Tesseract for encrypted/legacy files
+    // Can be disabled via DISABLE_HANCOM_FALLBACK=true to avoid timeout bottlenecks
+    if (process.env.DISABLE_HANCOM_FALLBACK === 'true') {
+      console.log(
+        `[ATTACHMENT-PARSER] pyhwp failed, Hancom fallback DISABLED (DISABLE_HANCOM_FALLBACK=true): ${fileName}`
+      );
+      return null;
+    }
+
     console.log(
       `[ATTACHMENT-PARSER] pyhwp failed, falling back to Hancom Docs + Tesseract: ${fileName}`
     );
