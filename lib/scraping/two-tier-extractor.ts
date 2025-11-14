@@ -25,7 +25,7 @@
  */
 
 import { ExtractionLogger } from './extraction-logger';
-import { extractBudget, extractEligibilityCriteria, extractBusinessStructures } from './parsers/ntis-announcement-parser';
+import { extractBudget, extractBudgetSemantic, extractEligibilityCriteria, extractBusinessStructures } from './parsers/ntis-announcement-parser';
 import { extractTRLRange, extractInvestmentRequirement } from './utils';
 import { parseKoreanDate } from './utils';
 
@@ -306,7 +306,7 @@ export class TwoTierExtractor {
         .map((f) => f.text)
         .join('\n\n');
 
-      const budget = extractBudget(announcementText);
+      const budget = extractBudgetSemantic(announcementText);
       if (budget !== null) {
         // P3 Enhancement: Validate budget against title context
         this.validateBudgetAgainstTitle(budget);
@@ -327,7 +327,7 @@ export class TwoTierExtractor {
 
     // Try rawHtml text extraction
     if (this.rawHtmlText) {
-      const budget = extractBudget(this.rawHtmlText);
+      const budget = extractBudgetSemantic(this.rawHtmlText);
       if (budget !== null) {
         // P3 Enhancement: Validate budget against title context
         this.validateBudgetAgainstTitle(budget);
@@ -339,7 +339,7 @@ export class TwoTierExtractor {
 
     // Try description as fallback
     if (this.detailPageData.description) {
-      const budget = extractBudget(this.detailPageData.description);
+      const budget = extractBudgetSemantic(this.detailPageData.description);
       if (budget !== null) {
         // P3 Enhancement: Validate budget against title context
         this.validateBudgetAgainstTitle(budget);
@@ -665,13 +665,11 @@ export class TwoTierExtractor {
       title.includes('일반트랙') || title.includes('일반 트랙') || title.includes('general track');
 
     if (isGeneralTrack && budget > 2000000000) {
-      // > 20억원
-      this.logger.logWarning(
-        'BUDGET',
-        `Extracted budget (${budget.toLocaleString()} won) unusually high for General Track`,
-        `Title: ${this.detailPageData.title}, Budget: ${budget.toLocaleString()} won (${
+      // > 20억원 - Log warning for validation (TIPS General Track typically < ₩2B)
+      console.log(
+        `   ⚠️  Budget validation: Extracted budget (${budget.toLocaleString()} won / ${
           budget / 100000000
-        }억원)`
+        }억원) unusually high for General Track program: ${this.detailPageData.title}`
       );
     }
   }

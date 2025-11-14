@@ -622,6 +622,260 @@ export function extractBudgetWithContext(
 }
 
 /**
+ * SEMANTIC BUDGET EXTRACTION (Phase 2 Enhancement - November 14, 2025)
+ *
+ * Solves multi-budget announcement problems (like TIPS) by implementing semantic classification:
+ * 1. Extract ALL budget amounts from text with surrounding context
+ * 2. Classify each as: R&D vs non-R&D, per-applicant vs total
+ * 3. Apply priority logic: R&D > non-R&D, per-applicant > total
+ *
+ * Example: TIPS announcement contains:
+ *   - R&D total: 4,776억원
+ *   - R&D per-company: 최대 5억원 (일반트랙), 15억원 (딥테크), 12억원 (글로벌)
+ *   - Non-R&D total: 650억원
+ *   - Non-R&D per-company: 최대 3억원
+ * → Returns 500,000,000 won (R&D per-applicant for 일반트랙)
+ */
+
+interface BudgetCandidate {
+  amount: number;
+  context: string;
+  matchText: string;
+  isRd: boolean;
+  isNonRd: boolean;
+  isPerApplicant: boolean;
+  isTotal: boolean;
+}
+
+/**
+ * Extract all possible budget amounts from text with surrounding context
+ */
+function extractAllBudgetCandidates(bodyText: string): BudgetCandidate[] {
+  const candidates: BudgetCandidate[] = [];
+
+  // Define all budget patterns (both 억원 and 백만원)
+  const patterns = [
+    // Per-applicant patterns (highest priority indicators)
+    { regex: /최대\s*([\d,\.]+)\s*억원/gi, unit: 100000000 },
+    { regex: /과제당\s*([\d,\.]+)\s*억원/gi, unit: 100000000 },
+    { regex: /기업당\s*([\d,\.]+)\s*억원/gi, unit: 100000000 },
+    { regex: /건당\s*([\d,\.]+)\s*억원/gi, unit: 100000000 },
+    { regex: /개사당\s*([\d,\.]+)\s*억원/gi, unit: 100000000 },
+
+    // Total patterns
+    { regex: /총\s*([\d,\.]+)\s*억원/gi, unit: 100000000 },
+    { regex: /전체\s*([\d,\.]+)\s*억원/gi, unit: 100000000 },
+
+    // Generic patterns (need context classification)
+    { regex: /([\d,\.]+)\s*억원/g, unit: 100000000 },
+    { regex: /([\d,\.]+)\s*백만원/g, unit: 1000000 },
+  ];
+
+  patterns.forEach(({ regex, unit }) => {
+    // Reset regex state
+    regex.lastIndex = 0;
+
+    let match;
+    while ((match = regex.exec(bodyText)) !== null) {
+      const matchIndex = match.index;
+      const matchText = match[0];
+
+      // Extract surrounding context (150 chars before and after for better precision)
+      const contextStart = Math.max(0, matchIndex - 150);
+      const contextEnd = Math.min(bodyText.length, matchIndex + matchText.length + 150);
+      const context = bodyText.substring(contextStart, contextEnd);
+
+      // Parse amount
+      const amountStr = match[1].replace(/,/g, '');
+      const amountNum = parseFloat(amountStr);
+
+      // Validate reasonable range
+      if (amountNum > 0 && amountNum < 100000) {
+        const amount = Math.round(amountNum * unit);
+
+        // Classify this candidate
+        const classification = classifyBudgetCandidate(context, matchText);
+
+        candidates.push({
+          amount,
+          context,
+          matchText,
+          ...classification,
+        });
+      }
+    }
+  });
+
+  // Remove duplicates (same amount found multiple times)
+  const uniqueCandidates = candidates.filter((candidate, index, self) =>
+    index === self.findIndex(c => c.amount === candidate.amount && c.matchText === candidate.matchText)
+  );
+
+  return uniqueCandidates;
+}
+
+/**
+ * Classify a budget candidate based on context and match text
+ */
+function classifyBudgetCandidate(
+  context: string,
+  matchText: string
+): Pick<BudgetCandidate, 'isRd' | 'isNonRd' | 'isPerApplicant' | 'isTotal'> {
+  // R&D keywords (Korean variations)
+  const rdKeywords = [
+    'R&D', 'r&d', 'R & D',
+    '연구개발', '연구 개발',
+    '연구비', '연구 비',
+    '기술개발', '기술 개발',
+    '연구과제', '연구 과제',
+    '개발비', '개발 비',
+    '기술혁신',
+    '연구',
+  ];
+
+  // Non-R&D keywords (exclusion indicators)
+  const nonRdKeywords = [
+    '비R&D', '비 R&D', 'non-R&D', 'Non-R&D',
+    '연계사업', '연계 사업',
+    '마케팅',
+    '판로', '판로개척',
+    '해외진출', '해외 진출',
+    '수출', '수출지원',
+    '인증', '인증지원',
+    '특허', '특허출원',
+    '시제품', '시제품 제작',
+  ];
+
+  // Per-applicant keywords
+  const perApplicantKeywords = [
+    '최대', '최대 ', // Pattern: "최대 5억원"
+    '과제당', '과제 당',
+    '기업당', '기업 당',
+    '건당', '건 당',
+    '개사당', '개사 당',
+    '1개', '한 개', '하나',
+  ];
+
+  // Total keywords
+  const totalKeywords = [
+    '총', '총 ', '총액',
+    '전체', '전체 ',
+    '합계', '총계',
+    '누계',
+  ];
+
+  // Check R&D context
+  const isRd = rdKeywords.some(keyword => context.includes(keyword));
+  const isNonRd = nonRdKeywords.some(keyword => context.includes(keyword));
+
+  // Check per-applicant vs total
+  const isPerApplicant = perApplicantKeywords.some(keyword =>
+    context.includes(keyword) || matchText.includes(keyword)
+  );
+  const isTotal = totalKeywords.some(keyword =>
+    context.includes(keyword) || matchText.includes(keyword)
+  );
+
+  return { isRd, isNonRd, isPerApplicant, isTotal };
+}
+
+/**
+ * Semantic budget extraction with priority logic
+ *
+ * Priority rules:
+ * 1. R&D budgets over non-R&D budgets
+ * 2. Per-applicant budgets over total budgets
+ * 3. Fallback to existing extractBudget() if no classified budgets found
+ */
+export function extractBudgetSemantic(bodyText: string): number | null {
+  try {
+    console.log('[BUDGET-SEMANTIC] Starting semantic extraction...');
+
+    // Extract all budget candidates
+    const allCandidates = extractAllBudgetCandidates(bodyText);
+
+    console.log(`[BUDGET-SEMANTIC] Found ${allCandidates.length} total candidates`);
+    allCandidates.forEach((c, i) => {
+      console.log(`  [${i}] ${c.amount.toLocaleString()} won - "${c.matchText}" - R&D:${c.isRd} NonR&D:${c.isNonRd} PerApp:${c.isPerApplicant} Total:${c.isTotal}`);
+    });
+
+    if (allCandidates.length === 0) {
+      // No candidates found, use existing logic
+      console.log('[BUDGET-SEMANTIC] No candidates found, using fallback');
+      return extractBudget(bodyText);
+    }
+
+    // Filter for R&D budgets (exclude explicit non-R&D)
+    const rdCandidates = allCandidates.filter(c => {
+      // If explicitly marked as non-R&D, exclude
+      if (c.isNonRd) return false;
+
+      // If has R&D context, include
+      if (c.isRd) return true;
+
+      // If no clear R&D/non-R&D markers, include (neutral)
+      return true;
+    });
+
+    if (rdCandidates.length === 0) {
+      // All candidates are non-R&D, fallback to existing logic
+      console.log('[BUDGET-SEMANTIC] All candidates are non-R&D, using fallback');
+      return extractBudget(bodyText);
+    }
+
+    // Within R&D budgets, prioritize per-applicant over total
+    const perApplicantBudgets = rdCandidates.filter(c => c.isPerApplicant);
+
+    if (perApplicantBudgets.length > 0) {
+      // Sort by amount (ascending) and take the smallest per-applicant budget
+      // Rationale: For TIPS, "최대 5억원" (일반트랙) is more commonly applicable than "최대 15억원" (딥테크)
+      perApplicantBudgets.sort((a, b) => a.amount - b.amount);
+      const selected = perApplicantBudgets[0];
+
+      console.log(
+        `[BUDGET-SEMANTIC] Selected per-applicant R&D budget: ${selected.amount.toLocaleString()} won (${selected.amount / 100000000}억원) - Match: "${selected.matchText}"`
+      );
+
+      return selected.amount;
+    }
+
+    // No per-applicant found, use total R&D budget
+    const totalBudgets = rdCandidates.filter(c => c.isTotal);
+
+    if (totalBudgets.length > 0) {
+      // Sort by amount (descending) and take the largest total budget
+      totalBudgets.sort((a, b) => b.amount - a.amount);
+      const selected = totalBudgets[0];
+
+      console.log(
+        `[BUDGET-SEMANTIC] Selected total R&D budget: ${selected.amount.toLocaleString()} won (${selected.amount / 100000000}억원) - Match: "${selected.matchText}"`
+      );
+
+      return selected.amount;
+    }
+
+    // No total budget found either, use first R&D candidate
+    if (rdCandidates.length > 0) {
+      const selected = rdCandidates[0];
+
+      console.log(
+        `[BUDGET-SEMANTIC] Selected first R&D budget: ${selected.amount.toLocaleString()} won (${selected.amount / 100000000}억원) - Match: "${selected.matchText}"`
+      );
+
+      return selected.amount;
+    }
+
+    // Fallback to existing logic
+    console.log('[BUDGET-SEMANTIC] No suitable candidates found, using fallback');
+    return extractBudget(bodyText);
+
+  } catch (error) {
+    console.warn('[BUDGET-SEMANTIC] Error during semantic extraction, using fallback:', error);
+    return extractBudget(bodyText);
+  }
+}
+
+/**
  * Extract description (공고내용)
  * NTIS shows full announcement content in a content area
  */
