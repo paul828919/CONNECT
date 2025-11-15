@@ -52,6 +52,12 @@ export async function GET(
         primaryContactName: true,
         primaryContactEmail: true,
 
+        // Trust & Credentials (Priority 1)
+        certifications: true,
+        governmentCertifications: true,
+        industryAwards: true,
+        patentCount: true,
+
         // Profile metadata
         profileScore: true,
         createdAt: true,
