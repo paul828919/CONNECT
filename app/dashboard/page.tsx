@@ -20,6 +20,10 @@ export default function DashboardPage() {
     billingCycle: string;
     expiresAt: string;
   } | null>(null);
+  const [programStats, setProgramStats] = useState<{
+    totalPrograms: number;
+    totalGoverningOrgs: number;
+  } | null>(null);
 
   const fetchMatchStats = useCallback(async () => {
     try {
@@ -48,6 +52,21 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const fetchProgramStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/funding-programs/stats');
+      if (res.ok) {
+        const data = await res.json();
+        setProgramStats({
+          totalPrograms: data.stats.totalPrograms,
+          totalGoverningOrgs: data.stats.totalGoverningOrgs,
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching program stats:', err);
+    }
+  }, []);
+
   useEffect(() => {
     if (status === 'loading') return;
 
@@ -67,7 +86,8 @@ export default function DashboardPage() {
 
     fetchMatchStats();
     fetchSubscription();
-  }, [session, status, router, fetchMatchStats, fetchSubscription]);
+    fetchProgramStats();
+  }, [session, status, router, fetchMatchStats, fetchSubscription, fetchProgramStats]);
 
   const handleGenerateMatches = async () => {
     try {
@@ -158,10 +178,14 @@ export default function DashboardPage() {
             </Link>
             <div className="rounded-xl bg-white p-6 shadow-sm">
               <div className="text-sm font-medium text-gray-600">
-                활성 프로그램
+                활성 연구과제
               </div>
-              <div className="mt-2 text-3xl font-bold text-purple-600">8</div>
-              <div className="mt-1 text-xs text-gray-500">4개 기관</div>
+              <div className="mt-2 text-3xl font-bold text-purple-600">
+                {programStats ? programStats.totalPrograms : '-'}
+              </div>
+              <div className="mt-1 text-xs text-gray-500">
+                {programStats ? `${programStats.totalGoverningOrgs}개 기관` : '로딩 중...'}
+              </div>
             </div>
             <div className="rounded-xl bg-white p-6 shadow-sm">
               <div className="text-sm font-medium text-gray-600">
