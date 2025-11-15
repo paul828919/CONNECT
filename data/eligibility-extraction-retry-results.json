@@ -1,0 +1,1708 @@
+{
+  "summary": {
+    "totalFilesProcessed": 73,
+    "successfulExtractions": 66,
+    "failedExtractions": 7,
+    "extractionMethodBreakdown": {
+      "pyhwp": 0,
+      "hancomTesseract": 66,
+      "pdfParse": 0,
+      "failed": 7
+    },
+    "eligibilityTypeMatches": {
+      "type1_CorporateResearchInstitute": 1,
+      "type2_CorporateDedicatedRnD": 0,
+      "type7_InnoBizOrVenture": 3
+    },
+    "processingTime": 686464
+  },
+  "results": [
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250101_to_20250131/page-1/announcement-421",
+      "attachmentFile": "(중소벤처기업부_공고_제2025-59호)2025년_지역혁신선도기업육성(R D)_공고문.hwp",
+      "fileSize": 117959,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 11476,
+      "textLength": 1062,
+      "koreanCharPercentage": 40.772128060263654,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": true,
+          "matchedText": "벤처기업",
+          "pattern": "벤처기업"
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250101_to_20250131/page-1/announcement-422",
+      "attachmentFile": "[공고문] 2025년 중소기업 연구인력지원사업 공고.hwp",
+      "fileSize": 75776,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 9783,
+      "textLength": 1953,
+      "koreanCharPercentage": 31.285202252944188,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": true,
+          "matchedText": "벤처기업",
+          "pattern": "벤처기업"
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250101_to_20250131/page-1/announcement-423",
+      "attachmentFile": "[공고문] 2025년 중소기업 연구인력지원사업 공고.hwp",
+      "fileSize": 75776,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 9855,
+      "textLength": 1778,
+      "koreanCharPercentage": 34.308211473565805,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": true,
+          "matchedText": "벤처기업",
+          "pattern": "벤처기업"
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250101_to_20250131/page-16/announcement-273",
+      "attachmentFile": "2025년도 중견기업-지역 혁신 얼라이언스 지원사업 공고_80798309539779659.hwpx",
+      "fileSize": 229376,
+      "extractionMethod": "failed",
+      "extractionDuration": 1,
+      "textLength": 0,
+      "koreanCharPercentage": 0,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250101_to_20250131/page-28/announcement-147",
+      "attachmentFile": "붙임1. 2025년도 그린수소기술자립프로젝트 신규과제 사전공고문.hwp",
+      "fileSize": 122368,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10537,
+      "textLength": 1938,
+      "koreanCharPercentage": 34.41692466460268,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250101_to_20250131/page-28/announcement-148",
+      "attachmentFile": "(붙임 1) 2025년도 글로벌CLEAN 사업 신규과제 사전공고문.hwp",
+      "fileSize": 70144,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10632,
+      "textLength": 1688,
+      "koreanCharPercentage": 30.746445497630333,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250101_to_20250131/page-28/announcement-149",
+      "attachmentFile": "(붙임 1) 2025년도 H2GATHER 사업 신규과제 사전공고문.hwp",
+      "fileSize": 64512,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10250,
+      "textLength": 1852,
+      "koreanCharPercentage": 32.289416846652266,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250201_to_20250228/page-10/announcement-269",
+      "attachmentFile": "2025년 K-HERO 육성·지원 사업 공고_FF.hwp",
+      "fileSize": 112867,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10230,
+      "textLength": 1536,
+      "koreanCharPercentage": 36.26302083333333,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": true,
+          "matchedText": "기업부설연구소",
+          "pattern": "기업부설연구소"
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250201_to_20250228/page-10/announcement-270",
+      "attachmentFile": "1. 2025년 XaaS 선도 프로젝트 사업 신규과제 공고문.hwp",
+      "fileSize": 122046,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10747,
+      "textLength": 1756,
+      "koreanCharPercentage": 34.22551252847381,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250201_to_20250228/page-12/announcement-250",
+      "attachmentFile": "(붙임1) 2025년 국가첨단전략산업 기술혁신 융자사업 공고문(최종).hwp",
+      "fileSize": 250764,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 9293,
+      "textLength": 593,
+      "koreanCharPercentage": 24.620573355817875,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250201_to_20250228/page-13/announcement-238",
+      "attachmentFile": "(제2025-99호)2025년도 노지스마트농업활용모델개발사업 시행계획 재공고.hwp",
+      "fileSize": 335599,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10111,
+      "textLength": 1481,
+      "koreanCharPercentage": 35.921674544226875,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250201_to_20250228/page-17/announcement-204",
+      "attachmentFile": "2025년 산업기술국제협력사업(양자-스위스) 공고 접수 및 안내.pdf",
+      "fileSize": 234524,
+      "extractionMethod": "failed",
+      "extractionDuration": 53,
+      "textLength": 0,
+      "koreanCharPercentage": 0,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250201_to_20250228/page-17/announcement-204",
+      "attachmentFile": "★2025년 산업기술국제협력사업 통합 시행계획 공고.pdf",
+      "fileSize": 1874588,
+      "extractionMethod": "failed",
+      "extractionDuration": 36,
+      "textLength": 0,
+      "koreanCharPercentage": 0,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250201_to_20250228/page-17/announcement-204",
+      "attachmentFile": "붙임3. 2025년 산업기술국제협력사업(양자-스위스) 영문 공고문.pdf",
+      "fileSize": 523420,
+      "extractionMethod": "failed",
+      "extractionDuration": 9,
+      "textLength": 0,
+      "koreanCharPercentage": 0,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250201_to_20250228/page-20/announcement-176",
+      "attachmentFile": "(제2025-86호)2025년도 고위험동물감염병대응기술개발사업 시행계획 재공고.hwp",
+      "fileSize": 322992,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10228,
+      "textLength": 1601,
+      "koreanCharPercentage": 34.478450968144905,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250201_to_20250228/page-31/announcement-57",
+      "attachmentFile": "[행정안전부 공고 제2025-173호] 2025년도 재난안전 공동연구 기술개발 공모 공고서.hwp",
+      "fileSize": 20800444,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10632,
+      "textLength": 593,
+      "koreanCharPercentage": 24.620573355817875,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250201_to_20250228/page-31/announcement-57",
+      "attachmentFile": "[행정안전부 공고 제2025-173호] 2025년도 지진위험분석 및 관리기술개발 공모 공고서.hwp",
+      "fileSize": 191776,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 11077,
+      "textLength": 1714,
+      "koreanCharPercentage": 36.34772462077013,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250201_to_20250228/page-32/announcement-53",
+      "attachmentFile": "★(공고문) 2025년도 차세대원자력혁신생태계기반조성사업 신규과제 공고.hwp",
+      "fileSize": 356831,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10070,
+      "textLength": 1071,
+      "koreanCharPercentage": 36.41456582633053,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250201_to_20250228/page-32/announcement-54",
+      "attachmentFile": "(공고문) 2025년도 차세대원자력 전문인력 양성사업 신규과제 공고.hwp",
+      "fileSize": 326291,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 9678,
+      "textLength": 1375,
+      "koreanCharPercentage": 39.27272727272727,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250201_to_20250228/page-32/announcement-56",
+      "attachmentFile": "★(공고문) 2025년도 미래글로벌원자력전문인력양성사업 신규과제 공고★.hwp",
+      "fileSize": 377671,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10320,
+      "textLength": 1573,
+      "koreanCharPercentage": 33.057851239669425,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250301_to_20250331/page-1/announcement-154",
+      "attachmentFile": "[공고문] 의료AI혁신생태계조성(닥터앤서3.0) 사업.hwp",
+      "fileSize": 153986,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10722,
+      "textLength": 1618,
+      "koreanCharPercentage": 40.11124845488257,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250301_to_20250331/page-13/announcement-32",
+      "attachmentFile": "2025년도 사용후핵연료 처리기술 고도화 연구개발사업 신규과제 재공고.hwp",
+      "fileSize": 324041,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10584,
+      "textLength": 1395,
+      "koreanCharPercentage": 39.35483870967742,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250301_to_20250331/page-2/announcement-150",
+      "attachmentFile": "1. 공모공고서(2025년도 빅데이터 플랫폼 기반 분석 서비스 지원 사업 공고).hwp",
+      "fileSize": 102402,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10798,
+      "textLength": 2147,
+      "koreanCharPercentage": 35.072193758733114,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250301_to_20250331/page-7/announcement-93",
+      "attachmentFile": "(붙임1) 2025년 데이터센터 산업 활성화 지원 사업 통합_공고문.hwp",
+      "fileSize": 504296,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10517,
+      "textLength": 1729,
+      "koreanCharPercentage": 33.95026026604974,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250301_to_20250331/page-7/announcement-94",
+      "attachmentFile": "2025년 지역 자율형 디지털 혁신프로젝트(초광역협력형) 재공모문.hwp",
+      "fileSize": 324225,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 9489,
+      "textLength": 593,
+      "koreanCharPercentage": 24.620573355817875,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250301_to_20250331/page-7/announcement-97",
+      "attachmentFile": "2025년도 차세대 디지털 VTS 국제표준서비스 및 장비 개발사업 신규과제 선정계획 재공고.hwp",
+      "fileSize": 173229,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10496,
+      "textLength": 2172,
+      "koreanCharPercentage": 34.530386740331494,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250301_to_20250331/page-9/announcement-73",
+      "attachmentFile": "공지통신무전기 성능개량사업(UH-60 등 6종) 입찰공고문.hwp",
+      "fileSize": 107338,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10627,
+      "textLength": 2416,
+      "koreanCharPercentage": 38.41059602649007,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250301_to_20250331/page-9/announcement-74",
+      "attachmentFile": "25년도 상반기 방위산업 공급망 안정화 선도사업자 선정공고.hwp",
+      "fileSize": 187417,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 9995,
+      "textLength": 593,
+      "koreanCharPercentage": 24.620573355817875,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250301_to_20250331/page-9/announcement-76",
+      "attachmentFile": "(공고문) 2025년도「투자연계형기후테크에너지기술개발」사업 신규지원 대상과제 공_85373415896382737.hwpx",
+      "fileSize": 82432,
+      "extractionMethod": "failed",
+      "extractionDuration": 1,
+      "textLength": 0,
+      "koreanCharPercentage": 0,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250301_to_20250331/page-9/announcement-80",
+      "attachmentFile": "[공고문] 2025년도 관세행정 현장 맞춤형 기술개발사업 사업단 공고.hwp",
+      "fileSize": 20809963,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 11121,
+      "textLength": 917,
+      "koreanCharPercentage": 36.31406761177753,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-15/announcement-144",
+      "attachmentFile": "2025년도 NGS 패널데이터 기반 암 정밀의료 기술개발 사업 신규지원 대상과제 재공고문.hwp",
+      "fileSize": 160850,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10787,
+      "textLength": 1912,
+      "koreanCharPercentage": 34.62343096234309,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-15/announcement-151",
+      "attachmentFile": "(250227)유·도선 현대화 이차보전사업 시행지침.hwp",
+      "fileSize": 84725,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10643,
+      "textLength": 1443,
+      "koreanCharPercentage": 39.08523908523909,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-15/announcement-151",
+      "attachmentFile": "해양경찰청 공고 제2025-56호(2025년도 제2차 해수면 유도선 현대화 이차보전사업 시행 공고).hwp",
+      "fileSize": 120218,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10219,
+      "textLength": 1796,
+      "koreanCharPercentage": 34.910913140311806,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-16/announcement-132",
+      "attachmentFile": "2025년 이집트 디지털 헤리티지 센터 구축 지원 민간위탁 선정 재공모 공고문.hwp",
+      "fileSize": 88674,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10728,
+      "textLength": 1687,
+      "koreanCharPercentage": 34.439834024896264,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-17/announcement-131",
+      "attachmentFile": "2025년 이집트 룩소르 지속가능한 문화유산 관광자원 개발 역량강화 민간위탁 선정 재공모 공고문.hwp",
+      "fileSize": 91014,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10674,
+      "textLength": 1630,
+      "koreanCharPercentage": 38.58895705521472,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-18/announcement-118",
+      "attachmentFile": "붙임1. 2025년 제4차 디지털혁신기술국제공동연구사업 신규지원 대상과제 공고문.hwp",
+      "fileSize": 159685,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10777,
+      "textLength": 1778,
+      "koreanCharPercentage": 34.3644544431946,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-19/announcement-109",
+      "attachmentFile": "2025년도 과학기술정보통신부 연구산업진흥단지육성사업(대전 연구산업진흥단지) 시행 연장 공고문.hwp",
+      "fileSize": 89465,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10239,
+      "textLength": 2036,
+      "koreanCharPercentage": 35.65815324165029,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-2/announcement-276",
+      "attachmentFile": "2025년도 대학기술경영촉진(TLO혁신형) 신규과제 공고문_250430 .hwp",
+      "fileSize": 285407,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10418,
+      "textLength": 2162,
+      "koreanCharPercentage": 24.79185938945421,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-20/announcement-93",
+      "attachmentFile": "[붙임1] 2025년 바이오의료기술개발 사업 신규과제 제3차 공고문.hwp",
+      "fileSize": 340987,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 9700,
+      "textLength": 1427,
+      "koreanCharPercentage": 34.12754029432376,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-23/announcement-63",
+      "attachmentFile": "2025년도 차세대광패키징기술개발사업 신규과제 공모문.hwp",
+      "fileSize": 361297,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 9812,
+      "textLength": 593,
+      "koreanCharPercentage": 24.620573355817875,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-23/announcement-64",
+      "attachmentFile": "[붙임1] 2025년 바이오의료기술개발 사업 제1차 신규과제 2차 재공고문.hwp",
+      "fileSize": 340872,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 9924,
+      "textLength": 1439,
+      "koreanCharPercentage": 34.120917303683115,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-23/announcement-65",
+      "attachmentFile": "과학기술정보통신부 제2025-406호 2025년 프로젝트 석박사 양성사업 재공고.hwp",
+      "fileSize": 506475,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 9292,
+      "textLength": 593,
+      "koreanCharPercentage": 24.620573355817875,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-23/announcement-66",
+      "attachmentFile": "[공고문] 2025년 1차 국민생활안전 긴급대응연구(2단계) 기술개발 및 실증 신규과제 공고.hwp",
+      "fileSize": 367631,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10519,
+      "textLength": 1695,
+      "koreanCharPercentage": 32.743362831858406,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-26/announcement-35",
+      "attachmentFile": "붙임_2025년 한-필리핀 공동연구사업 신규과제 공고문.hwp",
+      "fileSize": 471841,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10397,
+      "textLength": 1669,
+      "koreanCharPercentage": 34.1521869382864,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-29/announcement-3",
+      "attachmentFile": "[공고문] 2025년도 국민생활안전 긴급대응연구(2단계) 사전준비(종합지원허브) 신규과제 공고.hwp",
+      "fileSize": 332897,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 9768,
+      "textLength": 1418,
+      "koreanCharPercentage": 37.588152327221444,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250401_to_20250430/page-4/announcement-258",
+      "attachmentFile": "2025년도 기후기술국제협력촉진사업(CTCN 기술지원) 신규과제 공모 공고문.hwp",
+      "fileSize": 358872,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10897,
+      "textLength": 1319,
+      "koreanCharPercentage": 34.495830174374525,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250501_to_20250531/page-10/announcement-76",
+      "attachmentFile": "2025년 나노 및 소재기술개발사업 신규과제 선정계획 3차 공고.hwp",
+      "fileSize": 1657172,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10437,
+      "textLength": 1986,
+      "koreanCharPercentage": 29.758308157099698,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250501_to_20250531/page-10/announcement-77",
+      "attachmentFile": "2025년 나노 및 소재기술개발사업 신규과제 선정계획 2차 공고.hwp",
+      "fileSize": 1669900,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10601,
+      "textLength": 2491,
+      "koreanCharPercentage": 26.053793657165798,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250501_to_20250531/page-11/announcement-66",
+      "attachmentFile": "생성AI 선도인재양성 사업 공고문(최종).hwp",
+      "fileSize": 297473,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 11239,
+      "textLength": 2317,
+      "koreanCharPercentage": 39.18860595597756,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250501_to_20250531/page-11/announcement-75",
+      "attachmentFile": "[공고문] 2025년 1차 국민생활안전 긴급대응연구(2단계) 기술개발 및 실증 신규과제 재공고.hwp",
+      "fileSize": 353475,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 11134,
+      "textLength": 2243,
+      "koreanCharPercentage": 27.95363352652697,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250501_to_20250531/page-12/announcement-65",
+      "attachmentFile": "2025년도 AI스타펠로우십지원(AI최고급신진연구자지원)사업 2차 공고문.hwp",
+      "fileSize": 237368,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10924,
+      "textLength": 1992,
+      "koreanCharPercentage": 39.3574297188755,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250501_to_20250531/page-14/announcement-42",
+      "attachmentFile": "붙임1_2025년도 초거대AI 확산 생태계 조성 사업(2차) 공고.hwp",
+      "fileSize": 229003,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10041,
+      "textLength": 1014,
+      "koreanCharPercentage": 35.99605522682446,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250501_to_20250531/page-3/announcement-150",
+      "attachmentFile": "[공고문] 2025년도 미래국방가교기술개발사업 신규과제 공고문.hwp",
+      "fileSize": 506285,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10537,
+      "textLength": 1517,
+      "koreanCharPercentage": 33.68490441661173,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250501_to_20250531/page-4/announcement-136",
+      "attachmentFile": "(붙임1) [공고문] AI컴퓨팅자원 활용기반 강화 (GPU 확보·구축·운용지원).hwp",
+      "fileSize": 101255,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10571,
+      "textLength": 1596,
+      "koreanCharPercentage": 39.22305764411028,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250501_to_20250531/page-4/announcement-137",
+      "attachmentFile": "[공고문] 과학기술인 협동조합 육성지원사업(지역 공동체 혁신 지원) 신규과제 선정 공고.hwp",
+      "fileSize": 112858,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10193,
+      "textLength": 1700,
+      "koreanCharPercentage": 37.76470588235294,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250501_to_20250531/page-5/announcement-135",
+      "attachmentFile": "붙임1. 2025년 연구개발특구육성(R D) 사업 지원 공고(AI 글로벌 빅테크 육성 사업).hwp",
+      "fileSize": 175340,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10810,
+      "textLength": 2114,
+      "koreanCharPercentage": 33.065279091769156,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250601_to_20250630/page-10/announcement-46",
+      "attachmentFile": "[공고문] 과학기술인 협동조합 육성지원사업(지역 공동체 혁신 지원) 신규과제 선정 연장 공고.hwp",
+      "fileSize": 113457,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10489,
+      "textLength": 1660,
+      "koreanCharPercentage": 35.602409638554214,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250601_to_20250630/page-11/announcement-39",
+      "attachmentFile": "붙임1. 공고_92739746806554917.hwpx",
+      "fileSize": 195308,
+      "extractionMethod": "failed",
+      "extractionDuration": 1,
+      "textLength": 0,
+      "koreanCharPercentage": 0,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250601_to_20250630/page-3/announcement-116",
+      "attachmentFile": "2025년 AI 디지털 기반 방송 콘텐츠 기획개발 지원 사업 공고문.hwp",
+      "fileSize": 149001,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10359,
+      "textLength": 1622,
+      "koreanCharPercentage": 34.03205918618989,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250601_to_20250630/page-5/announcement-94",
+      "attachmentFile": "붙임 1. 민군기술협력 전력지원체계개발사업 공고문.hwp",
+      "fileSize": 55501,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10083,
+      "textLength": 1103,
+      "koreanCharPercentage": 36.71804170444243,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250601_to_20250630/page-8/announcement-67",
+      "attachmentFile": "(붙임 1) 2025년도 국산AI반도체기반마이크로데이터센터확산(R D) 신규지원 대상과제 공고문.hwp",
+      "fileSize": 157414,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10899,
+      "textLength": 2025,
+      "koreanCharPercentage": 35.7037037037037,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250601_to_20250630/page-9/announcement-57",
+      "attachmentFile": "[공고문] 2025년 지능형 유무인 복합 경비안전 기술개발사업 신규과제 공고문.hwp",
+      "fileSize": 336630,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10486,
+      "textLength": 1611,
+      "koreanCharPercentage": 35.940409683426445,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250701_to_20250731/page-1/announcement-72",
+      "attachmentFile": "(붙임1) 2025년도 APEC 협력사업(네트워크) 신규과제 공고문.hwp",
+      "fileSize": 393482,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 9570,
+      "textLength": 593,
+      "koreanCharPercentage": 24.620573355817875,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250701_to_20250731/page-2/announcement-60",
+      "attachmentFile": "1. [공고문] 2025년 산업 특화형 피지컬AI 핵심기술 PoC 사업 통합 공고.hwp",
+      "fileSize": 117340,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10977,
+      "textLength": 1895,
+      "koreanCharPercentage": 33.13984168865435,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250701_to_20250731/page-2/announcement-67",
+      "attachmentFile": "2025년 바이오·의료기술개발사업 제2차 신규과제 2차 재공고문.hwp",
+      "fileSize": 339864,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10247,
+      "textLength": 1398,
+      "koreanCharPercentage": 35.407725321888414,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250701_to_20250731/page-3/announcement-52",
+      "attachmentFile": "0. 2025년 AI반도체 최적화 설계지원 사업 통합 공고문.hwp",
+      "fileSize": 87110,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10478,
+      "textLength": 1346,
+      "koreanCharPercentage": 36.03268945022288,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250701_to_20250731/page-3/announcement-57",
+      "attachmentFile": "1. 공모공고서(NIA2025-038)_재공고.hwp",
+      "fileSize": 99542,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10563,
+      "textLength": 2334,
+      "koreanCharPercentage": 35.347043701799485,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250701_to_20250731/page-4/announcement-47",
+      "attachmentFile": "1. 공모공고서(2025년 성능평가 데이터 구축).hwp",
+      "fileSize": 103698,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10905,
+      "textLength": 2247,
+      "koreanCharPercentage": 36.0925678682688,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250701_to_20250731/page-5/announcement-35",
+      "attachmentFile": "[공고문] 의료AI혁신생태계조성(닥터앤서3.0) 사업 2차공고.hwp",
+      "fileSize": 186149,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 10703,
+      "textLength": 1744,
+      "koreanCharPercentage": 36.353211009174316,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250801_to_20250831/page-5/announcement-12",
+      "attachmentFile": "1. 2025년 AI모델 맞춤형 설계지원(파운데이션 모델 트랙) 사업 공고문.hwp",
+      "fileSize": 71344,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 11478,
+      "textLength": 1329,
+      "koreanCharPercentage": 36.71933784800602,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250901_to_20250930/page-2/announcement-41",
+      "attachmentFile": "붙임 1. 2026년 착수 민군기술이전사업 과제(연구개발계획서) 공모 공고문.hwp",
+      "fileSize": 0,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 8827,
+      "textLength": 593,
+      "koreanCharPercentage": 24.620573355817875,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250901_to_20250930/page-2/announcement-50",
+      "attachmentFile": "(산업통상자원부 공고 제2025-671호) 2025년도 2차 전력정보화및정책지원사업 신규지원대상 연구개발과제 공고_102308577662804086.hwpx",
+      "fileSize": 127488,
+      "extractionMethod": "failed",
+      "extractionDuration": 0,
+      "textLength": 0,
+      "koreanCharPercentage": 0,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7",
+          "matched": false
+        }
+      }
+    },
+    {
+      "announcementFolder": "/Users/paulkim/Downloads/connect/data/scraper/ntis-attachments/20250901_to_20250930/page-5/announcement-14",
+      "attachmentFile": "[공고문] 인공지능 특화 파운데이션 모델 프로젝트_공고 제2025-0888호.hwp",
+      "fileSize": 77726,
+      "extractionMethod": "hancom-tesseract",
+      "extractionDuration": 9736,
+      "textLength": 1034,
+      "koreanCharPercentage": 40.522243713733076,
+      "eligibilityMatches": {
+        "type1_CorporateResearchInstitute": {
+          "type": "Type 1: Corporate + 기업부설연구소",
+          "matched": false
+        },
+        "type2_CorporateDedicatedRnD": {
+          "type": "Type 2: Corporate + 연구개발전담부서",
+          "matched": false
+        },
+        "type7_InnoBizOrVenture": {
+          "type": "Type 7: Corporate + INNO-BIZ or 벤처기업",
+          "matched": false
+        }
+      }
+    }
+  ]
+}

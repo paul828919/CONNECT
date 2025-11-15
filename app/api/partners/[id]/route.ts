@@ -64,6 +64,15 @@ export async function GET(
         priorGrantWins: true,
         priorGrantTotalAmount: true,
 
+        // Consortium Preferences (Priority 4)
+        desiredConsortiumFields: true,
+        desiredTechnologies: true,
+        targetPartnerTRL: true,
+        commercializationCapabilities: true,
+        expectedTRLLevel: true,
+        targetOrgScale: true,
+        targetOrgRevenue: true,
+
         // Profile metadata
         profileScore: true,
         createdAt: true,
