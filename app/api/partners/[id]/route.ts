@@ -58,6 +58,12 @@ export async function GET(
         industryAwards: true,
         patentCount: true,
 
+        // Track Record (Priority 2)
+        businessEstablishedDate: true,
+        collaborationCount: true,
+        priorGrantWins: true,
+        priorGrantTotalAmount: true,
+
         // Profile metadata
         profileScore: true,
         createdAt: true,
