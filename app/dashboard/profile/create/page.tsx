@@ -60,6 +60,11 @@ const organizationSchema = z.object({
     .max(9, 'TRL은 9 이하여야 합니다')
     .optional(),
   description: z.string().max(500, '설명은 500자 이하여야 합니다').optional(),
+  website: z
+    .string()
+    .url('올바른 웹사이트 주소를 입력해주세요 (예: https://example.com)')
+    .optional()
+    .or(z.literal('')),
 });
 
 type OrganizationFormData = z.infer<typeof organizationSchema>;
@@ -744,6 +749,31 @@ export default function CreateOrganizationProfilePage() {
               {errors.description && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.description.message}
+                </p>
+              )}
+            </div>
+
+            {/* Website */}
+            <div>
+              <label
+                htmlFor="website"
+                className="block text-sm font-medium text-gray-700"
+              >
+                홈페이지 주소 (선택사항)
+              </label>
+              <input
+                type="url"
+                id="website"
+                {...register('website')}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                placeholder="https://www.example.com"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                조직의 공식 홈페이지 주소를 입력해주세요
+              </p>
+              {errors.website && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.website.message}
                 </p>
               )}
             </div>

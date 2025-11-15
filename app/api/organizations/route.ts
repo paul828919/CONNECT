@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
       keyTechnologies, // comma-separated string from form
       technologyReadinessLevel,
       description,
+      website,
     } = body;
 
     // Automatically derive hasResearchInstitute from certifications array
@@ -171,6 +172,7 @@ export async function POST(request: NextRequest) {
         rdExperience: rdExperience || false,
         technologyReadinessLevel: technologyReadinessLevel || null,
         description: description || null,
+        website: website || null,
         // Tier 1A: Company eligibility fields
         revenueRange: revenueRange || null,
         businessStructure: businessStructure || null,
