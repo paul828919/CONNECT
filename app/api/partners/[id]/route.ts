@@ -76,6 +76,11 @@ export async function GET(
         // Investment History (Priority 3)
         investmentHistory: true,
 
+        // Additional Fields (Priority 5)
+        address: true,
+        rdInvestmentRatio: true,
+        lastFinancialYear: true,
+
         // Profile metadata
         profileScore: true,
         createdAt: true,
