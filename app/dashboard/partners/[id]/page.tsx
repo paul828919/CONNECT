@@ -42,6 +42,8 @@ interface Organization {
   expectedTRLLevel: number | null;
   targetOrgScale: string | null;
   targetOrgRevenue: string | null;
+  // Investment History (Priority 3)
+  investmentHistory: { manualEntry: string; verified: boolean } | null;
   profileScore: number;
   createdAt: string;
   _count: {
@@ -661,6 +663,49 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
                   )}
                 </div>
               </div>
+            </div>
+          ) : null}
+
+          {/* Investment History Section (Priority 3) */}
+          {organization.investmentHistory ? (
+            <div className="mb-6 rounded-2xl bg-white p-8 shadow-sm">
+              <h2 className="mb-6 flex items-center text-xl font-bold text-gray-900">
+                <span className="mr-2">💰</span>
+                투자 이력
+                {organization.investmentHistory.verified && (
+                  <span className="ml-3 inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 ring-1 ring-green-600/20">
+                    <svg className="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    검증됨
+                  </span>
+                )}
+              </h2>
+
+              <div className="rounded-lg bg-gradient-to-br from-purple-50 to-indigo-50 p-6 ring-1 ring-purple-600/10">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-purple-100">
+                    <svg className="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="mb-2 text-sm font-semibold text-gray-700">투자 내역</h3>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-900">
+                      {organization.investmentHistory.manualEntry}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {!organization.investmentHistory.verified && (
+                <p className="mt-4 flex items-center text-xs text-gray-500">
+                  <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  이 정보는 자체 입력된 내용이며, 아직 검증되지 않았습니다.
+                </p>
+              )}
             </div>
           ) : null}
 

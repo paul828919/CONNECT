@@ -73,6 +73,9 @@ export async function GET(
         targetOrgScale: true,
         targetOrgRevenue: true,
 
+        // Investment History (Priority 3)
+        investmentHistory: true,
+
         // Profile metadata
         profileScore: true,
         createdAt: true,
