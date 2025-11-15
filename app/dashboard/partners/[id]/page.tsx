@@ -29,6 +29,11 @@ interface Organization {
   governmentCertifications: string[] | null;
   industryAwards: string[] | null;
   patentCount: number | null;
+  // Track Record (Priority 2)
+  businessEstablishedDate: string | null;
+  collaborationCount: number | null;
+  priorGrantWins: number | null;
+  priorGrantTotalAmount: string | null; // BigInt serialized as string
   profileScore: number;
   createdAt: string;
   _count: {
@@ -393,6 +398,103 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
                       <div>
                         <p className="text-sm font-medium text-gray-600">등록 특허</p>
                         <p className="text-2xl font-bold text-purple-600">{organization.patentCount}건</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Track Record Section (Priority 2) */}
+          {(organization.businessEstablishedDate ||
+            organization.collaborationCount ||
+            organization.priorGrantWins ||
+            organization.priorGrantTotalAmount) ? (
+            <div className="mb-6 rounded-2xl bg-white p-8 shadow-sm">
+              <h2 className="mb-6 flex items-center text-xl font-bold text-gray-900">
+                <span className="mr-2">📊</span>
+                업적 & 실적
+              </h2>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* Years in Operation */}
+                {organization.businessEstablishedDate && (
+                  <div className="rounded-lg bg-blue-50 p-4 ring-1 ring-blue-600/20">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                        <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">운영 기간</p>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {(() => {
+                            const establishedDate = new Date(organization.businessEstablishedDate);
+                            const currentDate = new Date();
+                            const years = currentDate.getFullYear() - establishedDate.getFullYear();
+                            return `${years}년`;
+                          })()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Collaboration Count */}
+                {organization.collaborationCount && organization.collaborationCount > 0 && (
+                  <div className="rounded-lg bg-green-50 p-4 ring-1 ring-green-600/20">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                        <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">협업 프로젝트</p>
+                        <p className="text-2xl font-bold text-green-600">{organization.collaborationCount}건</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Prior Grant Wins */}
+                {organization.priorGrantWins && organization.priorGrantWins > 0 && (
+                  <div className="rounded-lg bg-purple-50 p-4 ring-1 ring-purple-600/20">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
+                        <svg className="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">정부과제 수주</p>
+                        <p className="text-2xl font-bold text-purple-600">{organization.priorGrantWins}건</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Prior Grant Total Amount */}
+                {organization.priorGrantTotalAmount && (
+                  <div className="rounded-lg bg-orange-50 p-4 ring-1 ring-orange-600/20">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
+                        <svg className="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">총 수주액</p>
+                        <p className="text-2xl font-bold text-orange-600">
+                          {(() => {
+                            const amount = BigInt(organization.priorGrantTotalAmount);
+                            const hundredMillion = BigInt(100000000);
+                            const inHundredMillion = Number(amount / hundredMillion);
+                            return `${inHundredMillion}억원`;
+                          })()}
+                        </p>
                       </div>
                     </div>
                   </div>
