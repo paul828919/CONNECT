@@ -34,6 +34,14 @@ interface Organization {
   collaborationCount: number | null;
   priorGrantWins: number | null;
   priorGrantTotalAmount: string | null; // BigInt serialized as string
+  // Consortium Preferences (Priority 4)
+  desiredConsortiumFields: string[] | null;
+  desiredTechnologies: string[] | null;
+  targetPartnerTRL: number | null;
+  commercializationCapabilities: string[] | null;
+  expectedTRLLevel: number | null;
+  targetOrgScale: string | null;
+  targetOrgRevenue: string | null;
   profileScore: number;
   createdAt: string;
   _count: {
@@ -499,6 +507,159 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Consortium Preferences Section (Priority 4) */}
+          {(organization.desiredConsortiumFields?.length ||
+            organization.desiredTechnologies?.length ||
+            organization.targetPartnerTRL ||
+            organization.commercializationCapabilities?.length ||
+            organization.expectedTRLLevel ||
+            organization.targetOrgScale ||
+            organization.targetOrgRevenue) ? (
+            <div className="mb-6 rounded-2xl bg-white p-8 shadow-sm">
+              <h2 className="mb-6 flex items-center text-xl font-bold text-gray-900">
+                <span className="mr-2">🤝</span>
+                컨소시엄 선호도
+              </h2>
+
+              <div className="space-y-6">
+                {/* Desired Consortium Fields */}
+                {organization.desiredConsortiumFields && organization.desiredConsortiumFields.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 text-sm font-semibold text-gray-700">희망 연구 분야</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {organization.desiredConsortiumFields.map((field, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 ring-1 ring-blue-600/20"
+                        >
+                          <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                          {field}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Desired Technologies */}
+                {organization.desiredTechnologies && organization.desiredTechnologies.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 text-sm font-semibold text-gray-700">희망 기술 분야</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {organization.desiredTechnologies.map((tech, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center rounded-lg bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 ring-1 ring-indigo-600/20"
+                        >
+                          <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                          </svg>
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Commercialization Capabilities */}
+                {organization.commercializationCapabilities && organization.commercializationCapabilities.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 text-sm font-semibold text-gray-700">사업화 역량</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {organization.commercializationCapabilities.map((capability, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 ring-1 ring-emerald-600/20"
+                        >
+                          <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          {capability}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* TRL Levels and Target Criteria */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {/* Target Partner TRL */}
+                  {organization.targetPartnerTRL && (
+                    <div className="rounded-lg bg-violet-50 p-4 ring-1 ring-violet-600/20">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-100">
+                          <svg className="h-6 w-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">희망 파트너 TRL</p>
+                          <p className="text-2xl font-bold text-violet-600">TRL {organization.targetPartnerTRL}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Expected TRL Level */}
+                  {organization.expectedTRLLevel && (
+                    <div className="rounded-lg bg-rose-50 p-4 ring-1 ring-rose-600/20">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100">
+                          <svg className="h-6 w-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">목표 TRL</p>
+                          <p className="text-2xl font-bold text-rose-600">TRL {organization.expectedTRLLevel}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Target Organization Scale */}
+                  {organization.targetOrgScale && (
+                    <div className="rounded-lg bg-amber-50 p-4 ring-1 ring-amber-600/20">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+                          <svg className="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">희망 파트너 규모</p>
+                          <p className="text-base font-bold text-amber-600">
+                            {organization.targetOrgScale.replace('_', ' ').replace('FROM', '').replace('TO', '-').replace('UNDER', '~').replace('OVER', '+').toLowerCase()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Target Organization Revenue */}
+                  {organization.targetOrgRevenue && (
+                    <div className="rounded-lg bg-teal-50 p-4 ring-1 ring-teal-600/20">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100">
+                          <svg className="h-6 w-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">희망 파트너 매출</p>
+                          <p className="text-base font-bold text-teal-600">
+                            {organization.targetOrgRevenue.replace('_', ' ').replace('FROM', '').replace('TO', '-').replace('UNDER', '~').replace('BILLION', '억').replace('OVER', '+').toLowerCase()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ) : null}
