@@ -201,6 +201,28 @@ export default function MatchesPage() {
     fetchMatches();
   }, [session, status, router, fetchMatches]);
 
+  // Scroll restoration: Handle hash anchors after component renders
+  useEffect(() => {
+    // Only proceed if there's a hash in the URL
+    if (!window.location.hash) return;
+
+    // Wait for React to finish rendering (especially important for dynamically loaded content)
+    const timeoutId = setTimeout(() => {
+      const hash = window.location.hash.substring(1); // Remove the '#'
+      const element = document.getElementById(hash);
+
+      if (element) {
+        // Instant scroll to the target element (no animation)
+        element.scrollIntoView({
+          behavior: 'auto',
+          block: 'center', // Center the element in the viewport
+        });
+      }
+    }, 300); // 300ms delay to ensure DOM is ready
+
+    return () => clearTimeout(timeoutId);
+  }, [matches, historicalMatches]); // Re-run when matches data changes
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600 bg-green-50 border-green-200';
     if (score >= 60) return 'text-blue-600 bg-blue-50 border-blue-200';
@@ -388,6 +410,7 @@ export default function MatchesPage() {
           {matches.map((match) => (
             <div
               key={match.id}
+              id={`match-${match.id}`}
               className="rounded-lg bg-white border border-gray-200 p-6 hover:shadow-lg transition-shadow"
             >
               {/* Match Header */}
@@ -555,6 +578,9 @@ export default function MatchesPage() {
                     href={normalizeExternalUrl(match.program.announcementUrl)!}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => {
+                      window.location.hash = `match-${match.id}`;
+                    }}
                     className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     공고 확인하기
@@ -644,6 +670,7 @@ export default function MatchesPage() {
               {historicalMatches.map((match) => (
                 <div
                   key={match.id}
+                  id={`historical-match-${match.id}`}
                   className="rounded-lg bg-white border-2 border-purple-200 p-6 opacity-90 hover:opacity-100 transition-opacity"
                 >
                   {/* Match Header with EXPIRED Badge */}
@@ -803,6 +830,9 @@ export default function MatchesPage() {
                         href={normalizeExternalUrl(match.program.announcementUrl)!}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => {
+                          window.location.hash = `historical-match-${match.id}`;
+                        }}
                         className="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 border-2 border-purple-300 rounded-lg hover:bg-purple-200 transition-colors"
                       >
                         📖 2026년 준비용으로 학습
