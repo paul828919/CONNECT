@@ -80,7 +80,6 @@ export async function POST(request: NextRequest) {
       certifications,
       investmentHistory,
       patentCount,
-      hasResearchInstitute,
       // Tier 1B: Algorithm enhancement fields
       collaborationCount,
       instituteType,
@@ -89,6 +88,9 @@ export async function POST(request: NextRequest) {
       technologyReadinessLevel,
       description,
     } = body;
+
+    // Automatically derive hasResearchInstitute from certifications array
+    const hasResearchInstitute = certifications?.includes('기업부설연구소') || false;
 
     // 1. Validate required fields
     if (!type || !name || !businessNumber || !industrySector || !employeeCount) {

@@ -50,7 +50,6 @@ const organizationSchema = z.object({
     .min(0, '특허 수는 0 이상이어야 합니다')
     .max(999, '특허 수는 999 이하여야 합니다')
     .optional(),
-  hasResearchInstitute: z.boolean().optional(),
   // Tier 1B: Research institute specific fields
   instituteType: z.enum(['UNIVERSITY', 'GOVERNMENT', 'PRIVATE']).optional(),
   researchFocusAreas: z.string().optional(), // Comma-separated string
@@ -107,7 +106,6 @@ export default function CreateOrganizationProfilePage() {
     defaultValues: {
       type: 'COMPANY',
       rdExperience: false,
-      hasResearchInstitute: false,
       certifications: [],
     },
   });
@@ -495,22 +493,6 @@ export default function CreateOrganizationProfilePage() {
                       {errors.patentCount.message}
                     </p>
                   )}
-                </div>
-
-                {/* Has Research Institute */}
-                <div className="flex items-start">
-                  <input
-                    type="checkbox"
-                    id="hasResearchInstitute"
-                    {...register('hasResearchInstitute')}
-                    className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <label
-                    htmlFor="hasResearchInstitute"
-                    className="ml-2 block text-sm text-gray-700"
-                  >
-                    기업부설연구소를 보유하고 있습니다
-                  </label>
                 </div>
 
                 {/* Investment History (Simplified) */}
