@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     const userId = session.user.id;
 
-    // 2. Get organization ID from query params
+    // 2. Get organization ID and pagination params from query
     const { searchParams } = new URL(request.url);
     const organizationId = searchParams.get('organizationId');
 
@@ -55,6 +55,15 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Parse pagination parameters
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '10', 10);
+
+    // Validate and sanitize pagination
+    const currentPage = Math.max(1, page);
+    const itemsPerPage = Math.min(Math.max(1, limit), 50); // Max 50 items per page
+    const skip = (currentPage - 1) * itemsPerPage;
 
     // 3. Verify user owns this organization
     const organization = await db.organizations.findUnique({
@@ -73,19 +82,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 4. Fetch historical matches for this organization
-    const matches = await db.funding_matches.findMany({
-      where: {
-        organizationId,
-        funding_programs: {
-          status: ProgramStatus.EXPIRED, // Only show matches to EXPIRED programs
-          announcementType: AnnouncementType.R_D_PROJECT, // Only R&D funding opportunities
-          scrapingSource: {
-            not: null, // Exclude test seed data
-            notIn: ['NTIS_API'], // Exclude NTIS_API (old project data)
-          },
+    // 4. Build where clause for historical matches
+    const whereClause = {
+      organizationId,
+      funding_programs: {
+        status: ProgramStatus.EXPIRED, // Only show matches to EXPIRED programs
+        announcementType: AnnouncementType.R_D_PROJECT, // Only R&D funding opportunities
+        scrapingSource: {
+          not: null, // Exclude test seed data
+          notIn: ['NTIS_API'], // Exclude NTIS_API (old project data)
         },
       },
+    };
+
+    // 5. Count total historical matches (for pagination metadata)
+    const totalMatches = await db.funding_matches.count({
+      where: whereClause,
+    });
+
+    const totalPages = Math.ceil(totalMatches / itemsPerPage);
+
+    // 6. Fetch paginated historical matches for this organization
+    const matches = await db.funding_matches.findMany({
+      where: whereClause,
       include: {
         funding_programs: true,
       },
@@ -93,9 +112,11 @@ export async function GET(request: NextRequest) {
         { score: 'desc' },           // Highest relevance first
         { createdAt: 'desc' },       // Most recently generated first
       ],
+      skip,
+      take: itemsPerPage,
     });
 
-    // 5. Return historical matches
+    // 7. Return historical matches with pagination metadata
     const response = {
       success: true,
       type: 'historical',
@@ -122,10 +143,18 @@ export async function GET(request: NextRequest) {
         isExpired: true, // Flag for UI rendering
         createdAt: match.createdAt.toISOString(),
       })),
-      count: matches.length,
-      message: matches.length === 0
+      count: totalMatches,
+      message: totalMatches === 0
         ? '아직 생성된 과거 매칭 결과가 없습니다. "과거 기회 보기" 버튼을 클릭하여 2025년 놓친 기회를 확인하세요.'
-        : `${matches.length}개의 과거 매칭 결과를 찾았습니다.`,
+        : `${totalMatches}개의 과거 매칭 결과를 찾았습니다.`,
+      pagination: {
+        currentPage,
+        itemsPerPage,
+        totalMatches,
+        totalPages,
+        hasNextPage: currentPage < totalPages,
+        hasPreviousPage: currentPage > 1,
+      },
     };
 
     return NextResponse.json(response, { status: 200 });

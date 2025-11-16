@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface HistoricalMatchesPromptProps {
   organizationId: string;
@@ -17,6 +17,8 @@ interface HistoricalMatchesPromptProps {
  * - Clear value proposition: "Study past programs to prepare future proposals"
  * - Opt-in design: User must explicitly click to view historical matches
  * - Educational framing: "Reference" not "Apply"
+ * - OPTION B: Enhanced visual prominence (larger card, animations, hover effects)
+ * - OPTION C: Count preview in button text
  */
 export function HistoricalMatchesPrompt({
   organizationId,
@@ -24,6 +26,27 @@ export function HistoricalMatchesPrompt({
 }: HistoricalMatchesPromptProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [historicalCount, setHistoricalCount] = useState<number | null>(null);
+
+  // OPTION C: Fetch historical match count on mount
+  useEffect(() => {
+    const fetchHistoricalCount = async () => {
+      try {
+        const res = await fetch(
+          `/api/matches/historical/count?organizationId=${organizationId}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setHistoricalCount(data.count);
+        }
+      } catch (err) {
+        console.error('Error fetching historical count:', err);
+        // Silently fail - count is optional enhancement
+      }
+    };
+
+    fetchHistoricalCount();
+  }, [organizationId]);
 
   const handleGenerateHistoricalMatches = async () => {
     try {
@@ -63,9 +86,9 @@ export function HistoricalMatchesPrompt({
   };
 
   return (
-    <div className="mt-8 rounded-lg bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200 p-8">
+    <div className="mt-8 rounded-xl bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 border-2 border-purple-300 p-10 shadow-lg transform transition-all hover:scale-[1.02] hover:shadow-xl">
       {/* Icon */}
-      <div className="mx-auto w-16 h-16 mb-4 rounded-full bg-purple-100 flex items-center justify-center">
+      <div className="mx-auto w-20 h-20 mb-5 rounded-full bg-purple-100 flex items-center justify-center animate-pulse">
         <svg
           className="w-8 h-8 text-purple-600"
           fill="none"
@@ -82,7 +105,7 @@ export function HistoricalMatchesPrompt({
       </div>
 
       {/* Title and Description */}
-      <h3 className="text-xl font-bold text-gray-900 text-center mb-3">
+      <h3 className="text-2xl font-bold text-gray-900 text-center mb-3">
         📚 올해 놓친 연구과제를 확인해보세요
       </h3>
       <p className="text-gray-700 text-center mb-6 max-w-2xl mx-auto">
@@ -131,7 +154,9 @@ export function HistoricalMatchesPrompt({
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
               </svg>
-              2025년 참고용 과제 보기
+              {historicalCount !== null && historicalCount > 0
+                ? `2025년 참고용 과제 ${historicalCount}개 보기`
+                : '2025년 참고용 과제 보기'}
             </>
           )}
         </button>

@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const userId = session.user.id;
 
-    // 2. Get organization ID from query params
+    // 2. Get organization ID and pagination params from query
     const { searchParams } = new URL(request.url);
     const organizationId = searchParams.get('organizationId');
 
@@ -47,6 +47,15 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Parse pagination parameters
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '10', 10);
+
+    // Validate and sanitize pagination
+    const currentPage = Math.max(1, page);
+    const itemsPerPage = Math.min(Math.max(1, limit), 50); // Max 50 items per page
+    const skip = (currentPage - 1) * itemsPerPage;
 
     // 3. Verify user owns this organization
     const organization = await db.organizations.findUnique({
@@ -65,21 +74,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 4. Fetch matches for this organization
-    const matches = await db.funding_matches.findMany({
-      where: {
-        organizationId,
-        funding_programs: {
-          status: 'ACTIVE', // Only show matches to active programs (exclude EXPIRED)
-          announcementType: AnnouncementType.R_D_PROJECT, // Only R&D funding opportunities (exclude surveys, events, notices)
-          scrapingSource: {
-            not: null, // Exclude test seed data
-            notIn: ['NTIS_API'], // Exclude NTIS_API (old project data)
-          },
-          // Allow NULL budgets and deadlines per user guidance
-          // (Jan-March NTIS announcements may have budget/deadline TBD)
+    // 4. Build where clause for active matches
+    const whereClause = {
+      organizationId,
+      funding_programs: {
+        status: 'ACTIVE', // Only show matches to active programs (exclude EXPIRED)
+        announcementType: AnnouncementType.R_D_PROJECT, // Only R&D funding opportunities (exclude surveys, events, notices)
+        scrapingSource: {
+          not: null, // Exclude test seed data
+          notIn: ['NTIS_API'], // Exclude NTIS_API (old project data)
         },
+        // Allow NULL budgets and deadlines per user guidance
+        // (Jan-March NTIS announcements may have budget/deadline TBD)
       },
+    };
+
+    // 5. Count total matches (for pagination metadata)
+    const totalMatches = await db.funding_matches.count({
+      where: whereClause,
+    });
+
+    const totalPages = Math.ceil(totalMatches / itemsPerPage);
+
+    // 6. Fetch paginated matches for this organization
+    const matches = await db.funding_matches.findMany({
+      where: whereClause,
       include: {
         funding_programs: true,
       },
@@ -87,9 +106,11 @@ export async function GET(request: NextRequest) {
         { funding_programs: { publishedAt: 'desc' } }, // Newest announcements first
         { funding_programs: { deadline: 'asc' } },     // Then by urgency (NULLs last)
       ],
+      skip,
+      take: itemsPerPage,
     });
 
-    // 5. Return matches
+    // 7. Return matches with pagination metadata
     const response = {
       success: true,
       matches: matches.map((match: any) => ({
@@ -112,6 +133,14 @@ export async function GET(request: NextRequest) {
         saved: match.saved,
         createdAt: match.createdAt.toISOString(),
       })),
+      pagination: {
+        currentPage,
+        itemsPerPage,
+        totalMatches,
+        totalPages,
+        hasNextPage: currentPage < totalPages,
+        hasPreviousPage: currentPage > 1,
+      },
     };
 
     return NextResponse.json(response, { status: 200 });
