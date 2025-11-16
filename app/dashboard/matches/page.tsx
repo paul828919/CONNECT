@@ -85,6 +85,14 @@ export default function MatchesPage() {
   const [requiredInvestmentAmount, setRequiredInvestmentAmount] = useState<number | undefined>();
   // Stage 2.1: Force regeneration state
   const [isRegenerating, setIsRegenerating] = useState(false);
+  // Pagination state (for both active and historical matches)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalMatches, setTotalMatches] = useState(0);
+  const [historicalCurrentPage, setHistoricalCurrentPage] = useState(1);
+  const [historicalTotalPages, setHistoricalTotalPages] = useState(1);
+  const [historicalTotalMatches, setHistoricalTotalMatches] = useState(0);
+  const itemsPerPage = 10;
 
   const fetchMatches = useCallback(async () => {
     try {
@@ -97,13 +105,27 @@ export default function MatchesPage() {
         return;
       }
 
-      const res = await fetch(`/api/matches?organizationId=${orgId}`);
+      const res = await fetch(
+        `/api/matches?organizationId=${orgId}&page=${currentPage}&limit=${itemsPerPage}`
+      );
       if (!res.ok) {
         throw new Error('Failed to fetch matches');
       }
 
       const data = await res.json();
       setMatches(data.matches || []);
+
+      // Update pagination metadata
+      if (data.pagination) {
+        setTotalPages(data.pagination.totalPages);
+        setTotalMatches(data.pagination.totalMatches);
+      }
+
+      // OPTION A: Auto-load historical matches when no active matches found
+      if (!data.matches || data.matches.length === 0) {
+        console.log('No active matches found. Auto-loading historical matches...');
+        await fetchHistoricalMatches();
+      }
 
       // Phase 4: Check if any matches need investment verification
       const matchesNeedingInvestment = (data.matches || []).filter(
@@ -136,7 +158,7 @@ export default function MatchesPage() {
     } finally {
       setLoading(false);
     }
-  }, [session]);
+  }, [session, currentPage, itemsPerPage]);
 
   const fetchHistoricalMatches = useCallback(async () => {
     try {
@@ -145,7 +167,9 @@ export default function MatchesPage() {
         return;
       }
 
-      const res = await fetch(`/api/matches/historical?organizationId=${orgId}`);
+      const res = await fetch(
+        `/api/matches/historical?organizationId=${orgId}&page=${historicalCurrentPage}&limit=${itemsPerPage}`
+      );
       if (!res.ok) {
         throw new Error('Failed to fetch historical matches');
       }
@@ -153,10 +177,56 @@ export default function MatchesPage() {
       const data = await res.json();
       setHistoricalMatches(data.matches || []);
       setShowHistorical(true);
+
+      // Update pagination metadata for historical matches
+      if (data.pagination) {
+        setHistoricalTotalPages(data.pagination.totalPages);
+        setHistoricalTotalMatches(data.pagination.totalMatches);
+      }
     } catch (err) {
       console.error('Error fetching historical matches:', err);
     }
-  }, [session]);
+  }, [session, historicalCurrentPage, itemsPerPage]);
+
+  // Pagination handlers for active matches
+  const handlePageClick = (pageNum: number) => {
+    setCurrentPage(pageNum);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Pagination handlers for historical matches
+  const handleHistoricalPageClick = (pageNum: number) => {
+    setHistoricalCurrentPage(pageNum);
+    document.getElementById('historical-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleHistoricalPreviousPage = () => {
+    if (historicalCurrentPage > 1) {
+      setHistoricalCurrentPage(historicalCurrentPage - 1);
+      document.getElementById('historical-section')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleHistoricalNextPage = () => {
+    if (historicalCurrentPage < historicalTotalPages) {
+      setHistoricalCurrentPage(historicalCurrentPage + 1);
+      document.getElementById('historical-section')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   // Stage 2.1: Force regenerate matches (clears cache + deletes old matches)
   const handleRegenerateMatches = useCallback(async () => {
@@ -180,7 +250,8 @@ export default function MatchesPage() {
         throw new Error(errorData.error || 'Failed to regenerate matches');
       }
 
-      // Success - reload matches
+      // Success - reload matches (reset to page 1)
+      setCurrentPage(1);
       await fetchMatches();
     } catch (err) {
       console.error('Error regenerating matches:', err);
@@ -200,6 +271,13 @@ export default function MatchesPage() {
 
     fetchMatches();
   }, [session, status, router, fetchMatches]);
+
+  // Refetch historical matches when historical page changes
+  useEffect(() => {
+    if (showHistorical && historicalCurrentPage > 1) {
+      fetchHistoricalMatches();
+    }
+  }, [historicalCurrentPage, showHistorical, fetchHistoricalMatches]);
 
   // Scroll restoration: Handle hash anchors after component renders
   useEffect(() => {
@@ -635,9 +713,72 @@ export default function MatchesPage() {
           ))}
         </div>
 
+        {/* Pagination Controls for Active Matches */}
+        {matches.length > 0 && totalPages > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-2">
+            <button
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className="px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:hover:bg-white"
+            >
+              ← 이전
+            </button>
+
+            <div className="flex gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((pageNum) => {
+                  // Show: first page, last page, current page, and pages within 1 of current
+                  return (
+                    pageNum === 1 ||
+                    pageNum === totalPages ||
+                    Math.abs(pageNum - currentPage) <= 1
+                  );
+                })
+                .map((pageNum, idx, arr) => {
+                  // Add ellipsis if there's a gap
+                  const prevPageNum = arr[idx - 1];
+                  const showEllipsis = prevPageNum && pageNum - prevPageNum > 1;
+
+                  return (
+                    <div key={pageNum} className="flex items-center gap-1">
+                      {showEllipsis && (
+                        <span className="px-2 text-gray-400">...</span>
+                      )}
+                      <button
+                        onClick={() => handlePageClick(pageNum)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                          currentPage === pageNum
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
+
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:hover:bg-white"
+            >
+              다음 →
+            </button>
+          </div>
+        )}
+
+        {/* Pagination Info */}
+        {matches.length > 0 && totalMatches > 0 && (
+          <div className="mt-4 text-center text-sm text-gray-600">
+            전체 {totalMatches}개 중 {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalMatches)}개 표시
+          </div>
+        )}
+
         {/* Historical Matches Section (with visual distinction) */}
         {showHistorical && historicalMatches.length > 0 && (
-          <div className="mt-12">
+          <div className="mt-12" id="historical-section">
             {/* Section Header with Clear Separation */}
             <div className="mb-6 p-4 bg-purple-50 border-l-4 border-purple-600 rounded">
               <div className="flex items-center gap-3">
@@ -886,6 +1027,67 @@ export default function MatchesPage() {
                 </div>
               ))}
             </div>
+
+            {/* Pagination Controls for Historical Matches */}
+            {historicalTotalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-2">
+                <button
+                  onClick={handleHistoricalPreviousPage}
+                  disabled={historicalCurrentPage === 1}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white border border-purple-300 text-purple-700 hover:bg-purple-50 disabled:hover:bg-white"
+                >
+                  ← 이전
+                </button>
+
+                <div className="flex gap-1">
+                  {Array.from({ length: historicalTotalPages }, (_, i) => i + 1)
+                    .filter((pageNum) => {
+                      return (
+                        pageNum === 1 ||
+                        pageNum === historicalTotalPages ||
+                        Math.abs(pageNum - historicalCurrentPage) <= 1
+                      );
+                    })
+                    .map((pageNum, idx, arr) => {
+                      const prevPageNum = arr[idx - 1];
+                      const showEllipsis = prevPageNum && pageNum - prevPageNum > 1;
+
+                      return (
+                        <div key={pageNum} className="flex items-center gap-1">
+                          {showEllipsis && (
+                            <span className="px-2 text-gray-400">...</span>
+                          )}
+                          <button
+                            onClick={() => handleHistoricalPageClick(pageNum)}
+                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                              historicalCurrentPage === pageNum
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-white border border-purple-300 text-purple-700 hover:bg-purple-50'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                <button
+                  onClick={handleHistoricalNextPage}
+                  disabled={historicalCurrentPage === historicalTotalPages}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white border border-purple-300 text-purple-700 hover:bg-purple-50 disabled:hover:bg-white"
+                >
+                  다음 →
+                </button>
+              </div>
+            )}
+
+            {/* Pagination Info for Historical */}
+            {historicalTotalMatches > 0 && (
+              <div className="mt-4 text-center text-sm text-purple-700">
+                전체 {historicalTotalMatches}개 중 {((historicalCurrentPage - 1) * itemsPerPage) + 1} - {Math.min(historicalCurrentPage * itemsPerPage, historicalTotalMatches)}개 표시
+              </div>
+            )}
 
             {/* Info Box at Bottom */}
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
