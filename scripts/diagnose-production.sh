@@ -65,7 +65,7 @@ app2_health=$(ssh_exec "docker exec connect_app2 curl -s http://localhost:3002/a
 echo "$app2_health"
 
 echo -e "\n${YELLOW}Testing public endpoint (HTTPS):${NC}"
-public_health=$(ssh_exec "curl -sk https://221.164.102.253/api/health 2>&1" || echo "FAILED")
+public_health=$(ssh_exec "curl -sk https://59.21.170.6/api/health 2>&1" || echo "FAILED")
 echo "$public_health"
 
 # ============================================
@@ -127,7 +127,7 @@ echo -e "\n${YELLOW}Nginx/HAProxy containers:${NC}"
 ssh_exec "docker ps | grep -iE 'nginx|haproxy|caddy|traefik' || echo 'No reverse proxy container found'"
 
 echo -e "\n${YELLOW}SSL Certificate status:${NC}"
-ssh_exec "echo | openssl s_client -connect 221.164.102.253:443 -servername 221.164.102.253 2>/dev/null | openssl x509 -noout -subject -dates 2>/dev/null || echo 'SSL check failed'"
+ssh_exec "echo | openssl s_client -connect 59.21.170.6:443 -servername 59.21.170.6 2>/dev/null | openssl x509 -noout -subject -dates 2>/dev/null || echo 'SSL check failed'"
 
 # ============================================
 # 7. DATABASE CONNECTIVITY

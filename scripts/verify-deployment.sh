@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SERVER="221.164.102.253"
+SERVER="59.21.170.6"
 SSH_KEY="${HOME}/.ssh/id_ed25519_connect"
 SERVER_USER="user"
 

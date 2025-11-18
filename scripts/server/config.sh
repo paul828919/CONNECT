@@ -11,14 +11,14 @@
 
 # SSH host alias (defined in ~/.ssh/config)
 # User should configure: Host connect-server
-#   HostName 221.164.102.253
+#   HostName 59.21.170.6
 #   User user
 #   IdentityFile ~/.ssh/id_rsa
-export SSH_HOST="221.164.102.253"
+export SSH_HOST="59.21.170.6"
 
 # Fallback direct connection (if ~/.ssh/config not configured)
 export SSH_USER="user"
-export SSH_IP="221.164.102.253"
+export SSH_IP="59.21.170.6"
 export SSH_PW="iw237877^^"
 
 # ============================================

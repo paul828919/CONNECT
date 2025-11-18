@@ -1,7 +1,7 @@
 #!/bin/bash
 # Quick verification script to check if OAuth fix is working
 
-SERVER="user@221.164.102.253"
+SERVER="user@59.21.170.6"
 SSHPASS="iw237877^^"
 
 echo "🔍 Checking Prisma Client in production..."

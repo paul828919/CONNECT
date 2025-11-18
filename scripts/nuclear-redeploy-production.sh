@@ -20,7 +20,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-PROD_SERVER="221.164.102.253"
+PROD_SERVER="59.21.170.6"
 PROD_USER="user"
 SSH_KEY="$HOME/.ssh/id_ed25519_connect"
 PROD_DIR="/opt/connect"

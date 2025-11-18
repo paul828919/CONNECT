@@ -14,7 +14,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # Configuration
-REMOTE_SERVER="user@221.164.102.253"
+REMOTE_SERVER="user@59.21.170.6"
 SERVER_PASSWORD="${CONNECT_SERVER_PASSWORD:-}"
 PROJECT_DIR="/opt/connect"
 
@@ -112,7 +112,7 @@ else
 fi
 
 echo -e "${YELLOW}Testing public endpoint...${NC}"
-PUBLIC_HEALTH=$(ssh_exec "curl -sf https://221.164.102.253/api/health 2>&1" || echo "FAIL")
+PUBLIC_HEALTH=$(ssh_exec "curl -sf https://59.21.170.6/api/health 2>&1" || echo "FAIL")
 if echo "$PUBLIC_HEALTH" | grep -q "\"status\":\"ok\""; then
     echo -e "${GREEN}✅ Public endpoint health check passed${NC}"
 else
@@ -134,6 +134,6 @@ echo "  2. View detailed diagnostics: ./scripts/diagnose-production.sh"
 echo "  3. Monitor logs: ssh $REMOTE_SERVER 'docker logs -f connect_app1'"
 echo ""
 echo -e "${BLUE}📊 Quick Health Check:${NC}"
-echo "  curl -k https://221.164.102.253/api/health | jq"
+echo "  curl -k https://59.21.170.6/api/health | jq"
 echo ""
 
