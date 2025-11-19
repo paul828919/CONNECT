@@ -159,7 +159,7 @@ export default function AdminFeedbackDashboard() {
       return res.json();
     },
     onSuccess: () => {
-      toast.success('Feedback updated successfully');
+      toast.success('피드백이 성공적으로 업데이트되었습니다');
       queryClient.invalidateQueries({ queryKey: ['admin-feedback'] });
       setSelectedFeedback(null);
     },
@@ -191,11 +191,11 @@ export default function AdminFeedbackDashboard() {
   // Get category icon and color
   const getCategoryDisplay = (category: string) => {
     const displays = {
-      BUG: { icon: Bug, label: 'Bug Report', color: 'bg-red-500' },
-      FEATURE_REQUEST: { icon: Lightbulb, label: 'Feature Request', color: 'bg-blue-500' },
-      POSITIVE: { icon: ThumbsUp, label: 'Positive Feedback', color: 'bg-green-500' },
-      COMPLAINT: { icon: AlertTriangle, label: 'Complaint', color: 'bg-orange-500' },
-      QUESTION: { icon: HelpCircle, label: 'Question', color: 'bg-purple-500' },
+      BUG: { icon: Bug, label: '버그 신고', color: 'bg-red-500' },
+      FEATURE_REQUEST: { icon: Lightbulb, label: '기능 요청', color: 'bg-blue-500' },
+      POSITIVE: { icon: ThumbsUp, label: '긍정적 피드백', color: 'bg-green-500' },
+      COMPLAINT: { icon: AlertTriangle, label: '불만사항', color: 'bg-orange-500' },
+      QUESTION: { icon: HelpCircle, label: '문의', color: 'bg-purple-500' },
     };
     return displays[category as keyof typeof displays];
   };
@@ -239,35 +239,35 @@ export default function AdminFeedbackDashboard() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold">Feedback Management</h1>
-          <p className="text-muted-foreground">View and manage user feedback submissions</p>
+          <h1 className="text-3xl font-bold">피드백 관리</h1>
+          <p className="text-muted-foreground">사용자 피드백 제출 내역 조회 및 관리</p>
         </div>
 
         {/* Stats Overview */}
         {data && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
             <Card className="p-4">
-              <div className="text-sm text-muted-foreground">New</div>
+              <div className="text-sm text-muted-foreground">신규</div>
               <div className="text-2xl font-bold text-blue-600">{data.stats.NEW}</div>
             </Card>
             <Card className="p-4">
-              <div className="text-sm text-muted-foreground">In Review</div>
+              <div className="text-sm text-muted-foreground">검토 중</div>
               <div className="text-2xl font-bold text-purple-600">{data.stats.IN_REVIEW}</div>
             </Card>
             <Card className="p-4">
-              <div className="text-sm text-muted-foreground">Planned</div>
+              <div className="text-sm text-muted-foreground">계획됨</div>
               <div className="text-2xl font-bold text-indigo-600">{data.stats.PLANNED}</div>
             </Card>
             <Card className="p-4">
-              <div className="text-sm text-muted-foreground">In Progress</div>
+              <div className="text-sm text-muted-foreground">진행 중</div>
               <div className="text-2xl font-bold text-yellow-600">{data.stats.IN_PROGRESS}</div>
             </Card>
             <Card className="p-4">
-              <div className="text-sm text-muted-foreground">Resolved</div>
+              <div className="text-sm text-muted-foreground">해결됨</div>
               <div className="text-2xl font-bold text-green-600">{data.stats.RESOLVED}</div>
             </Card>
             <Card className="p-4">
-              <div className="text-sm text-muted-foreground">Closed</div>
+              <div className="text-sm text-muted-foreground">종료됨</div>
               <div className="text-2xl font-bold text-gray-600">{data.stats.CLOSED}</div>
             </Card>
           </div>
@@ -281,7 +281,7 @@ export default function AdminFeedbackDashboard() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search feedback..."
+                placeholder="피드백 검색..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -300,12 +300,12 @@ export default function AdminFeedbackDashboard() {
               }}
               className="border rounded-lg px-3 py-2 text-sm"
             >
-              <option value="">All Categories</option>
-              <option value="BUG">Bug Report</option>
-              <option value="FEATURE_REQUEST">Feature Request</option>
-              <option value="POSITIVE">Positive Feedback</option>
-              <option value="COMPLAINT">Complaint</option>
-              <option value="QUESTION">Question</option>
+              <option value="">모든 카테고리</option>
+              <option value="BUG">버그 신고</option>
+              <option value="FEATURE_REQUEST">기능 요청</option>
+              <option value="POSITIVE">긍정적 피드백</option>
+              <option value="COMPLAINT">불만사항</option>
+              <option value="QUESTION">문의</option>
             </select>
 
             {/* Priority Filter */}
@@ -317,11 +317,11 @@ export default function AdminFeedbackDashboard() {
               }}
               className="border rounded-lg px-3 py-2 text-sm"
             >
-              <option value="">All Priorities</option>
-              <option value="CRITICAL">Critical</option>
-              <option value="HIGH">High</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="LOW">Low</option>
+              <option value="">모든 우선순위</option>
+              <option value="CRITICAL">긴급</option>
+              <option value="HIGH">높음</option>
+              <option value="MEDIUM">보통</option>
+              <option value="LOW">낮음</option>
             </select>
 
             {/* Status Filter */}
@@ -333,13 +333,13 @@ export default function AdminFeedbackDashboard() {
               }}
               className="border rounded-lg px-3 py-2 text-sm"
             >
-              <option value="">All Statuses</option>
-              <option value="NEW">New</option>
-              <option value="IN_REVIEW">In Review</option>
-              <option value="PLANNED">Planned</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="RESOLVED">Resolved</option>
-              <option value="CLOSED">Closed</option>
+              <option value="">모든 상태</option>
+              <option value="NEW">신규</option>
+              <option value="IN_REVIEW">검토 중</option>
+              <option value="PLANNED">계획됨</option>
+              <option value="IN_PROGRESS">진행 중</option>
+              <option value="RESOLVED">해결됨</option>
+              <option value="CLOSED">종료됨</option>
             </select>
           </div>
         </Card>
@@ -348,10 +348,10 @@ export default function AdminFeedbackDashboard() {
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <MessageSquare className="h-5 w-5 mr-2 text-blue-500" />
-            Feedback Submissions
+            피드백 제출 목록
             {data && (
               <span className="ml-2 text-sm font-normal text-muted-foreground">
-                ({data.pagination.totalCount} total)
+                (총 {data.pagination.totalCount}건)
               </span>
             )}
           </h2>
@@ -370,13 +370,13 @@ export default function AdminFeedbackDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>날짜</TableHead>
+                      <TableHead>카테고리</TableHead>
+                      <TableHead>제목</TableHead>
+                      <TableHead>사용자</TableHead>
+                      <TableHead>우선순위</TableHead>
+                      <TableHead>상태</TableHead>
+                      <TableHead>작업</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -404,7 +404,7 @@ export default function AdminFeedbackDashboard() {
                             {feedback.title}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {feedback.user?.name || 'Anonymous'}
+                            {feedback.user?.name || '익명'}
                             {feedback.user?.email && (
                               <div className="text-xs">{feedback.user.email}</div>
                             )}
@@ -417,7 +417,7 @@ export default function AdminFeedbackDashboard() {
                               variant="outline"
                               onClick={() => handleViewDetail(feedback)}
                             >
-                              View
+                              보기
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -430,8 +430,8 @@ export default function AdminFeedbackDashboard() {
               {/* Pagination */}
               <div className="flex items-center justify-between mt-4 pt-4 border-t">
                 <div className="text-sm text-muted-foreground">
-                  Page {data.pagination.page} of {data.pagination.totalPages} •{' '}
-                  {data.pagination.totalCount} total feedback
+                  {data.pagination.page}/{data.pagination.totalPages} 페이지 •{' '}
+                  총 {data.pagination.totalCount}건의 피드백
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -441,7 +441,7 @@ export default function AdminFeedbackDashboard() {
                     disabled={page === 1}
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Previous
+                    이전
                   </Button>
                   <Button
                     size="sm"
@@ -449,14 +449,14 @@ export default function AdminFeedbackDashboard() {
                     onClick={() => setPage((p) => p + 1)}
                     disabled={!data.pagination.hasMore}
                   >
-                    Next
+                    다음
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-12">No feedback found</p>
+            <p className="text-muted-foreground text-center py-12">피드백이 없습니다</p>
           )}
         </Card>
 
@@ -465,7 +465,7 @@ export default function AdminFeedbackDashboard() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card className="max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6">
               <div className="flex justify-between items-start mb-4">
-                <h2 className="text-2xl font-bold">Feedback Detail</h2>
+                <h2 className="text-2xl font-bold">피드백 상세</h2>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -479,7 +479,7 @@ export default function AdminFeedbackDashboard() {
                 {/* Metadata */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-sm text-muted-foreground">Category</div>
+                    <div className="text-sm text-muted-foreground">카테고리</div>
                     <div className="mt-1">
                       {(() => {
                         const categoryDisplay = getCategoryDisplay(selectedFeedback.category);
@@ -494,15 +494,15 @@ export default function AdminFeedbackDashboard() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Submitted</div>
+                    <div className="text-sm text-muted-foreground">제출일</div>
                     <div className="mt-1">
                       {new Date(selectedFeedback.createdAt).toLocaleString('ko-KR')}
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">User</div>
+                    <div className="text-sm text-muted-foreground">사용자</div>
                     <div className="mt-1">
-                      {selectedFeedback.user?.name || 'Anonymous'}
+                      {selectedFeedback.user?.name || '익명'}
                       {selectedFeedback.user?.email && (
                         <div className="text-sm text-muted-foreground">
                           {selectedFeedback.user.email}
@@ -511,21 +511,21 @@ export default function AdminFeedbackDashboard() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-muted-foreground">Page</div>
+                    <div className="text-sm text-muted-foreground">페이지</div>
                     <div className="mt-1 text-sm">
-                      {selectedFeedback.page || 'Not specified'}
+                      {selectedFeedback.page || '미지정'}
                     </div>
                   </div>
                 </div>
 
                 {/* Title & Description */}
                 <div>
-                  <div className="text-sm text-muted-foreground">Title</div>
+                  <div className="text-sm text-muted-foreground">제목</div>
                   <div className="mt-1 font-semibold text-lg">{selectedFeedback.title}</div>
                 </div>
 
                 <div>
-                  <div className="text-sm text-muted-foreground">Description</div>
+                  <div className="text-sm text-muted-foreground">설명</div>
                   <div className="mt-1 p-3 bg-gray-50 rounded-lg whitespace-pre-wrap">
                     {selectedFeedback.description}
                   </div>
@@ -533,46 +533,46 @@ export default function AdminFeedbackDashboard() {
 
                 {/* Admin Controls */}
                 <div className="border-t pt-4">
-                  <h3 className="font-semibold mb-3">Admin Controls</h3>
+                  <h3 className="font-semibold mb-3">관리자 컨트롤</h3>
 
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label className="text-sm text-muted-foreground">Priority</label>
+                      <label className="text-sm text-muted-foreground">우선순위</label>
                       <select
                         value={editingPriority}
                         onChange={(e) => setEditingPriority(e.target.value)}
                         className="w-full mt-1 border rounded-lg px-3 py-2"
                       >
-                        <option value="CRITICAL">Critical</option>
-                        <option value="HIGH">High</option>
-                        <option value="MEDIUM">Medium</option>
-                        <option value="LOW">Low</option>
+                        <option value="CRITICAL">긴급</option>
+                        <option value="HIGH">높음</option>
+                        <option value="MEDIUM">보통</option>
+                        <option value="LOW">낮음</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="text-sm text-muted-foreground">Status</label>
+                      <label className="text-sm text-muted-foreground">상태</label>
                       <select
                         value={editingStatus}
                         onChange={(e) => setEditingStatus(e.target.value)}
                         className="w-full mt-1 border rounded-lg px-3 py-2"
                       >
-                        <option value="NEW">New</option>
-                        <option value="IN_REVIEW">In Review</option>
-                        <option value="PLANNED">Planned</option>
-                        <option value="IN_PROGRESS">In Progress</option>
-                        <option value="RESOLVED">Resolved</option>
-                        <option value="CLOSED">Closed</option>
+                        <option value="NEW">신규</option>
+                        <option value="IN_REVIEW">검토 중</option>
+                        <option value="PLANNED">계획됨</option>
+                        <option value="IN_PROGRESS">진행 중</option>
+                        <option value="RESOLVED">해결됨</option>
+                        <option value="CLOSED">종료됨</option>
                       </select>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-sm text-muted-foreground">Admin Notes</label>
+                    <label className="text-sm text-muted-foreground">관리자 메모</label>
                     <Textarea
                       value={editingNotes}
                       onChange={(e) => setEditingNotes(e.target.value)}
-                      placeholder="Add internal notes about this feedback..."
+                      placeholder="이 피드백에 대한 내부 메모를 추가하세요..."
                       className="mt-1"
                       rows={4}
                     />
@@ -584,7 +584,7 @@ export default function AdminFeedbackDashboard() {
                       onClick={() => setSelectedFeedback(null)}
                       disabled={updateMutation.isPending}
                     >
-                      Cancel
+                      취소
                     </Button>
                     <Button
                       onClick={handleUpdate}
@@ -593,10 +593,10 @@ export default function AdminFeedbackDashboard() {
                       {updateMutation.isPending ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Updating...
+                          업데이트 중...
                         </>
                       ) : (
-                        'Update Feedback'
+                        '피드백 업데이트'
                       )}
                     </Button>
                   </div>

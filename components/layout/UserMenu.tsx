@@ -53,6 +53,9 @@ export default function UserMenu() {
             <DropdownMenuItem onClick={() => router.push('/admin/eligibility-review')}>
               자격 요건 검토
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/dashboard/admin/feedback')}>
+              피드백 대시보드
+            </DropdownMenuItem>
           </>
         )}
         <DropdownMenuSeparator />

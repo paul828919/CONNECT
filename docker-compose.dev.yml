@@ -12,6 +12,8 @@ services:
       dockerfile: Dockerfile.dev
     container_name: connect_dev_app
     restart: unless-stopped
+    env_file:
+      - .env.local
     ports:
       - "3000:3000"
     environment:
@@ -41,6 +43,16 @@ services:
       AI_CIRCUIT_BREAKER_WINDOW: ${AI_CIRCUIT_BREAKER_WINDOW:-60000}
       AI_CIRCUIT_BREAKER_TIMEOUT: ${AI_CIRCUIT_BREAKER_TIMEOUT:-30000}
       AI_CIRCUIT_BREAKER_HALF_OPEN_MAX: ${AI_CIRCUIT_BREAKER_HALF_OPEN_MAX:-1}
+      # Email Configuration (AWS SES)
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Connect}
+      SMTP_REPLY_TO: ${SMTP_REPLY_TO}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
     volumes:
       - .:/app
       - /app/node_modules
