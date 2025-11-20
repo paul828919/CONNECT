@@ -217,6 +217,40 @@ export const INDUSTRY_TAXONOMY = {
       },
     },
   },
+
+  CULTURAL: {
+    name: '문화/콘텐츠',
+    keywords: ['문화', '콘텐츠', '문화산업', '문화예술', 'CULTURAL', 'CONTENT'],
+    subSectors: {
+      CONTENT: {
+        name: '콘텐츠',
+        keywords: ['콘텐츠', '게임', '방송', '영상', '웹툰', '애니메이션', 'OTT', '미디어', '음악', '엔터테인먼트', 'K-POP', '드라마', '영화', '공연'],
+      },
+      CULTURAL_HERITAGE: {
+        name: '문화재/문화유산',
+        keywords: ['문화재', '문화유산', '전통문화', '문화보존', '문화재보호', '유산', '박물관', '전시'],
+      },
+      TOURISM: {
+        name: '관광',
+        keywords: ['관광', '관광산업', '문화관광', '관광콘텐츠', 'K-관광', '지역관광', '체험관광'],
+      },
+      SPORTS: {
+        name: '체육/스포츠',
+        keywords: ['체육', '스포츠', '스포츠산업', 'e스포츠', '건강', '피트니스', '레저'],
+      },
+    },
+  },
+
+  OTHER: {
+    name: '기타',
+    keywords: ['기타', '복합', '융합', 'OTHER'],
+    subSectors: {
+      GENERAL: {
+        name: '일반',
+        keywords: ['일반', '범용', '공통', '다분야'],
+      },
+    },
+  },
 } as const;
 
 /**
@@ -255,6 +289,8 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     CONSTRUCTION: 0.6, // Smart construction
     TRANSPORTATION: 0.8, // Autonomous vehicles
     DEFENSE: 0.2, // Military ICT (low relevance for most ICT companies)
+    CULTURAL: 0.8, // Digital content, OTT, gaming, streaming
+    OTHER: 0.5, // Medium relevance
   },
   MANUFACTURING: {
     ICT: 0.8,
@@ -267,6 +303,8 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     CONSTRUCTION: 0.6,
     TRANSPORTATION: 0.7, // Automotive
     DEFENSE: 0.4, // Defense manufacturing (specialized, low general relevance)
+    CULTURAL: 0.3, // Media production hardware
+    OTHER: 0.5, // Medium relevance
   },
   BIO_HEALTH: {
     ICT: 0.7,
@@ -279,6 +317,8 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     CONSTRUCTION: 0.3,
     TRANSPORTATION: 0.4,
     DEFENSE: 0.1, // Military medicine only (very low general relevance)
+    CULTURAL: 0.2, // Sports health, wellness
+    OTHER: 0.5, // Medium relevance
   },
   ENERGY: {
     ICT: 0.7,
@@ -291,6 +331,8 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     CONSTRUCTION: 0.5,
     TRANSPORTATION: 0.7, // EV
     DEFENSE: 0.1, // Military energy systems (very low general relevance)
+    CULTURAL: 0.2, // Minimal overlap
+    OTHER: 0.5, // Medium relevance
   },
   ENVIRONMENT: {
     ICT: 0.6,
@@ -303,6 +345,8 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     CONSTRUCTION: 0.6,
     TRANSPORTATION: 0.6,
     DEFENSE: 0.0, // No relevance
+    CULTURAL: 0.3, // Cultural heritage preservation
+    OTHER: 0.5, // Medium relevance
   },
   AGRICULTURE: {
     ICT: 0.7,
@@ -315,6 +359,8 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     CONSTRUCTION: 0.3,
     TRANSPORTATION: 0.3,
     DEFENSE: 0.0, // No relevance
+    CULTURAL: 0.2, // Culinary tourism
+    OTHER: 0.5, // Medium relevance
   },
   MARINE: {
     ICT: 0.6,
@@ -327,6 +373,8 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     CONSTRUCTION: 0.4,
     TRANSPORTATION: 0.5,
     DEFENSE: 0.3, // Naval systems (specialized, low general relevance)
+    CULTURAL: 0.2, // Maritime museums
+    OTHER: 0.5, // Medium relevance
   },
   CONSTRUCTION: {
     ICT: 0.6,
@@ -339,6 +387,8 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     CONSTRUCTION: 1.0,
     TRANSPORTATION: 0.5,
     DEFENSE: 0.2, // Military facilities (specialized, low general relevance)
+    CULTURAL: 0.4, // Cultural facilities, museums
+    OTHER: 0.5, // Medium relevance
   },
   TRANSPORTATION: {
     ICT: 0.8,
@@ -351,6 +401,8 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     CONSTRUCTION: 0.5,
     TRANSPORTATION: 1.0,
     DEFENSE: 0.3, // Military vehicles (specialized, low general relevance)
+    CULTURAL: 0.5, // Tourism transportation
+    OTHER: 0.5, // Medium relevance
   },
 
   DEFENSE: {
@@ -364,6 +416,38 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     CONSTRUCTION: 0.2,
     TRANSPORTATION: 0.3,
     DEFENSE: 1.0,
+    CULTURAL: 0.1, // Military museums only
+    OTHER: 0.5, // Medium relevance
+  },
+
+  CULTURAL: {
+    ICT: 0.8, // Digital content, OTT, gaming, streaming
+    MANUFACTURING: 0.3, // Media production hardware
+    BIO_HEALTH: 0.2, // Sports health, wellness
+    ENERGY: 0.2, // Minimal overlap
+    ENVIRONMENT: 0.3, // Cultural heritage preservation
+    AGRICULTURE: 0.2, // Culinary tourism
+    MARINE: 0.2, // Maritime museums
+    CONSTRUCTION: 0.4, // Cultural facilities, museums
+    TRANSPORTATION: 0.5, // Tourism transportation
+    DEFENSE: 0.1, // Military museums only
+    CULTURAL: 1.0,
+    OTHER: 0.5, // Medium relevance
+  },
+
+  OTHER: {
+    ICT: 0.5,
+    MANUFACTURING: 0.5,
+    BIO_HEALTH: 0.5,
+    ENERGY: 0.5,
+    ENVIRONMENT: 0.5,
+    AGRICULTURE: 0.5,
+    MARINE: 0.5,
+    CONSTRUCTION: 0.5,
+    TRANSPORTATION: 0.5,
+    DEFENSE: 0.5,
+    CULTURAL: 0.5,
+    OTHER: 1.0,
   },
 };
 

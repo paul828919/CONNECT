@@ -21,7 +21,7 @@ const organizationEditSchema = z.object({
     .optional(),
   // Tier 1A: Company-specific eligibility fields
   revenueRange: z
-    .enum(['UNDER_1B', 'FROM_1B_TO_10B', 'FROM_10B_TO_50B', 'FROM_50B_TO_100B', 'OVER_100B'])
+    .enum(['NONE', 'UNDER_1B', 'FROM_1B_TO_10B', 'FROM_10B_TO_50B', 'FROM_50B_TO_100B', 'OVER_100B'])
     .optional()
     .nullable(),
   businessStructure: z.enum(['CORPORATION', 'SOLE_PROPRIETOR']).optional().nullable(),
@@ -83,6 +83,8 @@ const industrySectors = [
   { value: 'MARINE', label: '해양수산' },
   { value: 'CONSTRUCTION', label: '건설' },
   { value: 'TRANSPORTATION', label: '교통/운송' },
+  { value: 'DEFENSE', label: '방위/국방' },
+  { value: 'CULTURAL', label: '문화/콘텐츠' },
   { value: 'OTHER', label: '기타' },
 ];
 
@@ -420,6 +422,7 @@ export default function EditOrganizationProfilePage() {
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
                   >
                     <option value="">선택해주세요</option>
+                    <option value="NONE">없음 (비영리기관)</option>
                     <option value="UNDER_1B">10억원 미만</option>
                     <option value="FROM_1B_TO_10B">10억원~100억원</option>
                     <option value="FROM_10B_TO_50B">100억원~500억원</option>

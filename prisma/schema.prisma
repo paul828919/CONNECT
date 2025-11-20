@@ -790,6 +790,7 @@ enum ProgramStatus {
 }
 
 enum RevenueRange {
+  NONE
   UNDER_1B
   FROM_1B_TO_10B
   FROM_10B_TO_50B
