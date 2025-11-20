@@ -17,6 +17,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      TZ: Asia/Seoul
       NODE_ENV: development
       INSTANCE_ID: app1
       DATABASE_URL: postgresql://connect:connect_dev_password@postgres:5432/connect?schema=public
@@ -77,6 +78,7 @@ services:
     container_name: connect_dev_postgres
     restart: unless-stopped
     environment:
+      TZ: Asia/Seoul
       POSTGRES_DB: connect
       POSTGRES_USER: connect
       POSTGRES_PASSWORD: connect_dev_password
@@ -99,6 +101,8 @@ services:
     container_name: connect_dev_redis_cache
     ports:
       - "6379:6379"
+    environment:
+      TZ: Asia/Seoul
     command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
     restart: unless-stopped
     healthcheck:
@@ -113,6 +117,8 @@ services:
     container_name: connect_dev_redis_queue
     ports:
       - "6380:6379"
+    environment:
+      TZ: Asia/Seoul
     command: redis-server --appendonly yes
     restart: unless-stopped
     healthcheck:
@@ -131,6 +137,7 @@ services:
     profiles:
       - scraper  # Only start when explicitly requested
     environment:
+      TZ: Asia/Seoul
       NODE_ENV: development
       DATABASE_URL: postgresql://connect:connect_dev_password@postgres:5432/connect?schema=public
       REDIS_CACHE_URL: redis://redis-cache:6379/0
