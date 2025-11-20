@@ -56,6 +56,9 @@ export default function UserMenu() {
             <DropdownMenuItem onClick={() => router.push('/dashboard/admin/feedback')}>
               피드백 대시보드
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/dashboard/admin/statistics')}>
+              사용자 통계
+            </DropdownMenuItem>
           </>
         )}
         <DropdownMenuSeparator />
