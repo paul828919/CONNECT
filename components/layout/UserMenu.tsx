@@ -60,6 +60,12 @@ export default function UserMenu() {
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
+          onClick={() => router.push('/dashboard/settings/withdrawal')}
+          className="text-gray-600"
+        >
+          회원 탈퇴
+        </DropdownMenuItem>
+        <DropdownMenuItem
           onClick={() => signOut({ callbackUrl: '/auth/signin' })}
           className="text-red-600 focus:text-red-600"
         >
