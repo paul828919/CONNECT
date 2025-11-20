@@ -533,6 +533,18 @@ model Session {
   @@map("sessions")
 }
 
+model active_user_stats {
+  id             String   @id @default(uuid())
+  date           DateTime @unique @db.Date
+  uniqueUsers    Int      @default(0)
+  totalPageViews Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([date])
+  @@map("active_user_stats")
+}
+
 model subscriptions {
   id                       String             @id @default(uuid())
   userId                   String             @unique

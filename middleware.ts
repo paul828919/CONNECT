@@ -17,6 +17,7 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { trackActiveUser } from '@/lib/analytics/active-user-tracking';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -37,6 +38,13 @@ export async function middleware(request: NextRequest) {
       // Add callback URL to redirect back after sign-in
       signInUrl.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(signInUrl);
+    }
+
+    // Track active user (async, non-blocking, silent fail)
+    if (sessionToken?.value) {
+      trackActiveUser(sessionToken.value).catch((error) => {
+        console.error('[Middleware] Failed to track active user:', error);
+      });
     }
   }
 
