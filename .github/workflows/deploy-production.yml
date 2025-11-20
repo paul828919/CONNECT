@@ -291,6 +291,185 @@ jobs:
 
           echo "✓ Source files synchronized"
 
+      - name: Generate .env.production from GitHub Secrets
+        run: |
+          cat > .env.production << 'EOF'
+          # ============================================
+          # Connect Platform - Production Environment
+          # ============================================
+          # Auto-generated from GitHub Secrets during deployment
+          # Last Updated: $(date +"%B %d, %Y")
+          # DO NOT EDIT MANUALLY - This file is regenerated on every deployment
+
+          # Node Environment
+          NODE_ENV=production
+
+          # ============================================
+          # Database Configuration
+          # ============================================
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DATABASE_URL=postgresql://connect:${DB_PASSWORD}@pgbouncer:6432/connect?schema=public&pool_timeout=30&connection_limit=50
+
+          # ============================================
+          # Redis Configuration
+          # ============================================
+          REDIS_CACHE_URL=redis://redis-cache:6379/0
+          REDIS_QUEUE_URL=redis://redis-queue:6380/0
+
+          # ============================================
+          # Authentication & Security
+          # ============================================
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL=https://connectplt.kr
+
+          # ============================================
+          # Data Encryption (PIPA Compliance - REQUIRED)
+          # ============================================
+          ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}
+          ENCRYPTION_KEY_CREATED=2025-10-10
+          ENCRYPTION_KEY_NEXT_ROTATION=2026-01-10
+
+          # ============================================
+          # OAuth Providers (Korean Services)
+          # ============================================
+          KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+          NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }}
+
+          # ============================================
+          # Email Configuration - AWS SES (Seoul Region)
+          # ============================================
+          SMTP_HOST=email-smtp.ap-northeast-2.amazonaws.com
+          SMTP_PORT=587
+          SMTP_SECURE=false
+          SMTP_USER=${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM_EMAIL=support@connectplt.kr
+          SMTP_FROM_NAME=Connect
+          SMTP_REPLY_TO=support@connectplt.kr
+          ADMIN_EMAIL=support@connectplt.kr
+
+          # ============================================
+          # NTIS API (National Science & Technology Information Service)
+          # ============================================
+          NTIS_API_KEY=${{ secrets.NTIS_API_KEY }}
+
+          # ============================================
+          # Anthropic Claude AI
+          # ============================================
+          ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_MODEL=claude-sonnet-4-5-20250929
+          ANTHROPIC_MAX_TOKENS=4096
+          ANTHROPIC_TEMPERATURE=0.7
+
+          # AI Rate Limiting & Budget
+          AI_RATE_LIMIT_PER_MINUTE=50
+          AI_DAILY_BUDGET_KRW=50000
+
+          # ============================================
+          # Payment Integration (Toss Payments)
+          # ============================================
+          TOSS_CLIENT_KEY=${{ secrets.TOSS_CLIENT_KEY }}
+          TOSS_SECRET_KEY=${{ secrets.TOSS_SECRET_KEY }}
+          TOSS_TEST_MODE=${{ secrets.TOSS_TEST_MODE }}
+
+          # ============================================
+          # Monitoring & Error Tracking
+          # ============================================
+          SENTRY_DSN=
+          GRAFANA_PASSWORD=${{ secrets.GRAFANA_PASSWORD }}
+
+          # ============================================
+          # Scraping Configuration
+          # ============================================
+          SCRAPER_CONCURRENCY=2
+          SCRAPER_TIMEOUT=30000
+          SCRAPER_USER_AGENT=Mozilla/5.0 (compatible; ConnectBot/1.0; +https://connectplt.kr)
+
+          # Agency URLs
+          IITP_URL=https://www.iitp.kr
+          KEIT_URL=https://www.keit.re.kr
+          TIPA_URL=https://www.tipa.or.kr
+          KIMST_URL=https://www.kimst.re.kr
+
+          # Rate Limiting
+          RATE_LIMIT_PER_MINUTE=10
+
+          # Scraping Schedule
+          SCRAPING_SCHEDULE_NORMAL=0 9,15 * * *
+          SCRAPING_SCHEDULE_PEAK=0 9,12,15,18 1-3 * *
+
+          # NTIS Date Filtering (Daily Scraper)
+          NTIS_SCRAPING_DAYS_BACK=2
+
+          # ============================================
+          # Cron Job Security
+          # ============================================
+          CRON_SECRET_TOKEN=
+
+          # ============================================
+          # Application Settings
+          # ============================================
+          NEXT_PUBLIC_APP_URL=https://connectplt.kr
+          DOMAIN=connectplt.kr
+
+          # ============================================
+          # Feature Flags
+          # ============================================
+          ENABLE_ANALYTICS=true
+          ENABLE_ERROR_TRACKING=false
+          MAINTENANCE_MODE=false
+          EOF
+
+          echo "✓ .env.production generated from GitHub Secrets (149 lines)"
+
+      - name: Transfer .env.production to production server
+        run: |
+          echo "Transferring .env.production to production server..."
+          scp -i ~/.ssh/deploy_key \
+            .env.production \
+            ${{ secrets.PRODUCTION_SERVER_USER }}@${{ secrets.PRODUCTION_SERVER_IP }}:/opt/connect/.env.production
+
+          # Set secure permissions
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.PRODUCTION_SERVER_USER }}@${{ secrets.PRODUCTION_SERVER_IP }} \
+            'chmod 600 /opt/connect/.env.production'
+
+          echo "✓ Environment file transferred and secured"
+
+      - name: Create symlink for Docker Compose compatibility
+        run: |
+          echo "Creating symlink .env → .env.production..."
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.PRODUCTION_SERVER_USER }}@${{ secrets.PRODUCTION_SERVER_IP }} << 'EOF'
+            cd /opt/connect
+
+            # Remove old .env if it's a regular file
+            if [ -f .env ] && [ ! -L .env ]; then
+              echo "Backing up old .env to .env.backup-manual-$(date +%Y%m%d-%H%M%S)"
+              mv .env .env.backup-manual-$(date +%Y%m%d-%H%M%S)
+            fi
+
+            # Remove old symlink if it exists
+            if [ -L .env ]; then
+              rm .env
+            fi
+
+            # Create new symlink
+            ln -s .env.production .env
+
+            # Verify symlink
+            if [ -L .env ]; then
+              echo "✓ Symlink created: .env → .env.production"
+              ls -la .env
+            else
+              echo "❌ Failed to create symlink"
+              exit 1
+            fi
+          EOF
+
       - name: Copy images to production
         run: |
           echo "Transferring app image..."
