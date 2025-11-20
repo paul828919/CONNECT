@@ -33,6 +33,7 @@ import { startScheduler } from './scheduler';
 import { startNTISScheduler } from '../ntis-api/scheduler';
 import { initializeCacheScheduler } from '../cache/init';
 import { classifyAnnouncement } from './classification';
+import { startProcessWorkerScheduler } from './process-worker-scheduler';
 
 
 // Job data interface
@@ -702,9 +703,13 @@ scrapingWorker.on('failed', (job, err) => {
 
 // Start schedulers on worker initialization
 console.log('🚀 Initializing schedulers...');
-startScheduler();            // NTIS Announcement Scraper (Playwright, 9 AM + 3 PM KST) - PRIMARY DATA SOURCE
-// startNTISScheduler();        // NTIS API scraper (completed/in-progress projects only) - NOT announcements
-initializeCacheScheduler();  // Cache warming (6 AM KST daily)
-console.log('✅ Schedulers initialized successfully (NTIS Announcement Scraper active)');
+startScheduler();                   // Discovery Scraper (10 AM + 2 PM KST) - Updated Nov 20, 2025
+startProcessWorkerScheduler();      // Process Worker (event-driven, auto-start after Discovery)
+// startNTISScheduler();            // NTIS API scraper (completed/in-progress projects only) - NOT announcements
+initializeCacheScheduler();         // Cache warming (6 AM KST daily)
+console.log('✅ Schedulers initialized successfully');
+console.log('  - Discovery Scraper: 10 AM + 2 PM KST (yesterday to today)');
+console.log('  - Process Worker: Event-driven (auto-start after Discovery)');
+console.log('  - Cache Warming: 6 AM KST daily');
 
 export default scrapingWorker;

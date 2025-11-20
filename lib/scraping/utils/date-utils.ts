@@ -43,6 +43,44 @@ export function getDailyScrapeDateRange(daysBack: number = 2): {
 }
 
 /**
+ * Get "yesterday to today" date range for daily NTIS scraping
+ * Based on KST (Asia/Seoul) timezone
+ *
+ * @returns Object with fromDate (yesterday) and toDate (today) in YYYY-MM-DD format
+ *
+ * @example
+ * // If today is Oct 26, 2025 in KST
+ * getYesterdayToTodayRange()
+ * // Returns { fromDate: '2025-10-25', toDate: '2025-10-26' }
+ */
+export function getYesterdayToTodayRange(): {
+  fromDate: string; // YYYY-MM-DD format
+  toDate: string;   // YYYY-MM-DD format
+} {
+  // Get current date in Korea timezone (Asia/Seoul)
+  const nowKST = new Date(
+    new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })
+  );
+
+  // Calculate yesterday
+  const yesterdayKST = new Date(nowKST);
+  yesterdayKST.setDate(nowKST.getDate() - 1);
+
+  // Format date as YYYY-MM-DD
+  const formatDate = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  return {
+    fromDate: formatDate(yesterdayKST),
+    toDate: formatDate(nowKST),
+  };
+}
+
+/**
  * Validate YYYY-MM-DD date string and convert to Date object components
  * Throws error if invalid or auto-corrected (e.g., Feb 31 → Mar 3)
  *

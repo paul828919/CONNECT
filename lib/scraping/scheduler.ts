@@ -2,14 +2,21 @@
  * Scraping Scheduler (NTIS-only mode)
  *
  * Schedules NTIS announcement scraping using node-cron:
- * - Fixed schedule: 9 AM + 3 PM KST daily (2x daily)
+ * - Fixed schedule: 10 AM + 2 PM KST daily (2x daily) - Updated Nov 20, 2025
+ * - Date range: Yesterday to today (dynamic KST-based calculation)
  * - Target: NTIS funding announcements only (IITP, KEIT, TIPA, KIMST disabled)
+ * - Architecture: Runs standalone Discovery Scraper script → Triggers Process Worker via BullMQ
  */
 
 import cron from 'node-cron';
 import { Queue } from 'bullmq';
 import { getAllAgencyConfigs } from './config';
 import { logScraping } from './utils';
+import { getYesterdayToTodayRange } from './utils/date-utils';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 // Bull queue for scraping jobs
 export const scrapingQueue = new Queue('scraping-queue', {
@@ -20,7 +27,68 @@ export const scrapingQueue = new Queue('scraping-queue', {
 });
 
 /**
- * Queue scraping jobs for NTIS only
+ * Run Discovery Scraper script and trigger Process Worker
+ * NOTE: Runs standalone script with "yesterday to today" date range
+ */
+async function runDiscoveryScraper() {
+  const { fromDate, toDate } = getYesterdayToTodayRange();
+
+  console.log(`  📅 Date range: ${fromDate} → ${toDate}`);
+  console.log(`  🔍 Running Discovery Scraper...`);
+
+  try {
+    // Run Discovery Scraper script
+    const command = `npx tsx scripts/scrape-ntis-discovery.ts --fromDate ${fromDate} --toDate ${toDate}`;
+    const { stdout, stderr } = await execAsync(command, {
+      maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large outputs
+    });
+
+    console.log(stdout);
+    if (stderr) {
+      console.error('  ⚠️  Discovery Scraper stderr:', stderr);
+    }
+
+    console.log('  ✅ Discovery Scraper completed successfully');
+
+    // Trigger Process Worker via BullMQ event
+    const scrapingSession = `${fromDate}-${toDate}-${Date.now()}`;
+    await triggerProcessWorker(scrapingSession);
+
+    console.log('  📤 Process Worker trigger queued');
+  } catch (err: any) {
+    console.error('  ❌ Discovery Scraper failed:', err.message);
+    if (err.stdout) console.log('  📋 stdout:', err.stdout);
+    if (err.stderr) console.error('  📋 stderr:', err.stderr);
+    throw err;
+  }
+}
+
+/**
+ * Trigger Process Worker via BullMQ event
+ * Queues a job to start the Process Worker after Discovery Scraper completes
+ */
+async function triggerProcessWorker(scrapingSession: string) {
+  await scrapingQueue.add(
+    'process-worker-trigger',
+    {
+      scrapingSession,
+      triggeredAt: new Date().toISOString(),
+    },
+    {
+      priority: 1, // High priority
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 2000,
+      },
+      removeOnComplete: true,
+      removeOnFail: false,
+    }
+  );
+}
+
+/**
+ * Queue scraping jobs for NTIS only (LEGACY - kept for manual trigger)
  * NOTE: Only NTIS Announcement Scraper is active (IITP, KEIT, TIPA, KIMST disabled)
  */
 async function queueScrapingJobs(priority: 'high' | 'standard' = 'standard') {
@@ -64,18 +132,18 @@ async function queueScrapingJobs(priority: 'high' | 'standard' = 'standard') {
 
 /**
  * Start scraping scheduler
- * NTIS-only mode: 9 AM + 3 PM daily (fixed schedule)
+ * NTIS-only mode: 10 AM + 2 PM KST daily (updated Nov 20, 2025)
  */
 export function startScheduler() {
   console.log('🚀 Starting NTIS announcement scraping scheduler...');
 
-  // Fixed schedule: 9 AM + 3 PM KST daily
+  // Fixed schedule: 10 AM + 2 PM KST daily
   // Cron format: minute hour day month weekday
   cron.schedule(
-    '0 9,15 * * *',
+    '0 10,14 * * *',
     async () => {
-      console.log('⏰ Running NTIS announcement scrape (9 AM + 3 PM daily)...');
-      await queueScrapingJobs('standard');
+      console.log('⏰ Running NTIS announcement scrape (10 AM + 2 PM daily)...');
+      await runDiscoveryScraper();
     },
     {
       timezone: 'Asia/Seoul',
@@ -83,8 +151,10 @@ export function startScheduler() {
   );
 
   console.log('✓ NTIS announcement scraping scheduler started successfully');
-  console.log(`  - Schedule: 9 AM + 3 PM KST (2x daily)`);
+  console.log(`  - Schedule: 10 AM + 2 PM KST (2x daily)`);
+  console.log(`  - Date Range: Yesterday to today (dynamic)`);
   console.log(`  - Target: NTIS funding announcements only`);
+  console.log(`  - Architecture: Discovery Scraper → Process Worker (event-driven)`);
 }
 
 /**
