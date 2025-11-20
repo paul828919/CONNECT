@@ -13,7 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/auth-options';
+import { authOptions } from '@/lib/auth.config';
 import { PrismaClient } from '@prisma/client';
 import { createClient } from 'redis';
 import { createAuditLog, AuditAction } from '@/lib/audit';
