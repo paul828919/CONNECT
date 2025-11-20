@@ -21,9 +21,9 @@ This file provides guidelines for using Claude Code (claude.ai/code) when workin
 **Never use passwords in commands.**
 ```bash
 # ✅ Correct method - Always use SSH key authentication
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6
 # ❌ Incorrect Method - Never use password authentication
-sshpass -p ‘password’ ssh user@221.164.102.253
+sshpass -p ‘password’ ssh user@59.21.170.6
 ```
 ### 3. 🏗️ CI/CD Architecture (Production-Grade Entrypoint Pattern)
 **Status:** ✅ Production-ready (100% successful deployments since October 15, 2025)
