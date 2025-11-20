@@ -87,6 +87,9 @@ services:
       AI_RATE_LIMIT_PER_MINUTE: ${AI_RATE_LIMIT_PER_MINUTE:-50}
       AI_DAILY_BUDGET_KRW: ${AI_DAILY_BUDGET_KRW:-50000}
 
+      # Cron Job Authentication
+      CRON_SECRET_TOKEN: ${CRON_SECRET_TOKEN}
+
       # Monitoring
       SENTRY_DSN: ${SENTRY_DSN}
 
@@ -182,6 +185,9 @@ services:
       # AI Rate Limiting & Budget
       AI_RATE_LIMIT_PER_MINUTE: ${AI_RATE_LIMIT_PER_MINUTE:-50}
       AI_DAILY_BUDGET_KRW: ${AI_DAILY_BUDGET_KRW:-50000}
+
+      # Cron Job Authentication
+      CRON_SECRET_TOKEN: ${CRON_SECRET_TOKEN}
 
       SENTRY_DSN: ${SENTRY_DSN}
       NODE_OPTIONS: "--max-old-space-size=8192"
