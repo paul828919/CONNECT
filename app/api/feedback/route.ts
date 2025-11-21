@@ -221,7 +221,7 @@ async function sendAdminNotificationEmail(params: {
       select: {
         name: true,
         email: true,
-        organizations: {
+        organization: {
           select: { name: true },
         },
       },
@@ -230,7 +230,7 @@ async function sendAdminNotificationEmail(params: {
     if (user) {
       userName = user.name || 'Unknown';
       userEmail = user.email || 'N/A';
-      organizationName = user.organizations?.name || 'N/A';
+      organizationName = user.organization?.name || 'N/A';
     }
   }
 

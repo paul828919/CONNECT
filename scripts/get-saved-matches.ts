@@ -22,7 +22,7 @@ async function main() {
     // Find user by email
     const user = await prisma.user.findUnique({
       where: { email: 'kbj20415@gmail.com' },
-      include: { organizations: true },
+      include: { organization: true },
     });
 
     if (!user) {
@@ -31,7 +31,7 @@ async function main() {
     }
 
     console.log(`✅ Found user: ${user.name} (${user.email})`);
-    console.log(`   Organization: ${user.organizations?.name || 'N/A'}`);
+    console.log(`   Organization: ${user.organization?.name || 'N/A'}`);
     console.log(`   Organization ID: ${user.organizationId}\n`);
 
     if (!user.organizationId) {

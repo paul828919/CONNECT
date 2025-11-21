@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     const user = await db.user.findUnique({
       where: { id: userId },
       include: {
-        organizations: true,
+        organization: true,
       },
     });
 
@@ -79,8 +79,8 @@ export async function POST(request: NextRequest) {
 
     // Build company context (if organization exists)
     let companyContext: CompanyContext | undefined;
-    if (user.organizations) {
-      const org = user.organizations;
+    if (user.organization) {
+      const org = user.organization;
       companyContext = {
         name: org.name,
         industry: org.industrySector || '정보 없음',

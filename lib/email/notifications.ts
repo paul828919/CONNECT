@@ -64,7 +64,7 @@ export async function sendNewMatchNotification(
     const user = await db.user.findUnique({
       where: { id: userId },
       include: {
-        organizations: {
+        organization: {
           select: {
             name: true,
           },
@@ -72,7 +72,7 @@ export async function sendNewMatchNotification(
       },
     });
 
-    if (!user || !user.email || !user.organizations) {
+    if (!user || !user.email || !user.organization) {
       console.error(`User ${userId} not found or missing data`);
       return false;
     }
@@ -98,7 +98,7 @@ export async function sendNewMatchNotification(
     // 4. Prepare email data
     const emailData: NewMatchEmailData = {
       userName: user.name || '사용자',
-      organizationName: user.organizations.name,
+      organizationName: user.organization.name,
       matches: matches.map((match) => ({
         id: match.id,
         title: match.funding_programs.title,
@@ -158,13 +158,13 @@ export async function sendDeadlineReminder(
     const user = await db.user.findUnique({
       where: { id: userId },
       include: {
-        organizations: {
+        organization: {
           select: { name: true },
         },
       },
     });
 
-    if (!user || !user.email || !user.organizations) {
+    if (!user || !user.email || !user.organization) {
       return false;
     }
 
@@ -182,7 +182,7 @@ export async function sendDeadlineReminder(
     // 3. Prepare email data
     const emailData: DeadlineReminderEmailData = {
       userName: user.name || '사용자',
-      organizationName: user.organizations.name,
+      organizationName: user.organization.name,
       program: {
         id: match.funding_programs.id,
         title: match.funding_programs.title,
@@ -229,13 +229,13 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
     const user = await db.user.findUnique({
       where: { id: userId },
       include: {
-        organizations: {
+        organization: {
           select: { id: true, name: true },
         },
       },
     });
 
-    if (!user || !user.email || !user.organizations) {
+    if (!user || !user.email || !user.organization) {
       return false;
     }
 
@@ -260,7 +260,7 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
       // New matches this week
       db.funding_matches.count({
         where: {
-          organizationId: user.organizations.id,
+          organizationId: user.organization.id,
           createdAt: {
             gte: weekStart,
             lte: weekEnd,
@@ -271,7 +271,7 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
       // Upcoming deadlines (next 14 days)
       db.funding_matches.count({
         where: {
-          organizationId: user.organizations.id,
+          organizationId: user.organization.id,
           funding_programs: {
             deadline: {
               gte: new Date(),
@@ -285,7 +285,7 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
     // 5. Fetch top matches
     const topMatches = await db.funding_matches.findMany({
       where: {
-        organizationId: user.organizations.id,
+        organizationId: user.organization.id,
         createdAt: {
           gte: weekStart,
           lte: weekEnd,
@@ -302,7 +302,7 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
     // 6. Fetch upcoming deadlines
     const upcomingDeadlinesList = await db.funding_matches.findMany({
       where: {
-        organizationId: user.organizations.id,
+        organizationId: user.organization.id,
         funding_programs: {
           deadline: {
             gte: new Date(),
@@ -324,7 +324,7 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
     // 7. Prepare email data
     const emailData: WeeklyDigestEmailData = {
       userName: user.name || '사용자',
-      organizationName: user.organizations.name,
+      organizationName: user.organization.name,
       weekStart,
       weekEnd,
       stats: {
@@ -383,7 +383,7 @@ export async function sendWeeklyDigestToAll(): Promise<{
     const users = await db.user.findMany({
       where: {
         email: { not: null },
-        organizations: { isNot: null },
+        organization: { isNot: null },
       },
       select: { id: true },
     });
