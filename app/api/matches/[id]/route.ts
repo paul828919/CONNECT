@@ -64,6 +64,16 @@ export async function PATCH(
             },
           },
         },
+        funding_programs: {
+          select: {
+            id: true,
+            title: true,
+            agencyId: true,
+            deadline: true,
+            budgetAmount: true,
+            status: true,
+          },
+        },
       },
     });
 

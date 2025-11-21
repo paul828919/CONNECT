@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
 import { db } from '@/lib/db';
+import { Prisma } from '@prisma/client';
 
 
 export async function GET(
@@ -100,7 +101,61 @@ export async function GET(
           ],
         },
       },
-    });
+    }) as Prisma.consortium_projectsGetPayload<{
+      include: {
+        organizations: {
+          select: {
+            id: true;
+            name: true;
+            type: true;
+            businessStructure: true;
+            industrySector: true;
+            employeeCount: true;
+            primaryContactName: true;
+            primaryContactEmail: true;
+            primaryContactPhone: true;
+            address: true;
+          };
+        };
+        user: {
+          select: {
+            name: true;
+            email: true;
+          };
+        };
+        funding_programs: {
+          select: {
+            id: true;
+            agencyId: true;
+            title: true;
+            deadline: true;
+            budgetAmount: true;
+            announcementUrl: true;
+          };
+        };
+        consortium_members: {
+          include: {
+            organizations: {
+              select: {
+                id: true;
+                name: true;
+                type: true;
+                businessStructure: true;
+                industrySector: true;
+                employeeCount: true;
+                technologyReadinessLevel: true;
+                rdExperience: true;
+                researchFocusAreas: true;
+                primaryContactName: true;
+                primaryContactEmail: true;
+                primaryContactPhone: true;
+                address: true;
+              };
+            };
+          };
+        };
+      };
+    }> | null;
 
     if (!consortium) {
       return NextResponse.json(
