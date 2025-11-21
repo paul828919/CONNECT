@@ -3,16 +3,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Building2, GraduationCap, Microscope, CheckCircle2, TrendingUp, Users, Award, Shield, Zap, Ship } from 'lucide-react';
-import BetaBanner from './components/BetaBanner';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen">
-      {/* Beta Banner */}
-      <BetaBanner />
-
       {/* Navigation */}
-      <nav className="fixed top-[52px] left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
+      <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-0.5">
             <Image
