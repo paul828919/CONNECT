@@ -30,7 +30,7 @@ Copy and paste these **exact values** into GitHub Secrets:
 
 #### **PRODUCTION_SERVER_IP**
 ```
-221.164.102.253
+59.21.170.6
 ```
 **Description:** Production server IP address
 
@@ -116,7 +116,7 @@ aXzTqR1YfL2bTTJ2X21KQw==
 
 Use this checklist to ensure all secrets are added:
 
-- [ ] **PRODUCTION_SERVER_IP** = `221.164.102.253`
+- [ ] **PRODUCTION_SERVER_IP** = `59.21.170.6`
 - [ ] **PRODUCTION_SERVER_USER** = `user`
 - [ ] **PRODUCTION_SERVER_SSH_KEY** = [From `~/.ssh/id_ed25519_connect`]
 - [ ] **DB_PASSWORD** = `9LroqGz1xI+mKhcN9q0B52xHsiqr0DuLxs=`
@@ -189,7 +189,7 @@ Your SSH key in GitHub should:
 
 ```bash
 # Test that your SSH key works
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "echo 'SSH connection successful!'"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "echo 'SSH connection successful!'"
 
 # Expected output:
 # SSH connection successful!
@@ -267,11 +267,11 @@ cat ~/.ssh/id_ed25519_connect | head -1
 # Should show: -----BEGIN OPENSSH PRIVATE KEY-----
 
 # 2. Check if key is authorized on server
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "cat ~/.ssh/authorized_keys"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "cat ~/.ssh/authorized_keys"
 # Should contain your public key
 
 # 3. Test connection manually
-ssh -v -i ~/.ssh/id_ed25519_connect user@221.164.102.253
+ssh -v -i ~/.ssh/id_ed25519_connect user@59.21.170.6
 # Look for "Authentication succeeded (publickey)"
 
 # 4. Verify GitHub secret has correct format
@@ -312,16 +312,16 @@ ssh -v -i ~/.ssh/id_ed25519_connect user@221.164.102.253
 
 ```bash
 # 1. Verify server is accessible
-ping 221.164.102.253
+ping 59.21.170.6
 
 # 2. Check SSH port
-nc -zv 221.164.102.253 22
+nc -zv 59.21.170.6 22
 
 # 3. Verify Docker is running on server
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "docker ps"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "docker ps"
 
 # 4. Check server logs
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "tail -f /var/log/syslog"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "tail -f /var/log/syslog"
 ```
 
 ---
@@ -340,7 +340,7 @@ echo ""
 
 # Test SSH connection
 echo "1️⃣ Testing SSH connection..."
-if ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "echo 'Connected!'" &>/dev/null; then
+if ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "echo 'Connected!'" &>/dev/null; then
     echo "✅ SSH connection successful!"
 else
     echo "❌ SSH connection failed!"
@@ -350,7 +350,7 @@ fi
 # Test server accessibility
 echo ""
 echo "2️⃣ Testing server accessibility..."
-if ping -c 1 221.164.102.253 &>/dev/null; then
+if ping -c 1 59.21.170.6 &>/dev/null; then
     echo "✅ Server is reachable!"
 else
     echo "❌ Server is unreachable!"
@@ -360,7 +360,7 @@ fi
 # Test Docker on server
 echo ""
 echo "3️⃣ Testing Docker on server..."
-if ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "docker --version" &>/dev/null; then
+if ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "docker --version" &>/dev/null; then
     echo "✅ Docker is available!"
 else
     echo "❌ Docker is not available!"
@@ -370,12 +370,12 @@ fi
 # Test project directory
 echo ""
 echo "4️⃣ Testing project directory..."
-if ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "test -d /opt/connect" &>/dev/null; then
+if ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "test -d /opt/connect" &>/dev/null; then
     echo "✅ Project directory exists!"
 else
     echo "❌ Project directory not found!"
     echo "ℹ️  Creating /opt/connect..."
-    ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "sudo mkdir -p /opt/connect && sudo chown user:user /opt/connect"
+    ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "sudo mkdir -p /opt/connect && sudo chown user:user /opt/connect"
 fi
 
 echo ""
@@ -436,7 +436,7 @@ chmod +x test-secrets.sh
 4. **Verify Deployment**
    ```bash
    # Check production
-   curl https://221.164.102.253/api/health
+   curl https://59.21.170.6/api/health
    
    # Should return: {"status":"ok"}
    ```
@@ -497,7 +497,7 @@ git push origin main
 │                                                 │
 │  ✅ Test Connection:                           │
 │     ssh -i ~/.ssh/id_ed25519_connect \        │
-│         user@221.164.102.253                   │
+│         user@59.21.170.6                   │
 │                                                 │
 └─────────────────────────────────────────────────┘
 ```

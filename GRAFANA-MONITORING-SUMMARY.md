@@ -20,9 +20,9 @@
 
 | Dashboard | Panels | Purpose | URL |
 |-----------|--------|---------|-----|
-| **Connect Platform Overview** | 7 panels | Main monitoring dashboard | [View](http://221.164.102.253:3100/d/connect-platform-overview) |
-| **PostgreSQL Monitoring** | 5 panels | Database deep-dive | [View](http://221.164.102.253:3100/d/postgres-monitoring) |
-| **Redis Monitoring** | 6 panels | Cache & queue monitoring | [View](http://221.164.102.253:3100/d/redis-monitoring) |
+| **Connect Platform Overview** | 7 panels | Main monitoring dashboard | [View](http://59.21.170.6:3100/d/connect-platform-overview) |
+| **PostgreSQL Monitoring** | 5 panels | Database deep-dive | [View](http://59.21.170.6:3100/d/postgres-monitoring) |
+| **Redis Monitoring** | 6 panels | Cache & queue monitoring | [View](http://59.21.170.6:3100/d/redis-monitoring) |
 
 ### **3. Documentation Created ✅**
 
@@ -41,7 +41,7 @@
 
 ```bash
 # Open main dashboard
-open http://221.164.102.253:3100/d/connect-platform-overview
+open http://59.21.170.6:3100/d/connect-platform-overview
 
 # Login credentials
 Username: admin
@@ -284,23 +284,23 @@ Your Connect platform now has:
 **Can't access Grafana?**
 ```bash
 # Check if container is running
-ssh user@221.164.102.253 'docker ps | grep grafana'
+ssh user@59.21.170.6 'docker ps | grep grafana'
 
 # Restart if needed
-ssh user@221.164.102.253 'docker restart connect_grafana'
+ssh user@59.21.170.6 'docker restart connect_grafana'
 ```
 
 **Dashboard showing no data?**
 ```bash
 # Test data source connection
 curl -u admin:aXzTqR1YfL2bTTJ2X21KQw== \
-  http://221.164.102.253:3100/api/datasources
+  http://59.21.170.6:3100/api/datasources
 ```
 
 **Need to reset password?**
 ```bash
 # Update in .env and restart
-ssh user@221.164.102.253 'docker restart connect_grafana'
+ssh user@59.21.170.6 'docker restart connect_grafana'
 ```
 
 ---

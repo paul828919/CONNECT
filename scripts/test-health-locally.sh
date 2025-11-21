@@ -105,10 +105,10 @@ echo ""
 echo -e "${GREEN}Test Commands (after deployment):${NC}"
 echo ""
 echo '  # Test app1 (pretty printed)'
-echo '  curl -k https://221.164.102.253/api/health | jq'
+echo '  curl -k https://59.21.170.6/api/health | jq'
 echo ""
 echo '  # Test from inside container'
-echo '  ssh user@221.164.102.253 "docker exec connect_app1 curl http://localhost:3001/api/health" | jq'
+echo '  ssh user@59.21.170.6 "docker exec connect_app1 curl http://localhost:3001/api/health" | jq'
 echo ""
 echo '  # Run full health check'
 echo '  ./scripts/check-health.sh'

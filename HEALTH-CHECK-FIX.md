@@ -127,7 +127,7 @@ export CONNECT_SERVER_PASSWORD='iw237877^^'
 ### Test Health Endpoints Directly
 ```bash
 # On production server:
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 
 # Test app1 (port 3001)
 docker exec connect_app1 curl http://localhost:3001/api/health | jq
@@ -136,7 +136,7 @@ docker exec connect_app1 curl http://localhost:3001/api/health | jq
 docker exec connect_app2 curl http://localhost:3002/api/health | jq
 
 # Test public endpoint
-curl -k https://221.164.102.253/api/health | jq
+curl -k https://59.21.170.6/api/health | jq
 ```
 
 ### Test Redis Connectivity

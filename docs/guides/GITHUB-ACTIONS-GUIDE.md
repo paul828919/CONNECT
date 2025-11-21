@@ -309,7 +309,7 @@ docker build -f Dockerfile.production -t test .
 gh secret list
 
 # Test SSH manually
-ssh user@221.164.102.253 'echo "Success"'
+ssh user@59.21.170.6 'echo "Success"'
 
 # Update secret if needed
 gh secret set PRODUCTION_SERVER_PASSWORD
@@ -322,7 +322,7 @@ gh secret set PRODUCTION_SERVER_PASSWORD
 **Solution:**
 ```bash
 # SSH to server
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 
 # Check logs
 docker logs connect_app1 --tail 50
@@ -340,7 +340,7 @@ curl http://172.25.0.21:3001/api/health
 ```bash
 # Automatic rollback (workflow does this)
 # If manual needed:
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 cd /opt/connect
 docker-compose restart app1 app2
 

@@ -59,7 +59,7 @@ export CONNECT_SERVER_PASSWORD='iw237877^^'
 ./scripts/check-health.sh
 
 # Test endpoint
-curl -k https://221.164.102.253/api/health | jq
+curl -k https://59.21.170.6/api/health | jq
 
 # Full diagnostics
 ./scripts/diagnose-production.sh
@@ -119,7 +119,7 @@ curl -k https://221.164.102.253/api/health | jq
 - [ ] Set password: `export CONNECT_SERVER_PASSWORD='iw237877^^'`
 - [ ] Deploy: `./scripts/deploy-health-fix.sh`
 - [ ] Verify: `./scripts/check-health.sh`
-- [ ] Test: `curl -k https://221.164.102.253/api/health | jq`
+- [ ] Test: `curl -k https://59.21.170.6/api/health | jq`
 - [ ] Confirm all ✅ green checkmarks
 
 ---
@@ -156,7 +156,7 @@ curl -k https://221.164.102.253/api/health | jq
 
 ### If deployment fails:
 1. Run: `./scripts/diagnose-production.sh`
-2. Check: `ssh user@221.164.102.253 "docker logs connect_app1"`
+2. Check: `ssh user@59.21.170.6 "docker logs connect_app1"`
 3. See: `HEALTH-CHECK-FIX.md` → Troubleshooting section
 
 ### If health checks still fail:

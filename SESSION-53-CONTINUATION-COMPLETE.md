@@ -26,7 +26,7 @@ Successfully retrieved all required secrets from production server:
 - ✅ `NEXTAUTH_SECRET` - Retrieved from `/opt/connect/.env`
 - ✅ `DB_PASSWORD` - Already documented
 - ✅ `GRAFANA_PASSWORD` - Already documented
-- ✅ `PRODUCTION_SERVER_IP` - Confirmed: 221.164.102.253
+- ✅ `PRODUCTION_SERVER_IP` - Confirmed: 59.21.170.6
 - ✅ `PRODUCTION_SERVER_USER` - Confirmed: user
 - ✅ `PRODUCTION_SERVER_SSH_KEY` - Available at `~/.ssh/id_ed25519_connect`
 
@@ -229,7 +229,7 @@ Created: `docs/guides/GITHUB-ACTIONS-TESTING.md` (683 lines)
 
 ```
 Secret 1: PRODUCTION_SERVER_IP
-Value: 221.164.102.253
+Value: 59.21.170.6
 
 Secret 2: PRODUCTION_SERVER_USER
 Value: user

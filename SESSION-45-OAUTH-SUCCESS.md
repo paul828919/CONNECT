@@ -251,10 +251,10 @@ npm run build  # ✅ SUCCESS
 ```bash
 # Deploy updated code
 rsync -avz --progress --exclude='node_modules' --exclude='.next' ... \
-  . user@221.164.102.253:/opt/connect/
+  . user@59.21.170.6:/opt/connect/
 
 # SSH to server
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 
 # Stop containers
 cd /opt/connect
@@ -762,7 +762,7 @@ The fix is **minimal, elegant, and follows NextAuth best practices**. The platfo
 
 **Server Access**:
 ```bash
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 cd /opt/connect
 docker ps
 docker logs connect_app1

@@ -3,7 +3,7 @@
 
 **Version**: 1.0
 **Last Updated**: October 11, 2025 (Session 35)
-**Target Environment**: Production Server (221.164.102.253)
+**Target Environment**: Production Server (59.21.170.6)
 
 **⚠️ CRITICAL**: Run `./deployment-verification.sh` BEFORE following this runbook!
 
@@ -45,7 +45,7 @@ LOCAL_COMMIT=$(git log --oneline -1 | cut -d' ' -f1)
 echo "Local: $LOCAL_COMMIT"
 
 # Production commit
-PROD_COMMIT=$(sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+PROD_COMMIT=$(sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'cd /opt/connect && git log --oneline -1' | cut -d' ' -f1)
 echo "Production: $PROD_COMMIT"
 
@@ -107,13 +107,13 @@ ls -la .env.production
 **Step 4: Backup Current Production State**
 ```bash
 # SSH to production and create backup
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'cd /opt/connect && \
    git log --oneline -1 > /opt/connect/backups/pre-deploy-$(date +%Y%m%d-%H%M%S).commit && \
    docker compose -f docker-compose.production.yml ps > /opt/connect/backups/pre-deploy-$(date +%Y%m%d-%H%M%S).services'
 
 # Verify backup created
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'ls -lh /opt/connect/backups/pre-deploy-* | tail -2'
 ```
 
@@ -152,7 +152,7 @@ sshpass -p 'iw237877^^' rsync -avz --progress \
   --exclude='.playwright-mcp' \
   --exclude='playwright-report' \
   --exclude='test-results' \
-  . user@221.164.102.253:/opt/connect/
+  . user@59.21.170.6:/opt/connect/
 
 # Expected output: File transfer progress, "sent X bytes, received Y bytes"
 # Time: 5-10 minutes depending on changes
@@ -167,10 +167,10 @@ echo $?
 # Copy .env.production to production server
 sshpass -p 'iw237877^^' scp -o StrictHostKeyChecking=no \
   /Users/paulkim/Downloads/connect/.env.production \
-  user@221.164.102.253:/opt/connect/
+  user@59.21.170.6:/opt/connect/
 
 # Verify .env.production copied
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'ls -lh /opt/connect/.env.production'
 
 # Expected: File exists with recent timestamp
@@ -179,7 +179,7 @@ sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
 **Step 3: Verify File Permissions**
 ```bash
 # SSH to production and check ownership
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'ls -la /opt/connect/ | head -20'
 
 # Expected: Files owned by 'user:user'
@@ -193,7 +193,7 @@ sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
 **Step 1: Stop Current Containers**
 ```bash
 # SSH to production
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6
 
 # Navigate to project directory
 cd /opt/connect
@@ -294,7 +294,7 @@ docker logs connect_app2 --tail 50
 # From local machine or production
 
 # Health check via direct IP
-curl -sI http://221.164.102.253/api/health
+curl -sI http://59.21.170.6/api/health
 # Expected: HTTP/1.1 200 OK
 
 # Health check via domain
@@ -337,7 +337,7 @@ curl -sI https://connectplt.kr/dashboard/profile/create
 **Step 4: Database Connectivity Test**
 ```bash
 # SSH to production
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6
 
 # Check PostgreSQL connection
 docker exec connect_postgres psql -U paulkim -d connect -c "SELECT COUNT(*) FROM users;"
@@ -394,7 +394,7 @@ PLAYWRIGHT_BASE_URL=https://connectplt.kr \
 **Step 1: Identify Last Good Commit**
 ```bash
 # Check backup files
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'cat /opt/connect/backups/pre-deploy-*.commit | tail -1'
 
 # Expected: Last known good commit hash (e.g., "ff92164")
@@ -403,7 +403,7 @@ sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
 **Step 2: Revert Code**
 ```bash
 # SSH to production
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6
 
 # Navigate to project
 cd /opt/connect
@@ -493,7 +493,7 @@ rsync: failed to set permissions on "/opt/connect/...": Permission denied
 **Solution**:
 ```bash
 # SSH to production
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6
 
 # Fix ownership
 sudo chown -R user:user /opt/connect
@@ -515,7 +515,7 @@ Error: no space left on device
 **Solution**:
 ```bash
 # SSH to production
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6
 
 # Clean up old images
 docker image prune -a --force
@@ -639,7 +639,7 @@ curl: (60) SSL certificate problem: certificate has expired
 **Solution**:
 ```bash
 # SSH to production
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6
 
 # Check Nginx configuration
 sudo nginx -t

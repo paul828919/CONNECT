@@ -11,7 +11,7 @@
 
 This document provides **verified hardware specifications** for the Connect platform's production server. All specifications were obtained through direct SSH access and system inspection on October 14, 2025.
 
-**Server Location:** 221.164.102.253  
+**Server Location:** 59.21.170.6  
 **Purpose:** Production deployment of Connect AI-powered funding matching platform
 
 ---
@@ -214,7 +214,7 @@ Driver:             Likely Intel i40e or ixgbe
 
 **Speed Test Results (October 14, 2025):**
 ```bash
-Testing from Korea Telecom (221.164.102.253)
+Testing from Korea Telecom (59.21.170.6)
 Test Server: MOACK Data Center (Yongin-si) [265.28 km]
 
 Download:    708-775 Mbps (avg: 740 Mbps)

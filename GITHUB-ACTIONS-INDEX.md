@@ -130,7 +130,7 @@ If you encounter issues:
 **Total Secrets Required:** 7
 
 ### **Server Access (3)**
-- `PRODUCTION_SERVER_IP` = `221.164.102.253`
+- `PRODUCTION_SERVER_IP` = `59.21.170.6`
 - `PRODUCTION_SERVER_USER` = `user`
 - `PRODUCTION_SERVER_SSH_KEY` = [From `~/.ssh/id_ed25519_connect`]
 
@@ -246,7 +246,7 @@ git push origin main                      # Auto-deploys!
 
 # Verify
 ./scripts/verify-deployment.sh           # Check deployment
-curl https://221.164.102.253/api/health  # Test endpoint
+curl https://59.21.170.6/api/health  # Test endpoint
 ```
 
 ---
@@ -324,7 +324,7 @@ cat ~/.ssh/id_ed25519_connect | pbcopy
 ```bash
 # Check GitHub Actions logs
 # Run: ./scripts/verify-deployment.sh
-# View server: ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "docker ps"
+# View server: ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "docker ps"
 ```
 
 ### **Documentation Paths**

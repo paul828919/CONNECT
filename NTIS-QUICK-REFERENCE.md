@@ -147,7 +147,7 @@ ssh connect-prod "docker logs connect_scraper --tail 100"
 
 ```
 Production Environment:
-├── Server: 221.164.102.253
+├── Server: 59.21.170.6
 ├── .env location: /opt/connect/.env
 ├── NTIS_API_KEY: ✅ Configured (6f5cioc70502fi63fdn5)
 ├── Containers with NTIS_API_KEY:

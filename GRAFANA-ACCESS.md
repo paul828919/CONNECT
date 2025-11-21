@@ -9,7 +9,7 @@
 
 ### **Production Grafana**
 
-**URL:** http://221.164.102.253:3100
+**URL:** http://59.21.170.6:3100
 
 **Login Credentials:**
 - **Username:** `admin`
@@ -22,7 +22,7 @@
 ### **Step 1: Access Grafana**
 
 1. Open your browser
-2. Navigate to: http://221.164.102.253:3100
+2. Navigate to: http://59.21.170.6:3100
 3. You'll see the Grafana login page
 
 ### **Step 2: Log In**
@@ -128,13 +128,13 @@ After logging in, you can:
 **Solution:**
 ```bash
 # Check if Grafana container is running
-ssh user@221.164.102.253 'docker ps | grep grafana'
+ssh user@59.21.170.6 'docker ps | grep grafana'
 
 # If not running, start it
-ssh user@221.164.102.253 'docker start connect_grafana'
+ssh user@59.21.170.6 'docker start connect_grafana'
 
 # Check logs if issues persist
-ssh user@221.164.102.253 'docker logs connect_grafana --tail 50'
+ssh user@59.21.170.6 'docker logs connect_grafana --tail 50'
 ```
 
 ### **Problem: Login Failed**
@@ -147,10 +147,10 @@ ssh user@221.164.102.253 'docker logs connect_grafana --tail 50'
 **Solution:**
 ```bash
 # Verify password in .env
-ssh user@221.164.102.253 'cat /opt/connect/.env | grep GRAFANA_PASSWORD'
+ssh user@59.21.170.6 'cat /opt/connect/.env | grep GRAFANA_PASSWORD'
 
 # Restart Grafana if needed
-ssh user@221.164.102.253 'docker restart connect_grafana'
+ssh user@59.21.170.6 'docker restart connect_grafana'
 ```
 
 ### **Problem: Dashboards Not Loading**
@@ -158,13 +158,13 @@ ssh user@221.164.102.253 'docker restart connect_grafana'
 **Solution:**
 ```bash
 # Check Grafana logs
-ssh user@221.164.102.253 'docker logs connect_grafana --tail 100'
+ssh user@59.21.170.6 'docker logs connect_grafana --tail 100'
 
 # Restart container
-ssh user@221.164.102.253 'docker restart connect_grafana'
+ssh user@59.21.170.6 'docker restart connect_grafana'
 
 # Check if volume is mounted correctly
-ssh user@221.164.102.253 'docker inspect connect_grafana | grep -A 10 Mounts'
+ssh user@59.21.170.6 'docker inspect connect_grafana | grep -A 10 Mounts'
 ```
 
 ---
@@ -187,7 +187,7 @@ ssh user@221.164.102.253 'docker inspect connect_grafana | grep -A 10 Mounts'
 **To change password:**
 ```bash
 # SSH to server
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 
 # Edit .env file
 nano /opt/connect/.env
@@ -250,7 +250,7 @@ docker restart connect_grafana
 ## ✅ Quick Reference
 
 ```
-URL:      http://221.164.102.253:3100
+URL:      http://59.21.170.6:3100
 Username: admin
 Password: aXzTqR1YfL2bTTJ2X21KQw==
 Port:     3100 (external), 3000 (internal)

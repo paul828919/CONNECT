@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================
 # Connect Platform - Production Deployment
-# Server: 221.164.102.253
+# Server: 59.21.170.6
 # Strategy: Blue-Green Zero-Downtime
 # ============================================
 
@@ -16,7 +16,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # Configuration
-REMOTE_SERVER="user@221.164.102.253"
+REMOTE_SERVER="user@59.21.170.6"
 REMOTE_DIR="/opt/connect"
 SERVER_PASSWORD="${CONNECT_SERVER_PASSWORD:-}"
 HEALTH_CHECK_TIMEOUT=60
@@ -52,7 +52,7 @@ show_banner() {
     echo -e "${CYAN}║       🚀 Connect Platform Deployment 🚀           ║${NC}"
     echo -e "${CYAN}║                                                    ║${NC}"
     echo -e "${CYAN}║   Strategy: Blue-Green Zero-Downtime             ║${NC}"
-    echo -e "${CYAN}║   Server: 221.164.102.253                        ║${NC}"
+    echo -e "${CYAN}║   Server: 59.21.170.6                        ║${NC}"
     echo -e "${CYAN}║   Version: ${VERSION}                   ║${NC}"
     echo -e "${CYAN}║                                                    ║${NC}"
     echo -e "${CYAN}╚════════════════════════════════════════════════════╝${NC}"
@@ -326,7 +326,7 @@ blue_green_deploy() {
     
     # Check via public endpoint
     info "Checking public endpoint..."
-    local public_health=$(ssh_exec "curl -sf https://221.164.102.253/api/health 2>&1" || echo "FAIL")
+    local public_health=$(ssh_exec "curl -sf https://59.21.170.6/api/health 2>&1" || echo "FAIL")
     
     if echo "$public_health" | grep -q "healthy"; then
         success "Public endpoint healthy ✓"
@@ -391,17 +391,17 @@ show_summary() {
     echo "  • Version: ${VERSION}"
     echo "  • Strategy: Blue-Green (zero downtime)"
     echo "  • Duration: ~3 minutes"
-    echo "  • Server: 221.164.102.253"
+    echo "  • Server: 59.21.170.6"
     echo ""
     
     info "🔗 Quick Links:"
-    echo "  • Website: https://221.164.102.253"
-    echo "  • Health: https://221.164.102.253/api/health"
-    echo "  • Grafana: http://221.164.102.253:3100"
+    echo "  • Website: https://59.21.170.6"
+    echo "  • Health: https://59.21.170.6/api/health"
+    echo "  • Grafana: http://59.21.170.6:3100"
     echo ""
     
     info "📝 Next Steps:"
-    echo "  1. Monitor Grafana: http://221.164.102.253:3100"
+    echo "  1. Monitor Grafana: http://59.21.170.6:3100"
     echo "  2. Check logs: ssh ${REMOTE_SERVER} 'docker logs -f connect_app1'"
     echo "  3. Test features manually"
     echo "  4. Monitor for 10 minutes"
@@ -410,7 +410,7 @@ show_summary() {
     info "🔄 If Problems Occur:"
     echo "  • Quick rollback: ./scripts/rollback-production.sh"
     echo "  • Check logs: docker logs connect_app1 --tail 100"
-    echo "  • Check health: curl https://221.164.102.253/api/health"
+    echo "  • Check health: curl https://59.21.170.6/api/health"
     echo ""
 }
 

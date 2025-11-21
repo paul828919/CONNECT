@@ -158,7 +158,7 @@ Your first automated deployment is running RIGHT NOW:
 
 **All 7 secrets successfully added by user:**
 
-1. ✅ `PRODUCTION_SERVER_IP` = 221.164.102.253
+1. ✅ `PRODUCTION_SERVER_IP` = 59.21.170.6
 2. ✅ `PRODUCTION_SERVER_USER` = user
 3. ✅ `PRODUCTION_SERVER_SSH_KEY` = [SSH private key]
 4. ✅ `DB_PASSWORD` = [Database password]
@@ -214,10 +214,10 @@ The GitHub Actions workflow will:
 ./scripts/verify-deployment.sh
 
 # Test production
-curl https://221.164.102.253/api/health
+curl https://59.21.170.6/api/health
 
 # View application
-open https://221.164.102.253
+open https://59.21.170.6
 ```
 
 ---
@@ -235,13 +235,13 @@ open https://221.164.102.253
 ./scripts/verify-deployment.sh
 
 # Test health endpoint
-curl https://221.164.102.253/api/health
+curl https://59.21.170.6/api/health
 
 # Check deployment status
-curl https://221.164.102.253/api/version
+curl https://59.21.170.6/api/version
 
 # SSH to server
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6
 ```
 
 ---
@@ -418,11 +418,11 @@ Companies pay $150K+/year for DevOps engineers who can:
 1. **Verify Deployment**
    ```bash
    ./scripts/verify-deployment.sh
-   curl https://221.164.102.253/api/health
+   curl https://59.21.170.6/api/health
    ```
 
 2. **Test Application**
-   - Visit https://221.164.102.253
+   - Visit https://59.21.170.6
    - Test login functionality
    - Verify features working
 
@@ -503,13 +503,13 @@ You now have:
 ./scripts/verify-deployment.sh
 
 # Test production
-curl https://221.164.102.253/api/health
+curl https://59.21.170.6/api/health
 
 # Watch workflows
 open https://github.com/paul828919/CONNECT/actions
 
 # SSH to server
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6
 ```
 
 ### **Documentation**
@@ -533,7 +533,7 @@ ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253
 
 **Repository:** https://github.com/paul828919/CONNECT  
 **Actions:** https://github.com/paul828919/CONNECT/actions  
-**Production:** https://221.164.102.253
+**Production:** https://59.21.170.6
 
 **Current Deployment:** 🔄 **RUNNING**  
 **Expected Complete:** ~8-12 minutes from trigger

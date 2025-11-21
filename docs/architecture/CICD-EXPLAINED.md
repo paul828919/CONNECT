@@ -186,7 +186,7 @@ Now imagine:
 │  └─ If any fail → STOP (don't deploy broken code)          │
 │                                                               │
 │  STAGE 3: DEPLOY TO GREEN (30 seconds)                      │
-│  ├─ Upload to server (221.164.102.253)                     │
+│  ├─ Upload to server (59.21.170.6)                     │
 │  ├─ Start new container (app2 - "Green")                    │
 │  ├─ Wait for health check (10 seconds)                      │
 │  └─ If healthy → Continue, else → ROLLBACK                  │
@@ -787,7 +787,7 @@ git checkout main            # Switch back to main
 **Method 1: Instant Switch (5 seconds)**
 ```bash
 # Switch traffic to previous version
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 docker exec haproxy sed -i 's/server app2 check/server app2 check backup/' /etc/haproxy/haproxy.cfg
 docker exec haproxy kill -HUP 1
 
@@ -797,7 +797,7 @@ docker exec haproxy kill -HUP 1
 **Method 2: Redeploy Previous Version (30 seconds)**
 ```bash
 # Pull previous Docker image
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 docker pull connect:v1.0.0
 docker tag connect:v1.0.0 connect:latest
 docker-compose restart app1 app2
@@ -808,7 +808,7 @@ docker-compose restart app1 app2
 **Method 3: Restore from Backup (5 minutes)**
 ```bash
 # If database migration failed
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 docker exec -i connect_postgres psql -U connect < /backups/postgres/latest.sql
 
 # Result: Database back to previous state
@@ -844,19 +844,19 @@ docker exec -i connect_postgres psql -U connect < /backups/postgres/latest.sql
 **How to Check (Quick Commands):**
 ```bash
 # 1. Check if app is running
-curl https://221.164.102.253/api/health
+curl https://59.21.170.6/api/health
 
 # 2. Check Docker containers
-ssh user@221.164.102.253 'docker ps'
+ssh user@59.21.170.6 'docker ps'
 
 # 3. Check logs for errors
-ssh user@221.164.102.253 'docker logs app1 --tail 50 | grep -i error'
+ssh user@59.21.170.6 'docker logs app1 --tail 50 | grep -i error'
 
 # 4. Check disk space
-ssh user@221.164.102.253 'df -h'
+ssh user@59.21.170.6 'df -h'
 
 # 5. Check resource usage
-ssh user@221.164.102.253 'docker stats --no-stream'
+ssh user@59.21.170.6 'docker stats --no-stream'
 ```
 
 ---
@@ -883,7 +883,7 @@ DATABASE_URL="postgresql://connect:password123@localhost:5432"
 ```bash
 # Use SSH keys, not passwords
 ssh-keygen -t ed25519 -C "paul@connect.co.kr"
-ssh-copy-id user@221.164.102.253
+ssh-copy-id user@59.21.170.6
 
 # Disable password authentication on server
 sudo sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
@@ -1166,7 +1166,7 @@ Automated backups every 15 minutes → Hard drive fails → Restore from backup 
    (Follow procedure in Part 5, Section 4)
    
 3. Verify backups running:
-   ssh user@221.164.102.253 'ls -lh /backups/postgres/ | tail -5'
+   ssh user@59.21.170.6 'ls -lh /backups/postgres/ | tail -5'
 
 # Day 2: Document Your Process
 1. Create personal runbook:
@@ -1177,7 +1177,7 @@ Automated backups every 15 minutes → Hard drive fails → Restore from backup 
 2. Save in Google Docs (accessible anywhere)
 
 # Day 3: Set Up Monitoring
-1. Open Grafana: http://221.164.102.253:3100
+1. Open Grafana: http://59.21.170.6:3100
 2. Customize main dashboard
 3. Set up email alerts
 4. Test alerts (trigger warning on purpose)
@@ -1272,15 +1272,15 @@ docs/architecture/
 **1. Check Logs:**
 ```bash
 # App logs
-ssh user@221.164.102.253 'docker logs app1 --tail 100'
+ssh user@59.21.170.6 'docker logs app1 --tail 100'
 
 # Database logs
-ssh user@221.164.102.253 'docker logs connect_postgres --tail 100'
+ssh user@59.21.170.6 'docker logs connect_postgres --tail 100'
 ```
 
 **2. Check Health:**
 ```bash
-curl https://221.164.102.253/api/health
+curl https://59.21.170.6/api/health
 ```
 
 **3. Ask Claude:**

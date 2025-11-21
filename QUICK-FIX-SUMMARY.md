@@ -86,11 +86,11 @@ This will:
 ### Option 2: Manual Deploy
 ```bash
 # 1. Upload files to server
-scp app/api/health/route.ts user@221.164.102.253:/root/connect/app/api/health/
-scp scripts/check-health.sh user@221.164.102.253:/root/connect/scripts/
+scp app/api/health/route.ts user@59.21.170.6:/root/connect/app/api/health/
+scp scripts/check-health.sh user@59.21.170.6:/root/connect/scripts/
 
 # 2. Rebuild and restart
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 cd /root/connect
 docker-compose -f docker-compose.production.yml build app1 app2
 docker-compose -f docker-compose.production.yml up -d --no-deps app1
@@ -139,25 +139,25 @@ docker-compose -f docker-compose.production.yml up -d --no-deps app2
 export CONNECT_SERVER_PASSWORD='iw237877^^'
 
 # Check app1
-sshpass -p "$CONNECT_SERVER_PASSWORD" ssh user@221.164.102.253 \
+sshpass -p "$CONNECT_SERVER_PASSWORD" ssh user@59.21.170.6 \
   "docker exec connect_app1 curl http://localhost:3001/api/health"
 
 # Check app2
-sshpass -p "$CONNECT_SERVER_PASSWORD" ssh user@221.164.102.253 \
+sshpass -p "$CONNECT_SERVER_PASSWORD" ssh user@59.21.170.6 \
   "docker exec connect_app2 curl http://localhost:3002/api/health"
 
 # Check public endpoint
-curl -k https://221.164.102.253/api/health | jq
+curl -k https://59.21.170.6/api/health | jq
 ```
 
 ### Test Redis
 ```bash
 # Redis Cache
-sshpass -p "$CONNECT_SERVER_PASSWORD" ssh user@221.164.102.253 \
+sshpass -p "$CONNECT_SERVER_PASSWORD" ssh user@59.21.170.6 \
   "docker exec connect_redis_cache redis-cli ping"
 
 # Redis Queue
-sshpass -p "$CONNECT_SERVER_PASSWORD" ssh user@221.164.102.253 \
+sshpass -p "$CONNECT_SERVER_PASSWORD" ssh user@59.21.170.6 \
   "docker exec connect_redis_queue redis-cli ping"
 ```
 
@@ -167,8 +167,8 @@ sshpass -p "$CONNECT_SERVER_PASSWORD" ssh user@221.164.102.253 \
 
 ### 1. Check Application Logs
 ```bash
-ssh user@221.164.102.253 "docker logs connect_app1 --tail 50"
-ssh user@221.164.102.253 "docker logs connect_app2 --tail 50"
+ssh user@59.21.170.6 "docker logs connect_app1 --tail 50"
+ssh user@59.21.170.6 "docker logs connect_app2 --tail 50"
 ```
 
 ### 2. Run Full Diagnostics
@@ -178,7 +178,7 @@ ssh user@221.164.102.253 "docker logs connect_app2 --tail 50"
 
 ### 3. Verify Container Status
 ```bash
-ssh user@221.164.102.253 "docker ps"
+ssh user@59.21.170.6 "docker ps"
 ```
 
 ---

@@ -54,7 +54,7 @@ This will guide you through adding all 7 secrets.
 
 #### 1. PRODUCTION_SERVER_IP
 ```
-221.164.102.253
+59.21.170.6
 ```
 
 #### 2. PRODUCTION_SERVER_USER
@@ -237,7 +237,7 @@ git push origin main
 ### 3. Verify Deployment
 ```bash
 ./scripts/verify-deployment.sh
-curl https://221.164.102.253/api/health
+curl https://59.21.170.6/api/health
 ```
 
 ---
@@ -305,7 +305,7 @@ curl https://221.164.102.253/api/health
 
 **Connection Test:**
 ```bash
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "echo works!"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "echo works!"
 ```
 
 ---
@@ -325,7 +325,7 @@ ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "echo works!"
 ### **VERIFY (1 minute)**
 - [ ] Check deployment succeeds
 - [ ] Run: `./scripts/verify-deployment.sh`
-- [ ] Test: `curl https://221.164.102.253/api/health`
+- [ ] Test: `curl https://59.21.170.6/api/health`
 
 ---
 

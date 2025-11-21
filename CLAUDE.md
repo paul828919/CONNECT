@@ -39,7 +39,7 @@ Health check verification → Success (or automatic rollback)
 ```
 **⚠️ Important - Must verify before Docker build:**
 **Development Environment:** MacBook Pro M4 Max (ARM64/aarch64 architecture)
-**Production Environment:** Linux server 221.164.102.253 (x86_64/amd64 architecture)
+**Production Environment:** Linux server 59.21.170.6 (x86_64/amd64 architecture)
 **Essential Build Command (used in all sessions):**
 ```bash
 docker buildx build --platform linux/amd64 -f Dockerfile.production -t connect:latest .

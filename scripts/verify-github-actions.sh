@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 SSH_KEY="${HOME}/.ssh/id_ed25519_connect"
-SERVER_IP="221.164.102.253"
+SERVER_IP="59.21.170.6"
 SERVER_USER="user"
 PROJECT_DIR="/opt/connect"
 

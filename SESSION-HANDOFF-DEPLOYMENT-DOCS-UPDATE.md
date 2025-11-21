@@ -94,7 +94,7 @@ DEPRECATED (Don't Use) ⚠️
 ```
 
 ### **Production Environment**
-- **Server:** 221.164.102.253
+- **Server:** 59.21.170.6
 - **OS:** Ubuntu 22.04.4 LTS
 - **Hardware:** Intel i9-12900K (16 cores), 128GB RAM
 - **Containers:** app1 (3001), app2 (3002) - both healthy
@@ -202,8 +202,8 @@ git push origin main
 ./scripts/verify-deployment.sh
 
 # Check production health
-curl http://221.164.102.253:3001/api/health
-curl http://221.164.102.253:3002/api/health
+curl http://59.21.170.6:3001/api/health
+curl http://59.21.170.6:3002/api/health
 ```
 
 ### **Development**

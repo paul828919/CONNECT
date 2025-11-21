@@ -25,7 +25,7 @@ echo ""
 
 # Secret 1
 echo -e "${GREEN}1. PRODUCTION_SERVER_IP${NC}"
-echo "   Value: 221.164.102.253"
+echo "   Value: 59.21.170.6"
 echo ""
 
 # Secret 2

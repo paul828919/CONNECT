@@ -57,7 +57,7 @@
 ### 2. **SSH Key Authentication Setup** ✅
 **Implemented:**
 - ✅ Generated secure ED25519 SSH key
-- ✅ Copied to production server (221.164.102.253)
+- ✅ Copied to production server (59.21.170.6)
 - ✅ Configured SSH config with `connect-prod` alias
 - ✅ Created convenient shell aliases
 - ✅ Updated scripts to support both SSH keys and passwords
@@ -111,7 +111,7 @@ DB_PASSWORD=                    # PostgreSQL password
 # Auth (must be strong, random)
 JWT_SECRET=                     # 32+ chars
 NEXTAUTH_SECRET=                # 32+ chars
-NEXTAUTH_URL=                   # https://221.164.102.253
+NEXTAUTH_URL=                   # https://59.21.170.6
 
 # OAuth
 KAKAO_CLIENT_ID=
@@ -183,7 +183,7 @@ ssh connect-prod "cd /opt/connect && docker-compose -f docker-compose.production
 ### **3. Re-verify System Health**
 ```bash
 ./scripts/check-health.sh
-curl -k https://221.164.102.253/api/health | jq
+curl -k https://59.21.170.6/api/health | jq
 ```
 
 ---
@@ -205,7 +205,7 @@ curl -k https://221.164.102.253/api/health | jq
 
 ### **SSH Configuration**
 - SSH Key: `~/.ssh/id_ed25519_connect`
-- SSH Alias: `connect-prod` → `user@221.164.102.253`
+- SSH Alias: `connect-prod` → `user@59.21.170.6`
 - Password: No longer needed for scripts!
 
 ---
@@ -232,7 +232,7 @@ connect-logs-app2    # App2 logs
 
 ### **Health Endpoint:**
 ```bash
-curl -k https://221.164.102.253/api/health | jq
+curl -k https://59.21.170.6/api/health | jq
 ```
 
 ---
@@ -301,7 +301,7 @@ I'm continuing from a previous session where we fixed the health monitoring syst
 - Production server should have .env at /opt/connect/.env
 
 CURRENT SITUATION:
-- System: Connect Platform on 221.164.102.253
+- System: Connect Platform on 59.21.170.6
 - SSH: Configured with connect-prod alias (key-based auth)
 - Containers: All healthy (app1, app2, postgres, redis-cache, redis-queue)
 - Warning: Some env vars showing as "not set" (TOSS_CLIENT_KEY, TOSS_SECRET_KEY, SENTRY_DSN)
@@ -328,10 +328,10 @@ Reference files: ENV-VERIFICATION-REPORT.md, SESSION-HANDOFF-HEALTH-SECURITY.md
 
 ## 📋 **Quick Reference**
 
-**Production Server**: `221.164.102.253`  
+**Production Server**: `59.21.170.6`  
 **SSH Alias**: `connect-prod`  
 **Project Path**: `/opt/connect`  
-**Health Endpoint**: `https://221.164.102.253/api/health`  
+**Health Endpoint**: `https://59.21.170.6/api/health`  
 **SSH Key**: `~/.ssh/id_ed25519_connect`  
 
 **Common Commands:**

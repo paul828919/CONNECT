@@ -96,7 +96,7 @@ After HTTPS setup, Next.js needs to be restarted:
 **SSH Config Created**:
 ```
 Host connect-server
-    HostName 221.164.102.253
+    HostName 59.21.170.6
     User paul
     IdentityFile ~/.ssh/id_rsa
     StrictHostKeyChecking yes
@@ -293,7 +293,7 @@ All scripts source `config.sh` for centralized configuration.
 # SSH Configuration
 SSH_HOST="connect-server"        # Host alias from ~/.ssh/config
 SSH_USER="paul"                  # Server username
-SSH_IP="221.164.102.253"        # Server IP address
+SSH_IP="59.21.170.6"        # Server IP address
 
 # Remote Paths
 REMOTE_PROJECT_PATH="/opt/connect"
@@ -394,10 +394,10 @@ ssh connect-server
 **Solution**:
 ```bash
 # Copy SSH key to server
-ssh-copy-id -i ~/.ssh/id_rsa paul@221.164.102.253
+ssh-copy-id -i ~/.ssh/id_rsa paul@59.21.170.6
 
 # Or add key manually on server
-cat ~/.ssh/id_rsa.pub | ssh paul@221.164.102.253 "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+cat ~/.ssh/id_rsa.pub | ssh paul@59.21.170.6 "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
 ```
 
 ### Problem: "Next.js won't start"

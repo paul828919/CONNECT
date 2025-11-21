@@ -37,7 +37,7 @@ NAVER_CLIENT_SECRET="INlzYiYqBW"
 
 ```bash
 # SSH to production and add OAuth credentials
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 << 'EOF'
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 << 'EOF'
 cat >> /opt/connect/.env.production << 'ENVEOF'
 
 # OAuth Credentials (Added Session 41)
@@ -61,7 +61,7 @@ EOF
 
 ```bash
 # Restart app containers to pick up new environment variables
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 << 'EOF'
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 << 'EOF'
 cd /opt/connect
 
 # Stop app containers
@@ -161,7 +161,7 @@ If OAuth breaks something:
 
 ```bash
 # Remove OAuth credentials
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 << 'EOF'
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 << 'EOF'
 cd /opt/connect
 # Remove last 6 lines from .env.production (OAuth block)
 head -n -6 .env.production > .env.production.tmp
@@ -202,7 +202,7 @@ EOF
 
 ```bash
 # 1. Add OAuth to production
-sshpass -p 'iw237877^^' ssh user@221.164.102.253 'cat >> /opt/connect/.env.production << EOF
+sshpass -p 'iw237877^^' ssh user@59.21.170.6 'cat >> /opt/connect/.env.production << EOF
 
 KAKAO_CLIENT_ID="bd3fa10fd919f0676a26f53a5277f553"
 KAKAO_CLIENT_SECRET="vgjFmUt4TheMAm9m0J3hbyilGUk0GBOp"
@@ -211,7 +211,7 @@ NAVER_CLIENT_SECRET="INlzYiYqBW"
 EOF'
 
 # 2. Restart containers
-sshpass -p 'iw237877^^' ssh user@221.164.102.253 'cd /opt/connect && docker compose -f docker-compose.production.yml restart app1 app2'
+sshpass -p 'iw237877^^' ssh user@59.21.170.6 'cd /opt/connect && docker compose -f docker-compose.production.yml restart app1 app2'
 
 # 3. Capture session
 ./capture-auth-simple.sh

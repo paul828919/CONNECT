@@ -264,7 +264,7 @@ interface TestResult {
 ### Immediate (Beta Week 1 Day 2 - October 11, 2025 PM)
 
 **Priority 2: HTTPS Setup** (2 hours - if time permits)
-1. SSH to Linux server (221.164.102.253)
+1. SSH to Linux server (59.21.170.6)
 2. Install Nginx + Certbot
 3. Configure SSL certificate for connectplt.kr
 4. Test https://connectplt.kr (green padlock)
@@ -430,7 +430,7 @@ const token = await new SignJWT({ userId, email, role })
 **If Time Permits Today**:
 
 **Priority 2: HTTPS Setup** (2 hours)
-1. Verify Linux server access (ssh paul@221.164.102.253)
+1. Verify Linux server access (ssh paul@59.21.170.6)
 2. Install Nginx + Certbot
 3. Configure SSL for connectplt.kr
 4. Test green padlock
@@ -454,7 +454,7 @@ const token = await new SignJWT({ userId, email, role })
 ## 📌 Action Items for Next Session
 
 **If continuing Day 2 (HTTPS setup)**:
-- [ ] SSH to Linux server (221.164.102.253)
+- [ ] SSH to Linux server (59.21.170.6)
 - [ ] Install Nginx + Certbot
 - [ ] Configure SSL certificate
 - [ ] Test https://connectplt.kr

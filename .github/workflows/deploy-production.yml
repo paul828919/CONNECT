@@ -407,7 +407,7 @@ jobs:
           # ============================================
           # Cron Job Security
           # ============================================
-          CRON_SECRET_TOKEN=
+          CRON_SECRET_TOKEN=${{ secrets.CRON_SECRET_TOKEN }}
 
           # ============================================
           # Application Settings

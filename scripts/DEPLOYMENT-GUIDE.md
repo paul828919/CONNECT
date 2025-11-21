@@ -20,7 +20,7 @@ export CONNECT_SERVER_PASSWORD='iw237877^^'
 
 **Note:** For security, consider setting up SSH key authentication instead:
 ```bash
-ssh-copy-id user@221.164.102.253
+ssh-copy-id user@59.21.170.6
 ```
 
 ### 2. **Required Tools**
@@ -123,7 +123,7 @@ git push origin main
 ./scripts/check-health.sh
 
 # 6. Check Grafana
-open http://221.164.102.253:3100
+open http://59.21.170.6:3100
 ```
 
 ---
@@ -232,10 +232,10 @@ STEP 5: Final Verification
 
 ```bash
 # Check if server is reachable
-ping 221.164.102.253
+ping 59.21.170.6
 
 # Test SSH manually
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 
 # If password fails, check environment variable
 echo $CONNECT_SERVER_PASSWORD
@@ -262,7 +262,7 @@ docker build -f Dockerfile.production -t connect:test .
 
 ```bash
 # Check migration status manually
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 docker exec connect_app1 npx prisma migrate status
 
 # View migration history
@@ -279,13 +279,13 @@ docker exec connect_postgres psql -U connect -c "SELECT * FROM _prisma_migration
 
 ```bash
 # Check application logs
-ssh user@221.164.102.253 'docker logs connect_app1 --tail 100'
+ssh user@59.21.170.6 'docker logs connect_app1 --tail 100'
 
 # Check if containers are running
-ssh user@221.164.102.253 'docker ps'
+ssh user@59.21.170.6 'docker ps'
 
 # Try restarting
-ssh user@221.164.102.253 'docker restart connect_app1'
+ssh user@59.21.170.6 'docker restart connect_app1'
 
 # If all else fails, rollback
 ./scripts/rollback-production.sh
@@ -305,13 +305,13 @@ ssh user@221.164.102.253 'docker restart connect_app1'
 ./scripts/check-health.sh
 
 # Minute 2: Check Grafana
-open http://221.164.102.253:3100
+open http://59.21.170.6:3100
 
 # Minute 3: Test features manually
-open https://221.164.102.253
+open https://59.21.170.6
 
 # Minute 5: Check logs
-ssh user@221.164.102.253 'docker logs connect_app1 --tail 50'
+ssh user@59.21.170.6 'docker logs connect_app1 --tail 50'
 
 # Minute 10: Final health check
 ./scripts/check-health.sh
@@ -349,10 +349,10 @@ ssh user@221.164.102.253 'docker logs connect_app1 --tail 50'
 ssh-keygen -t ed25519 -C "paul@connect.co.kr"
 
 # Copy to server
-ssh-copy-id user@221.164.102.253
+ssh-copy-id user@59.21.170.6
 
 # Test
-ssh user@221.164.102.253 'echo "SSH Key works!"'
+ssh user@59.21.170.6 'echo "SSH Key works!"'
 
 # Remove password from scripts
 unset CONNECT_SERVER_PASSWORD
@@ -374,7 +374,7 @@ git status | grep .env
 
 ```bash
 # Change server password every 3 months
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 passwd
 
 # Update your environment variable
@@ -401,9 +401,9 @@ echo "$(date): Deployed version $(git rev-parse --short HEAD) - $(git log -1 --p
 | Deploy | `./scripts/deploy-production.sh` | 3-4 min |
 | Rollback | `./scripts/rollback-production.sh` | 5-30 sec |
 | Health Check | `./scripts/check-health.sh` | 10 sec |
-| View Logs | `ssh user@221.164.102.253 'docker logs -f connect_app1'` | Continuous |
-| Check Containers | `ssh user@221.164.102.253 'docker ps'` | Instant |
-| Restart Container | `ssh user@221.164.102.253 'docker restart connect_app1'` | 10 sec |
+| View Logs | `ssh user@59.21.170.6 'docker logs -f connect_app1'` | Continuous |
+| Check Containers | `ssh user@59.21.170.6 'docker ps'` | Instant |
+| Restart Container | `ssh user@59.21.170.6 'docker restart connect_app1'` | 10 sec |
 
 ---
 
@@ -436,7 +436,7 @@ npm run build              # Verify build works
 
 ```bash
 # Bookmark Grafana
-open http://221.164.102.253:3100
+open http://59.21.170.6:3100
 
 # Check these metrics:
 # - Request rate (should be stable)

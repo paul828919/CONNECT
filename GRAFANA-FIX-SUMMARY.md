@@ -69,12 +69,12 @@
 ## ✅ Verification
 
 ### **Before Fix:**
-- ❌ Documentation showed: `http://221.164.102.253:3010`
+- ❌ Documentation showed: `http://59.21.170.6:3010`
 - ❌ Port 3010 not accessible (connection refused)
 - ❌ No centralized Grafana access guide
 
 ### **After Fix:**
-- ✅ All documentation updated to: `http://221.164.102.253:3100`
+- ✅ All documentation updated to: `http://59.21.170.6:3100`
 - ✅ Port 3100 verified working (Grafana login page accessible)
 - ✅ Credentials documented and accessible
 - ✅ Comprehensive access guide created
@@ -82,7 +82,7 @@
 ### **Final Check:**
 ```bash
 # Verified no remaining incorrect port references
-grep -r "221.164.102.253:3010" . --exclude-dir=node_modules
+grep -r "59.21.170.6:3010" . --exclude-dir=node_modules
 # Result: No matches found ✅
 
 grep -r "localhost:3010" . --exclude-dir=node_modules  
@@ -94,17 +94,17 @@ grep -r "localhost:3010" . --exclude-dir=node_modules
 ## 🔐 Access Information
 
 ### **Production Grafana**
-- **URL:** http://221.164.102.253:3100
+- **URL:** http://59.21.170.6:3100
 - **Username:** admin
 - **Password:** aXzTqR1YfL2bTTJ2X21KQw==
 
 ### **Quick Access**
 ```bash
 # Open Grafana in browser
-open http://221.164.102.253:3100
+open http://59.21.170.6:3100
 
 # Verify container is running
-ssh user@221.164.102.253 'docker ps | grep grafana'
+ssh user@59.21.170.6 'docker ps | grep grafana'
 ```
 
 ---
@@ -147,7 +147,7 @@ ssh user@221.164.102.253 'docker ps | grep grafana'
 ## 📝 Next Steps
 
 ### **Immediate (Now)**
-1. ✅ Access Grafana: http://221.164.102.253:3100
+1. ✅ Access Grafana: http://59.21.170.6:3100
 2. ✅ Log in with credentials above
 3. ✅ Verify dashboards are visible
 4. ✅ Bookmark the URL
@@ -182,7 +182,7 @@ grafana:
 ### **Port Mapping**
 - **Internal Port:** 3000 (inside container)
 - **External Port:** 3100 (host machine)
-- **Access URL:** http://221.164.102.253:3100
+- **Access URL:** http://59.21.170.6:3100
 
 ### **Why Port 3100?**
 - Avoids conflict with Next.js dev server (3000)

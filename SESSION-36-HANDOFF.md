@@ -89,7 +89,7 @@ echo "Local HEAD: $LOCAL_COMMIT"
 git log --oneline -5
 
 # Check production commit
-PROD_COMMIT=$(sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+PROD_COMMIT=$(sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'cd /opt/connect && git log --oneline -1' | cut -d' ' -f1)
 echo "Production HEAD: $PROD_COMMIT"
 
@@ -176,14 +176,14 @@ git status
 **Backup Current Production**:
 ```bash
 # Create backup of current production state
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'cd /opt/connect && \
    mkdir -p backups && \
    git log --oneline -1 > backups/pre-deploy-$(date +%Y%m%d-%H%M%S).commit && \
    docker compose -f docker-compose.production.yml ps > backups/pre-deploy-$(date +%Y%m%d-%H%M%S).services'
 
 # Verify backup created
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'ls -lh /opt/connect/backups/pre-deploy-* | tail -2'
 
 # Expected: Two backup files with recent timestamps
@@ -219,7 +219,7 @@ sshpass -p 'iw237877^^' rsync -avz --progress \
   --exclude='.playwright-mcp' \
   --exclude='playwright-report' \
   --exclude='test-results' \
-  . user@221.164.102.253:/opt/connect/
+  . user@59.21.170.6:/opt/connect/
 
 # Expected output: File transfer progress
 # Time: 5-10 minutes
@@ -234,10 +234,10 @@ echo $?
 # Copy .env.production to production server
 sshpass -p 'iw237877^^' scp -o StrictHostKeyChecking=no \
   /Users/paulkim/Downloads/connect/.env.production \
-  user@221.164.102.253:/opt/connect/
+  user@59.21.170.6:/opt/connect/
 
 # Verify .env.production deployed
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'ls -lh /opt/connect/.env.production'
 
 # Expected: File with recent timestamp
@@ -255,7 +255,7 @@ sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
 **Stop Current Containers**:
 ```bash
 # SSH to production
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 << 'EOF'
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 << 'EOF'
 cd /opt/connect
 
 # Stop app containers
@@ -271,7 +271,7 @@ EOF
 **Rebuild Images**:
 ```bash
 # SSH to production
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 << 'EOF'
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 << 'EOF'
 cd /opt/connect
 
 # Remove old containers (preserves volumes)
@@ -295,7 +295,7 @@ EOF
 **Database Migrations** (if any):
 ```bash
 # SSH to production
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 << 'EOF'
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 << 'EOF'
 cd /opt/connect
 
 # Run migrations
@@ -315,7 +315,7 @@ EOF
 **Start New Containers**:
 ```bash
 # SSH to production
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 << 'EOF'
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 << 'EOF'
 cd /opt/connect
 
 # Start containers
@@ -402,7 +402,7 @@ curl -sI https://connectplt.kr/dashboard/matches
 **Database & Redis Connectivity**:
 ```bash
 # SSH to production and test
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 << 'EOF'
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 << 'EOF'
 # Test PostgreSQL
 docker exec connect_postgres psql -U paulkim -d connect -c "SELECT 1;"
 
@@ -613,7 +613,7 @@ k6 run __tests__/performance/api-stress-short.js
 
 ```bash
 # SSH to production
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 << 'EOF'
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 << 'EOF'
 cd /opt/connect
 
 # Check last good commit from backup
@@ -783,7 +783,7 @@ ff92164 - Day 2: Docker Production Deployment (CURRENTLY IN PRODUCTION)
 
 **Production URL**: https://connectplt.kr
 
-**Production Server**: 221.164.102.253 (user@221.164.102.253, password: iw237877^^)
+**Production Server**: 59.21.170.6 (user@59.21.170.6, password: iw237877^^)
 
 ---
 

@@ -22,7 +22,7 @@
 ## 📊 **Current System Status**
 
 ### ✅ **What's Working:**
-- Production: All containers healthy (221.164.102.253)
+- Production: All containers healthy (59.21.170.6)
 - Health monitoring: Enhanced with real connectivity tests
 - SSH: Key-based authentication configured (no password needed)
 - Commands available: `connect-health`, `connect-ssh`, `connect-status`
@@ -68,7 +68,7 @@ NTIS_API_KEY="production_key_just_updated"
 DB_PASSWORD="production_db_password"
 JWT_SECRET="production_jwt_secret"
 NEXTAUTH_SECRET="production_nextauth_secret"
-NEXTAUTH_URL="https://221.164.102.253"
+NEXTAUTH_URL="https://59.21.170.6"
 ENCRYPTION_KEY="production_encryption_key"
 KAKAO_CLIENT_ID="kakao_client_id"
 KAKAO_CLIENT_SECRET="kakao_client_secret"
@@ -161,7 +161,7 @@ warning: SENTRY_DSN variable is not set
 DB_PASSWORD=                    # PostgreSQL password
 JWT_SECRET=                     # Auth secret (32+ chars)
 NEXTAUTH_SECRET=                # NextAuth secret (32+ chars)
-NEXTAUTH_URL=                   # https://221.164.102.253 or domain
+NEXTAUTH_URL=                   # https://59.21.170.6 or domain
 KAKAO_CLIENT_ID=                # OAuth
 KAKAO_CLIENT_SECRET=            # OAuth
 NAVER_CLIENT_ID=                # OAuth
@@ -212,7 +212,7 @@ connect-status       # Container status
 | **Purpose** | Development | Production deployment |
 | **Database** | `localhost:6432` | `postgres:5432` |
 | **Redis** | `localhost:6379` | `redis-cache:6379` |
-| **URL** | `http://localhost:3000` | `https://221.164.102.253` |
+| **URL** | `http://localhost:3000` | `https://59.21.170.6` |
 | **Secrets** | Dev values OK | MUST be production |
 | **NTIS Key** | Can use production | MUST have production |
 
@@ -255,7 +255,7 @@ connect-status       # Container status
 I'm continuing from a previous session about environment variables. Here's the situation:
 
 CONTEXT:
-- Platform: Connect Platform on server 221.164.102.253
+- Platform: Connect Platform on server 59.21.170.6
 - All containers healthy and operational
 - SSH configured with 'connect-prod' alias (key-based, no password)
 - Health monitoring system working perfectly
@@ -302,7 +302,7 @@ Reference: SESSION-HANDOFF-ENV-VERIFICATION.md, ENV-VERIFICATION-REPORT.md
 ## 📊 **Quick Reference**
 
 **Production Server:**
-- IP: 221.164.102.253
+- IP: 59.21.170.6
 - SSH: `ssh connect-prod` (no password)
 - Project: `/opt/connect`
 - .env location: `/opt/connect/.env`

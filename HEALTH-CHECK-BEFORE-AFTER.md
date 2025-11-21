@@ -307,7 +307,7 @@ Step 5/5: Verifying deployment...
 
 1. **Deploy the fix**: `./scripts/deploy-health-fix.sh`
 2. **Verify results**: `./scripts/check-health.sh`
-3. **Monitor**: `curl -k https://221.164.102.253/api/health | jq`
+3. **Monitor**: `curl -k https://59.21.170.6/api/health | jq`
 
 **Estimated deployment time**: 2-3 minutes  
 **Downtime**: Zero (rolling restart)

@@ -86,6 +86,6 @@ Research how Heroku/AWS/Kubernetes solve the problem. They already figured it ou
 Created: October 15, 2025
 Production Status: ✅ Deployed and Stable
 Architecture: Industry-Standard Entrypoint Pattern
-Server: 221.164.102.253 (Both app instances healthy)
+Server: 59.21.170.6 (Both app instances healthy)
 
 ================================================================================

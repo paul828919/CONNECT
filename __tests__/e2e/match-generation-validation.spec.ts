@@ -380,7 +380,7 @@ test.describe('Phase 1 Summary', () => {
     console.log('\n✓ All Phase 1 tests executed');
     console.log('✓ Screenshots saved to test-results/');
     console.log('\nNext: Phase 2 - Database Verification');
-    console.log('Run: sshpass -p \'iw237877^^\' ssh user@221.164.102.253');
+    console.log('Run: sshpass -p \'iw237877^^\' ssh user@59.21.170.6');
     console.log('Then: docker exec -it connect_postgres psql -U connect -d connect');
     console.log('='.repeat(60) + '\n');
   });

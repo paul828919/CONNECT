@@ -580,7 +580,7 @@ k6 run --out cloud __tests__/performance/api-stress.js
 4. **Resource Usage** (monitor during tests):
 ```bash
 # SSH to production server
-sshpass -p 'iw237877^^' ssh user@221.164.102.253
+sshpass -p 'iw237877^^' ssh user@59.21.170.6
 
 # Monitor Docker containers
 watch -n 2 'docker stats --no-stream'
@@ -687,7 +687,7 @@ k6 run __tests__/performance/homepage-load.js     # Homepage load
 k6 run __tests__/performance/api-stress.js        # API stress test
 
 # Docker Monitoring (during performance tests)
-sshpass -p 'iw237877^^' ssh user@221.164.102.253 'docker stats --no-stream'
+sshpass -p 'iw237877^^' ssh user@59.21.170.6 'docker stats --no-stream'
 ```
 
 ---

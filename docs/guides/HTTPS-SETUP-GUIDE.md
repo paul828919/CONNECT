@@ -16,7 +16,7 @@ This guide walks through setting up HTTPS for Connect Platform using:
 
 **Architecture**:
 ```
-Internet → Cloudflare DNS → Your Server (221.164.102.253)
+Internet → Cloudflare DNS → Your Server (59.21.170.6)
                              ├─ Nginx (port 80/443)
                              └─ Next.js (port 3000)
 ```
@@ -27,7 +27,7 @@ Internet → Cloudflare DNS → Your Server (221.164.102.253)
 
 **Before starting, verify**:
 
-1. ✅ DNS is working: `connectplt.kr` → `221.164.102.253`
+1. ✅ DNS is working: `connectplt.kr` → `59.21.170.6`
 2. ✅ Next.js is running on port 3000 (on Linux server)
 3. ✅ Port 80 and 443 are open (firewall/security groups)
 4. ✅ You have root/sudo access to the Linux server
@@ -36,10 +36,10 @@ Internet → Cloudflare DNS → Your Server (221.164.102.253)
 ```bash
 # Test DNS resolution
 dig connectplt.kr +short
-# Should return: 221.164.102.253
+# Should return: 59.21.170.6
 
 # Test if Next.js is accessible (if server firewall allows)
-curl http://221.164.102.253:3000/api/health
+curl http://59.21.170.6:3000/api/health
 # Should return: {"status":"ok"}
 ```
 
@@ -54,10 +54,10 @@ curl http://221.164.102.253:3000/api/health
 From your MacBook:
 ```bash
 # Copy the setup script to the server
-scp scripts/setup-https.sh paul@221.164.102.253:~/
+scp scripts/setup-https.sh paul@59.21.170.6:~/
 
 # SSH to the server
-ssh paul@221.164.102.253
+ssh paul@59.21.170.6
 ```
 
 ### Step 2: Run Setup Script
@@ -93,7 +93,7 @@ The script will:
 
 ```bash
 # From your MacBook
-ssh paul@221.164.102.253
+ssh paul@59.21.170.6
 ```
 
 ### Step 2: Verify Next.js is Running
@@ -344,7 +344,7 @@ sudo netstat -tlnp | grep :443
 # Verify DNS from server
 dig connectplt.kr +short
 
-# Should return: 221.164.102.253
+# Should return: 59.21.170.6
 ```
 
 ### Issue 4: "nginx: configuration test failed"
@@ -514,12 +514,12 @@ sudo systemctl reload nginx
                     │
 ┌───────────────────▼─────────────────────────────────────┐
 │  Cloudflare DNS                                          │
-│  connectplt.kr → 221.164.102.253                        │
+│  connectplt.kr → 59.21.170.6                        │
 └───────────────────┬─────────────────────────────────────┘
                     │
                     │
 ┌───────────────────▼─────────────────────────────────────┐
-│  Linux Server (221.164.102.253)                         │
+│  Linux Server (59.21.170.6)                         │
 │                                                           │
 │  ┌─────────────────────────────────────────────────┐   │
 │  │  Nginx (Reverse Proxy)                          │   │

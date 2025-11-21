@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Connect Platform is now **live in production** at https://connectplt.kr with full HTTPS encryption and all core services operational. Docker-based multi-container deployment successfully running on production server (221.164.102.253).
+Connect Platform is now **live in production** at https://connectplt.kr with full HTTPS encryption and all core services operational. Docker-based multi-container deployment successfully running on production server (59.21.170.6).
 
 ### Deployment Timeline
 - **Session 8** (Oct 10, AM): Docker build, PostgreSQL setup, Prisma migrations

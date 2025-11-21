@@ -29,8 +29,8 @@
 **Domain Acquired**: `connectplt.kr` via Gabia
 **Cost**: ₩15,000/year
 **DNS Configuration**:
-- A record @ → 221.164.102.253 (TTL: 600s)
-- A record www → 221.164.102.253 (TTL: 600s)
+- A record @ → 59.21.170.6 (TTL: 600s)
+- A record www → 59.21.170.6 (TTL: 600s)
 - TXT record for Google verification
 - MX record → smtp.google.com
 
@@ -43,7 +43,7 @@ DOMAIN="connectplt.kr"
 **Verification**:
 ```bash
 $ dig connectplt.kr +short
-221.164.102.253  ✅
+59.21.170.6  ✅
 
 $ nslookup www.connectplt.kr
 Server:		8.8.8.8
@@ -51,7 +51,7 @@ Address:	8.8.8.8#53
 
 Non-authoritative answer:
 Name:	www.connectplt.kr
-Address: 221.164.102.253  ✅
+Address: 59.21.170.6  ✅
 ```
 
 **Status**: ✅ Production-ready
@@ -326,7 +326,7 @@ await prisma.organization.findMany();
 | Criterion | Target | Actual | Status |
 |-----------|--------|--------|--------|
 | Domain purchased | connectplt.kr | connectplt.kr | ✅ |
-| DNS configured | 221.164.102.253 | 221.164.102.253 | ✅ |
+| DNS configured | 59.21.170.6 | 59.21.170.6 | ✅ |
 | DNS propagation | <2 hours | ~15 minutes | ✅ |
 | Load test script | 738 lines, 4 scenarios | 738 lines, 4 scenarios | ✅ |
 | Database seeded | 8 programs, 2 orgs | 8 programs, 2 orgs, 16 matches | ✅ |

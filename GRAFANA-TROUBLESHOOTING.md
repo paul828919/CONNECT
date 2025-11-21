@@ -19,16 +19,16 @@
 2. **Check data source health:**
    ```bash
    curl -u admin:aXzTqR1YfL2bTTJ2X21KQw== \
-     http://221.164.102.253:3100/api/datasources/1/health
+     http://59.21.170.6:3100/api/datasources/1/health
    ```
 3. **Verify database has data:**
    ```bash
-   ssh user@221.164.102.253 'docker exec connect_postgres psql -U connect -d connect -c "SELECT COUNT(*) FROM \"User\";"'
+   ssh user@59.21.170.6 'docker exec connect_postgres psql -U connect -d connect -c "SELECT COUNT(*) FROM \"User\";"'
    ```
 
 4. **Re-import dashboard if needed:**
    ```bash
-   curl -X POST http://221.164.102.253:3100/api/dashboards/db \
+   curl -X POST http://59.21.170.6:3100/api/dashboards/db \
      -H "Content-Type: application/json" \
      -u admin:aXzTqR1YfL2bTTJ2X21KQw== \
      -d @config/grafana/dashboards/platform-overview-fixed.json
@@ -45,22 +45,22 @@
 **Solution:**
 1. **Check if Grafana is running:**
    ```bash
-   ssh user@221.164.102.253 'docker ps | grep grafana'
+   ssh user@59.21.170.6 'docker ps | grep grafana'
    ```
 
 2. **Restart Grafana if needed:**
    ```bash
-   ssh user@221.164.102.253 'docker restart connect_grafana'
+   ssh user@59.21.170.6 'docker restart connect_grafana'
    ```
 
 3. **Check logs for errors:**
    ```bash
-   ssh user@221.164.102.253 'docker logs connect_grafana --tail 50'
+   ssh user@59.21.170.6 'docker logs connect_grafana --tail 50'
    ```
 
 4. **Verify port mapping:**
    ```bash
-   ssh user@221.164.102.253 'docker port connect_grafana'
+   ssh user@59.21.170.6 'docker port connect_grafana'
    # Should show: 3000/tcp -> 0.0.0.0:3100
    ```
 
@@ -75,13 +75,13 @@
 **Solution:**
 1. **Verify password from server:**
    ```bash
-   ssh user@221.164.102.253 'cat /opt/connect/.env | grep GRAFANA_PASSWORD'
+   ssh user@59.21.170.6 'cat /opt/connect/.env | grep GRAFANA_PASSWORD'
    ```
 
 2. **Reset password if needed:**
    ```bash
    # SSH to server
-   ssh user@221.164.102.253
+   ssh user@59.21.170.6
    
    # Edit .env file
    nano /opt/connect/.env
@@ -93,7 +93,7 @@
 
 3. **Use admin password reset (if have container access):**
    ```bash
-   ssh user@221.164.102.253 'docker exec -it connect_grafana grafana-cli admin reset-admin-password NEW_PASSWORD'
+   ssh user@59.21.170.6 'docker exec -it connect_grafana grafana-cli admin reset-admin-password NEW_PASSWORD'
    ```
 
 ---
@@ -108,30 +108,30 @@
 1. **Test network connectivity:**
    ```bash
    # Test if Grafana can reach PostgreSQL
-   ssh user@221.164.102.253 'docker exec connect_grafana ping -c 1 postgres'
+   ssh user@59.21.170.6 'docker exec connect_grafana ping -c 1 postgres'
    
    # Test if Grafana can reach Redis
-   ssh user@221.164.102.253 'docker exec connect_grafana ping -c 1 redis-cache'
+   ssh user@59.21.170.6 'docker exec connect_grafana ping -c 1 redis-cache'
    ```
 
 2. **Verify database credentials:**
    ```bash
-   ssh user@221.164.102.253 'cat /opt/connect/.env | grep DB_PASSWORD'
+   ssh user@59.21.170.6 'cat /opt/connect/.env | grep DB_PASSWORD'
    ```
 
 3. **Test database directly:**
    ```bash
-   ssh user@221.164.102.253 'docker exec connect_postgres psql -U connect -d connect -c "SELECT 1;"'
+   ssh user@59.21.170.6 'docker exec connect_postgres psql -U connect -d connect -c "SELECT 1;"'
    ```
 
 4. **Recreate data source:**
    ```bash
    # Delete old data source
-   curl -X DELETE http://221.164.102.253:3100/api/datasources/1 \
+   curl -X DELETE http://59.21.170.6:3100/api/datasources/1 \
      -u admin:aXzTqR1YfL2bTTJ2X21KQw==
    
    # Create new one (use correct password from .env)
-   curl -X POST http://221.164.102.253:3100/api/datasources \
+   curl -X POST http://59.21.170.6:3100/api/datasources \
      -H "Content-Type: application/json" \
      -u admin:aXzTqR1YfL2bTTJ2X21KQw== \
      -d '{
@@ -161,7 +161,7 @@
 
 2. **Test query directly in database:**
    ```bash
-   ssh user@221.164.102.253 'docker exec connect_postgres psql -U connect -d connect -c "YOUR_QUERY_HERE"'
+   ssh user@59.21.170.6 'docker exec connect_postgres psql -U connect -d connect -c "YOUR_QUERY_HERE"'
    ```
 
 3. **Update panel query:**
@@ -180,22 +180,22 @@
 **Solution:**
 1. **Check Grafana permissions:**
    ```bash
-   ssh user@221.164.102.253 'docker exec connect_grafana ls -la /var/lib/grafana'
+   ssh user@59.21.170.6 'docker exec connect_grafana ls -la /var/lib/grafana'
    ```
 
 2. **Verify disk space:**
    ```bash
-   ssh user@221.164.102.253 'df -h'
+   ssh user@59.21.170.6 'df -h'
    ```
 
 3. **Check Grafana logs:**
    ```bash
-   ssh user@221.164.102.253 'docker logs connect_grafana | grep -i error | tail -20'
+   ssh user@59.21.170.6 'docker logs connect_grafana | grep -i error | tail -20'
    ```
 
 4. **Restart Grafana:**
    ```bash
-   ssh user@221.164.102.253 'docker restart connect_grafana'
+   ssh user@59.21.170.6 'docker restart connect_grafana'
    ```
 
 ---
@@ -224,7 +224,7 @@
 
 4. **Check Grafana alert logs:**
    ```bash
-   ssh user@221.164.102.253 'docker logs connect_grafana | grep -i alert | tail -50'
+   ssh user@59.21.170.6 'docker logs connect_grafana | grep -i alert | tail -50'
    ```
 
 ---
@@ -248,7 +248,7 @@
 3. **Check database performance:**
    ```bash
    # Check active queries
-   ssh user@221.164.102.253 'docker exec connect_postgres psql -U connect -d connect -c "
+   ssh user@59.21.170.6 'docker exec connect_postgres psql -U connect -d connect -c "
    SELECT pid, now() - query_start as duration, query 
    FROM pg_stat_activity 
    WHERE state = '\''active'\'' 
@@ -258,7 +258,7 @@
 
 4. **Monitor Grafana resources:**
    ```bash
-   ssh user@221.164.102.253 'docker stats connect_grafana --no-stream'
+   ssh user@59.21.170.6 'docker stats connect_grafana --no-stream'
    ```
 
 ---
@@ -273,25 +273,25 @@ echo "=== Grafana Health Check ==="
 
 # 1. Container status
 echo -e "\n1. Container Status:"
-ssh user@221.164.102.253 'docker ps | grep grafana'
+ssh user@59.21.170.6 'docker ps | grep grafana'
 
 # 2. Grafana health
 echo -e "\n2. Grafana Health:"
-curl -s http://221.164.102.253:3100/api/health | jq '.'
+curl -s http://59.21.170.6:3100/api/health | jq '.'
 
 # 3. Data sources
 echo -e "\n3. Data Sources:"
 curl -s -u admin:aXzTqR1YfL2bTTJ2X21KQw== \
-  http://221.164.102.253:3100/api/datasources | jq -r '.[] | "\(.name): \(.type)"'
+  http://59.21.170.6:3100/api/datasources | jq -r '.[] | "\(.name): \(.type)"'
 
 # 4. PostgreSQL connection
 echo -e "\n4. PostgreSQL Connection:"
 curl -s -u admin:aXzTqR1YfL2bTTJ2X21KQw== \
-  http://221.164.102.253:3100/api/datasources/1/health
+  http://59.21.170.6:3100/api/datasources/1/health
 
 # 5. Database data
 echo -e "\n5. Database Stats:"
-ssh user@221.164.102.253 'docker exec connect_postgres psql -U connect -d connect -c "
+ssh user@59.21.170.6 'docker exec connect_postgres psql -U connect -d connect -c "
   SELECT 
     (SELECT COUNT(*) FROM \"User\") as users,
     (SELECT COUNT(*) FROM pg_stat_activity) as connections,
@@ -307,16 +307,16 @@ echo -e "\n=== Health Check Complete ==="
 
 ```bash
 # 1. Stop Grafana
-ssh user@221.164.102.253 'docker stop connect_grafana'
+ssh user@59.21.170.6 'docker stop connect_grafana'
 
 # 2. Remove Grafana data (backup first!)
-ssh user@221.164.102.253 'sudo mv /opt/connect/data/grafana /opt/connect/data/grafana.backup.$(date +%Y%m%d)'
+ssh user@59.21.170.6 'sudo mv /opt/connect/data/grafana /opt/connect/data/grafana.backup.$(date +%Y%m%d)'
 
 # 3. Recreate data directory
-ssh user@221.164.102.253 'mkdir -p /opt/connect/data/grafana'
+ssh user@59.21.170.6 'mkdir -p /opt/connect/data/grafana'
 
 # 4. Start Grafana
-ssh user@221.164.102.253 'docker start connect_grafana'
+ssh user@59.21.170.6 'docker start connect_grafana'
 
 # 5. Wait for startup
 sleep 10
@@ -342,19 +342,19 @@ sleep 10
 
 ```bash
 # View logs
-ssh user@221.164.102.253 'docker logs connect_grafana --tail 100'
+ssh user@59.21.170.6 'docker logs connect_grafana --tail 100'
 
 # Restart Grafana
-ssh user@221.164.102.253 'docker restart connect_grafana'
+ssh user@59.21.170.6 'docker restart connect_grafana'
 
 # Check connectivity
-ssh user@221.164.102.253 'docker exec connect_grafana ping -c 1 postgres'
+ssh user@59.21.170.6 'docker exec connect_grafana ping -c 1 postgres'
 
 # Test query
-ssh user@221.164.102.253 'docker exec connect_postgres psql -U connect -d connect -c "SELECT COUNT(*) FROM \"User\";"'
+ssh user@59.21.170.6 'docker exec connect_postgres psql -U connect -d connect -c "SELECT COUNT(*) FROM \"User\";"'
 
 # Check data sources
-curl -u admin:aXzTqR1YfL2bTTJ2X21KQw== http://221.164.102.253:3100/api/datasources
+curl -u admin:aXzTqR1YfL2bTTJ2X21KQw== http://59.21.170.6:3100/api/datasources
 ```
 
 ---

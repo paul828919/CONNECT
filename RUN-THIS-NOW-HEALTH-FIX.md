@@ -79,15 +79,15 @@ export CONNECT_SERVER_PASSWORD='iw237877^^'
 ### Test Individual Services
 ```bash
 # Test app1 health
-sshpass -p "$CONNECT_SERVER_PASSWORD" ssh user@221.164.102.253 \
+sshpass -p "$CONNECT_SERVER_PASSWORD" ssh user@59.21.170.6 \
   "docker exec connect_app1 curl http://localhost:3001/api/health" | jq
 
 # Test app2 health
-sshpass -p "$CONNECT_SERVER_PASSWORD" ssh user@221.164.102.253 \
+sshpass -p "$CONNECT_SERVER_PASSWORD" ssh user@59.21.170.6 \
   "docker exec connect_app2 curl http://localhost:3002/api/health" | jq
 
 # Test public endpoint
-curl -k https://221.164.102.253/api/health | jq
+curl -k https://59.21.170.6/api/health | jq
 ```
 
 ---
@@ -96,7 +96,7 @@ curl -k https://221.164.102.253/api/health | jq
 
 ### Check Deployment Logs
 ```bash
-ssh user@221.164.102.253 "docker logs connect_app1 --tail 50"
+ssh user@59.21.170.6 "docker logs connect_app1 --tail 50"
 ```
 
 ### Run Full Diagnostics
@@ -106,7 +106,7 @@ ssh user@221.164.102.253 "docker logs connect_app1 --tail 50"
 
 ### Manual Rollback (if needed)
 ```bash
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 cd /root/connect
 docker-compose -f docker-compose.production.yml restart app1 app2
 ```

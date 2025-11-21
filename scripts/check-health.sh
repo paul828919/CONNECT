@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================
 # Connect Platform - Quick Health Check
-# Server: 221.164.102.253
+# Server: 59.21.170.6
 # Run anytime: ./scripts/check-health.sh
 # ============================================
 
@@ -76,7 +76,7 @@ else
     echo "  ${FAIL} app2: Unhealthy or not responding"
 fi
 
-public_health=$(ssh_exec "curl -skf https://221.164.102.253/api/health" || echo "FAIL")
+public_health=$(ssh_exec "curl -skf https://59.21.170.6/api/health" || echo "FAIL")
 if echo "$public_health" | grep -q "\"status\":\"ok\""; then
     echo "  ${OK} Public endpoint: Healthy"
 else
@@ -222,8 +222,8 @@ echo -e "${BLUE}╚════════════════════�
 
 echo ""
 echo -e "${BLUE}🔗 Quick Links:${NC}"
-echo "  • Grafana: http://221.164.102.253:3100"
-echo "  • Health API: https://221.164.102.253/api/health"
+echo "  • Grafana: http://59.21.170.6:3100"
+echo "  • Health API: https://59.21.170.6/api/health"
 echo "  • View Logs: ssh ${REMOTE_SERVER} 'docker logs -f connect_app1'"
 echo ""
 

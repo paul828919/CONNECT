@@ -51,7 +51,7 @@ DB_PASSWORD=                    # PostgreSQL password (PRODUCTION)
 ```bash
 JWT_SECRET=                     # Strong random string (min 32 chars)
 NEXTAUTH_SECRET=                # Strong random string (min 32 chars)
-NEXTAUTH_URL=                   # https://221.164.102.253 or your domain
+NEXTAUTH_URL=                   # https://59.21.170.6 or your domain
 ```
 
 ### **3. OAuth Providers** (REQUIRED)
@@ -132,7 +132,7 @@ DB_PASSWORD=YOUR_SECURE_PASSWORD_HERE
 # Auth (Generate with: openssl rand -base64 32)
 JWT_SECRET=YOUR_JWT_SECRET_HERE
 NEXTAUTH_SECRET=YOUR_NEXTAUTH_SECRET_HERE
-NEXTAUTH_URL=https://221.164.102.253
+NEXTAUTH_URL=https://59.21.170.6
 
 # OAuth Providers
 KAKAO_CLIENT_ID=YOUR_KAKAO_CLIENT_ID

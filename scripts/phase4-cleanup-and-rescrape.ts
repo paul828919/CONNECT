@@ -7,7 +7,7 @@
  *
  * EXECUTION:
  * Run this script on production server OR with production DATABASE_URL:
- * DATABASE_URL="postgresql://connect@221.164.102.253:5432/connect?schema=public" npx tsx scripts/phase4-cleanup-and-rescrape.ts
+ * DATABASE_URL="postgresql://connect@59.21.170.6:5432/connect?schema=public" npx tsx scripts/phase4-cleanup-and-rescrape.ts
  *
  * SAFE GUARDS:
  * - Only deletes NTIS records (scrapingSource = 'ntis')

@@ -75,7 +75,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 SSH_KEY="${HOME}/.ssh/id_ed25519_connect"
-SERVER_IP="221.164.102.253"
+SERVER_IP="59.21.170.6"
 SERVER_USER="user"
 PROJECT_DIR="/opt/connect"
 
@@ -212,7 +212,7 @@ Create: `scripts/test-ssh-connection.sh`
 #!/bin/bash
 
 SSH_KEY="${HOME}/.ssh/id_ed25519_connect"
-SERVER_IP="221.164.102.253"
+SERVER_IP="59.21.170.6"
 SERVER_USER="user"
 
 echo "🔐 Testing SSH Connection..."
@@ -392,13 +392,13 @@ gh run download <run-id>
 
 ```bash
 # Watch deployment progress
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "docker ps"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "docker ps"
 
 # Check application logs
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "cd /opt/connect && docker-compose logs -f app1"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "cd /opt/connect && docker-compose logs -f app1"
 
 # Check health endpoint
-curl https://221.164.102.253/api/health
+curl https://59.21.170.6/api/health
 ```
 
 ---
@@ -430,7 +430,7 @@ gh workflow list
 **Check:**
 ```bash
 # Test SSH locally
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "echo 'works!'"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "echo 'works!'"
 
 # Verify key format
 cat ~/.ssh/id_ed25519_connect | head -1
@@ -458,23 +458,23 @@ cat ~/.ssh/id_ed25519_connect | xclip   # Linux
 gh run view --log
 
 # Check server logs
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "journalctl -u docker -n 100"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "journalctl -u docker -n 100"
 ```
 
 **Common issues:**
 1. **No space on server**
    ```bash
-   ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "df -h"
+   ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "df -h"
    ```
 
 2. **Docker not running**
    ```bash
-   ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "sudo systemctl status docker"
+   ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "sudo systemctl status docker"
    ```
 
 3. **Port conflicts**
    ```bash
-   ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "netstat -tulpn | grep :3000"
+   ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "netstat -tulpn | grep :3000"
    ```
 
 ### Problem: Health Check Fails
@@ -482,13 +482,13 @@ ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "journalctl -u docker -n 1
 **Debug:**
 ```bash
 # Test health endpoint manually
-curl -v https://221.164.102.253/api/health
+curl -v https://59.21.170.6/api/health
 
 # Check if application is running
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "docker ps | grep connect"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "docker ps | grep connect"
 
 # View application logs
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "cd /opt/connect && docker-compose logs app1"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "cd /opt/connect && docker-compose logs app1"
 ```
 
 ---
@@ -508,7 +508,7 @@ git push origin main
 gh run watch
 
 # 4. Verify deployment
-curl https://221.164.102.253/api/health
+curl https://59.21.170.6/api/health
 ```
 
 ### Scenario 2: Feature Branch Testing
@@ -544,7 +544,7 @@ git push origin feature/new-feature
 gh run watch
 
 # 3. Verify immediately
-curl https://221.164.102.253/api/health
+curl https://59.21.170.6/api/health
 ```
 
 ### Scenario 4: Rollback Test
@@ -555,7 +555,7 @@ curl https://221.164.102.253/api/health
 # 3. Verify automatic rollback
 # 4. Check logs
 
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 \
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 \
   "cd /opt/connect && docker-compose logs"
 ```
 
@@ -600,7 +600,7 @@ ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 \
 #!/bin/bash
 # Create: scripts/verify-deployment.sh
 
-SERVER="221.164.102.253"
+SERVER="59.21.170.6"
 
 echo "🔍 Verifying Deployment..."
 
@@ -641,7 +641,7 @@ echo "✅ Deployment verified successfully!"
 ### Manual Checks
 
 1. **Application Access**
-   - Visit https://221.164.102.253
+   - Visit https://59.21.170.6
    - Test login functionality
    - Check main features
 
@@ -682,10 +682,10 @@ gh workflow list
 gh workflow run deploy-production.yml
 
 # Check deployment
-curl https://221.164.102.253/api/health
+curl https://59.21.170.6/api/health
 
 # View server logs
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 \
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 \
   "cd /opt/connect && docker-compose logs -f"
 ```
 

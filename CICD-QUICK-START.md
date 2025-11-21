@@ -11,7 +11,7 @@
 ### **3 New Production Scripts**
 
 1. **`scripts/deploy-production.sh`** (300+ lines)
-   - Full Blue-Green deployment to 221.164.102.253
+   - Full Blue-Green deployment to 59.21.170.6
    - Zero-downtime deployment
    - Automated health checks
    - Database migration with backup
@@ -303,10 +303,10 @@ Both serving traffic, load balanced!
 # Expected: ✅ All systems operational
 
 # 4. Monitor Grafana for 10 minutes
-open http://221.164.102.253:3100
+open http://59.21.170.6:3100
 
 # 5. Test features manually
-open https://221.164.102.253
+open https://59.21.170.6
 
 # Done! ✅
 ```
@@ -375,10 +375,10 @@ npm run dev
 ./scripts/check-health.sh
 
 # Review Grafana
-open http://221.164.102.253:3100
+open http://59.21.170.6:3100
 
 # Check for errors
-ssh user@221.164.102.253 'docker logs connect_app1 --since 24h | grep -i error | tail -20'
+ssh user@59.21.170.6 'docker logs connect_app1 --since 24h | grep -i error | tail -20'
 ```
 
 ### **Before Deploying**
@@ -413,7 +413,7 @@ npm run lint
 ./scripts/check-health.sh
 
 # Friday: Review logs, plan improvements
-ssh user@221.164.102.253 'docker logs connect_app1 --since 7d > weekly-logs.txt'
+ssh user@59.21.170.6 'docker logs connect_app1 --since 7d > weekly-logs.txt'
 ```
 
 ---
@@ -443,10 +443,10 @@ ssh user@221.164.102.253 'docker logs connect_app1 --since 7d > weekly-logs.txt'
 ssh-keygen -t ed25519 -C "paul@connect.co.kr"
 
 # 2. Copy to server
-ssh-copy-id user@221.164.102.253
+ssh-copy-id user@59.21.170.6
 
 # 3. Test
-ssh user@221.164.102.253 'echo "SSH key works!"'
+ssh user@59.21.170.6 'echo "SSH key works!"'
 
 # 4. Remove password
 unset CONNECT_SERVER_PASSWORD
@@ -460,7 +460,7 @@ unset CONNECT_SERVER_PASSWORD
 
 ### **Grafana (Already Set Up)**
 
-**URL:** http://221.164.102.253:3100
+**URL:** http://59.21.170.6:3100
 
 **Key Metrics to Watch:**
 
@@ -495,10 +495,10 @@ unset CONNECT_SERVER_PASSWORD
 
 ```bash
 # Test connection
-ping 221.164.102.253
+ping 59.21.170.6
 
 # Try manual SSH
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 
 # Check password
 echo $CONNECT_SERVER_PASSWORD
@@ -535,10 +535,10 @@ docker build -f Dockerfile.production -t connect:test . 2>&1 | tee build-error.l
 ./scripts/check-health.sh
 
 # Check logs
-ssh user@221.164.102.253 'docker logs connect_app1 --tail 100'
+ssh user@59.21.170.6 'docker logs connect_app1 --tail 100'
 
 # Restart if needed
-ssh user@221.164.102.253 'docker restart connect_app1'
+ssh user@59.21.170.6 'docker restart connect_app1'
 
 # If still failing, rollback
 ./scripts/rollback-production.sh
@@ -550,10 +550,10 @@ ssh user@221.164.102.253 'docker restart connect_app1'
 
 ```bash
 # Check migration status
-ssh user@221.164.102.253 'docker exec connect_app1 npx prisma migrate status'
+ssh user@59.21.170.6 'docker exec connect_app1 npx prisma migrate status'
 
 # View migration history
-ssh user@221.164.102.253 'docker exec connect_postgres psql -U connect -c "SELECT * FROM _prisma_migrations;"'
+ssh user@59.21.170.6 'docker exec connect_postgres psql -U connect -c "SELECT * FROM _prisma_migrations;"'
 
 # If needed, rollback includes database restore
 ./scripts/rollback-production.sh

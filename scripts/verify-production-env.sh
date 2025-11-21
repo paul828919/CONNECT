@@ -146,7 +146,7 @@ if [ -n "$NEXTAUTH_URL" ]; then
     elif echo "$NEXTAUTH_URL" | grep -q "localhost\|127.0.0.1"; then
         echo -e "${RED}❌ NEXTAUTH_URL: Using localhost (must be production URL)${NC}"
         echo -e "${YELLOW}   Current: $NEXTAUTH_URL${NC}"
-        echo -e "${YELLOW}   Should be: https://221.164.102.253 (or your domain)${NC}"
+        echo -e "${YELLOW}   Should be: https://59.21.170.6 (or your domain)${NC}"
         ((MISSING_COUNT++))
     else
         echo -e "${YELLOW}⚠️  NEXTAUTH_URL: Not using HTTPS${NC}"

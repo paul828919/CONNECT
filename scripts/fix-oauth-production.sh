@@ -18,7 +18,7 @@ error() { echo -e "${RED}[$(date +'%H:%M:%S')] ✗${NC} $1"; exit 1; }
 info() { echo -e "${BLUE}[$(date +'%H:%M:%S')] ℹ${NC} $1"; }
 
 # Configuration
-SERVER="user@221.164.102.253"
+SERVER="user@59.21.170.6"
 SERVER_PATH="/opt/connect"
 LOCAL_PATH="/Users/paulkim/Downloads/connect"
 COMPOSE_FILE="docker-compose.production.yml"
@@ -149,6 +149,6 @@ info ""
 info "Next steps:"
 info "1. Visit https://connectplt.kr"
 info "2. Try logging in with Naver OAuth"
-info "3. Check logs: ssh user@221.164.102.253 'cd /opt/connect && docker compose -f docker-compose.production.yml logs -f app1 app2'"
+info "3. Check logs: ssh user@59.21.170.6 'cd /opt/connect && docker compose -f docker-compose.production.yml logs -f app1 app2'"
 info ""
 warn "If OAuth still fails, check the logs for the specific error message"

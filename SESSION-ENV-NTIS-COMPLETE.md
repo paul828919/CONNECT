@@ -68,7 +68,7 @@ NTIS_API_KEY: ✅ Present (value: 6f5cioc70502fi63fdn5)
 
 ## 📁 **Files Modified**
 
-### **On Production Server (221.164.102.253)**
+### **On Production Server (59.21.170.6)**
 1. `/opt/connect/.env`
    - Added: `NTIS_API_KEY=6f5cioc70502fi63fdn5`
    - Permissions: Changed from 644 to 600

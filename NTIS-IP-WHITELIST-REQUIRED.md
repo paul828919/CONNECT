@@ -15,7 +15,7 @@
 
 ❌ **Blocking Issue:**
 - Error: "접근 허용 IP가 아닙니다" (IP not authorized)
-- Production server IP (221.164.102.253) not whitelisted in NTIS portal
+- Production server IP (59.21.170.6) not whitelisted in NTIS portal
 - MacBook development IP (211.245.196.87) also not whitelisted
 
 ---
@@ -25,7 +25,7 @@
 **Add these IPs to NTIS API key `6f5cioc70502fi63fdn5`:**
 
 ```
-Production Server: 221.164.102.253
+Production Server: 59.21.170.6
 Development (MacBook): 211.245.196.87
 ```
 
@@ -45,7 +45,7 @@ Development (MacBook): 211.245.196.87
 
 3. **Add IPs**
    - Click: "IP 등록/수정" (IP Registration/Modification)
-   - Add: `221.164.102.253` (production)
+   - Add: `59.21.170.6` (production)
    - Add: `211.245.196.87` (development)
    - Format: Comma-separated or one per line (depending on portal UI)
 
@@ -68,7 +68,7 @@ Development (MacBook): 211.245.196.87
 API 키 6f5cioc70502fi63fdn5에 대해
 다음 IP 주소를 화이트리스트에 등록해 주시기 바랍니다:
 
-1. 운영 서버: 221.164.102.253
+1. 운영 서버: 59.21.170.6
 2. 개발 환경: 211.245.196.87
 
 목적: Connect 플랫폼 R&D 과제 정보 수집
@@ -84,7 +84,7 @@ Hello,
 
 Please whitelist the following IP addresses for API key 6f5cioc70502fi63fdn5:
 
-1. Production Server: 221.164.102.253
+1. Production Server: 59.21.170.6
 2. Development Environment: 211.245.196.87
 
 Purpose: R&D program data collection for Connect platform
@@ -100,7 +100,7 @@ Thank you.
 ### Test from Production Server:
 
 ```bash
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6
 
 # Test NTIS API connectivity
 curl -s "https://www.ntis.go.kr/rndopen/openApi/public_project?apprvKey=6f5cioc70502fi63fdn5&collection=project&SRWR=&startPosition=1&displayCnt=2"
@@ -181,7 +181,7 @@ Korean government APIs (including NTIS) require IP whitelisting for security:
 - Need to re-whitelist if IP changes
 - Check current IP: `curl -s https://api.ipify.org`
 
-**Production Server IP (221.164.102.253):**
+**Production Server IP (59.21.170.6):**
 - Static IP (dedicated server)
 - Should remain stable
 - One-time whitelisting sufficient
@@ -211,7 +211,7 @@ If NTIS only allows 1 IP:
 
 **What You Need to Do:**
 1. Log into NTIS portal: https://www.ntis.go.kr/rndopen/api/mng/apiMain.do
-2. Add IP `221.164.102.253` (production) to key `6f5cioc70502fi63fdn5`
+2. Add IP `59.21.170.6` (production) to key `6f5cioc70502fi63fdn5`
 3. Add IP `211.245.196.87` (MacBook) to key `6f5cioc70502fi63fdn5`
 4. Wait 5-10 minutes for propagation
 5. Run verification: `curl -s "https://www.ntis.go.kr/rndopen/openApi/public_project?apprvKey=6f5cioc70502fi63fdn5&collection=project&SRWR=&startPosition=1&displayCnt=2"`

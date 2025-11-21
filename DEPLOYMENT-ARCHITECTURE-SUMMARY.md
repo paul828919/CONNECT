@@ -205,7 +205,7 @@ Health Check Endpoint
 ## 🚀 Production Status (Current)
 
 ### Infrastructure
-- **Server:** `221.164.102.253`
+- **Server:** `59.21.170.6`
 - **App1:** Port 3001 ✅ Healthy
 - **App2:** Port 3002 ✅ Healthy
 - **Database:** PostgreSQL 15 ✅ Healthy

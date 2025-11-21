@@ -116,7 +116,7 @@ docker-compose -f docker-compose.production.yml up -d --no-deps --build app2
 
 | Component | Details |
 |-----------|---------|
-| **Host** | 221.164.102.253 |
+| **Host** | 59.21.170.6 |
 | **OS** | Ubuntu 22.04.4 LTS (Jammy Jellyfish) |
 | **Kernel** | 6.8.0-64-generic (PREEMPT_DYNAMIC) |
 | **CPU** | Intel Core i9-12900K (12th Gen Alder Lake) |
@@ -130,7 +130,7 @@ docker-compose -f docker-compose.production.yml up -d --no-deps --build app2
 | **Network Interface** | eno1 @ 10 Gbps (Local/LAN) |
 | **Internet Connection** | 740 Mbps down / 404 Mbps up (Korea Telecom) |
 | **Network Latency** | 12-14 ms (to datacenter) |
-| **Public IP** | 221.164.102.253/27 |
+| **Public IP** | 59.21.170.6/27 |
 | **Docker Version** | 24.0.7 |
 | **Docker Compose** | v2.24.0 |
 
@@ -311,7 +311,7 @@ docker exec connect_postgres psql -U connect < /backups/postgres/connect_2024101
 
 ### 1. **Grafana Dashboards**
 
-**URL:** `http://221.164.102.253:3100`
+**URL:** `http://59.21.170.6:3100`
 
 **Key Metrics:**
 - **Application:** Request rate, error rate, response time (p50/p95/p99)

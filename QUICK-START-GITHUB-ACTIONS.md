@@ -26,7 +26,7 @@ This will show you all 7 secrets you need to add to GitHub.
 
 ```
 Name: PRODUCTION_SERVER_IP
-Value: 221.164.102.253
+Value: 59.21.170.6
 
 Name: PRODUCTION_SERVER_USER
 Value: user
@@ -159,7 +159,7 @@ git push origin main
 **Solution:**
 ```bash
 # 1. Test SSH locally
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "echo works!"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "echo works!"
 
 # 2. Verify key format
 cat ~/.ssh/id_ed25519_connect | head -1
@@ -186,13 +186,13 @@ cat ~/.ssh/id_ed25519_connect | pbcopy
 **Solution:**
 ```bash
 # Check server
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "docker ps"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "docker ps"
 
 # View logs on GitHub
 # Actions → Click failed workflow → View logs
 
 # Check server logs
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253 "journalctl -u docker -n 50"
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 "journalctl -u docker -n 50"
 ```
 
 ---
@@ -217,7 +217,7 @@ git push origin main
 
 # Verify deployment
 ./scripts/verify-deployment.sh
-curl https://221.164.102.253/api/health
+curl https://59.21.170.6/api/health
 ```
 
 ---

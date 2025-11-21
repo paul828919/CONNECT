@@ -6,7 +6,7 @@
  *
  * EXECUTION:
  * Run after Phase 4 scraping completes (~10 minutes)
- * DATABASE_URL="postgresql://connect@221.164.102.253:5432/connect?schema=public" npx tsx scripts/phase5-verify-data-quality.ts
+ * DATABASE_URL="postgresql://connect@59.21.170.6:5432/connect?schema=public" npx tsx scripts/phase5-verify-data-quality.ts
  *
  * SUCCESS CRITERIA:
  * - publishedAt extraction: ≥80%

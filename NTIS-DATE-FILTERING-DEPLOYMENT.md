@@ -95,7 +95,7 @@ git push origin main
 
 ```bash
 # SSH to production server
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6
 
 # Check scraper container status
 docker ps -a | grep scraper
@@ -181,7 +181,7 @@ git push origin main
 
 ```bash
 # SSH to production server
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6
 
 # Find previous scraper image
 docker images | grep scraper
@@ -354,7 +354,7 @@ npx tsx scripts/test-ntis-date-filtering.ts
 
 ```bash
 # Manually trigger NTIS scraping (if needed)
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6
 docker exec $(docker ps -q -f name=scraper) npx tsx scripts/trigger-ntis-scrape.ts
 
 # Watch real-time logs

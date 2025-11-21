@@ -192,7 +192,7 @@ module.exports = {
   
   // Optimize images
   images: {
-    domains: ['221.164.102.253'],
+    domains: ['59.21.170.6'],
     formats: ['image/webp', 'image/avif'],
   },
   

@@ -22,7 +22,7 @@ The NTIS production API key integration achieved **partial success**:
 
 ### 1. IP Whitelist Registration (COMPLETE)
 **User Actions Completed**:
-- ✅ Production server IP: 221.164.102.253 (registered + approved)
+- ✅ Production server IP: 59.21.170.6 (registered + approved)
 - ✅ Development MacBook IP: 211.245.196.87 (registered + approved)
 - ✅ Portal: https://www.ntis.go.kr/rndopen/api/mng/apiMain.do
 
@@ -185,7 +185,7 @@ The production API key returns **0 results** for all queries, identical to demo 
 
 **What to Provide**:
 - API Key: 6f5cioc70502fi63fdn5
-- Whitelisted IPs: 221.164.102.253, 211.245.196.87
+- Whitelisted IPs: 59.21.170.6, 211.245.196.87
 - Issue: HTTP 200 response but TOTALHITS=0
 - Expected: Access to 108,000+ R&D project records
 
@@ -240,7 +240,7 @@ If NTIS confirms the key is activated but still returns 0 results:
 ### NTIS Integration Status ⚠️
 - ✅ API endpoint: https://www.ntis.go.kr/rndopen/openApi/public_project
 - ✅ API authentication: HTTP 200 responses
-- ✅ IP whitelist: 221.164.102.253, 211.245.196.87
+- ✅ IP whitelist: 59.21.170.6, 211.245.196.87
 - ⚠️ Data access: 0 results (unexpected)
 - ⏳ Support contact: Pending user action
 

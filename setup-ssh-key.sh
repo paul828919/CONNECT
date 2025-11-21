@@ -18,7 +18,7 @@ echo -e "${BLUE}║                                                    ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-REMOTE_SERVER="user@221.164.102.253"
+REMOTE_SERVER="user@59.21.170.6"
 SSH_KEY_PATH="$HOME/.ssh/id_ed25519_connect"
 
 # Check if key already exists
@@ -69,7 +69,7 @@ SSH_CONFIG="$HOME/.ssh/config"
 CONFIG_ENTRY="
 # Connect Production Server
 Host connect-prod
-    HostName 221.164.102.253
+    HostName 59.21.170.6
     User user
     IdentityFile $SSH_KEY_PATH
     ServerAliveInterval 60

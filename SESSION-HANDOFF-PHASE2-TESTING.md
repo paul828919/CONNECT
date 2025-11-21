@@ -96,10 +96,10 @@ docker inspect connect:latest --format='{{.Architecture}}'  # Must show "linux/a
 ### 3. 🔒 Security: SSH Keys Only
 ```bash
 # ✅ Correct
-ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253
+ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6
 
 # ❌ Wrong - NEVER use passwords
-sshpass -p 'password' ssh user@221.164.102.253
+sshpass -p 'password' ssh user@59.21.170.6
 ```
 
 ### 4. 🚀 CI/CD Architecture

@@ -72,7 +72,7 @@
 
 7. **Verify on production server**:
    ```bash
-   ssh user@221.164.102.253
+   ssh user@59.21.170.6
    cd /opt/connect
    npx tsx scripts/validate-ntis-integration.ts
    cat NTIS-IMPLEMENTATION-ROADMAP.md  # Quick reference
@@ -123,7 +123,7 @@
 
 7. **Verify on production server**: (DIFFERENT - Harder navigation)
    ```bash
-   ssh user@221.164.102.253
+   ssh user@59.21.170.6
    cd /opt/connect
    npx tsx scripts/validate-ntis-integration.ts
    cat docs/integration/ntis/IMPLEMENTATION-ROADMAP.md  # Longer path
@@ -219,7 +219,7 @@
 
 1. **SSH to production**:
    ```bash
-   ssh user@221.164.102.253
+   ssh user@59.21.170.6
    cd /opt/connect
    ```
 
@@ -389,12 +389,12 @@
 5. **Verify deployment**:
    ```bash
    ./scripts/verify-deployment.sh
-   curl https://221.164.102.253/api/health
+   curl https://59.21.170.6/api/health
    ```
 
 6. **SSH to production if issues**:
    ```bash
-   ssh user@221.164.102.253
+   ssh user@59.21.170.6
    cd /opt/connect
    cat DEPLOYMENT-ARCHITECTURE-QUICK-REFERENCE.md  # Fast access to patterns
    docker logs connect-app1-1
@@ -424,7 +424,7 @@
 
 6. **SSH to production if issues**:
    ```bash
-   ssh user@221.164.102.253
+   ssh user@59.21.170.6
    cd /opt/connect
    cat docs/deployment/QUICK-REFERENCE.md  # Longer path under pressure
    ```

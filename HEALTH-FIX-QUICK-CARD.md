@@ -39,7 +39,7 @@ export CONNECT_SERVER_PASSWORD='iw237877^^'
 ## 🔍 VERIFY
 ```bash
 ./scripts/check-health.sh
-curl -k https://221.164.102.253/api/health | jq
+curl -k https://59.21.170.6/api/health | jq
 ```
 
 ## 📚 DOCS

@@ -433,8 +433,8 @@ docker-compose -f docker-compose.dev.yml up
 3. **Verify on production (AMD64):**
 ```bash
 # Ensure compatibility before deploy
-scp docker-compose.production.yml user@221.164.102.253:/opt/connect/
-ssh user@221.164.102.253 'cd /opt/connect && docker-compose up -d'
+scp docker-compose.production.yml user@59.21.170.6:/opt/connect/
+ssh user@59.21.170.6 'cd /opt/connect && docker-compose up -d'
 ```
 
 ---
@@ -548,5 +548,5 @@ speedtest-cli
 
 **Verified By:** Direct system inspection  
 **Development:** MacBook Pro M4 Max (Mac16,5)  
-**Production:** Intel i9-12900K Server (221.164.102.253)
+**Production:** Intel i9-12900K Server (59.21.170.6)
 

@@ -309,7 +309,7 @@ export CONNECT_SERVER_PASSWORD='iw237877^^'
 
 **2. Test Public Endpoint**:
 ```bash
-curl -k https://221.164.102.253/api/health | jq
+curl -k https://59.21.170.6/api/health | jq
 ```
 
 **Expected Response**:
@@ -372,22 +372,22 @@ curl -k https://221.164.102.253/api/health | jq
 
 **1. Check SSH Connection**:
 ```bash
-ssh user@221.164.102.253 "docker ps"
+ssh user@59.21.170.6 "docker ps"
 ```
 
 **2. View Application Logs**:
 ```bash
-ssh user@221.164.102.253 "docker logs connect_app1 --tail 50"
+ssh user@59.21.170.6 "docker logs connect_app1 --tail 50"
 ```
 
 **3. Manual Deployment**:
 ```bash
 # Upload files
-scp app/api/health/route.ts user@221.164.102.253:/root/connect/app/api/health/
-scp scripts/check-health.sh user@221.164.102.253:/root/connect/scripts/
+scp app/api/health/route.ts user@59.21.170.6:/root/connect/app/api/health/
+scp scripts/check-health.sh user@59.21.170.6:/root/connect/scripts/
 
 # Rebuild
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 cd /root/connect
 docker-compose -f docker-compose.production.yml build app1 app2
 docker-compose -f docker-compose.production.yml up -d --no-deps app1
@@ -397,7 +397,7 @@ docker-compose -f docker-compose.production.yml up -d --no-deps app2
 
 **4. Rollback** (if needed):
 ```bash
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 cd /root/connect
 docker-compose -f docker-compose.production.yml restart app1 app2
 ```
@@ -448,7 +448,7 @@ docker-compose -f docker-compose.production.yml restart app1 app2
 ### Immediate (Now)
 1. ✅ **Deploy the fix**: `./scripts/deploy-health-fix.sh`
 2. ✅ **Verify results**: `./scripts/check-health.sh`
-3. ✅ **Test endpoint**: `curl -k https://221.164.102.253/api/health | jq`
+3. ✅ **Test endpoint**: `curl -k https://59.21.170.6/api/health | jq`
 
 ### Short Term (This Week)
 1. Monitor health checks for 24 hours

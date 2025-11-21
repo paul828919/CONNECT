@@ -644,7 +644,7 @@ npx tsx scripts/identify-low-quality-categories.ts
 3. **Verify Deployment**
    ```bash
    # SSH to production server
-   ssh -i ~/.ssh/id_ed25519_connect user@221.164.102.253
+   ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6
 
    # Check containers
    docker ps | grep connect

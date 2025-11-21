@@ -22,13 +22,13 @@ To enable automated deployments, you need to configure the following secrets in 
 
 ### **1. PRODUCTION_SERVER_IP**
 
-**Value:** `221.164.102.253`
+**Value:** `59.21.170.6`
 
 **Purpose:** IP address of your production server
 
 ```bash
 # To verify:
-ping 221.164.102.253
+ping 59.21.170.6
 ```
 
 ### **2. PRODUCTION_SERVER_USER**
@@ -53,7 +53,7 @@ These secrets are already in your production `.env` file. To retrieve them:
 
 ```bash
 # SSH to production server
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 
 # View environment variables
 cat /opt/connect/.env
@@ -63,7 +63,7 @@ cat /opt/connect/.env
 
 **Get value from:**
 ```bash
-ssh user@221.164.102.253 'cat /opt/connect/.env | grep DB_PASSWORD'
+ssh user@59.21.170.6 'cat /opt/connect/.env | grep DB_PASSWORD'
 ```
 
 **Expected format:** Base64 encoded string
@@ -74,7 +74,7 @@ ssh user@221.164.102.253 'cat /opt/connect/.env | grep DB_PASSWORD'
 
 **Get value from:**
 ```bash
-ssh user@221.164.102.253 'cat /opt/connect/.env | grep JWT_SECRET'
+ssh user@59.21.170.6 'cat /opt/connect/.env | grep JWT_SECRET'
 ```
 
 **Purpose:** JWT token signing secret
@@ -83,7 +83,7 @@ ssh user@221.164.102.253 'cat /opt/connect/.env | grep JWT_SECRET'
 
 **Get value from:**
 ```bash
-ssh user@221.164.102.253 'cat /opt/connect/.env | grep NEXTAUTH_SECRET'
+ssh user@59.21.170.6 'cat /opt/connect/.env | grep NEXTAUTH_SECRET'
 ```
 
 **Purpose:** NextAuth.js session encryption secret
@@ -92,7 +92,7 @@ ssh user@221.164.102.253 'cat /opt/connect/.env | grep NEXTAUTH_SECRET'
 
 **Get value from:**
 ```bash
-ssh user@221.164.102.253 'cat /opt/connect/.env | grep GRAFANA_PASSWORD'
+ssh user@59.21.170.6 'cat /opt/connect/.env | grep GRAFANA_PASSWORD'
 ```
 
 **Value:** `aXzTqR1YfL2bTTJ2X21KQw==`
@@ -138,11 +138,11 @@ ssh-keygen -t ed25519 -C "github-actions@connect" -f ~/.ssh/github_actions_conne
 
 ```bash
 # Method 1: Using ssh-copy-id
-ssh-copy-id -i ~/.ssh/github_actions_connect.pub user@221.164.102.253
+ssh-copy-id -i ~/.ssh/github_actions_connect.pub user@59.21.170.6
 
 # Method 2: Manual
 cat ~/.ssh/github_actions_connect.pub | \
-  ssh user@221.164.102.253 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys'
+  ssh user@59.21.170.6 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys'
 ```
 
 ### **Step 3: Add Private Key to GitHub Secrets**
@@ -208,7 +208,7 @@ Before running workflows, verify all secrets are set:
 
 ```bash
 # Export secrets locally
-export PRODUCTION_SERVER_IP="221.164.102.253"
+export PRODUCTION_SERVER_IP="59.21.170.6"
 export PRODUCTION_SERVER_USER="user"
 export PRODUCTION_SERVER_PASSWORD="iw237877^^"
 
@@ -334,13 +334,13 @@ gh secret delete SECRET_NAME
 **Solution:**
 ```bash
 # Test connection manually
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 
 # Check firewall
-ssh user@221.164.102.253 'sudo ufw status'
+ssh user@59.21.170.6 'sudo ufw status'
 
 # Verify SSH service
-ssh user@221.164.102.253 'sudo systemctl status ssh'
+ssh user@59.21.170.6 'sudo systemctl status ssh'
 ```
 
 ### **Problem: Secrets not updating in workflow**

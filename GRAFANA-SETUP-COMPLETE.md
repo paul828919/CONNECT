@@ -35,7 +35,7 @@
    - Recent user registrations
    - Database size by table
    - Redis cache hit ratio
-   - **URL:** http://221.164.102.253:3100/d/connect-platform-overview
+   - **URL:** http://59.21.170.6:3100/d/connect-platform-overview
 
 2. **PostgreSQL - Connect Database**
    - Database connections (active)
@@ -43,19 +43,19 @@
    - Database size
    - Top tables by size
    - Active queries
-   - **URL:** http://221.164.102.253:3100/d/postgres-monitoring
+   - **URL:** http://59.21.170.6:3100/d/postgres-monitoring
 
 3. **Redis - Cache & Queue**
    - Connected clients (Cache & Queue)
    - Memory usage (Cache & Queue)
    - Commands per second
-   - **URL:** http://221.164.102.253:3100/d/redis-monitoring
+   - **URL:** http://59.21.170.6:3100/d/redis-monitoring
 
 ---
 
 ## 🔐 Access Information
 
-**Grafana URL:** http://221.164.102.253:3100
+**Grafana URL:** http://59.21.170.6:3100
 
 **Credentials:**
 - Username: `admin`
@@ -188,7 +188,7 @@ This is your main dashboard. Use it to:
 
 **How to access:**
 ```bash
-open http://221.164.102.253:3100/d/connect-platform-overview
+open http://59.21.170.6:3100/d/connect-platform-overview
 ```
 
 ### **PostgreSQL Dashboard**
@@ -211,7 +211,7 @@ Use this for database deep-dive:
 
 **How to access:**
 ```bash
-open http://221.164.102.253:3100/d/postgres-monitoring
+open http://59.21.170.6:3100/d/postgres-monitoring
 ```
 
 ### **Redis Dashboard**
@@ -230,7 +230,7 @@ Monitor caching performance:
 
 **How to access:**
 ```bash
-open http://221.164.102.253:3100/d/redis-monitoring
+open http://59.21.170.6:3100/d/redis-monitoring
 ```
 
 ---
@@ -241,7 +241,7 @@ open http://221.164.102.253:3100/d/redis-monitoring
 
 ```bash
 # 1. Open main dashboard
-open http://221.164.102.253:3100/d/connect-platform-overview
+open http://59.21.170.6:3100/d/connect-platform-overview
 
 # Check:
 # - Total users (should grow steadily)
@@ -253,7 +253,7 @@ open http://221.164.102.253:3100/d/connect-platform-overview
 
 ```bash
 # 1. Check PostgreSQL dashboard
-open http://221.164.102.253:3100/d/postgres-monitoring
+open http://59.21.170.6:3100/d/postgres-monitoring
 
 # Check:
 # - Database size (plan upgrades)
@@ -437,13 +437,13 @@ As your platform scales, consider:
 ```bash
 # 1. Check data source connection
 curl -u admin:aXzTqR1YfL2bTTJ2X21KQw== \
-  http://221.164.102.253:3100/api/datasources
+  http://59.21.170.6:3100/api/datasources
 
 # 2. Test PostgreSQL connection
-ssh user@221.164.102.253 'docker exec connect_postgres psql -U connect -d connect -c "SELECT 1;"'
+ssh user@59.21.170.6 'docker exec connect_postgres psql -U connect -d connect -c "SELECT 1;"'
 
 # 3. Test Redis connection
-ssh user@221.164.102.253 'docker exec connect_redis_cache redis-cli PING'
+ssh user@59.21.170.6 'docker exec connect_redis_cache redis-cli PING'
 ```
 
 ### **Problem: Alerts Not Firing**
@@ -471,16 +471,16 @@ ssh user@221.164.102.253 'docker exec connect_redis_cache redis-cli PING'
 
 ```bash
 # Main Grafana
-http://221.164.102.253:3100
+http://59.21.170.6:3100
 
 # Platform Overview
-http://221.164.102.253:3100/d/connect-platform-overview
+http://59.21.170.6:3100/d/connect-platform-overview
 
 # PostgreSQL Monitoring
-http://221.164.102.253:3100/d/postgres-monitoring
+http://59.21.170.6:3100/d/postgres-monitoring
 
 # Redis Monitoring  
-http://221.164.102.253:3100/d/redis-monitoring
+http://59.21.170.6:3100/d/redis-monitoring
 ```
 
 ### **Essential Commands**
@@ -488,14 +488,14 @@ http://221.164.102.253:3100/d/redis-monitoring
 ```bash
 # Test data sources
 curl -u admin:aXzTqR1YfL2bTTJ2X21KQw== \
-  http://221.164.102.253:3100/api/datasources
+  http://59.21.170.6:3100/api/datasources
 
 # List dashboards
 curl -u admin:aXzTqR1YfL2bTTJ2X21KQw== \
-  http://221.164.102.253:3100/api/search
+  http://59.21.170.6:3100/api/search
 
 # Check Grafana health
-curl http://221.164.102.253:3100/api/health
+curl http://59.21.170.6:3100/api/health
 ```
 
 ---

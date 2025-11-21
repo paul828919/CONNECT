@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================
 # Connect Platform - Emergency Rollback
-# Server: 221.164.102.253
+# Server: 59.21.170.6
 # Rollback Time: < 30 seconds
 # ============================================
 
@@ -15,7 +15,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # Configuration
-REMOTE_SERVER="user@221.164.102.253"
+REMOTE_SERVER="user@59.21.170.6"
 REMOTE_DIR="/opt/connect"
 SERVER_PASSWORD="${CONNECT_SERVER_PASSWORD:-}"
 
@@ -246,7 +246,7 @@ verify_rollback() {
     fi
     
     # Check public endpoint
-    local public_health=$(ssh_exec "curl -sf https://221.164.102.253/api/health 2>&1" || echo "FAIL")
+    local public_health=$(ssh_exec "curl -sf https://59.21.170.6/api/health 2>&1" || echo "FAIL")
     if echo "$public_health" | grep -q "healthy"; then
         success "Public endpoint healthy ✓"
     else
@@ -279,14 +279,14 @@ show_summary() {
     echo ""
     
     log "🔗 Quick Links:"
-    echo "  • Website: https://221.164.102.253"
-    echo "  • Health: https://221.164.102.253/api/health"
+    echo "  • Website: https://59.21.170.6"
+    echo "  • Health: https://59.21.170.6/api/health"
     echo "  • Logs: ssh ${REMOTE_SERVER} 'docker logs -f connect_app1'"
     echo ""
     
     log "📝 Next Steps:"
     echo "  1. Monitor application for 10 minutes"
-    echo "  2. Check Grafana: http://221.164.102.253:3100"
+    echo "  2. Check Grafana: http://59.21.170.6:3100"
     echo "  3. Test critical features"
     echo "  4. Investigate what went wrong"
     echo "  5. Fix issue before redeploying"

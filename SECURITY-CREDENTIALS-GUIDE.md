@@ -25,7 +25,7 @@
 ssh-keygen -t ed25519 -C "new-key" -f ~/.ssh/id_ed25519_connect_new
 
 # Copy to server
-ssh-copy-id -i ~/.ssh/id_ed25519_connect_new user@221.164.102.253
+ssh-copy-id -i ~/.ssh/id_ed25519_connect_new user@59.21.170.6
 
 # Update SSH config to use new key
 nano ~/.ssh/config
@@ -44,7 +44,7 @@ security add-generic-password -a "$USER" -s "connect-server" -w "NEW_PASSWORD"
 #### **Method 3: Update Server Password**
 ```bash
 # SSH to server
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 
 # Change password
 passwd
@@ -72,12 +72,12 @@ passwd
 ssh-keygen -t ed25519 -C "connect-prod" -f ~/.ssh/id_ed25519_connect
 
 # 2. Copy to server (enter password one last time)
-ssh-copy-id -i ~/.ssh/id_ed25519_connect user@221.164.102.253
+ssh-copy-id -i ~/.ssh/id_ed25519_connect user@59.21.170.6
 
 # 3. Add to SSH config
 cat >> ~/.ssh/config << EOF
 Host connect-prod
-    HostName 221.164.102.253
+    HostName 59.21.170.6
     User user
     IdentityFile ~/.ssh/id_ed25519_connect
 EOF
@@ -283,7 +283,7 @@ source ~/.zshrc
 ### **Scenario 2: Server requires password rotation**
 ```bash
 # 1. SSH to server
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 
 # 2. Change password
 passwd
@@ -294,14 +294,14 @@ passwd
 ### **Scenario 3: Suspected credential compromise**
 ```bash
 # 1. Change password on server immediately
-ssh user@221.164.102.253 passwd
+ssh user@59.21.170.6 passwd
 
 # 2. If using SSH keys, generate new key
 ssh-keygen -t ed25519 -C "new-key" -f ~/.ssh/id_ed25519_connect_new
-ssh-copy-id -i ~/.ssh/id_ed25519_connect_new user@221.164.102.253
+ssh-copy-id -i ~/.ssh/id_ed25519_connect_new user@59.21.170.6
 
 # 3. Remove old key from server
-ssh user@221.164.102.253
+ssh user@59.21.170.6
 nano ~/.ssh/authorized_keys  # Remove old key
 
 # 4. Update local storage

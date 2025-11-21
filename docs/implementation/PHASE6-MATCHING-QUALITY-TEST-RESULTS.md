@@ -285,7 +285,7 @@ HWP (Hangul Word Processor) is **Korea's primary government document format**, u
 # macOS (Development)
 brew install libreoffice
 
-# Linux (Production Server 221.164.102.253)
+# Linux (Production Server 59.21.170.6)
 sudo apt-get update
 sudo apt-get install -y libreoffice libreoffice-writer
 
@@ -559,7 +559,7 @@ With HWP extraction enabled:
    # Development (macOS)
    brew install libreoffice
 
-   # Production (Linux server 221.164.102.253)
+   # Production (Linux server 59.21.170.6)
    sudo apt-get update
    sudo apt-get install -y libreoffice libreoffice-writer
 

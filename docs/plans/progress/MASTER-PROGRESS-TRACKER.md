@@ -606,7 +606,7 @@ Oct 9 ────────●───────────────�
 
 **Achievements**:
 - ✅ Domain purchased: `connectplt.kr` via Gabia (₩15,000/year)
-- ✅ DNS configured: A records for @ and www → 221.164.102.253 (TTL 600s)
+- ✅ DNS configured: A records for @ and www → 59.21.170.6 (TTL 600s)
 - ✅ DNS verified: Propagation confirmed (<15 minutes)
 - ✅ Environment updated: `NEXT_PUBLIC_APP_URL` and `DOMAIN` added to .env
 - ✅ Load testing framework created: `scripts/load-test-ai-features.ts` (738 lines)

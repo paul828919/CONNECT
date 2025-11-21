@@ -41,13 +41,13 @@ git log --oneline -10
 # Output shows: Local commits that may not be deployed
 
 # 2. SSH to production and check deployed commit
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'cd /opt/connect && git log --oneline -1'
 # Output shows: Actual production commit
 
 # 3. Compare local vs production
 LOCAL_COMMIT=$(git log --oneline -1 | cut -d' ' -f1)
-PROD_COMMIT=$(sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+PROD_COMMIT=$(sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'cd /opt/connect && git log --oneline -1' | cut -d' ' -f1)
 
 if [ "$LOCAL_COMMIT" != "$PROD_COMMIT" ]; then
@@ -241,7 +241,7 @@ git status
 **Step 2: Verify Production Deployment Status**
 ```bash
 # SSH to production and check deployed commit
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'cd /opt/connect && git log --oneline -1'
 ```
 
@@ -308,10 +308,10 @@ git log --oneline -5
 echo ""
 echo "📋 Gate 2: Production Git Status"
 echo "─────────────────────────────────────────"
-PROD_COMMIT=$(sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+PROD_COMMIT=$(sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'cd /opt/connect && git log --oneline -1' | cut -d' ' -f1)
 echo "Production HEAD: $PROD_COMMIT"
-sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@221.164.102.253 \
+sshpass -p 'iw237877^^' ssh -o StrictHostKeyChecking=no user@59.21.170.6 \
   'cd /opt/connect && git log --oneline -5'
 
 # Gate 3: Compare and report

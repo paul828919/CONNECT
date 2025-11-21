@@ -127,12 +127,12 @@ SMTP_FROM_ADDRESS=alerts@connectplt.kr
 Restart Grafana:
 
 ```bash
-ssh user@221.164.102.253 'cd /opt/connect && docker-compose restart grafana'
+ssh user@59.21.170.6 'cd /opt/connect && docker-compose restart grafana'
 ```
 
 ### **Method 2: Grafana UI Configuration**
 
-1. Open Grafana: http://221.164.102.253:3100
+1. Open Grafana: http://59.21.170.6:3100
 2. Login as admin
 3. Go to **Configuration** → **Settings** → **SMTP/Email**
 4. Fill in settings:
@@ -176,7 +176,7 @@ Time: {{ .StartsAt }}
 📋 Description: {{ .Annotations.description }}
 {{ end }}
 
-🔗 View in Grafana: http://221.164.102.253:3100
+🔗 View in Grafana: http://59.21.170.6:3100
 
 ---
 Connect Platform Monitoring
@@ -303,7 +303,7 @@ Connect Platform Monitoring
 
 ```bash
 # Via Grafana API
-curl -X POST http://221.164.102.253:3100/api/alerts/test \
+curl -X POST http://59.21.170.6:3100/api/alerts/test \
   -H "Content-Type: application/json" \
   -u admin:aXzTqR1YfL2bTTJ2X21KQw== \
   -d '{
@@ -322,7 +322,7 @@ curl -X POST http://221.164.102.253:3100/api/alerts/test \
 
 ```bash
 # Create many DB connections to trigger alert
-ssh user@221.164.102.253 'for i in {1..100}; do psql -U connect -d connect -c "SELECT pg_sleep(10);" & done'
+ssh user@59.21.170.6 'for i in {1..100}; do psql -U connect -d connect -c "SELECT pg_sleep(10);" & done'
 ```
 
 ### **Test 3: Check Alert Status**
@@ -367,7 +367,7 @@ ssh user@221.164.102.253 'for i in {1..100}; do psql -U connect -d connect -c "S
   <p>{{ .Annotations.description }}</p>
   {{ end }}
   
-  <a href="http://221.164.102.253:3100">View in Grafana</a>
+  <a href="http://59.21.170.6:3100">View in Grafana</a>
 </body>
 </html>
 ```
@@ -424,7 +424,7 @@ ORDER BY total_fires DESC;
 **Solutions:**
 1. **Check SMTP settings:**
    ```bash
-   ssh user@221.164.102.253 'docker logs connect_grafana | grep -i smtp'
+   ssh user@59.21.170.6 'docker logs connect_grafana | grep -i smtp'
    ```
 
 2. **Test SMTP connection:**

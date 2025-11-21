@@ -826,7 +826,7 @@ For a complete narrative view of all progress (Oct 9 → Jan 1, 2026), see:
 - ✅ Production API key configured in `.env.production`: `6f5cioc70502fi63fdn5`
 - ✅ NTIS client code deployed and operational
 - ✅ IP whitelisting completed by user:
-  - Production server IP: 221.164.102.253 (✅ WHITELISTED + APPROVED)
+  - Production server IP: 59.21.170.6 (✅ WHITELISTED + APPROVED)
   - MacBook dev IP: 211.245.196.87 (✅ WHITELISTED + APPROVED)
 - ✅ API authentication working (HTTP 200 responses, no IP block errors)
 - ⚠️ **BLOCKER**: Data access returns 0 results (unexpected for production key)
