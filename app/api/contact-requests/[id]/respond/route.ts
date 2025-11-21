@@ -87,7 +87,7 @@ export async function POST(
         respondedAt: new Date(),
       },
       include: {
-        user: {
+        sender: {
           select: { name: true, email: true },
         },
         organizations_contact_requests_senderOrgIdToorganizations: {

@@ -24,7 +24,7 @@
  * Run: npx tsx scripts/backfill-eligibility-no-ai.ts
  */
 
-import { PrismaClient, ConfidenceLevel } from '@prisma/client';
+import { Prisma, PrismaClient, ConfidenceLevel } from '@prisma/client';
 
 const db = new PrismaClient({
   log: ['error'],
@@ -249,7 +249,7 @@ async function backfillEligibilityData() {
     const programs = await db.funding_programs.findMany({
       where: {
         eligibilityCriteria: {
-          not: null,
+          not: Prisma.DbNull,
         },
       },
       select: {

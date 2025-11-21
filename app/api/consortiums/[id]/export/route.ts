@@ -56,7 +56,7 @@ export async function GET(
             address: true,
           },
         },
-        user: {
+        createdBy: {
           select: {
             name: true,
             email: true,

@@ -12,6 +12,7 @@
  * 5. Data Quality Metrics - Missing fields, validation
  */
 
+import { Prisma } from '@prisma/client';
 import { db } from '../lib/db';
 
 interface EligibilityCriteria {
@@ -193,7 +194,7 @@ async function verifyExtractedDataQuality() {
     console.log('');
 
     const programsWithEligibilityCriteria = await db.funding_programs.findMany({
-      where: { eligibilityCriteria: { not: null } },
+      where: { eligibilityCriteria: { not: Prisma.DbNull } },
       select: {
         id: true,
         title: true,

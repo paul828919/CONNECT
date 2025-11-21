@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { db } from '../lib/db';
 import { extractEligibilityCriteria } from '../lib/scraping/parsers/ntis-announcement-parser';
 
@@ -22,7 +23,7 @@ async function validateIndustryFix() {
   // Get all programs with eligibility criteria
   const programs = await db.funding_programs.findMany({
     where: {
-      eligibilityCriteria: { not: null },
+      eligibilityCriteria: { not: Prisma.DbNull },
     },
     select: {
       id: true,

@@ -80,7 +80,6 @@ export async function GET(request: NextRequest) {
         accounts: {
           select: {
             provider: true,
-            createdAt: true,
           },
         },
       },
@@ -117,7 +116,7 @@ export async function GET(request: NextRequest) {
         include: {
           consortium_projects: {
             select: {
-              title: true,
+              name: true,
               status: true,
             },
           },
@@ -127,7 +126,7 @@ export async function GET(request: NextRequest) {
 
       // Contact requests (sent)
       prisma.contact_requests.findMany({
-        where: { requesterId: userId },
+        where: { senderId: userId },
         orderBy: { createdAt: 'desc' },
         take: 50,
       }),

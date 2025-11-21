@@ -341,7 +341,7 @@ function scoreIndustryAlignment(
       const sector2 = findIndustrySector(candidateOrg.industrySector);
 
       if (sector1 && sector2) {
-        const relevance = calculateIndustryRelevance(sector1.id, sector2.id);
+        const relevance = calculateIndustryRelevance(sector1, sector2);
         if (relevance >= 0.5) {
           score = 10;
           reasons.push('CROSS_INDUSTRY_RELEVANT');
@@ -509,6 +509,11 @@ function isAdjacentScale(scale1: EmployeeCountRange, scale2: EmployeeCountRange)
  * Check if two revenue ranges are adjacent (within one level)
  */
 function isAdjacentRevenue(revenue1: RevenueRange, revenue2: RevenueRange): boolean {
+  // Handle NONE case - no adjacency concept for organizations without revenue
+  if (revenue1 === RevenueRange.NONE || revenue2 === RevenueRange.NONE) {
+    return false;
+  }
+
   const order = [
     RevenueRange.UNDER_1B,
     RevenueRange.FROM_1B_TO_10B,
