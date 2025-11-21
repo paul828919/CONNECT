@@ -543,6 +543,7 @@ export default function HomePage() {
               <ul className="space-y-2 text-sm">
                 <li><a href="#how-it-works" className="hover:text-white transition-colors">기능 소개</a></li>
                 <li><a href="/auth/signin" className="hover:text-white transition-colors">무료 시작</a></li>
+                <li><Link href="/pricing" className="hover:text-white transition-colors">요금제</Link></li>
               </ul>
             </div>
 
