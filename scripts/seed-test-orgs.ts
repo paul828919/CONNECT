@@ -99,7 +99,7 @@ async function main() {
         keyTechnologies: org.interests,
         technologyReadinessLevel: org.trlStage,
         rdExperience: true,
-        collaborationHistory: false,
+        collaborationCount: 0,
         profileCompleted: true,
         profileScore: 80,
       },

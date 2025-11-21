@@ -28,7 +28,7 @@ describe('Matching Algorithm', () => {
     annualRdBudget: null,
     researcherCount: null,
     keyTechnologies: [],
-    collaborationHistory: false,
+    collaborationCount: null,
     primaryContactName: null,
     primaryContactEmail: null,
     primaryContactPhone: null,

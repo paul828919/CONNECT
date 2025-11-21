@@ -34,7 +34,7 @@ async function main() {
 
   console.log('✅ Organization found:', organization.name);
   console.log('   Industry:', organization.industrySector);
-  console.log('   TRL:', organization.trlLevel);
+  console.log('   TRL:', organization.technologyReadinessLevel);
   console.log('   Type:', organization.type);
 
   // Test 2: Fetch EXPIRED programs

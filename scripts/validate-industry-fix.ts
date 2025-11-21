@@ -19,20 +19,20 @@ async function validateIndustryFix() {
   console.log('║      INDUSTRY SECTOR FIX VALIDATION                        ║');
   console.log('╚════════════════════════════════════════════════════════════╝\n');
 
-  // Get all programs with extracted text
+  // Get all programs with eligibility criteria
   const programs = await db.funding_programs.findMany({
     where: {
-      extractedText: { not: null },
+      eligibilityCriteria: { not: null },
     },
     select: {
       id: true,
       title: true,
-      extractedText: true,
+      description: true,
       eligibilityCriteria: true,
     },
   });
 
-  console.log(`📋 Analyzing ${programs.length} programs with extracted text\n`);
+  console.log(`📋 Analyzing ${programs.length} programs with eligibility criteria\n`);
 
   let totalPrograms = 0;
   let withITTag = 0;
@@ -54,8 +54,9 @@ async function validateIndustryFix() {
     const oldCriteria = program.eligibilityCriteria as any;
     const oldSectors = oldCriteria?.industryRequirements?.sectors || [];
 
-    // Re-extract with new logic
-    const newCriteria = extractEligibilityCriteria(program.extractedText!);
+    // Re-extract with new logic (using description as fallback for missing extractedText)
+    const textToAnalyze = program.description || '';
+    const newCriteria = extractEligibilityCriteria(textToAnalyze);
     const newSectors = newCriteria?.industryRequirements?.sectors || [];
 
     // Count new tags

@@ -904,9 +904,9 @@ async function processJob(
       `${totalOtherChars} chars from other files`
     );
 
-    // STEP 4.5: Update detailPageData.attachments with extracted text
+    // STEP 4.5: Update detailPageData.attachmentUrls with extracted text
     // This saves the extracted text to the database for debugging and verification
-    const updatedAttachments = (detailData.attachments || []).map((att: any) => {
+    const updatedAttachments = (detailData.attachmentUrls || []).map((att: any) => {
       const extracted = [...announcementFiles, ...otherFiles].find(
         (f) => f.filename === att.filename
       );

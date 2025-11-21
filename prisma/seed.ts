@@ -62,7 +62,7 @@ async function main() {
         rdExperience: true,
         technologyReadinessLevel: 7,
         keyTechnologies: ['인공지능', '머신러닝', '클라우드 컴퓨팅', 'SaaS'],
-        collaborationHistory: true,
+        collaborationCount: 3,
         primaryContactName: '김병진',
         primaryContactEmail: 'kbj20415@gmail.com',
         primaryContactPhone: '010-1234-5678',

@@ -122,14 +122,14 @@ async function analyzeInnowaveMatches() {
       // Scoring Breakdown
       console.log('\n   📊 SCORING BREAKDOWN:');
       console.log(`      Total Score: ${match.score}`);
-      console.log(`      Reasoning: ${match.reasoning?.substring(0, 100)}...`);
+      console.log(`      Explanation: ${match.explanation?.substring(0, 100)}...`);
 
       // Program Metadata
       console.log('\n   📋 PROGRAM METADATA:');
-      console.log(`      Ministry: ${program.ministryName}`);
-      console.log(`      Institution: ${program.institutionName}`);
+      console.log(`      Ministry: ${program.ministry}`);
+      console.log(`      Agency: ${program.agencyId}`);
       console.log(`      Category: ${program.category}`);
-      console.log(`      Budget: ${program.budgetRangeMin ? `${program.budgetRangeMin.toLocaleString()}` : 'N/A'} - ${program.budgetRangeMax ? `${program.budgetRangeMax.toLocaleString()}` : 'N/A'}`);
+      console.log(`      Budget: ${program.budgetAmount ? `₩${Number(program.budgetAmount).toLocaleString()}` : 'N/A'}`);
       console.log(`      Deadline: ${program.deadline ? new Date(program.deadline).toLocaleDateString('ko-KR') : 'N/A'}`);
       console.log(`      Status: ${program.status}`);
     });

@@ -48,7 +48,7 @@ async function testStage3TRLConfidence() {
     console.log(`      Type: ${org.type}`);
     console.log(`      Industry: ${org.industrySector || 'Not specified'}`);
     console.log(`      TRL Level: ${org.technologyReadinessLevel || 'Not specified'}`);
-    console.log(`      R&D Projects: ${org.rdProjectCount || 0}`);
+    console.log(`      Prior Grant Wins: ${org.priorGrantWins || 0}`);
     console.log(`      Business Structure: ${org.businessStructure || 'Not specified'}\n`);
 
     if (!org.technologyReadinessLevel) {

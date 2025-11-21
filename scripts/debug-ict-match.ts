@@ -30,8 +30,7 @@ async function main() {
   console.log(`  Business: ${org.businessStructure}`);
   console.log(`  TRL: ${org.technologyReadinessLevel}`);
   console.log(`  Industry: ${org.industrySector}`);
-  console.log(`  Eligible for hospital: ${org.eligibleForHospitalPrograms}`);
-  console.log(`  R&D Experience: ${org.hasRndExperience}`);
+  console.log(`  R&D Experience: ${org.rdExperience}`);
   console.log('');
 
   console.log('📋 ICT Program:');
@@ -41,7 +40,6 @@ async function main() {
   console.log(`  Status: ${ictProgram.status}`);
   console.log(`  Target Type: ${ictProgram.targetType}`);
   console.log(`  TRL: ${ictProgram.minTrl} - ${ictProgram.maxTrl}`);
-  console.log(`  Is Hospital: ${ictProgram.isHospitalProgram}`);
   console.log(`  Deadline: ${ictProgram.deadline}`);
   console.log(`  Eligibility: ${JSON.stringify(ictProgram.eligibilityCriteria)}`);
   console.log('');
@@ -64,15 +62,7 @@ async function main() {
     console.log('Let me check each filter:');
     console.log('');
 
-    // Check 1: Hospital filter
-    if (ictProgram.isHospitalProgram && !org.eligibleForHospitalPrograms) {
-      console.log('  ❌ BLOCKED by hospital filter');
-      console.log('     Program is hospital-only but org not eligible');
-    } else {
-      console.log('  ✅ PASSED hospital filter');
-    }
-
-    // Check 2: Category compatibility (we know this passes from our test)
+    // Check 1: Category compatibility
     console.log('  ✅ PASSED category compatibility filter (ICT ↔ ICT = 100%)');
 
     // Check 3: Eligibility

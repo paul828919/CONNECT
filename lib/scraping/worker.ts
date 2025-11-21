@@ -322,9 +322,7 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
                 announcingAgency: details.announcingAgency || null, // 공고기관명 (extracted from NTIS announcements)
                 category: details.category || null, // Industry sector (extracted from agency)
                 keywords: details.keywords || [], // Technology keywords (agency defaults + extracted from title/description)
-                allowedBusinessStructures: details.allowedBusinessStructures || null, // Business structure restrictions (CORPORATION, SOLE_PROPRIETOR)
-                attachmentUrls: details.attachmentUrls || [], // PDF attachment URLs
-                trlInferred: details.trlInferred || false, // Whether TRL was auto-classified (vs explicitly stated)
+                // Note: attachmentUrls and trlInferred not in ProgramDetails interface - will use Prisma defaults
                 contentHash,
                 scrapedAt: new Date(),
                 scrapingSource: agency.toLowerCase(), // Agency ID: tipa, iitp, keit, kimst, ntis

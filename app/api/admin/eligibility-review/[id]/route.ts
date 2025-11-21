@@ -145,15 +145,8 @@ export async function PATCH(
         action: `ELIGIBILITY_REVIEW_${action}`,
         resourceType: 'funding_programs',
         resourceId: params.id,
-        purpose: `Manual eligibility review: ${action}`,
+        purpose: `Manual eligibility review: ${action} - ${reviewNotes.substring(0, 50)}`,
         ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        metadata: {
-          action,
-          reviewNotes,
-          newConfidence: updateData.eligibilityConfidence,
-          reviewedBy: reviewerName,
-          programTitle: program.title,
-        },
       },
     });
 
