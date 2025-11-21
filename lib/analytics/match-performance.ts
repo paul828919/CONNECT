@@ -65,6 +65,8 @@ export interface LowQualityAlert {
   category: string;
   avgScore: number;
   matchCount: number;
+  savedRate: number;
+  viewedRate: number;
   threshold: number;
   recommendation: string;
 }
@@ -462,6 +464,8 @@ export async function identifyLowQualityCategories(
           category: report.category,
           avgScore: report.avgScore,
           matchCount: report.totalMatches,
+          savedRate: report.savedRate,
+          viewedRate: report.viewedRate,
           threshold: scoreThreshold,
           recommendation,
         });

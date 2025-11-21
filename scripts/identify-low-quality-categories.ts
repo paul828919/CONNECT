@@ -83,17 +83,15 @@ async function main() {
       console.log(`┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`);
       console.log();
       console.log(`📊 Performance Metrics:`);
-      console.log(`   Total Matches: ${alert.totalMatches}`);
+      console.log(`   Total Matches: ${alert.matchCount}`);
       console.log(`   Average Score: ${alert.avgScore.toFixed(1)}/100 ${getScoreIndicator(alert.avgScore, scoreThreshold)}`);
       console.log(`   Saved Rate: ${alert.savedRate.toFixed(1)}% ${getRateIndicator(alert.savedRate, savedRateThreshold)}`);
       console.log(`   Viewed Rate: ${alert.viewedRate.toFixed(1)}% ${getRateIndicator(alert.viewedRate, viewedRateThreshold)}`);
       console.log();
-      console.log(`🔍 Issues Detected:`);
-      alert.reasons.forEach(reason => {
-        console.log(`   🔴 ${reason}`);
-      });
+      console.log(`🔍 Primary Recommendation:`);
+      console.log(`   💡 ${alert.recommendation}`);
       console.log();
-      console.log(`💡 Recommended Actions:`);
+      console.log(`💡 Detailed Actions:`);
       const recommendations = generateRecommendations(alert);
       recommendations.forEach(rec => {
         console.log(`   ✓ ${rec}`);
@@ -106,10 +104,10 @@ async function main() {
     console.log('📈  SUMMARY');
     console.log('─────────────────────────────────────────────────────────────\n');
 
-    const totalMatches = alerts.reduce((sum, a) => sum + a.totalMatches, 0);
-    const avgScore = alerts.reduce((sum, a) => sum + a.avgScore * a.totalMatches, 0) / totalMatches;
-    const avgSavedRate = alerts.reduce((sum, a) => sum + a.savedRate * a.totalMatches, 0) / totalMatches;
-    const avgViewedRate = alerts.reduce((sum, a) => sum + a.viewedRate * a.totalMatches, 0) / totalMatches;
+    const totalMatches = alerts.reduce((sum, a) => sum + a.matchCount, 0);
+    const avgScore = alerts.reduce((sum, a) => sum + a.avgScore * a.matchCount, 0) / totalMatches;
+    const avgSavedRate = alerts.reduce((sum, a) => sum + a.savedRate * a.matchCount, 0) / totalMatches;
+    const avgViewedRate = alerts.reduce((sum, a) => sum + a.viewedRate * a.matchCount, 0) / totalMatches;
 
     console.log(`Total Low-Quality Categories: ${alerts.length}`);
     console.log(`Total Affected Matches: ${totalMatches}`);
@@ -208,7 +206,7 @@ function generateRecommendations(alert: any): string[] {
     recommendations.push('Review notification templates for engagement');
   }
 
-  if (alert.totalMatches > 100 && alert.savedRate < 5) {
+  if (alert.matchCount > 100 && alert.savedRate < 5) {
     recommendations.push('HIGH VOLUME, LOW QUALITY - Reduce match quantity, increase quality');
     recommendations.push('Implement stricter eligibility filtering');
   }

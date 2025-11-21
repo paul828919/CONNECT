@@ -3,7 +3,7 @@
  * Verify that the processor is correctly extracting text and storing data
  */
 
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -14,7 +14,7 @@ async function main() {
   console.log('');
 
   // Get a recently processed job (any status, recently updated)
-  const recentJob = await prisma.scraping_jobs.findFirst({
+  let recentJob = await prisma.scraping_jobs.findFirst({
     where: {
       OR: [
         { processingStatus: 'SKIPPED' },
@@ -52,7 +52,7 @@ async function main() {
         processingStatus: 'SKIPPED',
         detailPageData: {
           path: ['attachments', '0', 'text'],
-          not: null
+          not: Prisma.DbNull
         }
       },
       orderBy: {
@@ -80,7 +80,7 @@ async function main() {
     console.log('');
 
     // Use this job instead
-    Object.assign(recentJob || {}, anyJob);
+    recentJob = anyJob;
   }
 
   console.log('📋 SAMPLE PROCESSED JOB');
@@ -142,7 +142,7 @@ async function main() {
       console.log(`Program ID: ${fundingProgram.id}`);
       console.log(`Title: ${fundingProgram.title}`);
       console.log(`Deadline: ${fundingProgram.deadline || 'Not extracted'}`);
-      console.log(`Budget: ₩${fundingProgram.budgetAmount ? (fundingProgram.budgetAmount / 100000000).toFixed(1) + '억' : 'Not extracted'}`);
+      console.log(`Budget: ₩${fundingProgram.budgetAmount ? (Number(fundingProgram.budgetAmount) / 100000000).toFixed(1) + '억' : 'Not extracted'}`);
       console.log(`TRL Range: ${fundingProgram.minTrl}-${fundingProgram.maxTrl || 'Not extracted'}`);
       console.log(`Eligibility: ${fundingProgram.eligibilityCriteria ? JSON.stringify(fundingProgram.eligibilityCriteria).substring(0, 100) + '...' : 'Not extracted'}`);
       console.log(`Published At: ${fundingProgram.publishedAt || 'Not extracted'}`);

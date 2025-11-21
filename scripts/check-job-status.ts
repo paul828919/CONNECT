@@ -4,17 +4,17 @@ const db = new PrismaClient();
 
 async function checkStatus() {
   try {
-    const stats = await db.scrapingJob.groupBy({
+    const stats = await db.scraping_jobs.groupBy({
       by: ['processingStatus'],
       _count: true,
     });
 
-    const total = await db.scrapingJob.count();
+    const total = await db.scraping_jobs.count();
 
     console.log('');
     console.log('📊 Scraping Jobs Status:');
     console.log('═════════════════════════════════════');
-    stats.forEach((s) => {
+    stats.forEach((s: { processingStatus: string; _count: number }) => {
       console.log(`  ${s.processingStatus}: ${s._count}`);
     });
     console.log('─────────────────────────────────────');
@@ -22,9 +22,9 @@ async function checkStatus() {
     console.log('═════════════════════════════════════');
     console.log('');
 
-    const pending = stats.find((s) => s.processingStatus === 'PENDING')?._count || 0;
-    const completed = stats.find((s) => s.processingStatus === 'COMPLETED')?._count || 0;
-    const failed = stats.find((s) => s.processingStatus === 'FAILED')?._count || 0;
+    const pending = stats.find((s: { processingStatus: string; _count: number }) => s.processingStatus === 'PENDING')?._count || 0;
+    const completed = stats.find((s: { processingStatus: string; _count: number }) => s.processingStatus === 'COMPLETED')?._count || 0;
+    const failed = stats.find((s: { processingStatus: string; _count: number }) => s.processingStatus === 'FAILED')?._count || 0;
 
     if (pending > 0) {
       console.log(`✅ ${pending} jobs remaining to process`);
