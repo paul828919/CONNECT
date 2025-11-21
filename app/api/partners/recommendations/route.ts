@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
     // 6. Calculate compatibility scores for all candidates
     const recommendations = complementaryOrgs
       .map((org) => {
-        const compatibility = calculatePartnerCompatibility(userOrg, org);
+        const compatibility = calculatePartnerCompatibility(userOrg, org as any);
         return {
           organization: org,
           compatibility: {

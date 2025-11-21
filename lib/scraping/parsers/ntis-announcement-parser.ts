@@ -1048,6 +1048,7 @@ interface EligibilityCriteria {
     requiredAgreements?: string[];
     preferredStatus?: string[];
     targetCountry?: string;
+    exclusions?: string[];
   };
 
   // G. Legacy fields (backward compatibility)
@@ -1869,10 +1870,10 @@ async function downloadAndExtractAttachmentText(
         const download = result.download;
 
         // Save to temporary buffer
-        const fileBuffer = await download.createReadStream().then((stream) => {
+        const fileBuffer = await download.createReadStream().then((stream: NodeJS.ReadableStream) => {
           return new Promise<Buffer>((resolve, reject) => {
             const chunks: Buffer[] = [];
-            stream.on('data', (chunk) => chunks.push(chunk));
+            stream.on('data', (chunk: Buffer) => chunks.push(chunk));
             stream.on('end', () => resolve(Buffer.concat(chunks)));
             stream.on('error', reject);
           });

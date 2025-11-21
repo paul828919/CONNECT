@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
 
       if (userOrg) {
         try {
-          const result = calculatePartnerCompatibility(userOrg, org);
+          const result = calculatePartnerCompatibility(userOrg, org as any);
           compatibility = {
             score: result.score,
             breakdown: result.breakdown,

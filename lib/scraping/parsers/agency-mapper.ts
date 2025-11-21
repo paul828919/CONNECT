@@ -60,7 +60,7 @@ export interface CategorizationResult {
   /** Combined keywords from ministry + agency */
   keywords: string[];
   /** Data source used (ministry, agency, or both) */
-  source: 'ministry' | 'agency' | 'both' | 'fallback' | 'manual_review';
+  source: 'ministry' | 'agency' | 'both' | 'fallback' | 'manual_review' | 'nstc' | 'ksic';
   /** Confidence level */
   confidence: 'high' | 'medium' | 'low' | 'none';
   /** Whether this program requires manual review */

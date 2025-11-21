@@ -849,10 +849,10 @@ async function downloadAttachments(
 
       // Save downloaded file
       const download = result.download;
-      const fileBuffer = await download.createReadStream().then((stream) => {
+      const fileBuffer = await download.createReadStream().then((stream: NodeJS.ReadableStream) => {
         return new Promise<Buffer>((resolve, reject) => {
           const chunks: Buffer[] = [];
-          stream.on('data', (chunk) => chunks.push(chunk));
+          stream.on('data', (chunk: Buffer) => chunks.push(chunk));
           stream.on('end', () => resolve(Buffer.concat(chunks)));
           stream.on('error', reject);
         });

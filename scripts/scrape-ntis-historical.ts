@@ -277,7 +277,7 @@ async function main() {
                 allowedBusinessStructures: details.allowedBusinessStructures || [],
                 attachmentUrls: details.attachmentUrls || [],
                 trlInferred: details.trlInferred || false,
-                trlClassification: details.trlClassification || undefined,
+                trlClassification: details.trlClassification ? (details.trlClassification as any) : undefined,
               },
             });
           }

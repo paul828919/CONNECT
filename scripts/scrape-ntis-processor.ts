@@ -71,7 +71,7 @@ import { parseKoreanDate, generateProgramHash } from '../lib/scraping/utils';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
-import type { Browser } from 'playwright';
+import type { Browser, BrowserContext } from 'playwright';
 import { createAuthenticatedHancomBrowser } from '../lib/scraping/utils/hancom-docs-tesseract-converter';
 
 // Import two-tier extraction system
@@ -401,7 +401,7 @@ async function main() {
 
   // Create ONE authenticated browser per worker (not per job)
   // This prevents simultaneous login attempts when running multiple workers
-  let workerBrowser: Browser | null = null;
+  let workerBrowser: BrowserContext | null = null;
 
   // ================================================================
   // Graceful Shutdown Handlers (Zero Runtime Overhead)
@@ -689,14 +689,14 @@ async function fetchAndLockNextJob(config: ProcessorConfig): Promise<any | null>
 async function processJob(
   job: any,
   config: ProcessorConfig,
-  workerBrowser: Browser | null
+  workerBrowser: BrowserContext | null
 ): Promise<{
   success: boolean;
   skipped?: boolean;
   reason?: string;
   error?: string;
   fundingProgramId?: string;
-  updatedBrowser?: Browser | null; // Return updated browser reference
+  updatedBrowser?: BrowserContext | null; // Return updated browser reference
 }> {
   try {
     // STEP 1: Initialize browser session if needed (lazy initialization)
@@ -726,7 +726,7 @@ async function processJob(
     // STEP 2: Separate announcement files from other attachments
     const announcementFilenames = filterAnnouncementFiles(job.attachmentFilenames);
     const otherFilenames = job.attachmentFilenames.filter(
-      (f) => !announcementFilenames.includes(f)
+      (f: string) => !announcementFilenames.includes(f)
     );
 
     console.log(

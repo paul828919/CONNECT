@@ -478,7 +478,7 @@ export class TwoTierExtractor {
         ? this.attachmentData.announcementFiles.map((f) => f.text).join('\n\n')
         : `${this.detailPageData.description || ''}\n\n${this.rawHtmlText}`;
 
-    return extractBusinessStructures(announcementText);
+    return extractBusinessStructures(announcementText) || [];
   }
 
   /**
