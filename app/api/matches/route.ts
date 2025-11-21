@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient, AnnouncementType } from '@prisma/client';
+import { PrismaClient, AnnouncementType, ProgramStatus } from '@prisma/client';
 
 // Direct Prisma Client instantiation (bypasses lib/db module resolution issue)
 const globalForPrisma = globalThis as unknown as {
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     const whereClause = {
       organizationId,
       funding_programs: {
-        status: 'ACTIVE', // Only show matches to active programs (exclude EXPIRED)
+        status: ProgramStatus.ACTIVE, // Only show matches to active programs (exclude EXPIRED)
         announcementType: AnnouncementType.R_D_PROJECT, // Only R&D funding opportunities (exclude surveys, events, notices)
         scrapingSource: {
           not: null, // Exclude test seed data

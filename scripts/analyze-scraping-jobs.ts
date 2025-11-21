@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ScrapingStatus, ProcessingStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -62,8 +62,8 @@ async function main() {
     // Last successful job
     const lastSuccess = await prisma.scraping_jobs.findFirst({
       where: {
-        scrapingStatus: 'COMPLETED',
-        processingStatus: 'COMPLETED'
+        scrapingStatus: ScrapingStatus.SCRAPED,
+        processingStatus: ProcessingStatus.COMPLETED
       },
       orderBy: { processedAt: 'desc' },
       select: {
