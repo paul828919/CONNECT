@@ -36,6 +36,13 @@ yarn-error.log*
 .env.development
 .env.test
 
+# env backup files (CRITICAL: Never commit backup files with sensitive data)
+.env.backup*
+*.env.backup
+.env.*.backup
+*.backup
+.backup
+
 # vercel
 .vercel
 
