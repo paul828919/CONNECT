@@ -23,7 +23,6 @@
  */
 
 import { chromium, Browser, Page } from 'playwright';
-import OpenAI from 'openai';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -31,11 +30,6 @@ import * as os from 'os';
 // Hancom Docs credentials (from environment)
 const HANCOM_EMAIL = process.env.HANCOM_DOCS_ID || process.env.HANCOM_EMAIL || 'kbj20415@gmail.com';
 const HANCOM_PASSWORD = process.env.HANCOM_DOCS_PW || process.env.HANCOM_PASSWORD || 'BSiw237877^^';
-
-// OpenAI API for vision-based text extraction
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 // Timeouts
 const UPLOAD_TIMEOUT = 60000; // 60 seconds for upload
@@ -459,8 +453,12 @@ async function extractTextFromScreenshots(
       };
     });
 
-    // Call GPT-4 Vision API
-    const response = await openai.chat.completions.create({
+    // NOTE: OpenAI integration removed - this function is not currently used
+    // If screenshot-based extraction is needed, re-implement with alternative OCR solution
+    throw new Error('Screenshot-based text extraction is not currently implemented');
+
+    // Call GPT-4 Vision API (DISABLED)
+    /* const response = await openai.chat.completions.create({
       model: 'gpt-4o', // GPT-4 Omni has excellent vision capabilities
       messages: [
         {
@@ -496,7 +494,7 @@ Extract the complete text now:`,
     }
 
     console.log('[HANCOM-SCREENSHOT] ✓ Text extraction complete');
-    return extractedText;
+    return extractedText; */
   } catch (error: any) {
     console.error('[HANCOM-SCREENSHOT] GPT-4 Vision extraction error:', error.message);
     return null;
@@ -505,19 +503,12 @@ Extract the complete text now:`,
 
 /**
  * Check if screenshot-based conversion is available
+ * NOTE: Currently disabled as OpenAI integration has been removed
  */
 export function canUseScreenshotConversion(): boolean {
-  const hasHancomCreds = !!(HANCOM_EMAIL && HANCOM_PASSWORD);
-  const hasOpenAI = !!process.env.OPENAI_API_KEY;
-
-  if (!hasHancomCreds) {
-    console.warn('[HANCOM-SCREENSHOT] Missing Hancom Docs credentials (HANCOM_DOCS_ID, HANCOM_DOCS_PW)');
-  }
-  if (!hasOpenAI) {
-    console.warn('[HANCOM-SCREENSHOT] Missing OpenAI API key (OPENAI_API_KEY)');
-  }
-
-  return hasHancomCreds && hasOpenAI;
+  // Screenshot-based conversion is currently not implemented
+  // OpenAI integration was removed per project requirements
+  return false;
 }
 
 /**
