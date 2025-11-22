@@ -26,8 +26,6 @@ async function getRedisClient() {
     redisClient.on('error', (err) => {
       console.error('Redis rate limit error:', err);
     });
-
-    await redisClient.connect();
   }
 
   return redisClient;

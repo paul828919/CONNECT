@@ -50,6 +50,9 @@ RUN npm run build
 # ========== Stage 3: Runner ==========
 FROM node:20-slim AS runner
 
+# Upgrade to npm@11 (eliminates deprecated package warnings in CI/CD)
+RUN npm install -g npm@11
+
 WORKDIR /app
 
 ENV NODE_ENV production

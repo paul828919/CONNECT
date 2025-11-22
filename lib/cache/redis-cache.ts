@@ -59,22 +59,6 @@ export async function getCacheClient() {
     cacheClient.on('connect', () => {
       console.log('[CACHE] Redis connected successfully');
     });
-
-    // Add connection timeout to prevent indefinite hangs
-    const CONNECTION_TIMEOUT = 5000; // 5 seconds
-    const connectPromise = cacheClient.connect();
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Redis connection timeout after 5s')), CONNECTION_TIMEOUT)
-    );
-
-    try {
-      await Promise.race([connectPromise, timeoutPromise]);
-    } catch (error) {
-      console.error('[CACHE] Failed to connect to Redis:', error instanceof Error ? error.message : error);
-      // Clean up failed client
-      cacheClient = null;
-      throw error;
-    }
   }
 
   return cacheClient;
