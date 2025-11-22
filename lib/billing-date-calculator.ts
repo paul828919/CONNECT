@@ -1,4 +1,4 @@
-import { addMonths, addYears, lastDayOfMonth, isLeapYear } from 'date-fns';
+import { addMonths, addYears, isLeapYear } from 'date-fns';
 
 /**
  * Calculates next billing date matching Toss Payments billing anchor logic.
@@ -25,16 +25,21 @@ export function calculateNextBillingDate(params: {
     startDate = new Date() // Already in KST (system standard)
   } = params;
 
-  const dayOfMonth = startDate.getDate();
+  // Use UTC methods to ensure timezone-independent calculations
+  // This prevents off-by-one errors when running in different server timezones
+  const dayOfMonth = startDate.getUTCDate();
   let nextDate: Date;
 
   if (planType === 'MONTHLY') {
     nextDate = addMonths(startDate, 1);
 
     // Handle 30/31-day issue (e.g., Jan 31 → Feb 28/29)
-    if (nextDate.getDate() !== dayOfMonth) {
+    if (nextDate.getUTCDate() !== dayOfMonth) {
       // Toss typically uses "last day of month" logic for overflow
-      nextDate = lastDayOfMonth(addMonths(startDate, 1));
+      // Use UTC-aware last day calculation (Date.UTC with day 0 = last day of previous month)
+      const year = nextDate.getUTCFullYear();
+      const month = nextDate.getUTCMonth();
+      nextDate = new Date(Date.UTC(year, month + 1, 0)); // Last day of current month
     }
   } else {
     // ANNUAL
@@ -44,9 +49,10 @@ export function calculateNextBillingDate(params: {
     if (
       isLeapYear(startDate) &&
       dayOfMonth === 29 &&
-      startDate.getMonth() === 1
+      startDate.getUTCMonth() === 1
     ) {
-      nextDate = new Date(nextDate.getFullYear(), 1, 28); // Feb 28
+      const year = nextDate.getUTCFullYear();
+      nextDate = new Date(Date.UTC(year, 1, 28)); // Feb 28
     }
   }
 
