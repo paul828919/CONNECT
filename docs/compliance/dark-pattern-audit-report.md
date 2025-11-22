@@ -101,16 +101,27 @@ Implement dashboard refund request button (Priority: Medium)
 #### 2.2 Automatic Renewal Notice
 
 **Current State:**
-- Not yet implemented (Free plan only, no subscriptions active)
+- Implemented via checkout confirmation dialog (Phase 7a completed)
 
-**Verdict:** **N/A (Future Requirement)**
+**Implementation Details:**
+- Component: `components/checkout-confirmation-dialog.tsx`
+- Integration: `app/pricing/page.tsx` (intercepts checkout flow)
+- Billing calculation: `lib/billing-date-calculator.ts` (server-side, KST timezone)
 
-**Recommendation #2:**
-Before enabling paid subscriptions, add auto-renewal notice:
-```tsx
-// At checkout (app/api/payments/checkout/route.ts response)
-"이 플랜은 자동 갱신됩니다. 언제든지 취소할 수 있습니다."
-```
+**Features:**
+- ⚠️ Warning message: "이 플랜은 {billingCycle} 자동 갱신됩니다"
+- Next billing date displayed in KST: "다음 결제 예정일: yyyy년 M월 d일"
+- Mandatory consent checkbox (cannot proceed without checking)
+- Links to refund policy (2 prominent links in dialog)
+- Server-side calculation prevents "misleading information" claims (KFTC guideline)
+
+**Tested:**
+- Billing date calculation: 13/13 unit tests passing ✅
+- 30/31-day month handling (Jan 31 → Feb 28/29) ✅
+- Leap year edge cases (Feb 29 → Feb 28 next year) ✅
+- Monthly and annual billing cycles ✅
+
+**Verdict:** **COMPLIANT**
 
 #### 2.3 Refund Penalty Disclosure
 

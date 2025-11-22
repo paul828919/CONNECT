@@ -4,17 +4,26 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
+import { CheckoutConfirmationDialog } from '@/components/checkout-confirmation-dialog';
 
 type BillingCycle = 'monthly' | 'yearly';
 type Plan = 'FREE' | 'PRO' | 'TEAM';
+
+interface PendingCheckout {
+  plan: Plan;
+  planName: string;
+  amount: number;
+}
 
 export default function PricingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
   const [loading, setLoading] = useState<Plan | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingCheckout, setPendingCheckout] = useState<PendingCheckout | null>(null);
 
-  const handleUpgrade = async (plan: Plan) => {
+  const handleUpgrade = (plan: Plan, planName: string, amount: number) => {
     if (!session?.user) {
       router.push('/auth/signin?callbackUrl=/pricing');
       return;
@@ -22,14 +31,22 @@ export default function PricingPage() {
 
     if (plan === 'FREE') return;
 
+    setPendingCheckout({ plan, planName, amount });
+    setShowConfirmDialog(true);
+  };
+
+  const proceedToCheckout = async () => {
+    if (!pendingCheckout) return;
+
     try {
-      setLoading(plan);
+      setLoading(pendingCheckout.plan);
+      setShowConfirmDialog(false);
 
       const res = await fetch('/api/payments/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          plan,
+          plan: pendingCheckout.plan,
           billingCycle,
         }),
       });
@@ -52,6 +69,7 @@ export default function PricingPage() {
       alert('결제 처리 중 오류가 발생했습니다.');
     } finally {
       setLoading(null);
+      setPendingCheckout(null);
     }
   };
 
@@ -315,7 +333,7 @@ export default function PricingPage() {
 
                 {/* CTA Button */}
                 <button
-                  onClick={() => handleUpgrade(plan.key)}
+                  onClick={() => handleUpgrade(plan.key, plan.name, price)}
                   disabled={plan.key === 'FREE' || isLoading}
                   className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${colors.button} ${
                     isLoading ? 'opacity-50 cursor-wait' : ''
@@ -539,6 +557,19 @@ export default function PricingPage() {
           </Link>
         </div>
       </div>
+
+      {/* Checkout Confirmation Dialog */}
+      {pendingCheckout && (
+        <CheckoutConfirmationDialog
+          open={showConfirmDialog}
+          onOpenChange={setShowConfirmDialog}
+          planName={pendingCheckout.planName}
+          planType={billingCycle === 'yearly' ? 'ANNUAL' : 'MONTHLY'}
+          amount={pendingCheckout.amount}
+          onConfirm={proceedToCheckout}
+          loading={loading !== null}
+        />
+      )}
     </div>
   );
 }
