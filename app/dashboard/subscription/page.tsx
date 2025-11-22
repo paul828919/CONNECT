@@ -209,7 +209,7 @@ export default function SubscriptionPage() {
                       <div className="space-y-2 text-sm">
                         <div>• 다음 결제일(<strong>{new Date(subscription.nextBillingDate).toLocaleDateString('ko-KR')}</strong>)부터 자동 과금이 중지됩니다.</div>
                         <div>• 현재 기간(<strong>{new Date(subscription.expiresAt).toLocaleDateString('ko-KR')}까지</strong>)은 계속 이용 가능합니다.</div>
-                        <div className="text-amber-600">• 환불을 원하시는 경우 별도로 "환불 신청"을 해주세요.</div>
+                        <div className="text-amber-600">• 환불을 원하시는 경우 별도로 &quot;환불 신청&quot;을 해주세요.</div>
                       </div>
                     </AlertDialogDescription>
                   </AlertDialogHeader>
