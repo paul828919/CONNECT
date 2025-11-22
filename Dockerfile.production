@@ -36,10 +36,10 @@ COPY . .
 RUN npx prisma generate
 
 # Build Next.js application
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 # Skip static page generation for routes that need runtime data (MVP - optimize later)
-ENV SKIP_ENV_VALIDATION 1
+ENV SKIP_ENV_VALIDATION=1
 
 # Create empty .env file to satisfy Next.js build requirements
 # Actual environment variables are provided at runtime via docker-compose
@@ -55,8 +55,8 @@ RUN npm install -g npm@11
 
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create non-root user with home directory
 # --create-home ensures npm/npx have a writable home directory for cache/logs
