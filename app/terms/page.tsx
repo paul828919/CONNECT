@@ -192,26 +192,43 @@ export default function TermsOfServicePage() {
               </p>
             </section>
 
-            {/* Article 7: Service Charges */}
+            {/* Article 7: Service Charges and Refund Policy */}
             <section>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                제7조 (서비스 이용요금)
+                제7조 (서비스 이용요금 및 환불)
               </h2>
               <ol className="list-decimal list-inside space-y-2 mb-4">
                 <li>회사가 제공하는 서비스는 기본적으로 무료입니다. 다만, 회사는 유료 서비스를 제공할 수 있으며, 이 경우 해당 서비스 이용 전에 이용요금을 명시합니다.</li>
                 <li>유료 서비스 이용요금의 결제는 회사가 정한 방법(신용카드, 계좌이체 등)을 통해 이루어집니다.</li>
-                <li>유료 서비스를 이용한 회원이 결제한 이용요금은 환불이 불가능합니다. 다만, 다음 각 호의 경우는 예외로 합니다:
+                <li>유료 서비스의 환불 정책은 별도로 정한 <Link href="/refund-policy" className="text-blue-600 hover:text-blue-700 underline font-semibold">환불 정책 페이지</Link>에 따릅니다. 환불 정책은 전자상거래법 등 관련 법령을 준수하며, 소비자의 법정 권리(청약철회권, 계약해제권 등)는 본 약관과 무관하게 항상 보장됩니다.</li>
+                <li>환불 정책의 주요 내용은 다음과 같습니다:
                   <ul className="list-disc list-inside ml-6 mt-2 space-y-1">
-                    <li>서비스의 장애 또는 결함으로 인해 서비스를 이용하지 못한 경우</li>
-                    <li>회사의 귀책사유로 계약 내용과 다르게 서비스가 제공된 경우</li>
+                    <li>월간 플랜: 7일 이내 전액 환불 (1회 한정 정책), 7일 경과 후 환불 불가 (법정 권리 제외)</li>
+                    <li>연간 플랜: 7일 이내 전액 환불 (법정 청약철회권), 8일 이후 일할 계산 + 10% 위약금</li>
+                    <li>법정 환불 사유(서비스 장애, 빌링 오류, 계약 내용 불일치 등): 위약금 없이 전액 환불</li>
                   </ul>
                 </li>
+                <li>환불 신청은 고객센터(support@connectplt.kr) 또는 대시보드를 통해 가능하며, 승인 후 3영업일 내 처리됩니다.</li>
               </ol>
+              <div className="bg-blue-50 border-l-4 border-blue-600 p-4 mb-4">
+                <p className="text-sm text-blue-900">
+                  📖 <strong>상세한 환불 정책 확인:</strong>{' '}
+                  <Link href="/refund-policy" className="underline font-semibold hover:text-blue-700">
+                    환불 정책 페이지
+                  </Link>에서 전체 내용, 계산 예시, 환불 절차를 확인하실 수 있습니다.
+                </p>
+              </div>
               <p className="text-sm text-gray-600 italic">
-                <strong>Article 7 (Service Charges)</strong><br />
+                <strong>Article 7 (Service Charges and Refund Policy)</strong><br />
                 Basic services are free. Paid services may be offered with fees disclosed in advance.
-                Payment is made through designated methods (credit card, bank transfer). Refunds are not available
-                except for service failures or Company liability.
+                Payment is made through designated methods (credit card, bank transfer). Refund policy is governed by
+                the separate{' '}
+                <Link href="/refund-policy" className="text-blue-600 hover:text-blue-700 underline font-semibold">
+                  Refund Policy page
+                </Link>, which complies with Korean e-commerce law and guarantees statutory consumer rights
+                (cooling-off period, contract cancellation rights). Key points: Monthly plans offer 7-day full refund
+                (one-time), annual plans offer 7-day full refund then pro-rated with 10% penalty. Statutory refund
+                reasons (service failures, billing errors) are processed without penalty.
               </p>
             </section>
 

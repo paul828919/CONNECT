@@ -5,6 +5,11 @@
 User-agent: *
 Allow: /
 
+# Explicitly allow legal/policy pages (for transparency)
+Allow: /terms
+Allow: /privacy
+Allow: /refund-policy
+
 # Disallow private/authenticated areas
 Disallow: /api/
 Disallow: /dashboard/

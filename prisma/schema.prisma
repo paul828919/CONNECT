@@ -436,6 +436,7 @@ model organizations {
   contact_requests_contact_requests_senderOrgIdToorganizations   contact_requests[]    @relation("contact_requests_senderOrgIdToorganizations")
   funding_matches                                                funding_matches[]
   users                                                          User[]
+  refundRequests                                                 RefundRequest[]
 
   @@index([businessNumberHash])
   @@index([profileCompleted])
@@ -622,6 +623,8 @@ model User {
   sessions               Session[]
   subscriptions          subscriptions?
   organization           organizations?        @relation(fields: [organizationId], references: [id])
+  refundRequests         RefundRequest[]       @relation("RefundRequests")
+  processedRefunds       RefundRequest[]       @relation("RefundProcessedBy")
 
   @@index([email])
   @@index([organizationId])
@@ -909,4 +912,72 @@ enum ConfidenceLevel {
   HIGH
   MEDIUM
   LOW
+}
+
+enum RefundReasonCategory {
+  CHANGE_OF_MIND       // 단순 변심
+  SERVICE_ISSUE        // 서비스 장애/오류
+  BILLING_ERROR        // 빌링 오류
+  DUPLICATE_PAYMENT    // 중복 결제
+  CONTRACT_MISMATCH    // 설명과 다른 서비스
+  OTHER                // 기타
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+model RefundRequest {
+  id                   String                @id @default(cuid())
+  userId               String
+  user                 User                  @relation("RefundRequests", fields: [userId], references: [id])
+  organizationId       String?
+  organization         organizations?        @relation(fields: [organizationId], references: [id])
+
+  // Payment details
+  subscriptionId       String?
+  plan                 SubscriptionPlan
+  billingCycle         BillingCycle
+  amountPaid           Int                   // in KRW
+  purchaseDate         DateTime
+  contractEndDate      DateTime              // For accurate day calculation
+
+  // Refund calculation
+  usedDays             Int
+  refundAmount         Int
+  penalty              Int                   // 10% penalty if contractual
+
+  // Category + Breakdown
+  reasonCategory       RefundReasonCategory  @default(OTHER)
+  calculationJson      Json                  @db.Json // Stores RefundCalculation object
+
+  // Legal/policy basis
+  isStatutory          Boolean               @default(false) // 법정 청약철회/계약해제 여부
+  reason               String                // User-provided reason
+  internalNotes        String?               // CS team notes
+
+  // Admin tracking
+  processedByAdminId   String?
+  processedBy          User?                 @relation("RefundProcessedBy", fields: [processedByAdminId], references: [id])
+
+  // Status tracking
+  status               RefundStatus          @default(PENDING)
+  requestedAt          DateTime              @default(now())
+  approvedAt           DateTime?
+  processedAt          DateTime?             // When sent to PG
+  completedAt          DateTime?             // When PG confirmed
+  rejectedAt           DateTime?
+  rejectionReason      String?
+
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([reasonCategory])
 }

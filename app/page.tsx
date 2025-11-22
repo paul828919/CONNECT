@@ -572,6 +572,7 @@ export default function HomePage() {
             <div className="flex gap-6 mt-4 md:mt-0">
               <Link href="/privacy" className="hover:text-white transition-colors">개인정보처리방침</Link>
               <Link href="/terms" className="hover:text-white transition-colors">이용약관</Link>
+              <Link href="/refund-policy" className="hover:text-white transition-colors">환불 정책</Link>
             </div>
           </div>
         </div>

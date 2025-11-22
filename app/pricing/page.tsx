@@ -468,6 +468,58 @@ export default function PricingPage() {
           </div>
         </div>
 
+        {/* Refund Policy Notice */}
+        <div className="mt-12 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-8 border-2 border-blue-200">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div className="flex-1 text-left">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  💯 안심하고 시작하세요 - 환불 보장
+                </h3>
+                <div className="space-y-2 text-gray-700 mb-4">
+                  <p className="flex items-start">
+                    <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
+                    <span><strong>월간 플랜:</strong> 7일 이내 전액 환불 (1회 한정 정책)</span>
+                  </p>
+                  <p className="flex items-start">
+                    <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
+                    <span><strong>연간 플랜:</strong> 7일 이내 전액 환불 (법정 청약철회권)</span>
+                  </p>
+                  <p className="flex items-start">
+                    <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
+                    <span><strong>서비스 이슈:</strong> 기간 무관 전액 환불 (장애, 빌링 오류 등)</span>
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    href="/refund-policy"
+                    className="inline-flex items-center px-5 py-2.5 bg-white border-2 border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-md"
+                  >
+                    <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    전체 환불 정책 보기
+                  </Link>
+                  <Link
+                    href="/terms"
+                    className="inline-flex items-center px-5 py-2.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    이용약관 확인
+                  </Link>
+                </div>
+                <p className="text-xs text-gray-500 mt-3 italic">
+                  본 환불 정책은 전자상거래법을 준수하며, 법정 소비자 권리는 항상 보장됩니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* FAQ Section */}
         <div className="mt-16 text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
