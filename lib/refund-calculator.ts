@@ -180,3 +180,37 @@ export function calculateMonthlyRefund(
     }
   };
 }
+
+/**
+ * Unified refund calculator
+ * Automatically detects plan type and applies correct calculation logic
+ */
+export interface RefundCalculationParams {
+  totalPaid: number;
+  startDate: Date;
+  requestDate: Date;
+  contractEndDate: Date;
+  isAnnualPlan: boolean;
+  mode?: 'statutory' | 'contractual';
+}
+
+export function calculateRefund(params: RefundCalculationParams): RefundCalculation {
+  const { totalPaid, startDate, requestDate, contractEndDate, isAnnualPlan, mode } = params;
+
+  if (isAnnualPlan) {
+    return calculateAnnualRefund(
+      totalPaid,
+      startDate,
+      contractEndDate,
+      requestDate,
+      { statutory: mode === 'statutory' }
+    );
+  } else {
+    return calculateMonthlyRefund(
+      totalPaid,
+      startDate,
+      requestDate,
+      { isFirstTimeGoodwill: mode === 'statutory' }
+    );
+  }
+}

@@ -4,6 +4,7 @@ import './globals.css'
 import SessionProvider from './providers/SessionProvider'
 import QueryClientProvider from './providers/QueryClientProvider'
 import { FeedbackWidget } from '@/components/feedback-widget'
+import { Toaster } from '@/components/ui/toaster'
 import StructuredData from './components/StructuredData'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -98,6 +99,7 @@ export default function RootLayout({
               {children}
             </div>
             <FeedbackWidget />
+            <Toaster />
           </QueryClientProvider>
         </SessionProvider>
       </body>

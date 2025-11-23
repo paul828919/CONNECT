@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
         nextBillingDate: true,
         amount: true,
         currency: true,
+        paymentMethod: true,
         createdAt: true,
       },
     });
