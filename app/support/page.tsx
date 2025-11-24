@@ -215,7 +215,7 @@ export default function CustomerSupportPage() {
                 </span>
               </summary>
               <p className="text-gray-600 mt-4 pl-4">
-                예, 언제든지 구독 플랜을 업그레이드하거나 다운그레이드할 수 있습니다. 대시보드의 "구독 관리" 메뉴에서 플랜을 변경하실 수 있으며, 변경 사항은 다음 결제 주기부터 적용됩니다.
+                예, 언제든지 구독 플랜을 업그레이드하거나 다운그레이드할 수 있습니다. 대시보드의 &quot;구독 관리&quot; 메뉴에서 플랜을 변경하실 수 있으며, 변경 사항은 다음 결제 주기부터 적용됩니다.
               </p>
             </details>
 
