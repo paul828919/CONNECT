@@ -57,7 +57,7 @@ export default function UserMenu() {
               자격 요건 검토
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push('/dashboard/admin/feedback')}>
-              피드백 대시보드
+              피드백 관리
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push('/dashboard/admin/statistics')}>
               사용자 통계

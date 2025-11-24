@@ -179,7 +179,7 @@ export default function AdminEligibilityReviewPage() {
       <div className="space-y-6">
         {/* Page Header */}
         <div>
-          <h1 className="text-3xl font-bold">자격 요건 검토 대시보드</h1>
+          <h1 className="text-3xl font-bold">자격 요건 검토</h1>
           <p className="text-muted-foreground">모호한 자격 요건을 가진 프로그램의 수동 검토</p>
         </div>
 
