@@ -551,7 +551,6 @@ export default function HomePage() {
               <h4 className="text-white font-semibold mb-4">지원</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/support" className="hover:text-white transition-colors">고객 지원</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">가이드</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
               </ul>
             </div>
@@ -565,14 +564,14 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
-            <div>
-              © 2025 Connect. All rights reserved.
-            </div>
-            <div className="flex gap-6 mt-4 md:mt-0">
+          <div className="border-t border-gray-800 pt-8 text-sm">
+            <div className="flex justify-center gap-6 mb-4">
               <Link href="/privacy" className="hover:text-white transition-colors">개인정보처리방침</Link>
               <Link href="/terms" className="hover:text-white transition-colors">이용약관</Link>
               <Link href="/refund-policy" className="hover:text-white transition-colors">환불 정책</Link>
+            </div>
+            <div className="text-center">
+              © 2025 Innowave. All rights reserved.
             </div>
           </div>
         </div>
