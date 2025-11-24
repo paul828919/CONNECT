@@ -217,12 +217,12 @@ export default function AIMonitoringDashboard() {
   const pieData = budgetStats
     ? [
         {
-          name: 'Match Explanations',
+          name: '매칭 설명',
           value: budgetStats.stats.byService.MATCH_EXPLANATION?.cost || 0,
           count: budgetStats.stats.byService.MATCH_EXPLANATION?.count || 0,
         },
         {
-          name: 'Q&A Chat',
+          name: 'Q&A 채팅',
           value: budgetStats.stats.byService.QA_CHAT?.cost || 0,
           count: budgetStats.stats.byService.QA_CHAT?.count || 0,
         },
@@ -262,8 +262,8 @@ export default function AIMonitoringDashboard() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">AI Cost Monitoring</h1>
-            <p className="text-muted-foreground">Monitor AI usage, costs, and budget alerts</p>
+            <h1 className="text-3xl font-bold">AI 비용 모니터링</h1>
+            <p className="text-muted-foreground">AI 사용량, 비용 및 예산 알림 모니터링</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -272,9 +272,9 @@ export default function AIMonitoringDashboard() {
               onChange={(e) => setDays(parseInt(e.target.value))}
               className="border rounded-lg px-3 py-2 text-sm"
             >
-              <option value={7}>Last 7 days</option>
-              <option value={30}>Last 30 days</option>
-              <option value={90}>Last 90 days</option>
+              <option value={7}>최근 7일</option>
+              <option value={30}>최근 30일</option>
+              <option value={90}>최근 90일</option>
             </select>
 
             <Button
@@ -283,7 +283,7 @@ export default function AIMonitoringDashboard() {
               onClick={() => setIsAutoRefresh(!isAutoRefresh)}
             >
               <RefreshCcw className={`h-4 w-4 mr-2 ${isAutoRefresh ? 'animate-spin' : ''}`} />
-              {isAutoRefresh ? 'Auto-Refresh ON' : 'Auto-Refresh OFF'}
+              {isAutoRefresh ? '자동 새로고침 켜짐' : '자동 새로고침 꺼짐'}
             </Button>
 
             <Button
@@ -297,7 +297,7 @@ export default function AIMonitoringDashboard() {
               ) : (
                 <Mail className="h-4 w-4 mr-2" />
               )}
-              Test Alert
+              알림 테스트
             </Button>
           </div>
         </div>
@@ -306,9 +306,9 @@ export default function AIMonitoringDashboard() {
         <Card className="p-6">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h2 className="text-xl font-semibold">Daily Budget Status</h2>
+              <h2 className="text-xl font-semibold">일일 예산 현황</h2>
               <p className="text-sm text-muted-foreground">
-                Resets at midnight KST
+                자정(KST)에 초기화
               </p>
             </div>
             <DollarSign className="h-8 w-8 text-green-500" />
@@ -322,25 +322,25 @@ export default function AIMonitoringDashboard() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground">Daily Limit</div>
+                  <div className="text-sm text-muted-foreground">일일 한도</div>
                   <div className="text-2xl font-bold">
                     {formatKRW(budgetStats.budget.dailyLimit)}
                   </div>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground">Spent Today</div>
+                  <div className="text-sm text-muted-foreground">금일 사용</div>
                   <div className="text-2xl font-bold text-blue-600">
                     {formatKRW(budgetStats.budget.spent)}
                   </div>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground">Remaining</div>
+                  <div className="text-sm text-muted-foreground">잔여</div>
                   <div className="text-2xl font-bold text-green-600">
                     {formatKRW(budgetStats.budget.remaining)}
                   </div>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground">Usage %</div>
+                  <div className="text-sm text-muted-foreground">사용률 %</div>
                   <div className="text-2xl font-bold text-purple-600">
                     {budgetStats.budget.percentage.toFixed(1)}%
                   </div>
@@ -349,7 +349,7 @@ export default function AIMonitoringDashboard() {
 
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span>Budget Progress</span>
+                  <span>예산 진행률</span>
                   <span>{budgetStats.budget.percentage.toFixed(1)}%</span>
                 </div>
                 <Progress value={budgetStats.budget.percentage} className="h-3" />
@@ -365,25 +365,25 @@ export default function AIMonitoringDashboard() {
               {/* Stats Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
                 <div>
-                  <div className="text-xs text-muted-foreground">Total Requests</div>
+                  <div className="text-xs text-muted-foreground">총 요청 수</div>
                   <div className="text-lg font-semibold">{budgetStats.stats.totalRequests.toLocaleString()}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-muted-foreground">Success Rate</div>
+                  <div className="text-xs text-muted-foreground">성공률</div>
                   <div className="text-lg font-semibold text-green-600">{budgetStats.stats.successRate.toFixed(1)}%</div>
                 </div>
                 <div>
-                  <div className="text-xs text-muted-foreground">Cache Hit Rate</div>
+                  <div className="text-xs text-muted-foreground">캐시 적중률</div>
                   <div className="text-lg font-semibold text-purple-600">{budgetStats.stats.cacheHitRate.toFixed(1)}%</div>
                 </div>
                 <div>
-                  <div className="text-xs text-muted-foreground">Avg Duration</div>
+                  <div className="text-xs text-muted-foreground">평균 처리 시간</div>
                   <div className="text-lg font-semibold">{budgetStats.stats.averageDuration.toFixed(0)}ms</div>
                 </div>
               </div>
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-8">No data available</p>
+            <p className="text-muted-foreground text-center py-8">데이터 없음</p>
           )}
         </Card>
 
@@ -393,7 +393,7 @@ export default function AIMonitoringDashboard() {
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center">
               <TrendingUp className="h-5 w-5 mr-2 text-blue-500" />
-              Daily Cost Trend
+              일일 비용 추이
             </h2>
             {dailyLoading ? (
               <div className="flex justify-center py-8">
@@ -414,34 +414,34 @@ export default function AIMonitoringDashboard() {
                       labelFormatter={(date) => new Date(date).toLocaleDateString('ko-KR')}
                     />
                     <Legend />
-                    <Line type="monotone" dataKey="totalCost" stroke="#3b82f6" strokeWidth={2} name="Total Cost" />
-                    <Line type="monotone" dataKey="matchExplanationCost" stroke="#10b981" strokeWidth={1} name="Match Explanations" />
-                    <Line type="monotone" dataKey="qaChatCost" stroke="#8b5cf6" strokeWidth={1} name="Q&A Chat" />
+                    <Line type="monotone" dataKey="totalCost" stroke="#3b82f6" strokeWidth={2} name="총 비용" />
+                    <Line type="monotone" dataKey="matchExplanationCost" stroke="#10b981" strokeWidth={1} name="매칭 설명" />
+                    <Line type="monotone" dataKey="qaChatCost" stroke="#8b5cf6" strokeWidth={1} name="Q&A 채팅" />
                   </LineChart>
                 </ResponsiveContainer>
                 <div className="grid grid-cols-3 gap-4 mt-4 text-sm">
                   <div className="text-center">
-                    <div className="text-muted-foreground">Avg Daily Cost</div>
+                    <div className="text-muted-foreground">일평균 비용</div>
                     <div className="font-semibold">{formatKRW(dailyData.summary.averageDailyCost)}</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-muted-foreground">Total Cost</div>
+                    <div className="text-muted-foreground">총 비용</div>
                     <div className="font-semibold text-blue-600">{formatKRW(dailyData.summary.totalCost)}</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-muted-foreground">Total Requests</div>
+                    <div className="text-muted-foreground">총 요청 수</div>
                     <div className="font-semibold">{dailyData.summary.totalRequests.toLocaleString()}</div>
                   </div>
                 </div>
               </div>
             ) : (
-              <p className="text-muted-foreground text-center py-8">No data available</p>
+              <p className="text-muted-foreground text-center py-8">데이터 없음</p>
             )}
           </Card>
 
           {/* Service Breakdown */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Service Breakdown</h2>
+            <h2 className="text-xl font-semibold mb-4">서비스별 분석</h2>
             {statsLoading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -478,13 +478,13 @@ export default function AIMonitoringDashboard() {
                         <div className="text-sm font-medium">{service.name}</div>
                       </div>
                       <div className="text-lg font-bold">{formatKRW(service.value)}</div>
-                      <div className="text-xs text-muted-foreground">{service.count} requests</div>
+                      <div className="text-xs text-muted-foreground">{service.count} 요청</div>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <p className="text-muted-foreground text-center py-8">No data available</p>
+              <p className="text-muted-foreground text-center py-8">데이터 없음</p>
             )}
           </Card>
         </div>
@@ -493,7 +493,7 @@ export default function AIMonitoringDashboard() {
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <Users className="h-5 w-5 mr-2 text-purple-500" />
-            Top Users by Cost
+            비용 상위 사용자
           </h2>
           {usersLoading ? (
             <div className="flex justify-center py-8">
@@ -504,13 +504,13 @@ export default function AIMonitoringDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Rank</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead className="text-right">Total Cost</TableHead>
-                    <TableHead className="text-right">Requests</TableHead>
-                    <TableHead className="text-right">Avg/Request</TableHead>
-                    <TableHead className="text-right">% of Total</TableHead>
+                    <TableHead>순위</TableHead>
+                    <TableHead>사용자</TableHead>
+                    <TableHead>이메일</TableHead>
+                    <TableHead className="text-right">총 비용</TableHead>
+                    <TableHead className="text-right">요청 수</TableHead>
+                    <TableHead className="text-right">요청당 평균</TableHead>
+                    <TableHead className="text-right">전체 비율</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -531,7 +531,7 @@ export default function AIMonitoringDashboard() {
               </Table>
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-8">No users data available</p>
+            <p className="text-muted-foreground text-center py-8">사용자 데이터 없음</p>
           )}
         </Card>
 
@@ -539,7 +539,7 @@ export default function AIMonitoringDashboard() {
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             <AlertTriangle className="h-5 w-5 mr-2 text-yellow-500" />
-            Budget Alert History
+            예산 알림 내역
           </h2>
           {alertsLoading ? (
             <div className="flex justify-center py-8">
@@ -550,7 +550,7 @@ export default function AIMonitoringDashboard() {
               {/* Summary Stats */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                 <div className="text-center p-3 border rounded-lg">
-                  <div className="text-sm text-muted-foreground">Total Alerts</div>
+                  <div className="text-sm text-muted-foreground">총 알림 수</div>
                   <div className="text-2xl font-bold">{alertsData.summary.totalAlerts}</div>
                 </div>
                 <div className="text-center p-3 border rounded-lg">
@@ -566,7 +566,7 @@ export default function AIMonitoringDashboard() {
                   <div className="text-2xl font-bold text-red-600">{alertsData.summary.bySeverity.CRITICAL}</div>
                 </div>
                 <div className="text-center p-3 border rounded-lg bg-green-50">
-                  <div className="text-sm text-muted-foreground">Sent</div>
+                  <div className="text-sm text-muted-foreground">전송됨</div>
                   <div className="text-2xl font-bold text-green-600">{alertsData.summary.alertsSent}</div>
                 </div>
               </div>
@@ -577,13 +577,13 @@ export default function AIMonitoringDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Severity</TableHead>
-                        <TableHead>Threshold</TableHead>
-                        <TableHead className="text-right">Amount Spent</TableHead>
-                        <TableHead className="text-right">Percentage</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Sent At</TableHead>
+                        <TableHead>날짜</TableHead>
+                        <TableHead>심각도</TableHead>
+                        <TableHead>임계값</TableHead>
+                        <TableHead className="text-right">사용 금액</TableHead>
+                        <TableHead className="text-right">비율</TableHead>
+                        <TableHead>상태</TableHead>
+                        <TableHead>전송 시간</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -602,12 +602,12 @@ export default function AIMonitoringDashboard() {
                             {alert.alertSent ? (
                               <Badge className="bg-green-500">
                                 <CheckCircle className="h-3 w-3 mr-1" />
-                                Sent
+                                전송됨
                               </Badge>
                             ) : (
                               <Badge variant="outline">
                                 <Clock className="h-3 w-3 mr-1" />
-                                Pending
+                                대기 중
                               </Badge>
                             )}
                           </TableCell>
@@ -622,11 +622,11 @@ export default function AIMonitoringDashboard() {
                   </Table>
                 </div>
               ) : (
-                <p className="text-muted-foreground text-center py-8">No alerts in selected period</p>
+                <p className="text-muted-foreground text-center py-8">선택 기간에 알림 없음</p>
               )}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-8">No alerts data available</p>
+            <p className="text-muted-foreground text-center py-8">알림 데이터 없음</p>
           )}
         </Card>
       </div>
