@@ -9,7 +9,6 @@
  * - Beautiful card-based UI with shadcn/ui
  * - Loading states with skeleton
  * - Error handling with retry
- * - Cost and cache status display
  *
  * Week 3-4: AI Integration (Day 16-17)
  */
@@ -22,7 +21,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -32,8 +30,6 @@ import {
   CheckCircle2,
   RefreshCw,
   Sparkles,
-  Clock,
-  Coins,
 } from 'lucide-react';
 
 interface ParsedMatchExplanation {
@@ -176,22 +172,15 @@ export function MatchExplanation({ matchId, autoLoad = false }: MatchExplanation
               <CardTitle className="text-xl">AI 매칭 설명</CardTitle>
               <CardDescription>{matchInfo?.programTitle}</CardDescription>
             </div>
-            {metadata && (
-              <div className="flex gap-2">
-                {metadata.cached && (
-                  <Badge variant="secondary" className="gap-1">
-                    <Clock className="h-3 w-3" />
-                    캐시됨
-                  </Badge>
-                )}
-                {!metadata.cached && metadata.cost > 0 && (
-                  <Badge variant="outline" className="gap-1">
-                    <Coins className="h-3 w-3" />
-                    ₩{metadata.cost.toFixed(2)}
-                  </Badge>
-                )}
-              </div>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={loadExplanation}
+              className="gap-2 h-7 text-xs"
+            >
+              <RefreshCw className="h-3 w-3" />
+              새로고침
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -245,28 +234,6 @@ export function MatchExplanation({ matchId, autoLoad = false }: MatchExplanation
             </div>
           </div>
 
-          {/* Metadata footer */}
-          {metadata && (
-            <div className="pt-4 border-t text-xs text-muted-foreground flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span>응답 시간: {metadata.responseTime}ms</span>
-                {metadata.usage && (
-                  <span>
-                    토큰: {metadata.usage.inputTokens}↑ / {metadata.usage.outputTokens}↓
-                  </span>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={loadExplanation}
-                className="gap-2 h-7 text-xs"
-              >
-                <RefreshCw className="h-3 w-3" />
-                새로고침
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
 
