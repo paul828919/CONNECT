@@ -35,7 +35,7 @@ function getRedisClient(): Redis {
 }
 
 // Cache configuration
-const CACHE_TTL_SECONDS = 24 * 60 * 60; // 24 hours
+const CACHE_TTL_SECONDS = 6 * 60 * 60; // 6 hours (reduced from 24h for status-aware caching)
 const CACHE_KEY_PREFIX = 'match:explanation:';
 
 /**
@@ -55,9 +55,10 @@ export interface MatchExplanationResponse {
 /**
  * Generate cache key for match explanation
  * Uses IDs for consistency and to avoid issues with name changes
+ * Includes program status to prevent stale ACTIVE advice on EXPIRED programs
  */
-function getCacheKey(organizationId: string, programId: string): string {
-  return `${CACHE_KEY_PREFIX}${organizationId}:${programId}`;
+function getCacheKey(organizationId: string, programId: string, status: string): string {
+  return `${CACHE_KEY_PREFIX}${organizationId}:${programId}:${status}`;
 }
 
 /**
@@ -65,11 +66,12 @@ function getCacheKey(organizationId: string, programId: string): string {
  */
 async function getCachedExplanation(
   organizationId: string,
-  programId: string
+  programId: string,
+  status: string
 ): Promise<ParsedMatchExplanation | null> {
   try {
     const redis = getRedisClient();
-    const key = getCacheKey(organizationId, programId);
+    const key = getCacheKey(organizationId, programId, status);
     const cached = await redis.get(key);
 
     if (cached) {
@@ -91,16 +93,67 @@ async function getCachedExplanation(
 async function cacheExplanation(
   organizationId: string,
   programId: string,
+  status: string,
   explanation: ParsedMatchExplanation
 ): Promise<void> {
   try {
     const redis = getRedisClient();
-    const key = getCacheKey(organizationId, programId);
+    const key = getCacheKey(organizationId, programId, status);
     await redis.setex(key, CACHE_TTL_SECONDS, JSON.stringify(explanation));
     console.log('[CACHE] SET - AI Explanation:', key, `(TTL: ${CACHE_TTL_SECONDS}s)`);
   } catch (error) {
     console.error('[CACHE] Write error - AI Explanation:', error);
     // Non-critical error, don't throw
+  }
+}
+
+/**
+ * Detect state inconsistency in AI-generated content
+ * Logs warnings when EXPIRED/ARCHIVED programs contain ACTIVE-like language
+ */
+function detectStateInconsistency(
+  explanation: ParsedMatchExplanation,
+  programStatus: string,
+  programTitle: string,
+  organizationId: string
+): void {
+  const fullText = `${explanation.summary} ${explanation.reasons.join(' ')} ${explanation.cautions || ''} ${explanation.recommendation}`.toLowerCase();
+
+  let inconsistencyDetected = false;
+  const issues: string[] = [];
+
+  // Check for EXPIRED/ARCHIVED programs with ACTIVE-like language
+  if (programStatus === 'EXPIRED' || programStatus === 'ARCHIVED') {
+    // Detect active application language
+    if (fullText.includes('신청하세요') || fullText.includes('지원하세요')) {
+      issues.push('ACTIVE_LANGUAGE_IN_NON_ACTIVE_PROGRAM');
+      inconsistencyDetected = true;
+    }
+
+    // Detect apologetic closure language (negative framing)
+    if (fullText.includes('마감') && (fullText.includes('죄송') || fullText.includes('불가능'))) {
+      issues.push('APOLOGETIC_CLOSURE_LANGUAGE');
+      inconsistencyDetected = true;
+    }
+
+    // Detect error mentions that destroy user trust
+    if (fullText.includes('시스템 오류') || fullText.includes('오류로 보입니다')) {
+      issues.push('ERROR_MENTION_IN_EXPLANATION');
+      inconsistencyDetected = true;
+    }
+  }
+
+  if (inconsistencyDetected) {
+    console.warn('[AI_STATE_INCONSISTENCY] Detected potential content mismatch:', {
+      programTitle,
+      programStatus,
+      organizationId,
+      issues,
+      timestamp: new Date().toISOString(),
+      metric: 'ai.explanation.state_inconsistency',
+      count: issues.length,
+      summary: explanation.summary.substring(0, 100), // First 100 chars for debugging
+    });
   }
 }
 
@@ -118,7 +171,7 @@ export async function generateMatchExplanation(
   // Try to get from cache first (use IDs if available, fallback to names)
   const cacheOrgId = organizationId || input.companyName;
   const cacheProgramId = programId || input.programTitle;
-  const cached = await getCachedExplanation(cacheOrgId, cacheProgramId);
+  const cached = await getCachedExplanation(cacheOrgId, cacheProgramId, input.programStatus);
 
   if (cached) {
     const responseTime = Date.now() - startTime;
@@ -156,8 +209,16 @@ export async function generateMatchExplanation(
     // Parse XML response
     const explanation = parseMatchExplanation(aiResponse.content);
 
+    // Detect state inconsistency (logs warnings for monitoring)
+    detectStateInconsistency(
+      explanation,
+      input.programStatus,
+      input.programTitle,
+      organizationId || 'UNKNOWN'
+    );
+
     // Cache the result (use IDs if available, fallback to names)
-    await cacheExplanation(cacheOrgId, cacheProgramId, explanation);
+    await cacheExplanation(cacheOrgId, cacheProgramId, input.programStatus, explanation);
 
     const responseTime = Date.now() - startTime;
 
@@ -183,6 +244,7 @@ export async function generateMatchExplanation(
       programTitle: input.programTitle,
       organizationName: input.companyName,
       matchScore: input.matchScore || 75,
+      programStatus: input.programStatus,
     });
 
     // Parse fallback content into expected format
@@ -285,15 +347,16 @@ export async function getCacheStats(): Promise<{
 }
 
 /**
- * Clear cache for specific organization and program
+ * Clear cache for specific organization, program, and status
  */
 export async function clearExplanationCache(
   organizationId: string,
-  programId: string
+  programId: string,
+  status: string
 ): Promise<void> {
   try {
     const redis = getRedisClient();
-    const key = getCacheKey(organizationId, programId);
+    const key = getCacheKey(organizationId, programId, status);
     await redis.del(key);
   } catch (error) {
     console.error('Cache clear error:', error);

@@ -20,15 +20,62 @@ export interface FallbackResponse {
 
 /**
  * Get fallback content for match explanation
- * Returns generic explanations when AI is unavailable
+ * Returns context-aware explanations when AI is unavailable
  */
 export function getMatchExplanationFallback(
   programTitle: string,
   organizationName: string,
-  matchScore: number
+  matchScore: number,
+  programStatus?: 'ACTIVE' | 'EXPIRED' | 'ARCHIVED'
 ): FallbackResponse {
-  // Generic match explanation (Korean)
-  const koreanExplanation = `
+  const status = programStatus || 'ACTIVE';
+
+  let koreanExplanation: string;
+
+  switch (status) {
+    case 'EXPIRED':
+      koreanExplanation = `
+**매칭 결과**: ${programTitle}
+
+**선정 이유**:
+- 귀사(${organizationName})의 사업 분야와 본 과제의 목적이 ${matchScore}점으로 매칭되었습니다.
+- 과제는 이미 마감되었으나, 2026년도 유사 과제 준비에 참고하세요.
+- 귀사의 강점을 파악하는 학습 자료로 활용하실 수 있습니다.
+
+**다음 단계** (2026년 준비):
+1. NTIS에서 2026년 1-2월 유사 공고를 모니터링하세요
+2. 과제 요구사항(TRL, 인증)을 기준으로 보완점을 준비하세요
+3. 사업계획서 초안을 미리 작성하세요 (3-4주 소요)
+
+**도움이 필요하시면**: 신청서 검토 서비스(₩2-3M) 또는 컨소시엄 구성 서비스(₩3-5M)를 이용하실 수 있습니다.
+
+*참고: 상세 설명 생성이 지연되고 있어 기본 정보만 먼저 제공합니다. 잠시 후 다시 시도하시면 더 상세한 분석을 받아보실 수 있습니다.*
+      `.trim();
+      break;
+
+    case 'ARCHIVED':
+      koreanExplanation = `
+**매칭 결과**: ${programTitle}
+
+**선정 이유**:
+- 귀사(${organizationName})와 ${matchScore}점으로 매칭되었던 이력을 통해 귀사의 강점을 파악할 수 있습니다.
+- 이 과제는 영구 중단되었으나, 귀사 역량은 여전히 유효합니다.
+- 유사한 현재 활성 과제를 탐색하는 데 활용하세요.
+
+**다음 단계** (대체 과제 탐색):
+1. 대시보드에서 현재 활성 과제를 확인하세요
+2. 과제 카테고리 및 TRL 요구사항이 유사한 과제를 찾으세요
+3. 귀사 프로필을 최적화하여 매칭 점수를 높이세요
+
+**도움이 필요하시면**: 컨소시엄 구성 서비스(₩3-5M)를 통해 대체 과제를 찾으실 수 있습니다.
+
+*참고: 상세 설명 생성이 지연되고 있어 기본 정보만 먼저 제공합니다. 잠시 후 다시 시도하시면 더 상세한 분석을 받아보실 수 있습니다.*
+      `.trim();
+      break;
+
+    case 'ACTIVE':
+    default:
+      koreanExplanation = `
 **매칭 결과**: ${programTitle}
 
 **선정 이유**:
@@ -43,8 +90,10 @@ export function getMatchExplanationFallback(
 
 **도움이 필요하시면**: 신청서 검토 서비스(₩2-3M) 또는 컨소시엄 구성 서비스(₩3-5M)를 이용하실 수 있습니다.
 
-*참고: AI 서비스가 일시적으로 사용 불가하여 기본 매칭 설명을 제공해 드렸습니다. 잠시 후 다시 시도하시면 더 상세한 분석을 받아보실 수 있습니다.*
-  `.trim();
+*참고: 상세 설명 생성이 지연되고 있어 기본 정보만 먼저 제공합니다. 잠시 후 다시 시도하시면 더 상세한 분석을 받아보실 수 있습니다.*
+      `.trim();
+      break;
+  }
 
   const englishExplanation = `
 **Match Result**: ${programTitle}
@@ -314,6 +363,7 @@ export function getFallbackContent(
     programTitle?: string;
     organizationName?: string;
     matchScore?: number;
+    programStatus?: 'ACTIVE' | 'EXPIRED' | 'ARCHIVED';
     question?: string;
   }
 ): FallbackResponse {
@@ -322,7 +372,8 @@ export function getFallbackContent(
       return getMatchExplanationFallback(
         context.programTitle || 'R&D Program',
         context.organizationName || 'Your Organization',
-        context.matchScore || 75
+        context.matchScore || 75,
+        context.programStatus
       );
 
     case 'QA_CHAT':

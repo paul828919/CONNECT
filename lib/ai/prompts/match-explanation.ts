@@ -16,7 +16,8 @@ export interface MatchExplanationInput {
   programBudget: string;
   programTRL: string;
   programIndustry: string;
-  programDeadline: string;
+  programDeadline: Date | null;
+  programStatus: 'ACTIVE' | 'EXPIRED' | 'ARCHIVED';
   programRequirements: string[];
 
   // Company information
@@ -43,19 +44,131 @@ export interface MatchExplanationInput {
   similarSuccessRate?: number; // Optional: similar companies' success rate
 }
 
-export function buildMatchExplanationPrompt(input: MatchExplanationInput): string {
-  const systemPrompt = `당신은 Connect 플랫폼의 AI 매칭 전문가입니다.
+/**
+ * System prompt for ACTIVE programs
+ * Focus: "Should I apply? What's urgent?"
+ */
+function getActiveSystemPrompt(): string {
+  return `당신은 Connect 플랫폼의 AI 매칭 전문가입니다.
 
 역할:
-- 한국 정부 R&D 과제와 기업의 매칭 결과를 설명
-- 왜 적합한지 구체적인 근거 제시
-- 신청 시 주의사항 안내
-- 전문적이면서 친근한 존댓말 사용
+- 현재 신청 가능한 R&D 과제에 대한 지원 가능성 평가
+- 매칭 점수의 구체적 근거 제시
+- 신청 전 필수 확인사항 안내 (TRL, 예산, 자격요건)
+- 마감일 기준 준비 일정 제안
 
 제약사항:
 - 선정을 보장하는 표현 금지 ("반드시 선정됩니다" ❌)
 - 일반적인 안내만 제공 ("일반적으로 적합합니다" ✅)
-- 최종 확인은 공고문 참조 안내 필수`;
+- 최종 확인은 공고문 참조 안내 필수
+
+응답 목표:
+- "지금 신청해야 할까?" → 명확한 판단 근거 제공
+- 마감일까지 남은 시간 고려한 실행 계획`;
+}
+
+/**
+ * System prompt for EXPIRED programs
+ * Focus: "How do I prepare for next year?"
+ */
+function getExpiredSystemPrompt(): string {
+  return `당신은 Connect 플랫폼의 AI 매칭 전문가입니다.
+
+역할:
+- 2026년도 유사 과제 대비를 위한 학습 자료 제공
+- 이 매칭이 왜 적합했는지 분석 (회사 강점 파악)
+- 내년 공고 대비 전략적 준비사항 제안
+- 현재 보완 가능한 요건 식별
+
+표현 지침:
+- "마감되었습니다"와 같은 부정적 표현 금지
+- "시스템 오류"와 같은 불신 유발 표현 절대 금지
+- 학습 관점의 긍정적 프레이밍 사용
+- "2026년 준비" 중심의 미래 지향적 톤
+
+응답 목표:
+- "내년 신청을 위해 무엇을 준비할까?" → 구체적 액션 플랜
+- 귀사의 강점 파악 및 보완점 개선 방향 제시`;
+}
+
+/**
+ * System prompt for ARCHIVED programs
+ * Focus: "Alternative exploration"
+ */
+function getArchivedSystemPrompt(): string {
+  return `당신은 Connect 플랫폼의 AI 매칭 전문가입니다.
+
+역할:
+- 과거 매칭 이유 분석 (회사 강점 파악용)
+- 유사한 현재 활성 과제 탐색 방향 제안
+- 회사 프로필 최적화 조언
+
+표현 지침:
+- 영구 중단 사실을 명확히 전달
+- "시스템 오류"와 같은 불신 유발 표현 절대 금지
+- 대안 탐색에 집중하는 긍정적 톤
+
+응답 목표:
+- "이 과제는 영구 중단되었으나, 귀사 강점은 여전히 유효합니다"
+- 유사한 활성 과제 탐색 가이드 제공`;
+}
+
+/**
+ * Calculate deadline urgency for ACTIVE programs
+ */
+function calculateDeadlineUrgency(deadline: Date): string {
+  const now = new Date();
+  const daysRemaining = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (daysRemaining <= 7) {
+    return `\n⚠️ 긴급: 마감까지 ${daysRemaining}일 남음 - 즉시 검토 필요`;
+  } else if (daysRemaining <= 14) {
+    return `\n마감까지 ${daysRemaining}일 - 1주 내 착수 권장`;
+  } else if (daysRemaining <= 30) {
+    return `\n마감까지 ${daysRemaining}일 - 2-3주 준비 기간 확보`;
+  }
+
+  return '';
+}
+
+/**
+ * Format deadline for display
+ */
+function formatDeadlineDisplay(deadline: Date | null): string {
+  if (!deadline) return '미정';
+
+  return deadline.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+export function buildMatchExplanationPrompt(input: MatchExplanationInput): string {
+  // Select appropriate system prompt based on program status
+  let systemPrompt: string;
+  let statusContext: string;
+
+  switch (input.programStatus) {
+    case 'EXPIRED':
+      systemPrompt = getExpiredSystemPrompt();
+      statusContext = `\n<context>이 과제는 이미 마감되었습니다. 2026년도 유사 과제 준비를 위한 학습 자료로 활용하세요.</context>\n`;
+      break;
+
+    case 'ARCHIVED':
+      systemPrompt = getArchivedSystemPrompt();
+      statusContext = `\n<context>이 과제는 영구 중단되었습니다. 귀사 강점 파악 및 대체 과제 탐색에 활용하세요.</context>\n`;
+      break;
+
+    case 'ACTIVE':
+    default:
+      systemPrompt = getActiveSystemPrompt();
+      const urgencyInfo = input.programDeadline
+        ? calculateDeadlineUrgency(input.programDeadline)
+        : '';
+      statusContext = `\n<context>이 과제는 현재 신청 가능합니다. 지원 가능성을 평가하고 실행 계획을 제시하세요.${urgencyInfo}</context>\n`;
+      break;
+  }
 
   const userPrompt = `<company_info>
 회사명: ${input.companyName}
@@ -73,7 +186,7 @@ R&D 경험: ${input.rdExperience}년
 지원 예산: ${input.programBudget}
 요구 TRL: ${input.programTRL}
 대상 산업: ${input.programIndustry}
-마감일: ${input.programDeadline}
+마감일: ${formatDeadlineDisplay(input.programDeadline)}
 필수 요건: ${input.programRequirements.join(', ')}
 </program_info>
 
@@ -123,7 +236,7 @@ ${input.similarSuccessRate ? `
 
 매칭 설명을 작성해주세요.`;
 
-  return `${systemPrompt}\n\n${userPrompt}`;
+  return `${systemPrompt}\n${statusContext}\n${userPrompt}`;
 }
 
 /**

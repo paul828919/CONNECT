@@ -108,7 +108,8 @@ export async function GET(
       programBudget: formatBudget(program.budgetAmount),
       programTRL: formatTRL(program.minTrl, program.maxTrl),
       programIndustry: program.category || '전 산업',
-      programDeadline: formatDeadline(program.deadline),
+      programDeadline: program.deadline, // Pass raw Date object
+      programStatus: program.status, // Pass program status for conditional prompts
       programRequirements: parseRequirements(program.eligibilityCriteria),
 
       // Company information
@@ -242,24 +243,6 @@ function formatTRL(minTrl: number | null, maxTrl: number | null): string {
   if (!minTrl && maxTrl) return `TRL ${maxTrl} 이하`;
   if (minTrl === maxTrl) return `TRL ${minTrl}`;
   return `TRL ${minTrl}-${maxTrl}`;
-}
-
-function formatDeadline(deadline: Date | null): string {
-  if (!deadline) return '상시 모집';
-
-  const now = new Date();
-  const daysUntil = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-  const dateStr = deadline.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
-  if (daysUntil <= 0) return `${dateStr} (마감)`;
-  if (daysUntil === 1) return `${dateStr} (내일 마감)`;
-  if (daysUntil <= 7) return `${dateStr} (${daysUntil}일 남음)`;
-  return dateStr;
 }
 
 function parseRequirements(eligibilityCriteria: any): string[] {
