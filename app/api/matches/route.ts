@@ -126,6 +126,7 @@ export async function GET(request: NextRequest) {
           announcementUrl: match.funding_programs.announcementUrl,
           manualReviewRequired: match.funding_programs.manualReviewRequired,
           manualReviewNotes: match.funding_programs.manualReviewNotes,
+          eligibilityConfidence: match.funding_programs.eligibilityConfidence,
         },
         score: match.score,
         explanation: match.explanation,

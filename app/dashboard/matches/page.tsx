@@ -8,6 +8,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { MatchExplanation } from '@/components/match-explanation';
 import { HistoricalMatchesPrompt } from '@/components/HistoricalMatchesPrompt';
 import { EligibilityBadge, type EligibilityLevel } from '@/components/matches/EligibilityBadge';
+import { EligibilityConfidenceAlert, type ConfidenceLevel } from '@/components/matches/EligibilityConfidenceAlert';
 import { InvestmentPrompt } from '@/components/profile/InvestmentPrompt';
 
 interface Match {
@@ -24,6 +25,7 @@ interface Match {
     status?: string; // Add status field for EXPIRED detection
     manualReviewRequired?: boolean; // Programs requiring manual announcement verification
     manualReviewNotes?: string | null; // Notes explaining why manual review is needed
+    eligibilityConfidence?: ConfidenceLevel; // Eligibility extraction confidence (HIGH, MEDIUM, LOW)
   };
   score: number;
   explanation: {
@@ -535,36 +537,12 @@ export default function MatchesPage() {
                 </div>
               </div>
 
-              {/* Manual Review Warning Banner (for programs without attachments) */}
-              {match.program.manualReviewRequired && (
-                <div className="mb-4 p-4 bg-orange-50 border-2 border-orange-300 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <svg
-                      className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                      />
-                    </svg>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-orange-900 mb-1">
-                        ⚠️ 공고문 직접 확인 필요
-                      </p>
-                      <p className="text-sm text-orange-800 mb-2">
-                        {match.program.manualReviewNotes || '이 프로그램은 첨부파일이 없어 상세 정보를 자동으로 추출할 수 없습니다.'}
-                      </p>
-                      <p className="text-xs text-orange-700">
-                        💡 아래 &quot;공고 확인하기&quot; 버튼을 클릭하여 NTIS 공고 페이지에서 직접 자격요건, 지원규모, 마감일을 확인하세요.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              {/* Eligibility Confidence Alert (for MEDIUM and LOW confidence programs) */}
+              {match.program.eligibilityConfidence && (
+                <EligibilityConfidenceAlert
+                  confidence={match.program.eligibilityConfidence}
+                  announcementUrl={match.program.announcementUrl}
+                />
               )}
 
               {/* Program Details */}
@@ -847,36 +825,12 @@ export default function MatchesPage() {
                     </div>
                   </div>
 
-                  {/* Manual Review Warning Banner (for historical programs without attachments) */}
-                  {match.program.manualReviewRequired && (
-                    <div className="mb-4 p-4 bg-orange-50 border-2 border-orange-300 rounded-lg">
-                      <div className="flex items-start gap-3">
-                        <svg
-                          className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                          />
-                        </svg>
-                        <div className="flex-1">
-                          <p className="text-sm font-bold text-orange-900 mb-1">
-                            ⚠️ 공고문 직접 확인 필요
-                          </p>
-                          <p className="text-sm text-orange-800 mb-2">
-                            {match.program.manualReviewNotes || '이 프로그램은 첨부파일이 없어 상세 정보를 자동으로 추출할 수 없습니다.'}
-                          </p>
-                          <p className="text-xs text-orange-700">
-                            💡 아래 &quot;2026년 준비용으로 학습&quot; 버튼을 클릭하여 NTIS 공고 페이지에서 직접 자격요건, 지원규모, 마감일을 확인하세요.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                  {/* Eligibility Confidence Alert (for MEDIUM and LOW confidence historical programs) */}
+                  {match.program.eligibilityConfidence && (
+                    <EligibilityConfidenceAlert
+                      confidence={match.program.eligibilityConfidence}
+                      announcementUrl={match.program.announcementUrl}
+                    />
                   )}
 
                   {/* Program Details with Strikethrough Deadline */}

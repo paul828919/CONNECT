@@ -135,6 +135,7 @@ export async function GET(request: NextRequest) {
           publishedAt: match.funding_programs.publishedAt?.toISOString(),
           manualReviewRequired: match.funding_programs.manualReviewRequired,
           manualReviewNotes: match.funding_programs.manualReviewNotes,
+          eligibilityConfidence: match.funding_programs.eligibilityConfidence,
         },
         score: match.score,
         explanation: match.explanation,
