@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import CompetitivenessCard from '@/components/dashboard/CompetitivenessCard';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -301,13 +302,7 @@ export default function DashboardPage() {
               <h4 className="font-semibold text-gray-900 mb-1">조직 프로필 관리</h4>
               <p className="text-sm text-gray-600">프로필을 업데이트하여 더 정확한 매칭 받기</p>
             </Link>
-            <Link
-              href="/dashboard/matches"
-              className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <h4 className="font-semibold text-gray-900 mb-1">매칭 결과 보기</h4>
-              <p className="text-sm text-gray-600">저장된 매칭 결과 확인 및 관리</p>
-            </Link>
+            <CompetitivenessCard organizationId={(session?.user as any)?.organizationId || ''} />
           </div>
         </div>
     </DashboardLayout>
