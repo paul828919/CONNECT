@@ -25,6 +25,11 @@ export default function DashboardPage() {
     totalPrograms: number;
     totalGoverningOrgs: number;
   } | null>(null);
+  const [profileCompletion, setProfileCompletion] = useState<{
+    percentage: number;
+    completedCount: number;
+    totalCount: number;
+  } | null>(null);
 
   const fetchMatchStats = useCallback(async () => {
     try {
@@ -68,6 +73,21 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const fetchProfileCompletion = useCallback(async () => {
+    try {
+      const orgId = (session?.user as any)?.organizationId;
+      if (!orgId) return;
+
+      const res = await fetch(`/api/organizations/profile-completion?organizationId=${orgId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setProfileCompletion(data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching profile completion:', err);
+    }
+  }, [session]);
+
   useEffect(() => {
     if (status === 'loading') return;
 
@@ -88,7 +108,8 @@ export default function DashboardPage() {
     fetchMatchStats();
     fetchSubscription();
     fetchProgramStats();
-  }, [session, status, router, fetchMatchStats, fetchSubscription, fetchProgramStats]);
+    fetchProfileCompletion();
+  }, [session, status, router, fetchMatchStats, fetchSubscription, fetchProgramStats, fetchProfileCompletion]);
 
   const handleGenerateMatches = async () => {
     try {
@@ -164,7 +185,7 @@ export default function DashboardPage() {
               환영합니다! 👋
             </h2>
             <p className="mt-2 text-gray-600">
-              Connect 플랫폼에 오신 것을 환영합니다. 프로필이 설정되면 맞춤형 R&D 펀딩 기회를 확인하실 수 있습니다.
+              Connect에 오신 것을 환영합니다. 프로필이 설정되면 맞춤형 R&D 연구과제와 지원사업을 확인하실 수 있습니다.
             </p>
           </div>
 
@@ -177,18 +198,18 @@ export default function DashboardPage() {
               <div className="mt-2 text-3xl font-bold text-blue-600">{matchCount}</div>
               <div className="mt-1 text-xs text-gray-500">저장된 매칭</div>
             </Link>
-            <div className="rounded-xl bg-white p-6 shadow-sm">
+            <div className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="text-sm font-medium text-gray-600">
-                활성 연구과제
+                접수 중 연구과제
               </div>
               <div className="mt-2 text-3xl font-bold text-purple-600">
                 {programStats ? programStats.totalPrograms : '-'}
               </div>
               <div className="mt-1 text-xs text-gray-500">
-                {programStats ? `${programStats.totalGoverningOrgs}개 기관` : '로딩 중...'}
+                {programStats ? `${programStats.totalGoverningOrgs}개 전문기관 공모 중` : '로딩 중...'}
               </div>
             </div>
-            <div className="rounded-xl bg-white p-6 shadow-sm">
+            <Link href="/dashboard/subscription" className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow block">
               <div className="text-sm font-medium text-gray-600">
                 구독 플랜
               </div>
@@ -202,7 +223,7 @@ export default function DashboardPage() {
                   ? `${usage.remaining}회 남음`
                   : '3 매칭/월'}
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Error Message / Upgrade Banner */}
@@ -252,10 +273,10 @@ export default function DashboardPage() {
           <div className="rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 p-8">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                맞춤형 펀딩 기회 찾기
+                맞춤형 연구과제 찾기
               </h3>
               <p className="text-gray-600">
-                귀하의 조직 프로필에 최적화된 정부 R&D 지원 프로그램을 추천해드립니다.
+                정부의 전체 R&D 사업 중 귀하의 조직 프로필에 최적화된 연구과제를 추천해드립니다.
               </p>
             </div>
 
@@ -288,7 +309,7 @@ export default function DashboardPage() {
               </button>
 
               <p className="text-sm text-gray-500">
-                4개 주요 기관 (IITP, KEIT, TIPA, KIMST)의 활성 프로그램 대상
+                NTIS 기반 전체 정부 R&D 연구과제 대상 (30개+ 부처 · 80개+ 전문기관)
               </p>
             </div>
           </div>
@@ -299,8 +320,32 @@ export default function DashboardPage() {
               href="/dashboard/profile/edit"
               className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
             >
-              <h4 className="font-semibold text-gray-900 mb-1">조직 프로필 관리</h4>
-              <p className="text-sm text-gray-600">프로필을 업데이트하여 더 정확한 매칭 받기</p>
+              <h4 className="font-semibold text-gray-900 mb-2">조직 프로필 관리</h4>
+              {profileCompletion && (
+                <div className="mb-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-500">프로필 완성도</span>
+                    <span className="text-xs font-medium text-gray-700">{profileCompletion.percentage}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-500 ${
+                        profileCompletion.percentage >= 80
+                          ? 'bg-green-500'
+                          : profileCompletion.percentage >= 50
+                          ? 'bg-yellow-500'
+                          : 'bg-orange-500'
+                      }`}
+                      style={{ width: `${profileCompletion.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              <p className="text-sm text-gray-600">
+                {profileCompletion && profileCompletion.percentage < 100
+                  ? '프로필을 완성하면 더 정확한 매칭을 받을 수 있습니다'
+                  : '프로필을 업데이트하여 더 정확한 매칭 받기'}
+              </p>
             </Link>
             <CompetitivenessCard organizationId={(session?.user as any)?.organizationId || ''} />
           </div>

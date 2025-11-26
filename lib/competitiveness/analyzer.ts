@@ -385,8 +385,14 @@ export function analyzeCompetitiveness(
     });
 
   // Calculate overall score
+  // When there are no improvement suggestions, the profile is optimal for matched programs (score = 100)
+  // Otherwise, score reflects the ratio of fully eligible matches
   const overallScore =
-    matches.length > 0 ? Math.round((fullyEligibleCount / matches.length) * 100) : 0;
+    matches.length > 0
+      ? improvements.length === 0
+        ? 100 // No improvements needed = maximum competitiveness
+        : Math.round((fullyEligibleCount / matches.length) * 100)
+      : 0;
 
   // Detect profile gaps
   const profileGaps = detectProfileGaps(org);
