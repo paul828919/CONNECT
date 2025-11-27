@@ -36,7 +36,7 @@ export default function HomePage() {
             <div className="space-y-8">
               <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                 <Zap className="w-4 h-4 mr-2" aria-hidden="true" />
-                AI 기반 매칭 엔진
+                NTIS 통합 · AI 매칭
               </div>
 
               <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
@@ -48,29 +48,29 @@ export default function HomePage() {
               </h1>
 
               <p className="text-xl text-gray-600 leading-relaxed">
-                4개 핵심 연구관리 전문기관의 연구과제 공고를 커넥트 에이전트가 분석하여
+                NTIS의 전체 국가 R&D 사업 공고를 커넥트 에이전트가 분석하여
                 <br />
                 당신에게 딱 맞는 연구과제의 기회를 매칭해드립니다
               </p>
 
-              {/* Stats - Production Safe Version */}
+              {/* Stats - NTIS Integration */}
               <div className="flex flex-wrap gap-8 pt-4">
                 <div className="relative">
-                  <div className="text-3xl font-bold text-blue-600">연 1,000+</div>
-                  <div className="text-sm text-gray-600">매칭 목표</div>
+                  <div className="text-3xl font-bold text-blue-600">1,600+</div>
+                  <div className="text-sm text-gray-600">연평균 총 R&D 사업 매칭</div>
                 </div>
                 <div className="relative">
-                  <div className="text-3xl font-bold text-blue-600">4개 기관</div>
-                  <div className="text-sm text-gray-600">주요 연구과제 공고</div>
+                  <div className="text-3xl font-bold text-blue-600">NTIS 통합</div>
+                  <div className="text-sm text-gray-600">국가 연구관리 전문기관</div>
                 </div>
                 <div className="relative">
-                  <div className="text-3xl font-bold text-blue-600">&lt;5분</div>
+                  <div className="text-3xl font-bold text-blue-600">&lt;3분</div>
                   <div className="text-sm text-gray-600">매칭 소요시간</div>
                 </div>
               </div>
 
               <p className="text-xs text-gray-500 italic">
-                * 매칭 목표 수치는 플랫폼 목표이며 실제 성과와 다를 수 있습니다
+                * NTIS 데이터 기준이며 실제 활성 공고 수는 시기에 따라 변동됩니다
               </p>
 
               {/* Primary CTA */}
@@ -142,88 +142,66 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Trust Indicators - 4 Agencies Section */}
+      {/* Trust Indicators - NTIS Integration Section */}
       <section className="py-16 px-4 bg-white border-y border-gray-100">
         <div className="container mx-auto max-w-7xl">
           {/* Header */}
           <div className="text-center mb-12">
-            <p className="text-sm text-gray-500 mb-2">국가 R&D사업 공고 출처</p>
+            <p className="text-sm text-gray-500 mb-2">데이터 출처</p>
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-              4개 핵심 연구관리 전문기관 모니터링
+              NTIS 국가 R&D 사업
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              정부 R&D 예산의 40-55%를 차지하는 주요 전문기관의
-              연구과제 공고를 정기적으로 수집·분석합니다
+              NTIS(국가과학기술지식정보서비스)의 전체 국가 R&D 사업을 분석합니다
             </p>
           </div>
 
-          {/* Agency Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 max-w-5xl mx-auto">
+          {/* Domain Grid - 8 Domains */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
             {[
-              { code: 'iitp', nameKr: '정보통신기획평가원', nameEn: 'IITP', ministry: '과기정통부', icon: Building2 },
-              { code: 'keit', nameKr: '한국산업기술평가관리원', nameEn: 'KEIT', ministry: '산업통상자원부', icon: Building2 },
-              { code: 'tipa', nameKr: '중소기업기술정보진흥원', nameEn: 'TIPA', ministry: '중소벤처기업부', icon: Building2 },
-              { code: 'kimst', nameKr: '해양수산과학기술진흥원', nameEn: 'KIMST', ministry: '해양수산부', icon: Ship },
-            ].map((agency) => {
-              const Icon = agency.icon;
-              return (
-                <div
-                  key={agency.code}
-                  className="p-6 rounded-xl border-2 transition-all hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200 hover:border-blue-300"
-                >
-                  {/* Icon */}
-                  <div className="mb-4 flex justify-center">
-                    <Icon className="w-10 h-10 text-blue-600" aria-hidden="true" />
-                  </div>
-
-                  {/* Korean Name */}
-                  <div className="text-center mb-2">
-                    <div className="font-bold text-sm text-gray-900 leading-tight mb-1">
-                      {agency.nameKr}
-                    </div>
-                    <div className="text-xs font-semibold text-gray-600">
-                      {agency.nameEn}
-                    </div>
-                  </div>
-
-                  {/* Ministry */}
-                  <div className="text-xs text-center text-gray-500 mt-3 pt-3 border-t border-blue-200">
-                    {agency.ministry}
-                  </div>
+              { code: 'ict', name: 'ICT', color: 'blue', bgFrom: 'from-blue-50', bgTo: 'to-blue-100/50', border: 'border-blue-200', hoverBorder: 'hover:border-blue-300', textColor: 'text-blue-600' },
+              { code: 'industry', name: '산업기술', color: 'slate', bgFrom: 'from-slate-50', bgTo: 'to-slate-100/50', border: 'border-slate-200', hoverBorder: 'hover:border-slate-300', textColor: 'text-slate-600' },
+              { code: 'bio', name: '바이오', color: 'emerald', bgFrom: 'from-emerald-50', bgTo: 'to-emerald-100/50', border: 'border-emerald-200', hoverBorder: 'hover:border-emerald-300', textColor: 'text-emerald-600' },
+              { code: 'sme', name: '중소벤처', color: 'amber', bgFrom: 'from-amber-50', bgTo: 'to-amber-100/50', border: 'border-amber-200', hoverBorder: 'hover:border-amber-300', textColor: 'text-amber-600' },
+              { code: 'energy', name: '에너지', color: 'yellow', bgFrom: 'from-yellow-50', bgTo: 'to-yellow-100/50', border: 'border-yellow-200', hoverBorder: 'hover:border-yellow-300', textColor: 'text-yellow-600' },
+              { code: 'maritime', name: '해양', color: 'cyan', bgFrom: 'from-cyan-50', bgTo: 'to-cyan-100/50', border: 'border-cyan-200', hoverBorder: 'hover:border-cyan-300', textColor: 'text-cyan-600' },
+              { code: 'culture', name: '문화콘텐츠', color: 'pink', bgFrom: 'from-pink-50', bgTo: 'to-pink-100/50', border: 'border-pink-200', hoverBorder: 'hover:border-pink-300', textColor: 'text-pink-600' },
+              { code: 'defense', name: '국방', color: 'indigo', bgFrom: 'from-indigo-50', bgTo: 'to-indigo-100/50', border: 'border-indigo-200', hoverBorder: 'hover:border-indigo-300', textColor: 'text-indigo-600' },
+            ].map((domain) => (
+              <div
+                key={domain.code}
+                className={`p-4 rounded-xl border-2 transition-all hover:shadow-md hover:-translate-y-0.5 bg-gradient-to-br ${domain.bgFrom} ${domain.bgTo} ${domain.border} ${domain.hoverBorder}`}
+              >
+                <div className={`text-center font-semibold ${domain.textColor}`}>
+                  {domain.name}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-6">
             <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">4개</div>
-              <div className="text-xs text-gray-600 mt-1">핵심 전문기관</div>
+              <div className="text-2xl font-bold text-blue-600">30+</div>
+              <div className="text-xs text-gray-600 mt-1">부처</div>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">40-55%</div>
-              <div className="text-xs text-gray-600 mt-1">예산 커버리지</div>
+              <div className="text-2xl font-bold text-green-600">80+</div>
+              <div className="text-xs text-gray-600 mt-1">전문기관</div>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">정기</div>
-              <div className="text-xs text-gray-600 mt-1">공고 수집</div>
+              <div className="text-2xl font-bold text-purple-600">1,600+</div>
+              <div className="text-xs text-gray-600 mt-1">총 사업</div>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">AI 분석</div>
-              <div className="text-xs text-gray-600 mt-1">매칭 엔진</div>
+              <div className="text-2xl font-bold text-orange-600">70+</div>
+              <div className="text-xs text-gray-600 mt-1">활성 공고</div>
             </div>
-          </div>
-
-          {/* Expansion note */}
-          <div className="text-center text-sm text-gray-600 mb-4">
-            베타 사용자 피드백을 기반으로 단계적 확장 예정입니다
           </div>
 
           {/* Disclaimer */}
           <p className="text-center text-xs text-gray-400">
-            * 상기 기관과의 공식 파트너십을 의미하지 않습니다.
-            공개된 공고 정보를 수집·분석하여 제공하는 서비스입니다.
+            * NTIS(국가과학기술지식정보서비스)의 공개 데이터를 기반으로 분석합니다.
           </p>
         </div>
       </section>
@@ -271,7 +249,7 @@ export default function HomePage() {
                 커넥트 에이전트(AI) 매칭
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                4개 핵심 연구관리 전문기관의 연구과제 공고를 커넥트의 에이전트가 검색과 분석. 당신의 프로필에 맞는 기회를 찾아드립니다.
+                NTIS의 전체 국가 R&D 사업 공고를 커넥트의 에이전트가 검색과 분석. 당신의 프로필에 맞는 기회를 찾아드립니다.
               </p>
               <ul className="mt-6 space-y-2">
                 <li className="flex items-start text-sm text-gray-600">
@@ -326,15 +304,15 @@ export default function HomePage() {
             <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl p-8 border border-blue-200">
               <TrendingUp className="w-12 h-12 text-blue-600 mb-6" aria-hidden="true" />
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                4개 핵심 기관 집중 모니터링
+                국가 전체 R&D과제 공고 실시간 분석
               </h3>
               <p className="text-gray-700 leading-relaxed mb-6">
-                과기정통부, 산업부, 중기부, 해수부의 주요 R&D 기관 공고를 정기적으로 수집하고 분석합니다. 더 이상 여러 사이트를 방문할 필요가 없습니다.
+                30개 이상의 부처, 80개 이상의 전문기관의 국가 R&D 사업 전체 공고를 분석합니다.
               </p>
               <div className="bg-white rounded-xl p-4">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-600">현재 모니터링</span>
-                  <span className="font-bold text-blue-600">4개 핵심 기관</span>
+                  <span className="font-bold text-blue-600">NTIS 전체 공고</span>
                 </div>
               </div>
             </div>
