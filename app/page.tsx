@@ -3,34 +3,16 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Building2, GraduationCap, Microscope, CheckCircle2, TrendingUp, Users, Award, Shield, Zap, Ship } from 'lucide-react';
+import Header from '@/components/layout/Header';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-0.5">
-            <Image
-              src="/logo.svg"
-              alt="Connect Logo"
-              width={48}
-              height={48}
-              className="w-[48px] h-[48px] -mr-2"
-            />
-            <span className="text-xl font-bold text-gray-900">Connect</span>
-          </div>
-          <Link
-            href="/auth/signin"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-3 py-2"
-          >
-            로그인
-          </Link>
-        </div>
-      </nav>
+      {/* Unified Navigation Header */}
+      <Header />
 
       {/* Hero Section */}
-      <section className="pt-40 pb-20 px-4 bg-gradient-to-b from-blue-50/50 to-white">
+      <section className="pt-24 pb-20 px-4 bg-gradient-to-b from-blue-50/50 to-white">
         <div className="container mx-auto max-w-6xl">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">

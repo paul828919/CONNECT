@@ -21,9 +21,10 @@ interface NavLink {
 
 interface MobileNavProps {
   navLinks: NavLink[];
+  isLoggedIn?: boolean;
 }
 
-export default function MobileNav({ navLinks }: MobileNavProps) {
+export default function MobileNav({ navLinks, isLoggedIn = false }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -55,6 +56,15 @@ export default function MobileNav({ navLinks }: MobileNavProps) {
               {link.label}
             </Link>
           ))}
+          {!isLoggedIn && (
+            <Link
+              href="/auth/signin"
+              onClick={() => setOpen(false)}
+              className="mt-4 rounded-lg px-4 py-3 text-sm font-medium text-center text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            >
+              로그인
+            </Link>
+          )}
         </nav>
       </SheetContent>
     </Sheet>

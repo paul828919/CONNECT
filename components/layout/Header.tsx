@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import UserMenu from './UserMenu';
 import MobileNav from './MobileNav';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
+  { href: '/', label: '홈' },
   { href: '/dashboard', label: '대시보드' },
   { href: '/dashboard/matches', label: '매칭 결과' },
   { href: '/dashboard/partners', label: '파트너 검색' },
@@ -17,13 +19,14 @@ const navLinks = [
 
 export default function Header() {
   const pathname = usePathname();
+  const { data: session, status } = useSession();
 
   return (
     <header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="text-2xl font-bold text-blue-600">Connect</div>
           </Link>
 
@@ -47,8 +50,19 @@ export default function Header() {
 
           {/* Right Side */}
           <div className="flex items-center gap-4">
-            <UserMenu />
-            <MobileNav navLinks={navLinks} />
+            {status === 'loading' ? (
+              <div className="w-20 h-8 bg-gray-100 rounded-md animate-pulse" />
+            ) : session ? (
+              <UserMenu />
+            ) : (
+              <Link
+                href="/auth/signin"
+                className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors rounded-md px-4 py-2"
+              >
+                로그인
+              </Link>
+            )}
+            <MobileNav navLinks={navLinks} isLoggedIn={!!session} />
           </div>
         </div>
       </div>
