@@ -6,6 +6,9 @@
  * - Uses "smart" strategy: warms organizations active today + programs
  * - Runs only in app1 container (check INSTANCE_ID)
  *
+ * UTC Conversion (standard for all backend services):
+ * - 06:00 KST = 21:00 UTC (previous day)
+ *
  * Phase 3: Cache Optimization - Week 9 Automation
  */
 
@@ -15,18 +18,20 @@ import { smartWarmCache, warmProgramsCache } from './cache-warming';
 /**
  * Start cache warming scheduler
  *
- * Schedules daily cache warming at 06:00 KST
+ * Schedules daily cache warming at 06:00 KST (21:00 UTC)
  * Only call this from app1 container to avoid duplicate jobs
  */
 export function startCacheWarmingScheduler() {
   console.log('🚀 Starting cache warming scheduler...');
 
-  // Daily at 06:00 KST (21:00 UTC previous day)
+  // Daily at 06:00 KST = 21:00 UTC (previous day)
   // Cron format: minute hour day month weekday
+  // Using UTC timezone for consistency across all backend services
   cron.schedule(
     '0 21 * * *',
     async () => {
-      console.log('⏰ [CACHE WARMING SCHEDULER] Running scheduled cache warming (06:00 KST)...');
+      const kstTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+      console.log(`⏰ [CACHE WARMING SCHEDULER] Running scheduled cache warming (KST: ${kstTime})...`);
 
       try {
         // Run smart warming strategy
@@ -52,7 +57,7 @@ export function startCacheWarmingScheduler() {
       }
     },
     {
-      timezone: 'Asia/Seoul', // Ensures correct timing for Korean business hours
+      timezone: 'UTC', // Using UTC for consistency across all backend services
     }
   );
 

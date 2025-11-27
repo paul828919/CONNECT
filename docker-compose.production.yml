@@ -32,7 +32,7 @@ services:
     container_name: connect_app1
     restart: unless-stopped
     environment:
-      TZ: Asia/Seoul
+      TZ: UTC
       NODE_ENV: production
       PORT: 3001
       INSTANCE_ID: app1
@@ -145,7 +145,7 @@ services:
     container_name: connect_app2
     restart: unless-stopped
     environment:
-      TZ: Asia/Seoul
+      TZ: UTC
       NODE_ENV: production
       PORT: 3002
       INSTANCE_ID: app2
@@ -236,7 +236,7 @@ services:
     container_name: connect_postgres
     restart: unless-stopped
     environment:
-      TZ: Asia/Seoul
+      TZ: UTC
       POSTGRES_DB: connect
       POSTGRES_USER: connect
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -305,7 +305,7 @@ services:
     container_name: connect_redis_cache
     restart: unless-stopped
     environment:
-      TZ: Asia/Seoul
+      TZ: UTC
     command: >
       redis-server
       --maxmemory 11gb
@@ -350,7 +350,7 @@ services:
     container_name: connect_redis_queue
     restart: unless-stopped
     environment:
-      TZ: Asia/Seoul
+      TZ: UTC
     command: >
       redis-server
       --maxmemory 2gb
@@ -399,7 +399,7 @@ services:
     container_name: connect_scraper
     restart: unless-stopped
     environment:
-      TZ: Asia/Seoul
+      TZ: UTC
       NODE_ENV: production
       DATABASE_URL: postgresql://connect:${DB_PASSWORD}@postgres:5432/connect?schema=public
       REDIS_CACHE_URL: redis://redis-cache:6379/0
@@ -457,7 +457,7 @@ services:
     restart: unless-stopped
     user: "472"
     environment:
-      TZ: Asia/Seoul
+      TZ: UTC
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: false

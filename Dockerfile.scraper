@@ -8,6 +8,7 @@ FROM mcr.microsoft.com/playwright:v1.48.0-focal
 WORKDIR /app
 
 # Install Node.js 20, Python pip, Tesseract OCR, pyhwp, Korean fonts, and timezone data
+# Using UTC as standard for all backend services (frontend handles KST display)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     apt-get install -y --no-install-recommends \
@@ -21,8 +22,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
         libxslt-dev \
         build-essential \
         tzdata && \
-    ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime && \
-    echo "Asia/Seoul" > /etc/timezone && \
+    ln -sf /usr/share/zoneinfo/UTC /etc/localtime && \
+    echo "UTC" > /etc/timezone && \
     dpkg-reconfigure -f noninteractive tzdata && \
     pip3 install --no-cache-dir pyhwp six && \
     apt-get clean && \

@@ -45,6 +45,9 @@ let cacheClient: ReturnType<typeof createClient> | null = null;
 
 /**
  * Get Redis cache client (singleton)
+ *
+ * IMPORTANT: Redis v4+ requires explicit .connect() call before use.
+ * This function handles connection state and auto-reconnects if needed.
  */
 export async function getCacheClient() {
   if (!cacheClient) {
@@ -59,6 +62,19 @@ export async function getCacheClient() {
     cacheClient.on('connect', () => {
       console.log('[CACHE] Redis connected successfully');
     });
+
+    cacheClient.on('reconnecting', () => {
+      console.log('[CACHE] Redis reconnecting...');
+    });
+
+    // Redis v4+ requires explicit connect() call
+    await cacheClient.connect();
+  }
+
+  // Auto-reconnect if connection was lost
+  if (!cacheClient.isOpen) {
+    console.log('[CACHE] Redis connection lost, reconnecting...');
+    await cacheClient.connect();
   }
 
   return cacheClient;

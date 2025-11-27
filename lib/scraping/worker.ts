@@ -701,13 +701,13 @@ scrapingWorker.on('failed', (job, err) => {
 
 // Start schedulers on worker initialization
 console.log('🚀 Initializing schedulers...');
-startScheduler();                   // Discovery Scraper (10 AM + 2 PM KST) - Updated Nov 20, 2025
+startScheduler();                   // Discovery Scraper (10 AM + 2 PM KST = 01:00 + 05:00 UTC)
 startProcessWorkerScheduler();      // Process Worker (event-driven, auto-start after Discovery)
 // startNTISScheduler();            // NTIS API scraper (completed/in-progress projects only) - NOT announcements
-initializeCacheScheduler();         // Cache warming (6 AM KST daily)
+initializeCacheScheduler();         // Cache warming (6 AM KST = 21:00 UTC)
 console.log('✅ Schedulers initialized successfully');
-console.log('  - Discovery Scraper: 10 AM + 2 PM KST (yesterday to today)');
+console.log('  - Discovery Scraper: 10 AM + 2 PM KST (01:00 + 05:00 UTC)');
 console.log('  - Process Worker: Event-driven (auto-start after Discovery)');
-console.log('  - Cache Warming: 6 AM KST daily');
+console.log('  - Cache Warming: 6 AM KST (21:00 UTC)');
 
 export default scrapingWorker;

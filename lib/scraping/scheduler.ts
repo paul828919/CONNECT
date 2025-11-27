@@ -133,25 +133,31 @@ async function queueScrapingJobs(priority: 'high' | 'standard' = 'standard') {
 /**
  * Start scraping scheduler
  * NTIS-only mode: 10 AM + 2 PM KST daily (updated Nov 20, 2025)
+ *
+ * UTC Conversion (standard for all backend services):
+ * - 10:00 KST = 01:00 UTC
+ * - 14:00 KST = 05:00 UTC
  */
 export function startScheduler() {
   console.log('🚀 Starting NTIS announcement scraping scheduler...');
 
   // Fixed schedule: 10 AM + 2 PM KST daily
+  // Expressed in UTC for consistency: 01:00 UTC + 05:00 UTC
   // Cron format: minute hour day month weekday
   cron.schedule(
-    '0 10,14 * * *',
+    '0 1,5 * * *',
     async () => {
-      console.log('⏰ Running NTIS announcement scrape (10 AM + 2 PM daily)...');
+      const kstTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+      console.log(`⏰ Running NTIS announcement scrape (KST: ${kstTime})...`);
       await runDiscoveryScraper();
     },
     {
-      timezone: 'Asia/Seoul',
+      timezone: 'UTC',
     }
   );
 
   console.log('✓ NTIS announcement scraping scheduler started successfully');
-  console.log(`  - Schedule: 10 AM + 2 PM KST (2x daily)`);
+  console.log(`  - Schedule: 10 AM + 2 PM KST (01:00 + 05:00 UTC)`);
   console.log(`  - Date Range: Yesterday to today (dynamic)`);
   console.log(`  - Target: NTIS funding announcements only`);
   console.log(`  - Architecture: Discovery Scraper → Process Worker (event-driven)`);
