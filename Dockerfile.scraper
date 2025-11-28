@@ -35,6 +35,10 @@ COPY package.json package-lock.json ./
 # Install dependencies (including Playwright)
 RUN npm ci --only=production
 
+# Install Playwright Chromium browser with dependencies (fix version mismatch)
+# Required because npm package version (1.56.1) differs from base image (1.48.0)
+RUN npx playwright install chromium --with-deps
+
 # Install tsx for TypeScript runtime
 RUN npm install -g tsx
 
