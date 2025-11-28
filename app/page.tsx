@@ -353,31 +353,11 @@ export default function HomePage() {
       {/* User Expectations - Production Safe (replaces fake testimonials) */}
       <section className="py-20 px-4 bg-gray-50">
         <div className="container mx-auto max-w-6xl">
-          {/* Beta Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16 max-w-4xl mx-auto">
-            <div className="text-center p-6 bg-white rounded-xl shadow-md border border-gray-100">
-              <div className="text-4xl font-bold text-blue-600 mb-2">50</div>
-              <div className="text-sm text-gray-600">Beta Users</div>
-            </div>
-            <div className="text-center p-6 bg-white rounded-xl shadow-md border border-gray-100">
-              <div className="text-4xl font-bold text-green-600 mb-2">200-500</div>
-              <div className="text-sm text-gray-600">Active Programs</div>
-            </div>
-            <div className="text-center p-6 bg-white rounded-xl shadow-md border border-gray-100">
-              <div className="text-4xl font-bold text-purple-600 mb-2">4</div>
-              <div className="text-sm text-gray-600">Major Agencies</div>
-            </div>
-            <div className="text-center p-6 bg-white rounded-xl shadow-md border border-gray-100">
-              <div className="text-4xl font-bold text-orange-600 mb-2">38%</div>
-              <div className="text-sm text-gray-600">Avg Match Quality</div>
-            </div>
-          </div>
-
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Connect가 제공하는 가치
             </h2>
-            <p className="text-lg text-gray-600">실제 사용자들의 기대와 목표</p>
+            <p className="text-lg text-gray-600">기업·대학·연구소가 기대하는 것</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -447,13 +427,13 @@ export default function HomePage() {
           <p className="text-xl text-blue-100 mb-12 leading-relaxed">
             3분 만에 가입하고, 오늘부터 맞춤형 연구과제 기회를 받아보세요.
             <br />
-            무료 플랜으로 시작할 수 있습니다. 신용카드도 필요 없습니다.
+            무료 플랜으로 시작할 수 있습니다. 
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <Link
               href="/auth/signin"
-              className="inline-flex items-center justify-center px-10 py-5 bg-white text-blue-600 font-bold rounded-xl hover:bg-gray-50 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 text-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
+              className="inline-flex items-center justify-center px-10 py-5 bg-white text-blue-600 font-bold rounded-xl hover:bg-gray-50 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 text-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600 animate-subtle-glow"
               aria-label="무료로 시작하기"
             >
               무료로 시작하기
@@ -494,7 +474,7 @@ export default function HomePage() {
                 <span className="text-xl font-bold text-white">Connect</span>
               </div>
               <p className="text-sm leading-relaxed">
-                한국 R&D 생태계를 연결하는 지능형 매칭 플랫폼
+                국가 R&D 생태계를 연결하는 지능형 매칭 플랫폼
               </p>
             </div>
 
