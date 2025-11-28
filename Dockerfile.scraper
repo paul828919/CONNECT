@@ -2,16 +2,26 @@
 # Connect Platform - Scraper Dockerfile
 # Playwright-enabled scraping service
 # ===========================================
+# Using ubuntu:20.04 base instead of Playwright base image to avoid
+# duplicate browser installations (base image v1.48.0 vs npm v1.56.1)
 
-FROM mcr.microsoft.com/playwright:v1.48.0-focal
+FROM ubuntu:20.04
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 
-# Install Node.js 20, Python pip, Tesseract OCR, pyhwp, Korean fonts, and timezone data
+# Install system dependencies including Node.js 20, Python, Tesseract OCR, Korean fonts
 # Using UTC as standard for all backend services (frontend handles KST display)
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        curl \
+        ca-certificates \
+        gnupg && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y --no-install-recommends \
+        nodejs \
         tesseract-ocr \
         tesseract-ocr-kor \
         fonts-nanum \
@@ -32,12 +42,19 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install dependencies (including Playwright)
+# Install dependencies (including Playwright npm package)
 RUN npm ci --only=production
 
-# Install Playwright Chromium browser with dependencies (fix version mismatch)
-# Required because npm package version (1.56.1) differs from base image (1.48.0)
-RUN npx playwright install chromium --with-deps
+# Set Playwright browsers path to a shared location accessible by all users
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+# Install Playwright Chromium browser with system dependencies
+# This installs ONLY the browser version matching the npm package (v1.56.1)
+# --with-deps ensures all required system libraries are installed
+RUN npx playwright install chromium --with-deps && \
+    chmod -R 755 /ms-playwright && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get clean
 
 # Install tsx for TypeScript runtime
 RUN npm install -g tsx
@@ -68,7 +85,6 @@ ENV NODE_ENV=production
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
 
 # Health check - verify scraper worker is responsive
-# Check if the worker process is running
 HEALTHCHECK --interval=60s --timeout=10s --start-period=60s --retries=3 \
   CMD pgrep -f "tsx lib/scraping/worker.ts" > /dev/null || exit 1
 
