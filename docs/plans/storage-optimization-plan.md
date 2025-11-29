@@ -425,3 +425,94 @@ ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 'docker system prune -a -f --v
 ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6 'docker ps'
 curl -s https://connectplt.kr/api/health
 ```
+
+---
+
+## Implementation Log
+
+### Phase 1 Execution (2025-11-30)
+
+| Step | Status | Notes |
+|------|--------|-------|
+| 1.1 Pre-cleanup verification | ✅ Complete | Baseline: 375GB (43%), 175+ images |
+| 1.2 Verify containers | ✅ Complete | 6 containers healthy |
+| 1.3 Clean dangling images | ✅ Complete | Recovered: 1.87 GB |
+| 1.4 Clean build cache | ✅ Complete | Recovered: 8.99 GB |
+| 1.5 Clean old tagged images | ✅ Complete | Recovered: ~270 GB |
+| 1.6 Clean journal logs | ✅ Complete (manual) | Recovered: 3.5 GB |
+| 1.7 Post-cleanup verification | ✅ Complete | Final: 80GB (~9%), 14 images |
+
+**Total Phase 1 Recovery: ~284 GB**
+
+### Phase 2 Implementation (2025-11-30)
+
+| Step | Status | Notes |
+|------|--------|-------|
+| 2.1 CI/CD cleanup step | ✅ Complete | Added to `deploy-production.yml` |
+| 2.2 Journal retention | ✅ Script created | Requires sudo: `scripts/configure-journal-retention.sh` |
+| 2.3 Archive legacy projects | ⏸️ Pending approval | Script: `scripts/archive-legacy-projects.sh` |
+
+### Phase 3 Implementation (2025-11-30)
+
+| Step | Status | Notes |
+|------|--------|-------|
+| 3.1 Storage monitoring | ✅ Complete | Script: `scripts/monitor-storage.sh` |
+| 3.2 Image retention policy | ✅ Complete | Script: `scripts/cleanup-docker-images.sh` |
+| 3.3 Grafana dashboard | 📋 Documented | Manual setup in Grafana UI (see below) |
+
+### Scripts Created
+
+Located in `/opt/connect/scripts/` (after deployment):
+
+1. **`monitor-storage.sh`** - Storage monitoring with alerts
+   - Cron: `0 */6 * * * /opt/connect/scripts/monitor-storage.sh >> /opt/connect/logs/storage-monitor.log 2>&1`
+   - Exit codes: 0=OK, 1=WARNING, 2=CRITICAL
+
+2. **`cleanup-docker-images.sh`** - Docker image retention policy
+   - Keeps last 3 versions of each image
+   - Cron: `0 3 * * * /opt/connect/scripts/cleanup-docker-images.sh >> /opt/connect/logs/docker-cleanup.log 2>&1`
+
+3. **`configure-journal-retention.sh`** - Journal configuration (requires sudo)
+   - Run once: `sudo /opt/connect/scripts/configure-journal-retention.sh`
+
+4. **`archive-legacy-projects.sh`** - Archive old projects
+   - Preview: `./archive-legacy-projects.sh --dry-run`
+   - Execute: `./archive-legacy-projects.sh --delete`
+
+### Grafana Dashboard Setup (Phase 3.3)
+
+To add storage monitoring to Grafana:
+
+1. Navigate to Grafana → Dashboards → New Dashboard
+2. Add the following panels:
+
+**Panel 1: Disk Usage Percentage**
+```promql
+100 - ((node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100)
+```
+
+**Panel 2: Docker Images Size**
+- Use custom data source or script output
+- Command: `docker system df --format "{{.Type}}\t{{.Size}}"`
+
+**Panel 3: Log Directory Growth**
+```promql
+node_filesystem_avail_bytes{mountpoint="/var/log"} / 1024 / 1024 / 1024
+```
+
+**Alert Rule:**
+- Condition: Disk usage > 70%
+- Severity: Warning
+- Notification: Slack/Email
+
+### Cron Setup Summary
+
+Add to production server crontab (`crontab -e`):
+
+```cron
+# Storage monitoring (every 6 hours)
+0 */6 * * * /opt/connect/scripts/monitor-storage.sh >> /opt/connect/logs/storage-monitor.log 2>&1
+
+# Docker image cleanup (daily at 3 AM)
+0 3 * * * /opt/connect/scripts/cleanup-docker-images.sh >> /opt/connect/logs/docker-cleanup.log 2>&1
+```

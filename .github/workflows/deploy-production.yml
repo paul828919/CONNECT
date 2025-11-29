@@ -577,7 +577,23 @@ jobs:
           echo "✅ Deployment successful!"
           echo "Version: ${{ github.sha }}"
           echo "Deployed by: ${{ github.actor }}"
-      
+
+      - name: Cleanup old Docker images
+        if: success()
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+          ${{ secrets.PRODUCTION_SERVER_USER }}@${{ secrets.PRODUCTION_SERVER_IP }} << 'EOF'
+          echo "🧹 Cleaning Docker images older than 72 hours..."
+          docker image prune -a --filter "until=72h" -f
+
+          echo "🧹 Cleaning build cache older than 24 hours..."
+          docker builder prune -f --filter "until=24h"
+
+          echo ""
+          echo "✅ Cleanup complete. Current Docker disk usage:"
+          docker system df
+          EOF
+
       - name: Rollback on failure
         if: failure()
         run: |
