@@ -699,15 +699,56 @@ scrapingWorker.on('failed', (job, err) => {
   }
 });
 
-// Start schedulers on worker initialization
-console.log('🚀 Initializing schedulers...');
-startScheduler();                   // Discovery Scraper (10 AM + 2 PM KST = 01:00 + 05:00 UTC)
-startProcessWorkerScheduler();      // Process Worker (event-driven, auto-start after Discovery)
-// startNTISScheduler();            // NTIS API scraper (completed/in-progress projects only) - NOT announcements
-initializeCacheScheduler();         // Cache warming (6 AM KST = 21:00 UTC)
-console.log('✅ Schedulers initialized successfully');
-console.log('  - Discovery Scraper: 10 AM + 2 PM KST (01:00 + 05:00 UTC)');
-console.log('  - Process Worker: Event-driven (auto-start after Discovery)');
-console.log('  - Cache Warming: 6 AM KST (21:00 UTC)');
+/**
+ * Wait for Redis connection to stabilize after container start
+ * Handles transient DNS resolution failures during Docker service discovery
+ */
+async function waitForRedis(retries = 5, delay = 3000): Promise<boolean> {
+  const { Queue } = await import('bullmq');
+  const testQueue = new Queue('connection-test', {
+    connection: {
+      host: process.env.REDIS_QUEUE_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_QUEUE_PORT || '6380'),
+    },
+  });
+
+  for (let i = 0; i < retries; i++) {
+    try {
+      await testQueue.client;
+      console.log('  ✅ Redis connection established');
+      await testQueue.close();
+      return true;
+    } catch (err) {
+      console.log(`  ⏳ Waiting for Redis... (attempt ${i + 1}/${retries})`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+
+  await testQueue.close();
+  throw new Error('Failed to connect to Redis after retries');
+}
+
+// Start schedulers on worker initialization with startup delay
+(async () => {
+  console.log('🚀 Initializing schedulers...');
+
+  try {
+    // Wait for Redis to be available (DNS resolution may take time after container start)
+    await waitForRedis();
+
+    startScheduler();                   // Discovery Scraper (10 AM + 2 PM KST = 01:00 + 05:00 UTC)
+    startProcessWorkerScheduler();      // Process Worker (event-driven, auto-start after Discovery)
+    // startNTISScheduler();            // NTIS API scraper (completed/in-progress projects only) - NOT announcements
+    initializeCacheScheduler();         // Cache warming (6 AM KST = 21:00 UTC)
+
+    console.log('✅ Schedulers initialized successfully');
+    console.log('  - Discovery Scraper: 10 AM + 2 PM KST (01:00 + 05:00 UTC)');
+    console.log('  - Process Worker: Event-driven (auto-start after Discovery)');
+    console.log('  - Cache Warming: 6 AM KST (21:00 UTC)');
+  } catch (err: any) {
+    console.error('❌ Failed to initialize schedulers:', err.message);
+    process.exit(1);
+  }
+})();
 
 export default scrapingWorker;

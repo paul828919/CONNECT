@@ -64,6 +64,31 @@ async function runDiscoveryScraper() {
 }
 
 /**
+ * Run Discovery Scraper with retry logic for transient failures
+ * Handles DNS resolution errors during container restarts
+ */
+async function runDiscoveryScraperWithRetry(maxRetries = 2): Promise<void> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await runDiscoveryScraper();
+      return;
+    } catch (err: any) {
+      const isTransient = err.message?.includes('ENOTFOUND') ||
+                          err.message?.includes('ECONNREFUSED') ||
+                          err.message?.includes('ETIMEDOUT');
+
+      if (attempt === maxRetries || !isTransient) {
+        console.error(`  ❌ Discovery Scraper failed after ${attempt} attempts`);
+        throw err;
+      }
+
+      console.log(`  🔄 Retry ${attempt}/${maxRetries} after transient failure...`);
+      await new Promise(r => setTimeout(r, 30000)); // 30s delay before retry
+    }
+  }
+}
+
+/**
  * Trigger Process Worker via BullMQ event
  * Queues a job to start the Process Worker after Discovery Scraper completes
  */
@@ -149,7 +174,7 @@ export function startScheduler() {
     async () => {
       const kstTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
       console.log(`⏰ Running NTIS announcement scrape (KST: ${kstTime})...`);
-      await runDiscoveryScraper();
+      await runDiscoveryScraperWithRetry();
     },
     {
       timezone: 'UTC',
