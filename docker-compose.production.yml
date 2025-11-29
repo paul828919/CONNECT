@@ -43,6 +43,8 @@ services:
       # Redis
       REDIS_CACHE_URL: redis://redis-cache:6379/0
       REDIS_QUEUE_URL: redis://redis-queue:6379/0
+      REDIS_QUEUE_HOST: redis-queue
+      REDIS_QUEUE_PORT: 6379
 
       # Auth
       JWT_SECRET: ${JWT_SECRET}
@@ -152,6 +154,8 @@ services:
       DATABASE_URL: postgresql://connect:${DB_PASSWORD}@postgres:5432/connect?schema=public&pool_timeout=30&connection_limit=50
       REDIS_CACHE_URL: redis://redis-cache:6379/0
       REDIS_QUEUE_URL: redis://redis-queue:6379/0
+      REDIS_QUEUE_HOST: redis-queue
+      REDIS_QUEUE_PORT: 6379
       JWT_SECRET: ${JWT_SECRET}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NEXTAUTH_URL: ${NEXTAUTH_URL}
