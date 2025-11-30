@@ -50,6 +50,32 @@ async function runDiscoveryScraper() {
 
     console.log('  ✅ Discovery Scraper completed successfully');
 
+    // Parse discovery result from stdout to get announcement count
+    const announcementsMatch = stdout.match(/Found (\d+) total announcements/);
+    const announcementsFound = announcementsMatch ? parseInt(announcementsMatch[1]) : 0;
+
+    // Log session to scraping_logs for audit trail (even for 0-result runs)
+    const { db } = await import('@/lib/db');
+    const { AgencyId } = await import('@prisma/client');
+
+    const sessionEndTime = new Date();
+    const sessionStartTime = new Date(sessionEndTime.getTime() - 60000); // Approximate 1 min ago
+
+    await db.scraping_logs.create({
+      data: {
+        agencyId: AgencyId.NTIS,
+        success: true,
+        programsFound: announcementsFound,
+        programsNew: 0, // Discovery phase doesn't determine new vs updated
+        programsUpdated: 0,
+        startedAt: sessionStartTime,
+        completedAt: sessionEndTime,
+        duration: sessionEndTime.getTime() - sessionStartTime.getTime(),
+      },
+    });
+
+    console.log(`  📝 Session logged (found: ${announcementsFound} announcements)`);
+
     // Trigger Process Worker via BullMQ event
     const scrapingSession = `${fromDate}-${toDate}-${Date.now()}`;
     await triggerProcessWorker(scrapingSession);
