@@ -50,6 +50,8 @@ interface ScrapingLog {
 
 export default function AdminScrapingDashboard() {
   const [isAutoRefresh, setIsAutoRefresh] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const LOGS_PER_PAGE = 10;
   const queryClient = useQueryClient();
 
   // Fetch queue stats
@@ -105,6 +107,12 @@ export default function AdminScrapingDashboard() {
     name: 'NTIS (국가과학기술지식정보서비스)',
     description: '모든 한국 연구기관의 R&D 프로그램 통합 스크래핑'
   };
+
+  // Pagination calculations
+  const totalPages = logs ? Math.ceil(logs.length / LOGS_PER_PAGE) : 0;
+  const startIndex = (currentPage - 1) * LOGS_PER_PAGE;
+  const endIndex = startIndex + LOGS_PER_PAGE;
+  const paginatedLogs = logs?.slice(startIndex, endIndex) || [];
 
   return (
     <DashboardLayout>
@@ -198,47 +206,89 @@ export default function AdminScrapingDashboard() {
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : logs && logs.length > 0 ? (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>소스</TableHead>
-                  <TableHead>상태</TableHead>
-                  <TableHead className="text-right">발견</TableHead>
-                  <TableHead className="text-right">신규</TableHead>
-                  <TableHead className="text-right">업데이트</TableHead>
-                  <TableHead className="text-right">소요 시간</TableHead>
-                  <TableHead>타임스탬프</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {logs.slice(0, 20).map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="font-medium">{log.agencyId.toUpperCase()}</TableCell>
-                    <TableCell>
-                      {log.success ? (
-                        <Badge variant="default" className="bg-green-500">성공</Badge>
-                      ) : (
-                        <Badge variant="destructive">실패</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">{log.programsFound}</TableCell>
-                    <TableCell className="text-right font-semibold text-blue-600">
-                      {log.programsNew}
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
-                      {log.programsUpdated}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {(log.duration / 1000).toFixed(1)}초
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(log.completedAt).toLocaleString('ko-KR')}
-                    </TableCell>
+          <div className="space-y-4">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>소스</TableHead>
+                    <TableHead>상태</TableHead>
+                    <TableHead className="text-right">발견</TableHead>
+                    <TableHead className="text-right">신규</TableHead>
+                    <TableHead className="text-right">업데이트</TableHead>
+                    <TableHead className="text-right">소요 시간</TableHead>
+                    <TableHead>타임스탬프</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paginatedLogs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-medium">{log.agencyId.toUpperCase()}</TableCell>
+                      <TableCell>
+                        {log.success ? (
+                          <Badge variant="default" className="bg-green-500">성공</Badge>
+                        ) : (
+                          <Badge variant="destructive">실패</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">{log.programsFound}</TableCell>
+                      <TableCell className="text-right font-semibold text-blue-600">
+                        {log.programsNew}
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        {log.programsUpdated}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {(log.duration / 1000).toFixed(1)}초
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(log.completedAt).toLocaleString('ko-KR')}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t pt-4">
+                <div className="text-sm text-muted-foreground">
+                  총 {logs.length}개 중 {startIndex + 1}-{Math.min(endIndex, logs.length)}개 표시
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    이전
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? 'default' : 'outline'}
+                        size="sm"
+                        className="w-8 h-8 p-0"
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    다음
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-muted-foreground text-center py-8">사용 가능한 스크래핑 로그 없음</p>
