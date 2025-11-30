@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'react-hot-toast';
-import { Loader2, PlayCircle, RefreshCcw, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Loader2, PlayCircle, RefreshCcw, CheckCircle, XCircle, Clock, Layers } from 'lucide-react';
 
 interface QueueStats {
   waiting: number;
@@ -105,7 +105,7 @@ export default function AdminScrapingDashboard() {
   const ntisSource = {
     id: 'ntis',
     name: 'NTIS (국가과학기술지식정보서비스)',
-    description: '모든 한국 연구기관의 R&D 프로그램 통합 스크래핑'
+    description: '국가 전체 연구기관의 R&D 프로그램 통합 스크래핑'
   };
 
   // Pagination calculations
@@ -119,7 +119,7 @@ export default function AdminScrapingDashboard() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">스크래핑 대시보드</h1>
+          <h1 className="text-3xl font-bold">스크래핑 관리</h1>
           <p className="text-muted-foreground">연구 지원 프로그램 스크래핑 모니터링 및 제어</p>
         </div>
 
@@ -189,6 +189,7 @@ export default function AdminScrapingDashboard() {
               <div className="text-sm text-muted-foreground">실패</div>
             </div>
             <div className="text-center p-4 border rounded-lg bg-primary/5">
+              <Layers className="h-8 w-8 mx-auto mb-2 text-primary" />
               <div className="text-2xl font-bold">{queueStats.total}</div>
               <div className="text-sm text-muted-foreground">전체 작업</div>
             </div>
