@@ -1,11 +1,13 @@
+'use client';
+
 /**
  * FAQ Page (자주 묻는 질문)
  * Dedicated FAQ page for Connect platform
  */
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { HelpCircle, ChevronLeft } from 'lucide-react';
+import PublicHeader from '@/components/layout/PublicHeader';
 
 interface FAQItem {
   question: string;
@@ -50,41 +52,7 @@ const faqItems: FAQItem[] = [
 export default function FAQPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      {/* Header */}
-      <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center space-x-0.5">
-            <Image
-              src="/logo.svg"
-              alt="Connect Logo"
-              width={48}
-              height={48}
-              className="w-[48px] h-[48px] -mr-2"
-            />
-            <span className="text-xl font-bold text-gray-900">Connect</span>
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/pricing"
-              className="hidden md:block text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              요금제
-            </Link>
-            <Link
-              href="/support"
-              className="hidden md:block text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              고객 지원
-            </Link>
-            <Link
-              href="/auth/signin"
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-3 py-2"
-            >
-              로그인
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <PublicHeader />
 
       {/* Content */}
       <div className="container mx-auto px-4 pt-32 pb-12 max-w-4xl">
