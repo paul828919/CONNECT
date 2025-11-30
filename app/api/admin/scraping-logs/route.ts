@@ -3,9 +3,10 @@
  *
  * Admin endpoint to fetch scraping logs for monitoring.
  *
- * Architecture Update (Nov 2025):
- * - Now reads from scraping_jobs table (Discovery Scraper architecture)
- * - Maps job-level data to legacy ScrapingLog interface for dashboard compatibility
+ * Architecture (Nov 30, 2025 - Corrected):
+ * - Reads from scraping_logs table (session-level data)
+ * - scraping_logs = Session-level logs (when scraping ran, overall results)
+ * - scraping_jobs = Announcement-level jobs (individual items) - NOT for dashboard
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -31,39 +32,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 3. Fetch recent scraping jobs (last 50) from new Discovery Scraper architecture
-    const jobs = await db.scraping_jobs.findMany({
+    // 3. Fetch recent scraping logs (last 50) - session-level data
+    const scrapingLogs = await db.scraping_logs.findMany({
       orderBy: {
-        scrapedAt: 'desc',
+        startedAt: 'desc',
       },
       take: 50,
-      select: {
-        id: true,
-        announcementTitle: true,
-        scrapingStatus: true,
-        scrapingError: true,
-        scrapedAt: true,
-        processingStatus: true,
-        processedAt: true,
-      },
     });
 
-    // 4. Transform scraping_jobs to legacy ScrapingLog interface for dashboard compatibility
-    // ScrapingStatus enum: SCRAPED | SCRAPING_FAILED
-    // ProcessingStatus enum: PENDING | PROCESSING | COMPLETED | FAILED | SKIPPED
-    const logs = jobs.map(job => ({
-      id: job.id,
-      agencyId: 'ntis', // Discovery Scraper only scrapes NTIS
-      success: job.scrapingStatus === 'SCRAPED',
-      programsFound: 1, // Each job = one announcement
-      programsNew: job.processingStatus === 'PENDING' ? 1 : 0,
-      programsUpdated: job.processingStatus === 'COMPLETED' ? 1 : 0,
-      errorMessage: job.scrapingError,
-      startedAt: job.scrapedAt,
-      completedAt: job.processedAt || job.scrapedAt,
-      duration: job.processedAt
-        ? new Date(job.processedAt).getTime() - new Date(job.scrapedAt).getTime()
-        : 0,
+    // 4. Map to ScrapingLog interface for dashboard
+    const logs = scrapingLogs.map(log => ({
+      id: log.id,
+      agencyId: log.agencyId.toLowerCase(),
+      success: log.success,
+      programsFound: log.programsFound,
+      programsNew: log.programsNew,
+      programsUpdated: log.programsUpdated,
+      errorMessage: log.error,
+      startedAt: log.startedAt,
+      completedAt: log.completedAt || log.startedAt,
+      duration: log.duration || 0,
     }));
 
     return NextResponse.json(logs, { status: 200 });
