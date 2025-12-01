@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import UserMenu from './UserMenu';
@@ -26,8 +27,15 @@ export default function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="text-2xl font-bold text-blue-600">Connect</div>
+          <Link href="/" className="flex items-center gap-1">
+            <Image
+              src="/logo.svg"
+              alt="Connect Logo"
+              width={24}
+              height={24}
+              className="w-6 h-6"
+            />
+            <span className="text-2xl font-bold text-blue-600">Connect</span>
           </Link>
 
           {/* Desktop Navigation */}

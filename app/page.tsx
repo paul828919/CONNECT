@@ -465,11 +465,11 @@ export default function HomePage() {
             <div>
               <div className="flex items-center space-x-0.5 mb-4">
                 <Image
-                  src="/logo.svg"
+                  src="/logo_white.svg"
                   alt="Connect Logo"
-                  width={48}
-                  height={48}
-                  className="w-[48px] h-[48px] -mr-2"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6"
                 />
                 <span className="text-xl font-bold text-white">Connect</span>
               </div>
