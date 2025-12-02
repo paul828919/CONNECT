@@ -2,12 +2,13 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { CheckoutConfirmationDialog } from '@/components/checkout-confirmation-dialog';
 
 type BillingCycle = 'monthly' | 'yearly';
 type Plan = 'FREE' | 'PRO' | 'TEAM';
+type SubscriptionPlan = Plan;
 
 interface PendingCheckout {
   plan: Plan;
@@ -22,6 +23,62 @@ export default function PricingPage() {
   const [loading, setLoading] = useState<Plan | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingCheckout, setPendingCheckout] = useState<PendingCheckout | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan | null>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(false);
+
+  const fetchCurrentSubscription = useCallback(async () => {
+    if (!session?.user) return;
+
+    setLoadingSubscription(true);
+    try {
+      const res = await fetch('/api/subscriptions/me');
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentPlan(data.subscription?.plan || 'FREE');
+      } else {
+        setCurrentPlan('FREE');
+      }
+    } catch (error) {
+      console.error('Error fetching subscription:', error);
+      setCurrentPlan('FREE');
+    } finally {
+      setLoadingSubscription(false);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      fetchCurrentSubscription();
+    } else if (status === 'unauthenticated') {
+      setCurrentPlan(null);
+    }
+  }, [status, session, fetchCurrentSubscription]);
+
+  const isCurrentPlan = (planKey: Plan): boolean => {
+    return currentPlan === planKey;
+  };
+
+  const getCtaText = (planKey: Plan, defaultCta: string): string => {
+    if (!session?.user) {
+      return planKey === 'FREE' ? '무료로 시작' : defaultCta;
+    }
+
+    if (loadingSubscription) {
+      return '확인 중...';
+    }
+
+    if (isCurrentPlan(planKey)) {
+      return '현재 플랜';
+    }
+
+    const planOrder: Record<Plan, number> = { FREE: 0, PRO: 1, TEAM: 2 };
+
+    if (currentPlan && planOrder[planKey] < planOrder[currentPlan]) {
+      return '다운그레이드';
+    }
+
+    return defaultCta;
+  };
 
   const handleUpgrade = (plan: Plan, planName: string, amount: number) => {
     if (!session?.user) {
@@ -29,6 +86,7 @@ export default function PricingPage() {
       return;
     }
 
+    if (isCurrentPlan(plan)) return;
     if (plan === 'FREE') return;
 
     setPendingCheckout({ plan, planName, amount });
@@ -94,7 +152,7 @@ export default function PricingPage() {
         '상세 매칭 설명 제한',
         '실시간 업데이트 없음',
       ],
-      cta: '현재 플랜',
+      defaultCta: '무료로 시작',
       highlighted: false,
       color: 'gray',
     },
@@ -117,7 +175,7 @@ export default function PricingPage() {
         '우선 기술 지원',
       ],
       limitations: [],
-      cta: 'Pro 시작하기',
+      defaultCta: 'Pro 시작하기',
       highlighted: true,
       color: 'blue',
     },
@@ -140,7 +198,7 @@ export default function PricingPage() {
         'SLA 보장 (99.9% 가동 시간)',
       ],
       limitations: [],
-      cta: 'Team 시작하기',
+      defaultCta: 'Team 시작하기',
       highlighted: false,
       color: 'purple',
     },
@@ -251,16 +309,26 @@ export default function PricingPage() {
             const colors = getColorClasses(plan.color, plan.highlighted);
             const price = plan.pricing[billingCycle];
             const isLoading = loading === plan.key;
+            const isCurrent = isCurrentPlan(plan.key);
+            const ctaText = getCtaText(plan.key, plan.defaultCta);
 
             return (
               <div
                 key={plan.key}
                 className={`relative rounded-2xl border-2 ${colors.border} ${colors.bg} p-8 shadow-xl transition-all hover:shadow-2xl ${
                   plan.highlighted ? 'transform scale-105' : ''
-                }`}
+                } ${isCurrent ? 'ring-2 ring-green-400' : ''}`}
               >
+                {/* Current Plan Badge */}
+                {isCurrent && session?.user && (
+                  <div className="absolute -top-4 right-4">
+                    <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
+                      현재 구독 중
+                    </span>
+                  </div>
+                )}
                 {/* Recommended Badge */}
-                {plan.highlighted && (
+                {plan.highlighted && !isCurrent && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <span className={`${colors.badge} px-4 py-1 rounded-full text-sm font-semibold shadow-md`}>
                       추천 플랜
@@ -334,10 +402,12 @@ export default function PricingPage() {
                 {/* CTA Button */}
                 <button
                   onClick={() => handleUpgrade(plan.key, plan.name, price)}
-                  disabled={plan.key === 'FREE' || isLoading}
-                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${colors.button} ${
-                    isLoading ? 'opacity-50 cursor-wait' : ''
-                  }`}
+                  disabled={isCurrent || (plan.key === 'FREE' && !session?.user) || isLoading}
+                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
+                    isCurrent
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : colors.button
+                  } ${isLoading ? 'opacity-50 cursor-wait' : ''}`}
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center">
@@ -363,7 +433,7 @@ export default function PricingPage() {
                       처리 중...
                     </span>
                   ) : (
-                    plan.cta
+                    ctaText
                   )}
                 </button>
               </div>
