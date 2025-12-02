@@ -18,15 +18,15 @@ export default function PublicHeader() {
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link href="/" className="flex items-center space-x-0.5">
+        <Link href="/" className="flex items-center gap-1">
           <Image
             src="/logo.svg"
             alt="Connect Logo"
-            width={48}
-            height={48}
-            className="w-[48px] h-[48px] -mr-2"
+            width={24}
+            height={24}
+            className="w-6 h-6"
           />
-          <span className="text-xl font-bold text-gray-900">Connect</span>
+          <span className="text-2xl font-bold text-blue-600">Connect</span>
         </Link>
         <div className="flex items-center gap-6">
           {publicNavLinks.map((link) => (
