@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { CheckoutConfirmationDialog } from '@/components/checkout-confirmation-dialog';
+import PublicHeader from '@/components/layout/PublicHeader';
 
 type BillingCycle = 'monthly' | 'yearly';
 type Plan = 'FREE' | 'PRO' | 'TEAM';
@@ -237,36 +238,10 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-blue-600">
-              Connect
-            </Link>
-            <div className="flex items-center gap-4">
-              {session?.user ? (
-                <Link
-                  href="/dashboard"
-                  className="text-sm font-medium text-gray-700 hover:text-blue-600"
-                >
-                  대시보드로 돌아가기
-                </Link>
-              ) : (
-                <Link
-                  href="/auth/signin"
-                  className="text-sm font-medium text-gray-700 hover:text-blue-600"
-                >
-                  로그인
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      <PublicHeader />
 
       {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             프로젝트에 맞는 플랜을 선택하세요
@@ -608,22 +583,19 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* FAQ Section */}
-        <div className="mt-16 text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            궁금한 점이 있으신가요?
-          </h2>
-          <p className="text-gray-600 mb-6">
-            플랜 선택에 도움이 필요하시면 언제든지 문의해주세요.
+        {/* Contact CTA */}
+        <div className="mt-8 text-center bg-blue-50 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            플랜 선택에 도움이 필요하신가요?
+          </h3>
+          <p className="text-gray-600 mb-4">
+            고객 지원팀에 문의하시면 더 자세한 도움을 받으실 수 있습니다.
           </p>
           <Link
-            href="/contact"
-            className="inline-flex items-center px-6 py-3 rounded-lg bg-white border-2 border-blue-600 text-blue-600 font-semibold hover:bg-blue-50 transition-all"
+            href="/support"
+            className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
           >
-            <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            문의하기
+            고객 지원 문의하기
           </Link>
         </div>
       </div>
