@@ -6,7 +6,7 @@
  */
 
 import Link from 'next/link';
-import { Headphones, Mail, Clock, HelpCircle, FileText, Shield, Users, CreditCard, Wrench, Database, ChevronLeft } from 'lucide-react';
+import { Headphones, Mail, Clock, HelpCircle, FileText, Shield, Users, CreditCard, Wrench, Database } from 'lucide-react';
 import PublicHeader from '@/components/layout/PublicHeader';
 
 export default function CustomerSupportPage() {
@@ -16,16 +16,6 @@ export default function CustomerSupportPage() {
 
       {/* Content */}
       <div className="container mx-auto px-4 pt-32 pb-12 max-w-6xl">
-        {/* Breadcrumb */}
-        <div className="mb-6">
-          <Link
-            href="/"
-            className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            홈으로
-          </Link>
-        </div>
         {/* Hero Section */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
