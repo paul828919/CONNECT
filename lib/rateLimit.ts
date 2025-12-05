@@ -139,6 +139,66 @@ export async function checkMatchLimit(
 }
 
 /**
+ * Contact request rate limiter (per organization)
+ * Enforces subscription-based limits for research collaboration requests
+ *
+ * Limits:
+ * - Free: Cannot send contact requests (view-only)
+ * - Pro: 10 requests per month
+ * - Team: Unlimited
+ */
+export async function checkContactLimit(
+  organizationId: string,
+  subscriptionPlan: 'free' | 'pro' | 'team'
+): Promise<{ allowed: boolean; remaining: number; resetDate: Date; upgradeRequired?: boolean }> {
+  // Free users cannot send contact requests at all
+  if (subscriptionPlan === 'free') {
+    return {
+      allowed: false,
+      remaining: 0,
+      resetDate: getNextMonthStart(),
+      upgradeRequired: true,
+    };
+  }
+
+  // Team users have unlimited contact requests
+  if (subscriptionPlan === 'team') {
+    return {
+      allowed: true,
+      remaining: 999999, // Effectively unlimited
+      resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+    };
+  }
+
+  // Pro tier: 10 contact requests per month
+  const redis = await getRedisClient();
+  const key = `contact:limit:${organizationId}:${getMonthKey()}`;
+  const currentCount = await redis.get(key);
+  const count = currentCount ? parseInt(currentCount, 10) : 0;
+
+  const MAX_PRO_CONTACTS = 10;
+
+  if (count >= MAX_PRO_CONTACTS) {
+    return {
+      allowed: false,
+      remaining: 0,
+      resetDate: getNextMonthStart(),
+    };
+  }
+
+  // Increment counter (expires at end of month)
+  await redis.set(key, count + 1, {
+    EXAT: Math.floor(getNextMonthStart().getTime() / 1000), // Unix timestamp
+  });
+
+  return {
+    allowed: true,
+    remaining: MAX_PRO_CONTACTS - (count + 1),
+    resetDate: getNextMonthStart(),
+  };
+}
+
+/**
  * Middleware wrapper for rate limiting
  *
  * @param config - Rate limit configuration
@@ -401,6 +461,7 @@ const rateLimit = {
   apiRateLimiter,
   authRateLimiter,
   checkMatchLimit,
+  checkContactLimit,
   resetRateLimit,
   getRateLimitStatus,
   checkIpRateLimit,

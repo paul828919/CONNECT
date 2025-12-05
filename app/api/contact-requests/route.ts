@@ -3,13 +3,19 @@
  *
  * GET: List contact requests (sent and received)
  * POST: Send a new contact request
+ *
+ * Rate Limits (subscription-based):
+ * - Free: Cannot send contact requests (view-only)
+ * - Pro: 10 requests per month
+ * - Team: Unlimited
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
 import { db } from '@/lib/db';
-import { ContactRequestType } from '@prisma/client';
+import { ContactRequestType, SubscriptionPlan } from '@prisma/client';
+import { checkContactLimit } from '@/lib/rateLimit';
 
 
 // Message templates for different request types
@@ -149,16 +155,56 @@ export async function POST(request: NextRequest) {
 
     const userId = (session.user as any).id;
 
-    // Get user's organization
+    // Get user's organization and subscription
     const user = await db.user.findUnique({
       where: { id: userId },
-      include: { organization: true },
+      include: {
+        organization: true,
+        subscriptions: {
+          select: {
+            plan: true,
+            status: true,
+          },
+        },
+      },
     });
 
     if (!user?.organization) {
       return NextResponse.json(
         { error: 'No organization associated with user' },
         { status: 400 }
+      );
+    }
+
+    // Check subscription-based contact limit
+    const subscriptionPlan = (user.subscriptions?.status === 'ACTIVE' || user.subscriptions?.status === 'TRIAL')
+      ? (user.subscriptions.plan?.toLowerCase() as 'free' | 'pro' | 'team')
+      : 'free';
+
+    const contactLimit = await checkContactLimit(user.organization.id, subscriptionPlan);
+
+    if (!contactLimit.allowed) {
+      if (contactLimit.upgradeRequired) {
+        return NextResponse.json(
+          {
+            error: 'Upgrade required',
+            message: '협력 요청은 Pro 이상 플랜에서 사용 가능합니다.',
+            code: 'UPGRADE_REQUIRED',
+            upgradeUrl: '/pricing',
+          },
+          { status: 403 }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          message: `이번 달 협력 요청 한도(${subscriptionPlan === 'pro' ? '10회' : '무제한'})를 초과했습니다.`,
+          code: 'CONTACT_LIMIT_EXCEEDED',
+          resetDate: contactLimit.resetDate.toISOString(),
+          remaining: contactLimit.remaining,
+        },
+        { status: 429 }
       );
     }
 
@@ -262,6 +308,10 @@ export async function POST(request: NextRequest) {
       success: true,
       contactRequest,
       message: '협력 요청이 전송되었습니다',
+      rateLimit: {
+        remaining: contactLimit.remaining,
+        resetDate: contactLimit.resetDate.toISOString(),
+      },
     });
   } catch (error: any) {
     console.error('Failed to send contact request:', error);

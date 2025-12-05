@@ -143,17 +143,13 @@ export default function PricingPage() {
         yearly: 0,
       },
       features: [
-        '3개 매칭 / 월',
+        '3회 매칭 / 월',
         '기본 프로필 관리',
-        '4개 기관 프로그램 검색',
+        '실시간 과제 공고 매칭',
         '매칭 스코어 확인',
         '이메일 지원 (48시간 이내)',
       ],
-      limitations: [
-        '월 3회 매칭 제한',
-        '상세 매칭 설명 제한',
-        '실시간 업데이트 없음',
-      ],
+      limitations: [],
       defaultCta: '무료로 시작',
       highlighted: false,
       color: 'gray',
@@ -169,13 +165,10 @@ export default function PricingPage() {
       },
       features: [
         '무제한 매칭 생성',
-        '상세 매칭 설명 (가중치, 보강 포인트)',
-        '실시간 프로그램 업데이트',
-        '체크리스트 + 자동 제안서 초안',
-        '연구기관 직접 연결 5회 / 월',
-        'SME 전용 / 대학 템플릿',
-        '이메일 지원 (24시간 이내)',
-        '우선 기술 지원',
+        'AI 기반 상세 매칭 분석',
+        '실시간 매칭',
+        '협력 요청 월 10회',
+        '우선 이메일 지원 (24시간 내)',
       ],
       limitations: [],
       defaultCta: 'Pro 시작하기',
@@ -194,12 +187,9 @@ export default function PricingPage() {
       features: [
         'Pro 플랜의 모든 기능',
         '최대 5명 팀 멤버',
-        '무제한 연구기관 직접 연결',
-        '전담 고객 성공 매니저',
-        '맞춤형 온보딩 지원',
-        '전략 컨설팅 (분기별)',
-        '우선 전화 지원',
-        'SLA 보장 (99.9% 가동 시간)',
+        '무제한 협력 요청',
+        '셀프서비스 온보딩 가이드',
+        '프리미엄 이메일 지원 (12시간 내)',
       ],
       limitations: [],
       defaultCta: 'Team 시작하기',
@@ -487,7 +477,7 @@ export default function PricingPage() {
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-4 px-6 text-gray-700">실시간 업데이트</td>
+                  <td className="py-4 px-6 text-gray-700">실시간 매칭</td>
                   <td className="py-4 px-6 text-center">
                     <span className="text-gray-400">—</span>
                   </td>
@@ -503,9 +493,11 @@ export default function PricingPage() {
                   </td>
                 </tr>
                 <tr className="bg-gray-50">
-                  <td className="py-4 px-6 text-gray-700">연구기관 연결</td>
-                  <td className="py-4 px-6 text-center text-gray-600">-</td>
-                  <td className="py-4 px-6 text-center text-gray-600">5회 / 월</td>
+                  <td className="py-4 px-6 text-gray-700">협력 요청</td>
+                  <td className="py-4 px-6 text-center">
+                    <span className="text-gray-400">—</span>
+                  </td>
+                  <td className="py-4 px-6 text-center text-gray-600">10회 / 월</td>
                   <td className="py-4 px-6 text-center text-green-600 font-semibold">
                     무제한
                   </td>
@@ -517,25 +509,11 @@ export default function PricingPage() {
                   <td className="py-4 px-6 text-center text-gray-600">최대 5명</td>
                 </tr>
                 <tr className="bg-gray-50">
-                  <td className="py-4 px-6 text-gray-700">전담 매니저</td>
-                  <td className="py-4 px-6 text-center">
-                    <span className="text-gray-400">—</span>
-                  </td>
-                  <td className="py-4 px-6 text-center">
-                    <span className="text-gray-400">—</span>
-                  </td>
-                  <td className="py-4 px-6 text-center">
-                    <svg className="h-5 w-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </td>
-                </tr>
-                <tr>
                   <td className="py-4 px-6 text-gray-700">지원 응답 시간</td>
                   <td className="py-4 px-6 text-center text-gray-600">48시간</td>
                   <td className="py-4 px-6 text-center text-gray-600">24시간</td>
                   <td className="py-4 px-6 text-center text-green-600 font-semibold">
-                    우선 지원
+                    12시간
                   </td>
                 </tr>
               </tbody>

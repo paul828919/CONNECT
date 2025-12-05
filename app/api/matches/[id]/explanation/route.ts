@@ -10,6 +10,11 @@
  * - Professional 존댓말 (formal Korean)
  * - Rate limiting (50 RPM)
  * - Cost tracking
+ * - Subscription gating (Pro/Team only for full AI explanations)
+ *
+ * Subscription tiers:
+ * - Free: Basic score display only
+ * - Pro/Team: Full AI-powered detailed explanations
  *
  * Week 3-4: AI Integration (Day 16-17)
  */
@@ -17,7 +22,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, SubscriptionPlan, SubscriptionStatus } from '@prisma/client';
 
 // Direct Prisma Client instantiation (bypasses lib/db module resolution issue)
 const globalForPrisma = globalThis as unknown as {
@@ -69,11 +74,19 @@ export async function GET(
       );
     }
 
-    // 3. Verify user owns this match
+    // 3. Verify user owns this match and get subscription info
     const userOrg = await db.user.findFirst({
       where: {
         id: userId,
         organizationId: match.organizationId,
+      },
+      include: {
+        subscriptions: {
+          select: {
+            plan: true,
+            status: true,
+          },
+        },
       },
     });
 
@@ -84,6 +97,57 @@ export async function GET(
           message: '이 매칭 결과에 접근할 권한이 없습니다.',
         },
         { status: 403 }
+      );
+    }
+
+    // 3a. Check subscription tier for AI explanation access
+    const subscription = userOrg.subscriptions;
+    const isActiveSubscription = subscription?.status === 'ACTIVE' || subscription?.status === 'TRIAL';
+    const subscriptionPlan = isActiveSubscription ? subscription?.plan : 'FREE';
+    const hasAIAccess = subscriptionPlan === 'PRO' || subscriptionPlan === 'TEAM';
+
+    // For Free users, return basic score only without AI generation
+    if (!hasAIAccess) {
+      // Update match viewed status
+      await db.funding_matches.update({
+        where: { id: matchId },
+        data: {
+          viewed: true,
+          viewedAt: new Date(),
+        },
+      });
+
+      // Return basic explanation for Free tier
+      const program = match.funding_programs;
+      return NextResponse.json(
+        {
+          success: true,
+          matchId,
+          explanation: {
+            summary: `${match.organizations.name}과(와) "${program.title}" 프로그램의 매칭 점수는 ${match.score}점입니다.`,
+            details: null,
+            strengths: [],
+            recommendations: [],
+          },
+          metadata: {
+            cached: false,
+            cost: 0,
+            responseTime: 0,
+            usage: null,
+            subscriptionRequired: true,
+          },
+          match: {
+            score: match.score,
+            programTitle: program.title,
+            agency: getAgencyName(program.agencyId),
+            deadline: program.deadline?.toISOString(),
+          },
+          upgradePrompt: {
+            message: 'Pro 플랜으로 업그레이드하시면 AI가 분석한 상세 매칭 설명, 강점, 보완 포인트를 확인하실 수 있습니다.',
+            upgradeUrl: '/pricing',
+          },
+        },
+        { status: 200 }
       );
     }
 
