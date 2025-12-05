@@ -136,7 +136,8 @@ export default function PricingPage() {
     {
       name: 'Free',
       key: 'FREE' as Plan,
-      description: '개인 연구자를 위한 기본 플랜',
+      description: 'Connect를 처음 경험하는 연구자',
+      secondaryDescription: '플랫폼 탐색 및 매칭 품질 검증',
       pricing: {
         monthly: 0,
         yearly: 0,
@@ -160,7 +161,8 @@ export default function PricingPage() {
     {
       name: 'Pro',
       key: 'PRO' as Plan,
-      description: '전문 연구자 및 중소기업을 위한 플랜',
+      description: '과제 수주를 본격 추진하는 연구팀',
+      secondaryDescription: '단일 부서/연구실의 실무 활용',
       pricing: {
         monthly: 49000,
         yearly: 490000,
@@ -170,8 +172,8 @@ export default function PricingPage() {
         '상세 매칭 설명 (가중치, 보강 포인트)',
         '실시간 프로그램 업데이트',
         '체크리스트 + 자동 제안서 초안',
-        'Warm Intro 5회 / 월',
-        '교수 / SME 전용 템플릿',
+        '연구기관 직접 연결 5회 / 월',
+        'SME 전용 / 대학 템플릿',
         '이메일 지원 (24시간 이내)',
         '우선 기술 지원',
       ],
@@ -183,7 +185,8 @@ export default function PricingPage() {
     {
       name: 'Team',
       key: 'TEAM' as Plan,
-      description: '팀 및 연구기관을 위한 플랜',
+      description: '조직 전체의 R&D 경쟁력을 관리하는 기관',
+      secondaryDescription: '다수 부서의 통합 관리',
       pricing: {
         monthly: 99000,
         yearly: 990000,
@@ -191,7 +194,7 @@ export default function PricingPage() {
       features: [
         'Pro 플랜의 모든 기능',
         '최대 5명 팀 멤버',
-        '무제한 Warm Intro',
+        '무제한 연구기관 직접 연결',
         '전담 고객 성공 매니저',
         '맞춤형 온보딩 지원',
         '전략 컨설팅 (분기별)',
@@ -294,19 +297,19 @@ export default function PricingPage() {
                   plan.highlighted ? 'transform scale-105' : ''
                 } ${isCurrent ? 'ring-2 ring-green-400' : ''}`}
               >
-                {/* Current Plan Badge */}
-                {isCurrent && session?.user && (
-                  <div className="absolute -top-4 right-4">
-                    <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
-                      현재 구독 중
+                {/* Most Popular Badge - Always shown for Pro plan */}
+                {plan.highlighted && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span className={`${colors.badge} px-4 py-1 rounded-full text-sm font-semibold shadow-md`}>
+                      가장 인기
                     </span>
                   </div>
                 )}
-                {/* Recommended Badge */}
-                {plan.highlighted && !isCurrent && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className={`${colors.badge} px-4 py-1 rounded-full text-sm font-semibold shadow-md`}>
-                      추천 플랜
+                {/* Current Plan Badge */}
+                {isCurrent && session?.user && (
+                  <div className={`absolute -top-4 ${plan.highlighted ? 'right-4' : 'left-1/2 transform -translate-x-1/2'}`}>
+                    <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
+                      현재 구독 중
                     </span>
                   </div>
                 )}
@@ -316,7 +319,8 @@ export default function PricingPage() {
                   <h3 className={`text-2xl font-bold ${colors.text} mb-2`}>
                     {plan.name}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-4">{plan.description}</p>
+                  <p className="text-sm text-gray-600 mb-1">{plan.description}</p>
+                  <p className="text-xs text-gray-400 mb-4">{plan.secondaryDescription}</p>
                   <div className="mb-2">
                     <span className="text-4xl font-bold text-gray-900">
                       ₩{formatPrice(price)}
@@ -416,6 +420,22 @@ export default function PricingPage() {
           })}
         </div>
 
+        {/* Social Proof Section */}
+        <div className="my-12 text-center">
+          <div className="flex items-center justify-center gap-4">
+            <div className="h-px w-16 bg-gray-300" />
+            <div className="flex items-center gap-2 text-gray-600">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <span className="text-sm font-medium">
+                1,600+ 국가 R&D 사업 공고 실시간 모니터링 중
+              </span>
+            </div>
+            <div className="h-px w-16 bg-gray-300" />
+          </div>
+        </div>
+
         {/* Feature Comparison Table */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
@@ -453,9 +473,7 @@ export default function PricingPage() {
                 <tr className="bg-gray-50">
                   <td className="py-4 px-6 text-gray-700">상세 매칭 설명</td>
                   <td className="py-4 px-6 text-center">
-                    <svg className="h-5 w-5 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <span className="text-gray-400">—</span>
                   </td>
                   <td className="py-4 px-6 text-center">
                     <svg className="h-5 w-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -471,9 +489,7 @@ export default function PricingPage() {
                 <tr>
                   <td className="py-4 px-6 text-gray-700">실시간 업데이트</td>
                   <td className="py-4 px-6 text-center">
-                    <svg className="h-5 w-5 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <span className="text-gray-400">—</span>
                   </td>
                   <td className="py-4 px-6 text-center">
                     <svg className="h-5 w-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -487,7 +503,7 @@ export default function PricingPage() {
                   </td>
                 </tr>
                 <tr className="bg-gray-50">
-                  <td className="py-4 px-6 text-gray-700">Warm Intro</td>
+                  <td className="py-4 px-6 text-gray-700">연구기관 연결</td>
                   <td className="py-4 px-6 text-center text-gray-600">-</td>
                   <td className="py-4 px-6 text-center text-gray-600">5회 / 월</td>
                   <td className="py-4 px-6 text-center text-green-600 font-semibold">
@@ -503,14 +519,10 @@ export default function PricingPage() {
                 <tr className="bg-gray-50">
                   <td className="py-4 px-6 text-gray-700">전담 매니저</td>
                   <td className="py-4 px-6 text-center">
-                    <svg className="h-5 w-5 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <span className="text-gray-400">—</span>
                   </td>
                   <td className="py-4 px-6 text-center">
-                    <svg className="h-5 w-5 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <span className="text-gray-400">—</span>
                   </td>
                   <td className="py-4 px-6 text-center">
                     <svg className="h-5 w-5 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
