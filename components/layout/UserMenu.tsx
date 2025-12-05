@@ -47,6 +47,9 @@ export default function UserMenu() {
         <DropdownMenuItem onClick={() => router.push('/dashboard/subscription')}>
           구독 관리
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push('/dashboard/team')}>
+          팀 관리
+        </DropdownMenuItem>
         {/* Admin only */}
         {((session.user as any)?.role === 'ADMIN' || (session.user as any)?.role === 'SUPER_ADMIN') && (
           <>
