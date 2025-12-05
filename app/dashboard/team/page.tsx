@@ -26,6 +26,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/lib/hooks/use-toast';
 import Link from 'next/link';
 
@@ -46,6 +52,17 @@ interface TeamLimits {
   remainingSlots: number;
 }
 
+interface InviteLink {
+  id: string;
+  code: string;
+  fullUrl: string;
+  expiresAt: string;
+  maxUses: number;
+  usedCount: number;
+  remainingUses: number;
+  createdAt: string;
+}
+
 export default function TeamPage() {
   const { data: session } = useSession();
   const { toast } = useToast();
@@ -55,7 +72,12 @@ export default function TeamPage() {
   const [organizationName, setOrganizationName] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
-  // Invite modal state
+  // Invite link state
+  const [inviteLink, setInviteLink] = useState<InviteLink | null>(null);
+  const [generatingLink, setGeneratingLink] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Invite modal state (for email invite)
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteName, setInviteName] = useState('');
@@ -89,11 +111,108 @@ export default function TeamPage() {
     }
   }, [toast]);
 
+  const fetchInviteLink = useCallback(async () => {
+    try {
+      const res = await fetch('/api/team/invite-link');
+      if (res.ok) {
+        const data = await res.json();
+        setInviteLink(data.inviteLink || null);
+      }
+    } catch (error) {
+      console.error('Failed to fetch invite link:', error);
+    }
+  }, []);
+
   useEffect(() => {
     if (session) {
       fetchTeamMembers();
+      fetchInviteLink();
     }
-  }, [session, fetchTeamMembers]);
+  }, [session, fetchTeamMembers, fetchInviteLink]);
+
+  const handleGenerateLink = async () => {
+    setGeneratingLink(true);
+    try {
+      const res = await fetch('/api/team/invite-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expiryDays: 7 }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setInviteLink(data.inviteLink);
+        toast({
+          title: '초대 링크가 생성되었습니다',
+          description: data.message,
+        });
+      } else {
+        toast({
+          title: '링크 생성 실패',
+          description: data.message || data.error,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: '네트워크 오류',
+        description: '잠시 후 다시 시도해주세요.',
+        variant: 'destructive',
+      });
+    } finally {
+      setGeneratingLink(false);
+    }
+  };
+
+  const handleDeactivateLink = async () => {
+    try {
+      const res = await fetch('/api/team/invite-link', {
+        method: 'DELETE',
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setInviteLink(null);
+        toast({
+          title: '초대 링크가 비활성화되었습니다',
+        });
+      } else {
+        toast({
+          title: '비활성화 실패',
+          description: data.message || data.error,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: '네트워크 오류',
+        description: '잠시 후 다시 시도해주세요.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!inviteLink) return;
+
+    try {
+      await navigator.clipboard.writeText(inviteLink.fullUrl);
+      setCopied(true);
+      toast({
+        title: '링크가 복사되었습니다',
+        description: '카카오톡이나 이메일로 공유하세요.',
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast({
+        title: '복사 실패',
+        description: '링크를 직접 선택하여 복사해주세요.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleInvite = async () => {
     if (!inviteEmail) {
@@ -186,6 +305,19 @@ export default function TeamPage() {
     });
   };
 
+  const formatExpiryDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    const formatted = date.toLocaleDateString('ko-KR', {
+      month: 'long',
+      day: 'numeric',
+    });
+
+    return `${formatted} (${diffDays}일 후 만료)`;
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -231,7 +363,7 @@ export default function TeamPage() {
                         <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        이메일로 간편하게 초대
+                        초대 링크로 간편하게 초대
                       </li>
                       <li className="flex items-center">
                         <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,8 +401,8 @@ export default function TeamPage() {
             <p className="text-gray-600">{organizationName}</p>
           </div>
 
-          <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-            <DialogTrigger asChild>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
                 disabled={!limits?.canAddMore}
                 className="bg-blue-600 hover:bg-blue-700"
@@ -279,47 +411,26 @@ export default function TeamPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
                 팀원 초대
+                <svg className="h-4 w-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>팀원 초대</DialogTitle>
-                <DialogDescription>
-                  초대할 팀원의 이메일 주소를 입력해주세요.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">이메일 주소 *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="team@example.com"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="name">이름 (선택)</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="홍길동"
-                    value={inviteName}
-                    onChange={(e) => setInviteName(e.target.value)}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setInviteOpen(false)}>
-                  취소
-                </Button>
-                <Button onClick={handleInvite} disabled={inviting}>
-                  {inviting ? '초대 중...' : '초대하기'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={handleGenerateLink} disabled={generatingLink}>
+                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                초대 링크 생성
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setInviteOpen(true)}>
+                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                이메일로 초대
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Team Limit Info */}
@@ -351,6 +462,126 @@ export default function TeamPage() {
                   style={{ width: `${(limits.currentMembers / limits.maxMembers) * 100}%` }}
                 />
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Invite Link Section */}
+        {limits?.canAddMore && (
+          <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                <CardTitle className="text-lg">팀 초대 링크</CardTitle>
+              </div>
+              <CardDescription>
+                초대 링크를 카카오톡이나 이메일로 공유하여 팀원을 쉽게 초대하세요.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {inviteLink ? (
+                <div className="space-y-4">
+                  {/* Link display */}
+                  <div className="flex gap-2">
+                    <div className="flex-1 bg-white rounded-lg border border-gray-200 px-4 py-3 font-mono text-sm text-gray-700 truncate">
+                      {inviteLink.fullUrl}
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleCopyLink}
+                      className="shrink-0"
+                    >
+                      {copied ? (
+                        <>
+                          <svg className="h-4 w-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          복사됨
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          복사
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Link info */}
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>만료: {formatExpiryDate(inviteLink.expiresAt)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span>남은 초대: {inviteLink.remainingUses}명</span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateLink}
+                      disabled={generatingLink}
+                    >
+                      <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      새 링크 생성
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleDeactivateLink}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      링크 비활성화
+                    </Button>
+                  </div>
+
+                  {/* Tip */}
+                  <div className="flex items-start gap-2 p-3 bg-white/50 rounded-lg border border-blue-100">
+                    <svg className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-sm text-gray-600">
+                      <strong>팁:</strong> 이 링크를 팀원에게 공유하면, 팀원이 링크를 클릭하고 로그인만 하면 자동으로 팀에 참여됩니다.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-gray-600 mb-4">
+                    초대 링크를 생성하여 팀원을 쉽게 초대하세요.
+                  </p>
+                  <Button onClick={handleGenerateLink} disabled={generatingLink}>
+                    {generatingLink ? (
+                      <>
+                        <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                        생성 중...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        초대 링크 생성
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -416,6 +647,48 @@ export default function TeamPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Email Invite Dialog */}
+        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>이메일로 팀원 초대</DialogTitle>
+              <DialogDescription>
+                초대할 팀원의 이메일 주소를 입력해주세요.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">이메일 주소 *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="team@example.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">이름 (선택)</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="홍길동"
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setInviteOpen(false)}>
+                취소
+              </Button>
+              <Button onClick={handleInvite} disabled={inviting}>
+                {inviting ? '초대 중...' : '초대하기'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Remove Confirmation Dialog */}
         <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>

@@ -437,6 +437,7 @@ model organizations {
   funding_matches                                                funding_matches[]
   users                                                          User[]
   refundRequests                                                 RefundRequest[]
+  teamInviteLinks                                                team_invite_links[]
 
   @@index([businessNumberHash])
   @@index([profileCompleted])
@@ -625,6 +626,7 @@ model User {
   organization           organizations?        @relation(fields: [organizationId], references: [id])
   refundRequests         RefundRequest[]       @relation("RefundRequests")
   processedRefunds       RefundRequest[]       @relation("RefundProcessedBy")
+  teamInviteLinks        team_invite_links[]
 
   @@index([email])
   @@index([organizationId])
@@ -638,6 +640,26 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model team_invite_links {
+  id             String        @id @default(uuid())
+  code           String        @unique
+  organizationId String
+  createdById    String
+  expiresAt      DateTime
+  maxUses        Int           @default(5)
+  usedCount      Int           @default(0)
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization   organizations @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy      User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([organizationId])
+  @@index([isActive, expiresAt])
 }
 
 enum AIFeedbackRating {
