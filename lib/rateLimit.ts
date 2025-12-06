@@ -24,8 +24,23 @@ async function getRedisClient() {
     });
 
     redisClient.on('error', (err) => {
-      console.error('Redis rate limit error:', err);
+      console.error('[RATE-LIMIT] Redis connection error:', err.message);
     });
+
+    redisClient.on('connect', () => {
+      console.log('[RATE-LIMIT] Redis connected successfully');
+    });
+
+    redisClient.on('reconnecting', () => {
+      console.log('[RATE-LIMIT] Redis reconnecting...');
+    });
+
+    await redisClient.connect();
+  }
+
+  if (!redisClient.isOpen) {
+    console.log('[RATE-LIMIT] Redis connection lost, reconnecting...');
+    await redisClient.connect();
   }
 
   return redisClient;
