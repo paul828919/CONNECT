@@ -3,23 +3,19 @@
  * Comprehensive refund policy compliant with Korean e-commerce law
  */
 
+'use client';
+
 import Link from 'next/link';
 import { FileText } from 'lucide-react';
+import PublicHeader from '@/components/layout/PublicHeader';
 
 export default function RefundPolicyPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4">
-          <Link href="/" className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
-            ← Connect
-          </Link>
-        </div>
-      </nav>
+      <PublicHeader />
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
+      <div className="container mx-auto px-4 pt-24 pb-12 max-w-4xl">
         <div className="bg-white rounded-lg shadow-lg p-8 md:p-12">
           {/* Title */}
           <header className="mb-8">
@@ -169,8 +165,10 @@ export default function RefundPolicyPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">6. 환불 절차</h2>
               <ol className="list-decimal list-inside space-y-3 mb-4 ml-4">
                 <li>
-                  <strong>환불 요청:</strong> 고객센터(support@connectplt.kr) 이메일 또는
-                  대시보드 내 환불 신청
+                  <Link href="/dashboard/subscription" className="text-blue-600 hover:text-blue-800 hover:underline font-semibold">
+                    환불 요청:
+                  </Link>{' '}
+                  support@connectplt.kr 로 이메일 발송
                 </li>
                 <li>
                   <strong>검토 및 승인:</strong> 요청일 기준 1영업일 내 처리 (내부 목표)
@@ -210,47 +208,52 @@ export default function RefundPolicyPage() {
               </div>
             </section>
 
-            {/* Section 8: English Summary */}
+            {/* Section 8: 요약 */}
             <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">8. English Summary</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">8. 환불 정책 요약</h2>
               <div className="prose prose-sm text-gray-600">
-                <h3 className="text-lg font-semibold text-gray-800">Refund Policy Summary</h3>
+                <h3 className="text-lg font-semibold text-gray-800">핵심 내용 정리</h3>
 
-                <p><strong>Monthly Plans:</strong></p>
+                <p><strong>월간 플랜:</strong></p>
                 <ul>
-                  <li>Within 7 days: Full refund (one-time goodwill policy)</li>
-                  <li>After 7 days: No refund (except statutory rights)</li>
+                  <li>7일 이내: 전액 환불 (1회 한정 우대 정책)</li>
+                  <li>7일 경과 후: 환불 불가 (법정 권리 제외)</li>
                 </ul>
 
-                <p><strong>Annual Plans:</strong></p>
+                <p><strong>연간 플랜:</strong></p>
                 <ul>
-                  <li>Within 7 days: Full refund (statutory cooling-off period)</li>
-                  <li>8 days ~ 50% period: Total − Used − (Remaining × 10% penalty)</li>
-                  <li>After 50%: Calculated amount (may be ₩0)</li>
+                  <li>7일 이내: 전액 환불 (법정 청약철회권)</li>
+                  <li>8일 ~ 50% 기간: 총액 − 사용분 − (잔여 × 10% 위약금)</li>
+                  <li>50% 이후: 계산된 금액 (₩0일 수 있음)</li>
                 </ul>
 
-                <p><strong>Statutory Rights Always Apply:</strong></p>
+                <p><strong>법정 권리 항상 적용:</strong></p>
                 <ul>
-                  <li>Service failures or errors</li>
-                  <li>Service differs from contract</li>
-                  <li>Billing errors or duplicate payments</li>
-                  <li>Other legal cancellation reasons</li>
+                  <li>서비스 장애 또는 오류</li>
+                  <li>계약 내용과 다른 서비스 제공</li>
+                  <li>중복 결제 또는 빌링 오류</li>
+                  <li>기타 법적 해지 사유</li>
                 </ul>
 
                 <p className="text-sm italic">
-                  In such cases, no 10% penalty applies, and full refunds are provided regardless of time period.
+                  이 경우 10% 위약금이 적용되지 않으며, 기간과 무관하게 전액 환불됩니다.
                 </p>
 
-                <p><strong>Refund Process:</strong></p>
+                <p><strong>환불 처리 절차:</strong></p>
                 <ol>
-                  <li>Request: Email support@connectplt.kr or use dashboard</li>
-                  <li>Review: 1 business day (internal target)</li>
-                  <li>Processing: 3 business days via Toss Payments</li>
-                  <li>Completion: Actual deposit time varies by financial institution</li>
+                  <li>
+                    <Link href="/dashboard/subscription" className="text-blue-600 hover:text-blue-800 hover:underline font-semibold">
+                      환불 요청:
+                    </Link>{' '}
+                    support@connectplt.kr 로 이메일 발송
+                  </li>
+                  <li>검토: 1영업일 (케이스에 따라 2일 이상 소요될 수 있음)</li>
+                  <li>처리: 토스페이먼츠를 통해 3영업일 내</li>
+                  <li>완료: 실제 입금 시간은 금융기관에 따라 상이</li>
                 </ol>
 
                 <p className="text-xs text-gray-500">
-                  Korean e-commerce law requires 15% annual interest for refund delays beyond 3 business days.
+                  전자상거래법에 따라 3영업일 초과 환불 지연 시 연 15% 지연배상금이 발생합니다.
                 </p>
               </div>
             </section>
@@ -261,32 +264,16 @@ export default function RefundPolicyPage() {
                 본 환불 정책은 전자상거래법 제17조(청약철회), 제18조(환불 처리),
                 소비자분쟁해결기준(10% 위약금)을 기반으로 작성되었습니다.
               </p>
-              <p className="text-sm text-gray-500 mt-2 italic">
-                This refund policy is based on Korean Electronic Commerce Act Articles 17-18
-                and Consumer Dispute Resolution Standards (10% penalty).
-              </p>
             </div>
           </div>
 
           {/* Navigation Links */}
-          <div className="mt-8 pt-6 border-t flex flex-wrap gap-4">
+          <div className="mt-8 pt-6 border-t flex justify-center">
             <Link
               href="/"
               className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
             >
               홈으로 돌아가기
-            </Link>
-            <Link
-              href="/terms"
-              className="inline-flex items-center justify-center px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              이용약관 보기
-            </Link>
-            <Link
-              href="/pricing"
-              className="inline-flex items-center justify-center px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              요금제 보기
             </Link>
           </div>
         </div>
