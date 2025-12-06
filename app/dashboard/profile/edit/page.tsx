@@ -303,6 +303,35 @@ export default function EditOrganizationProfilePage() {
           </div>
         )}
 
+        {/* Match Readiness Inline Prompt */}
+        {organizationData && (
+          !organizationData.keyTechnologies?.length || !organizationData.researchFocusAreas?.length
+        ) && (
+          <div className="mb-6 rounded-lg bg-amber-50 border border-amber-200 p-4">
+            <div className="flex items-start gap-3">
+              <svg
+                className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                />
+              </svg>
+              <div>
+                <h4 className="font-medium text-amber-800">매칭 품질을 높이세요</h4>
+                <p className="text-sm text-amber-700 mt-1">
+                  연구 분야와 핵심 기술을 입력하면 귀사에 더 적합한 연구 과제를 추천받을 수 있습니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Form */}
         <div className="rounded-2xl bg-white p-8 shadow-sm">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -685,10 +714,10 @@ export default function EditOrganizationProfilePage() {
                     id="researchFocusAreas"
                     {...register('researchFocusAreas')}
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="예: AI, 빅데이터, 클라우드 (쉼표로 구분)"
+                    placeholder="예: 문화유산 디지털화, 전시기술, K-Culture AI (쉼표로 구분)"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    여러 분야는 쉼표(,)로 구분해주세요
+                    💡 연구 분야를 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다
                   </p>
                   {errors.researchFocusAreas && (
                     <p className="mt-1 text-sm text-red-600">
@@ -710,10 +739,10 @@ export default function EditOrganizationProfilePage() {
                     id="keyTechnologies"
                     {...register('keyTechnologies')}
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="예: 머신러닝, 자연어처리, 컴퓨터비전 (쉼표로 구분)"
+                    placeholder="예: AR/VR, 디지털 아카이빙, 콘텐츠 관리 시스템 (쉼표로 구분)"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    여러 기술은 쉼표(,)로 구분해주세요
+                    💡 핵심 기술을 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다
                   </p>
                   {errors.keyTechnologies && (
                     <p className="mt-1 text-sm text-red-600">

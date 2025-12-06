@@ -14,6 +14,7 @@
 import { organizations, funding_programs } from '@prisma/client';
 import { MatchScore } from './algorithm';
 import { getTRLDescription } from './trl';
+import { findIndustrySector, INDUSTRY_RELEVANCE } from './taxonomy';
 
 export interface MatchExplanation {
   summary: string; // One-line summary
@@ -102,6 +103,21 @@ export function generateExplanation(
     warnings.push(
       `ℹ️ 기술성숙도(TRL) 추정값 - 공고문에 명시되지 않아 키워드 기반으로 추정한 값입니다. 정확한 TRL 요구사항은 공고문을 확인하세요.`
     );
+  }
+
+  // Warning 6: Cross-industry relevance (indirect match)
+  // When industry relevance is between 0.4 and 0.6, warn user about indirect relationship
+  if (org.industrySector && program.category) {
+    const orgSector = findIndustrySector(org.industrySector);
+    const programSector = findIndustrySector(program.category);
+    if (orgSector && programSector && orgSector !== programSector) {
+      const relevanceScore = INDUSTRY_RELEVANCE[orgSector]?.[programSector] ?? 0;
+      if (relevanceScore >= 0.4 && relevanceScore < 0.6) {
+        warnings.push(
+          `⚠️ 산업 분야 간접 연관 - 본 프로그램은 다른 산업 분야(${program.category})를 대상으로 합니다. 프로그램 세부 내용을 확인하세요.`
+        );
+      }
+    }
   }
 
   // Add score-based recommendations

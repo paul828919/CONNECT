@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import CompetitivenessCard from '@/components/dashboard/CompetitivenessCard';
+import MatchReadinessAlert from '@/components/dashboard/MatchReadinessAlert';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -29,6 +30,11 @@ export default function DashboardPage() {
     percentage: number;
     completedCount: number;
     totalCount: number;
+  } | null>(null);
+  const [organization, setOrganization] = useState<{
+    keyTechnologies: string[] | null;
+    researchFocusAreas: string[] | null;
+    industrySector: string | null;
   } | null>(null);
 
   const fetchMatchStats = useCallback(async () => {
@@ -88,6 +94,25 @@ export default function DashboardPage() {
     }
   }, [session]);
 
+  const fetchOrganization = useCallback(async () => {
+    try {
+      const orgId = (session?.user as any)?.organizationId;
+      if (!orgId) return;
+
+      const res = await fetch(`/api/organizations/${orgId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setOrganization({
+          keyTechnologies: data.organization.keyTechnologies,
+          researchFocusAreas: data.organization.researchFocusAreas,
+          industrySector: data.organization.industrySector,
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching organization:', err);
+    }
+  }, [session]);
+
   useEffect(() => {
     if (status === 'loading') return;
 
@@ -109,7 +134,8 @@ export default function DashboardPage() {
     fetchSubscription();
     fetchProgramStats();
     fetchProfileCompletion();
-  }, [session, status, router, fetchMatchStats, fetchSubscription, fetchProgramStats, fetchProfileCompletion]);
+    fetchOrganization();
+  }, [session, status, router, fetchMatchStats, fetchSubscription, fetchProgramStats, fetchProfileCompletion, fetchOrganization]);
 
   const handleGenerateMatches = async () => {
     try {
@@ -268,6 +294,9 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+
+          {/* Match Readiness Alert */}
+          {organization && <MatchReadinessAlert organization={organization} />}
 
           {/* Match Generation Section */}
           <div className="rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 p-8">

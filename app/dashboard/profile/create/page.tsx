@@ -177,7 +177,7 @@ export default function CreateOrganizationProfilePage() {
             조직 프로필 생성
           </h1>
           <p className="mt-2 text-gray-600">
-            펀딩 매칭을 위해 조직 정보를 입력해주세요
+            연구 과제 매칭을 위해 조직 정보를 입력해주세요
           </p>
         </div>
 
@@ -695,10 +695,10 @@ export default function CreateOrganizationProfilePage() {
                     id="researchFocusAreas"
                     {...register('researchFocusAreas')}
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="예: AI, 빅데이터, 클라우드 (쉼표로 구분)"
+                    placeholder="예: 문화유산 디지털화, 전시기술, K-Culture AI (쉼표로 구분)"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    여러 분야는 쉼표(,)로 구분해주세요
+                    💡 연구 분야를 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다
                   </p>
                   {errors.researchFocusAreas && (
                     <p className="mt-1 text-sm text-red-600">
@@ -720,10 +720,10 @@ export default function CreateOrganizationProfilePage() {
                     id="keyTechnologies"
                     {...register('keyTechnologies')}
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="예: 머신러닝, 자연어처리, 컴퓨터비전 (쉼표로 구분)"
+                    placeholder="예: AR/VR, 디지털 아카이빙, 콘텐츠 관리 시스템 (쉼표로 구분)"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    여러 기술은 쉼표(,)로 구분해주세요
+                    💡 핵심 기술을 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다
                   </p>
                   {errors.keyTechnologies && (
                     <p className="mt-1 text-sm text-red-600">
@@ -832,7 +832,7 @@ export default function CreateOrganizationProfilePage() {
         <div className="mt-6 rounded-lg bg-blue-50 p-4 text-sm text-blue-800">
           <p className="font-medium">💡 프로필 완성 후 이용 가능</p>
           <ul className="mt-2 ml-4 list-disc space-y-1">
-            <li>4개 주요 기관 (IITP, KEIT, TIPA, KIMST) 펀딩 매칭</li>
+            <li>NTIS 기반 전체 정부 R&D 연구 과제 매칭</li>
             <li>설명 가능한 AI 매칭 알고리즘</li>
             <li>실시간 공고 알림</li>
           </ul>

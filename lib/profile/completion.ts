@@ -79,6 +79,12 @@ const PROFILE_FIELDS: Array<{
     weight: 10,
     checkEmpty: (v) => !v || (Array.isArray(v) && v.length === 0),
   },
+  {
+    field: 'researchFocusAreas',
+    label: '연구 분야',
+    weight: 10,
+    checkEmpty: (v) => !v || (Array.isArray(v) && v.length === 0),
+  },
 
   // Track Record (10%)
   {

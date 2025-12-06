@@ -220,7 +220,18 @@ export const INDUSTRY_TAXONOMY = {
 
   CULTURAL: {
     name: '문화/콘텐츠',
-    keywords: ['문화', '콘텐츠', '문화산업', '문화예술', 'CULTURAL', 'CONTENT'],
+    keywords: [
+      // Core keywords
+      '문화', '콘텐츠', '문화산업', '문화예술', 'CULTURAL', 'CONTENT',
+      // Cultural Technology (CT) - based on NTIS CT기반조성사업
+      'CT', '문화기술',
+      // K-Culture programs
+      'K-Culture', 'K-콘텐츠',
+      // Ministry/program keywords
+      '문화체육관광', '미디어', '엔터테인먼트', '영상', '문화콘텐츠', '게임',
+      // Cultural heritage
+      '문화유산', '문화재', '전통문화',
+    ],
     subSectors: {
       CONTENT: {
         name: '콘텐츠',
@@ -421,7 +432,7 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
   },
 
   CULTURAL: {
-    ICT: 0.8, // Digital content, OTT, gaming, streaming
+    ICT: 0.5, // Reduced from 0.8: ICT includes non-cultural science programs (quantum physics, etc.)
     MANUFACTURING: 0.3, // Media production hardware
     BIO_HEALTH: 0.2, // Sports health, wellness
     ENERGY: 0.2, // Minimal overlap

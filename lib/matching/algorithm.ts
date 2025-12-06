@@ -209,7 +209,8 @@ export function generateMatches(
 
         if (!options?.includeExpired) {
           // STRICT industry filter for ACTIVE programs (application eligibility)
-          if (relevanceScore < 0.3) {
+          // Threshold raised from 0.3 to 0.4 to improve match quality
+          if (relevanceScore < 0.4) {
             continue; // Industry mismatch - fundamentally incompatible
           }
         }
@@ -252,8 +253,13 @@ export function generateMatches(
     matches.push(matchScore);
   }
 
+  // Filter out low-quality matches (minimum threshold: 45 points)
+  // Rationale: Scores below 45 indicate poor fit, prevents "technically eligible but poorly matched"
+  const MINIMUM_MATCH_SCORE = 45;
+
   // Sort by eligibility level first (FULLY_ELIGIBLE > CONDITIONALLY_ELIGIBLE), then by score
   return matches
+    .filter((m) => m.score >= MINIMUM_MATCH_SCORE)
     .sort((a, b) => {
       // Primary sort: Eligibility level
       if (a.eligibilityLevel !== b.eligibilityLevel) {
