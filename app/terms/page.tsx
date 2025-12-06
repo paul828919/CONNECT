@@ -23,9 +23,9 @@ export default function TermsOfServicePage() {
               alt="Connect Logo"
               width={48}
               height={48}
-              className="w-[48px] h-[48px] -mr-2"
+              className="w-[48px] h-[48px] -mr-2 -rotate-45"
             />
-            <span className="text-xl font-bold text-gray-900">Connect</span>
+            <span className="text-xl font-bold text-indigo-500">Connect</span>
           </Link>
           <Link
             href="/auth/signin"

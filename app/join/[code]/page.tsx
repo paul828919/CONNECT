@@ -223,9 +223,9 @@ export default function JoinPage() {
               alt="Connect Logo"
               width={32}
               height={32}
-              className="w-8 h-8"
+              className="w-8 h-8 -rotate-45"
             />
-            <span className="text-2xl font-bold text-blue-600">Connect</span>
+            <span className="text-2xl font-bold text-indigo-500">Connect</span>
           </Link>
 
           <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">

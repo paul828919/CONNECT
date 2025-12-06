@@ -33,9 +33,9 @@ export default function Header() {
               alt="Connect Logo"
               width={24}
               height={24}
-              className="w-6 h-6"
+              className="w-6 h-6 -rotate-45"
             />
-            <span className="text-2xl font-bold text-blue-600">Connect</span>
+            <span className="text-2xl font-bold text-indigo-500">Connect</span>
           </Link>
 
           {/* Desktop Navigation */}

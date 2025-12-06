@@ -469,7 +469,7 @@ export default function HomePage() {
                   alt="Connect Logo"
                   width={24}
                   height={24}
-                  className="w-6 h-6"
+                  className="w-6 h-6 -rotate-45"
                 />
                 <span className="text-xl font-bold text-white">Connect</span>
               </div>
