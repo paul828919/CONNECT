@@ -6,67 +6,20 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
-import { useState } from 'react';
+import { FileText } from 'lucide-react';
+import PublicHeader from '@/components/layout/PublicHeader';
 
 export default function TermsOfServicePage() {
-  const [activeTab, setActiveTab] = useState('terms');
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation - Same as landing page */}
-      <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center space-x-0.5">
-            <Image
-              src="/logo.svg"
-              alt="Connect Logo"
-              width={48}
-              height={48}
-              className="w-[48px] h-[48px] -mr-2 -rotate-45"
-            />
-            <span className="text-xl font-bold text-indigo-500">Connect</span>
-          </Link>
-          <Link
-            href="/auth/signin"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-3 py-2"
-          >
-            로그인
-          </Link>
-        </div>
-      </nav>
+      <PublicHeader />
 
       {/* Page Title */}
       <div className="bg-white border-b border-gray-200 pt-20">
-        <div className="container mx-auto px-4 py-8 max-w-5xl">
-          <h1 className="text-3xl font-bold text-gray-900">Innowave 약관 및 개인정보 보호</h1>
-        </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="bg-white border-b border-gray-300">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <div className="flex gap-1">
-            <button
-              onClick={() => setActiveTab('terms')}
-              className={`px-6 py-4 font-semibold transition-colors border-b-2 ${
-                activeTab === 'terms'
-                  ? 'text-green-600 border-green-600'
-                  : 'text-gray-600 border-transparent hover:text-gray-900'
-              }`}
-            >
-              이용약관
-            </button>
-            <button
-              onClick={() => setActiveTab('privacy')}
-              className={`px-6 py-4 font-semibold transition-colors border-b-2 ${
-                activeTab === 'privacy'
-                  ? 'text-green-600 border-green-600'
-                  : 'text-gray-600 border-transparent hover:text-gray-900'
-              }`}
-            >
-              개인정보처리방침
-            </button>
+        <div className="container mx-auto px-4 py-5 max-w-5xl">
+          <div className="flex items-center justify-center gap-3">
+            <FileText className="w-12 h-12 text-blue-600" />
+            <h1 className="text-4xl font-bold text-gray-900">이용약관</h1>
           </div>
         </div>
       </div>
@@ -74,7 +27,6 @@ export default function TermsOfServicePage() {
       {/* Content */}
       <div className="container mx-auto px-4 py-12 max-w-5xl">
         <div className="bg-white rounded-lg shadow-sm p-8 md:p-12">
-          {activeTab === 'terms' && (
             <div className="space-y-8">
               {/* 시행일 */}
               <div className="text-right text-sm text-gray-600">
@@ -308,13 +260,6 @@ export default function TermsOfServicePage() {
                 </div>
               </div>
             </div>
-          )}
-
-          {activeTab === 'privacy' && (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">개인정보처리방침은 준비 중입니다.</p>
-            </div>
-          )}
         </div>
 
         {/* Back to Home Button */}
