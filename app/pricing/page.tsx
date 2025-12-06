@@ -167,7 +167,7 @@ export default function PricingPage() {
         '무제한 매칭 생성',
         'AI 기반 상세 매칭 분석',
         '실시간 매칭',
-        '협력 요청 월 10회',
+        '협업 제안 월 10회',
         '우선 이메일 지원 (24시간 내)',
       ],
       limitations: [],
@@ -187,7 +187,7 @@ export default function PricingPage() {
       features: [
         'Pro 플랜의 모든 기능',
         '최대 5명 팀 멤버',
-        '무제한 협력 요청',
+        '무제한 협업 제안',
         '셀프서비스 온보딩 가이드',
         '프리미엄 이메일 지원 (12시간 내)',
       ],
@@ -493,7 +493,7 @@ export default function PricingPage() {
                   </td>
                 </tr>
                 <tr className="bg-gray-50">
-                  <td className="py-4 px-6 text-gray-700">협력 요청</td>
+                  <td className="py-4 px-6 text-gray-700">협업 제안</td>
                   <td className="py-4 px-6 text-center">
                     <span className="text-gray-400">—</span>
                   </td>
