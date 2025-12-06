@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth.config';
 import { db } from '@/lib/db';
-import { ContactRequestType, SubscriptionPlan } from '@prisma/client';
+import { ContactRequestType } from '@prisma/client';
 import { checkContactLimit } from '@/lib/rateLimit';
 
 
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: '로그인이 필요합니다' }, { status: 401 });
     }
 
     const userId = (session.user as any).id;
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
 
     if (!user?.organizationId) {
       return NextResponse.json(
-        { error: 'No organization associated with user' },
+        { error: '연결된 조직이 없습니다' },
         { status: 400 }
       );
     }
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Failed to fetch contact requests:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch contact requests' },
+      { error: '협력 요청 목록을 불러오는데 실패했습니다' },
       { status: 500 }
     );
   }
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: '로그인이 필요합니다' }, { status: 401 });
     }
 
     const userId = (session.user as any).id;
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
 
     if (!user?.organization) {
       return NextResponse.json(
-        { error: 'No organization associated with user' },
+        { error: '연결된 조직이 없습니다' },
         { status: 400 }
       );
     }
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
       if (contactLimit.upgradeRequired) {
         return NextResponse.json(
           {
-            error: 'Upgrade required',
+            error: '프로 구독 플랜으로 요금제 업그레이드 필요',
             message: '협력 요청은 Pro 이상 플랜에서 사용 가능합니다.',
             code: 'UPGRADE_REQUIRED',
             upgradeUrl: '/pricing',
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         {
-          error: 'Rate limit exceeded',
+          error: '요청 한도 초과',
           message: `이번 달 협력 요청 한도(${subscriptionPlan === 'pro' ? '10회' : '무제한'})를 초과했습니다.`,
           code: 'CONTACT_LIMIT_EXCEEDED',
           resetDate: contactLimit.resetDate.toISOString(),
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
     // Validate input
     if (!receiverOrgId || !type || !subject) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: '필수 항목을 입력해주세요' },
         { status: 400 }
       );
     }
@@ -227,14 +227,14 @@ export async function POST(request: NextRequest) {
 
     if (!receiverOrg) {
       return NextResponse.json(
-        { error: 'Receiver organization not found' },
+        { error: '대상 조직을 찾을 수 없습니다' },
         { status: 404 }
       );
     }
 
     if (receiverOrg.status !== 'ACTIVE') {
       return NextResponse.json(
-        { error: 'Cannot send request to inactive organization' },
+        { error: '비활성 조직에는 요청을 보낼 수 없습니다' },
         { status: 400 }
       );
     }
@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
     // Prevent sending request to own organization
     if (receiverOrgId === user.organization?.id) {
       return NextResponse.json(
-        { error: 'Cannot send request to your own organization' },
+        { error: '본인 조직에는 요청을 보낼 수 없습니다' },
         { status: 400 }
       );
     }
@@ -261,7 +261,7 @@ export async function POST(request: NextRequest) {
 
     if (recentRequest) {
       return NextResponse.json(
-        { error: 'You already have a pending or accepted request with this organization' },
+        { error: '해당 조직에 이미 대기 중이거나 수락된 요청이 있습니다' },
         { status: 400 }
       );
     }
@@ -316,7 +316,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Failed to send contact request:', error);
     return NextResponse.json(
-      { error: 'Failed to send contact request' },
+      { error: '협력 요청 전송에 실패했습니다' },
       { status: 500 }
     );
   }
