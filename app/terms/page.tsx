@@ -40,10 +40,10 @@ export default function TermsOfServicePage() {
                 </p>
               </section>
 
-              {/* 여러분을 환영합니다 */}
+              {/* 귀하의 방문을 환영합니다 */}
               <section>
                 <h2 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">
-                  여러분을 환영합니다.
+                  귀하를 환영합니다.
                 </h2>
                 <p className="text-gray-700 leading-relaxed mb-3">
                   Connect 서비스 및 제품(이하 &apos;서비스&apos;)을 이용해 주셔서 감사합니다.
@@ -56,23 +56,25 @@ export default function TermsOfServicePage() {
                 </p>
               </section>
 
-              {/* 다양한 Connect 서비스를 즐겨 보세요 */}
+              {/* Connect 서비스를 경험해 보세요 */}
               <section>
                 <h2 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">
-                  다양한 Connect 서비스를 즐겨 보세요.
+                  Connect 서비스를 경험해 보세요.
                 </h2>
                 <p className="text-gray-700 leading-relaxed mb-3">
                   Connect는 국가 R&D 과제 매칭 플랫폼으로서, 다음과 같은 서비스를 제공합니다:
                 </p>
                 <ul className="space-y-2 text-gray-700 ml-6">
-                  <li className="leading-relaxed">• R&D 펀딩 프로그램 정보 수집 및 매칭</li>
+                  <li className="leading-relaxed">• 사용자 맞춤형 연구과제공고 매칭</li>
+                  <li className="leading-relaxed">• 사용자 맞춤형 컨소시엄 기관 추천</li>
+                  <li className="leading-relaxed">• 사용자 맞춤형 협업 제안</li>
                   <li className="leading-relaxed">• 조직 프로필 관리 (기업/대학/연구소)</li>
                   <li className="leading-relaxed">• 맞춤형 매칭 알고리즘 제공</li>
-                  <li className="leading-relaxed">• 매칭 결과 열람 및 알림</li>
+                  <li className="leading-relaxed">• 실시간 매칭 결과 제공</li>
                   <li className="leading-relaxed">• 기타 Connect가 정하는 서비스</li>
                 </ul>
                 <p className="text-gray-700 leading-relaxed mt-4">
-                  Connect는 여러분이 본 약관 내용에 동의하는 경우, Connect 정책 및 개별 서비스 이용약관에 따라 각 개별 서비스를 이용할 수 있도록 합니다.
+                  귀하가 본 약관 내용에 동의하는 경우, Connect 정책 및 개별 서비스 이용약관에 따라 각 개별 서비스를 이용할 수 있도록 합니다.
                 </p>
               </section>
 
@@ -82,7 +84,7 @@ export default function TermsOfServicePage() {
                   회원 가입
                 </h2>
                 <p className="text-gray-700 leading-relaxed mb-3">
-                  여러분은 Connect가 제공하는 간편한 가입 절차를 통해 회원 가입을 신청할 수 있으며, Connect는 이에 대한 승낙을 통해 회원 가입 절차를 완료하고 여러분에게 Connect 서비스 이용 계정을 부여합니다.
+                  귀하는 Connect가 제공하는 간편한 가입 절차를 통해 회원 가입을 신청할 수 있으며, Connect는 이에 대한 승낙을 통해 회원 가입 절차를 완료하고 귀하에게 Connect 서비스 이용 계정을 부여합니다.
                 </p>
                 <p className="text-gray-700 leading-relaxed mb-3">
                   회원 가입은 카카오 또는 네이버 소셜 로그인을 통해 이루어지며, Connect는 OAuth 제공자로부터 받은 정보(이메일, 닉네임, 프로필 이미지)를 활용하여 회원을 식별합니다.
@@ -98,7 +100,7 @@ export default function TermsOfServicePage() {
                   Connect 계정
                 </h2>
                 <p className="text-gray-700 leading-relaxed mb-3">
-                  회원으로 가입하시면 Connect 계정이 생성됩니다. Connect 계정은 여러분이 Connect 서비스를 이용하기 위한 기본 정보이며, 소셜 로그인을 통해 안전하게 관리됩니다.
+                  회원으로 가입하시면 Connect 계정이 생성됩니다. Connect 계정은 귀하가 Connect 서비스를 이용하기 위한 기본 정보이며, 소셜 로그인을 통해 안전하게 관리됩니다.
                 </p>
                 <p className="text-green-600 font-semibold leading-relaxed mb-3">
                   Connect 계정은 반드시 본인 명의로 등록되어야 하며, 타인에게 양도하거나 대여할 수 없습니다.
@@ -115,15 +117,15 @@ export default function TermsOfServicePage() {
                 </p>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-bold text-gray-900 mb-2">R&D 펀딩 프로그램 매칭</h3>
+                    <h3 className="font-bold text-gray-900 mb-2">연구과제공고 매칭</h3>
                     <p className="text-gray-700 leading-relaxed">
-                      Connect는 4개 핵심 연구관리 전문기관(IITP, KEIT, TIPA, KIMST)의 연구과제 공고를 정기적으로 수집하고 분석합니다. AI 기반 매칭 알고리즘을 통해 회원의 프로필에 적합한 R&D 펀딩 프로그램을 추천합니다.
+                      Connect는 NTIS의 국가 R&D 사업의 전체 연구과제 공고를 실시간으로 모니터링하고 분석합니다. Connect의 AI 기반 매칭 알고리즘은 사용자 프로필에 맞춤화된 연구과제를 제공합니다.
                     </p>
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-900 mb-2">조직 프로필 관리</h3>
+                    <h3 className="font-bold text-gray-900 mb-2">컨소시엄 구축</h3>
                     <p className="text-gray-700 leading-relaxed">
-                      회원은 기업, 대학, 연구소 등의 조직 프로필을 등록하고 관리할 수 있습니다. 조직 프로필 정보는 매칭 알고리즘에 활용되어 적합한 R&D 펀딩 프로그램을 추천하는 데 사용됩니다.
+                      기업, 대학, 연구소 등의 사용자는 Connect에서 조직 프로필과 컨소시엄을 원하는 기관에 대한 요청사항을 등록하고 관리할 수 있습니다. Connect는 사용자의 조직 프로필 정보를 기반으로 컨소시엄 파트너를 찾고 추천받을수 있도록 R&D플랫폼을 사용자에게 제공합니다.
                     </p>
                   </div>
                 </div>
