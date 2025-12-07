@@ -216,10 +216,14 @@ export function generateMatches(
         }
         // For EXPIRED programs: Allow all cross-industry matches for learning purposes
         // Users benefit from seeing historical programs across diverse sectors
+      } else {
+        // CRITICAL FIX: If either sector cannot be identified, BLOCK the match
+        // This prevents bypassing industry compatibility checks with unknown categories
+        // Previously this was allowing matches to proceed, causing irrelevant matches
+        if (!options?.includeExpired) {
+          continue; // Cannot verify industry compatibility - block for safety
+        }
       }
-      // NOTE: If either sector is not in taxonomy, we allow the match to proceed
-      // This handles edge cases and new categories not yet in taxonomy
-      // The scoring system will still evaluate relevance through keyword matching
     }
 
     // ============================================================================

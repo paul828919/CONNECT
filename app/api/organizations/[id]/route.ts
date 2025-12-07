@@ -50,6 +50,7 @@ export async function GET(
         // Tier 1B: Algorithm enhancement fields
         collaborationCount: true,
         instituteType: true,
+        parentDepartment: true,
         researchFocusAreas: true,
         keyTechnologies: true,
         // Tier 2A: Consortium preference fields
@@ -174,6 +175,7 @@ export async function PATCH(
       // Tier 1B: Algorithm enhancement fields
       collaborationCount,
       instituteType,
+      parentDepartment,
       researchFocusAreas,
       keyTechnologies,
       // Tier 2A: Consortium preference fields
@@ -206,6 +208,7 @@ export async function PATCH(
     if (collaborationCount !== undefined)
       updateData.collaborationCount = collaborationCount;
     if (instituteType !== undefined) updateData.instituteType = instituteType;
+    if (parentDepartment !== undefined) updateData.parentDepartment = parentDepartment;
     // Convert comma-separated strings to arrays for database storage
     if (researchFocusAreas !== undefined) {
       updateData.researchFocusAreas = researchFocusAreas
@@ -389,6 +392,7 @@ export async function PATCH(
         // Tier 1B: Algorithm enhancement fields
         collaborationCount: true,
         instituteType: true,
+        parentDepartment: true,
         researchFocusAreas: true,
         keyTechnologies: true,
         // Tier 2A: Consortium preference fields

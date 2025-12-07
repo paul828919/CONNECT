@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
       // Tier 1B: Algorithm enhancement fields
       collaborationCount,
       instituteType,
+      parentDepartment, // for PUBLIC_INSTITUTION type
       researchFocusAreas, // comma-separated string from form
       keyTechnologies, // comma-separated string from form
       technologyReadinessLevel,
@@ -189,6 +190,7 @@ export async function POST(request: NextRequest) {
         // Tier 1B: Algorithm enhancement fields
         collaborationCount: collaborationCount || null,
         instituteType: instituteType || null,
+        parentDepartment: parentDepartment || null,
         // Convert comma-separated strings to arrays for database storage
         researchFocusAreas: researchFocusAreas
           ? researchFocusAreas

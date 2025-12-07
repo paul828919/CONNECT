@@ -40,12 +40,16 @@ export const INDUSTRY_TAXONOMY = {
         name: 'IoT/스마트시티',
         keywords: ['IoT', '사물인터넷', '스마트시티', '스마트홈', '센서', '엣지컴퓨팅'],
       },
+      QUANTUM: {
+        name: '양자기술',
+        keywords: ['양자', '양자기술', '양자컴퓨팅', '양자역학', '양자정보', 'QUANTUM', 'QuantERA'],
+      },
     },
   },
 
   MANUFACTURING: {
     name: '제조업',
-    keywords: ['제조', '제조업', '생산', '공정'],
+    keywords: ['제조', '제조업', '생산', '공정', 'MANUFACTURING'],
     subSectors: {
       SMART_FACTORY: {
         name: '스마트공장',
@@ -72,7 +76,7 @@ export const INDUSTRY_TAXONOMY = {
 
   BIO_HEALTH: {
     name: '바이오/헬스',
-    keywords: ['바이오', '헬스', '의료', '생명공학', 'BIO'],
+    keywords: ['바이오', '헬스', '의료', '생명공학', 'BIO', 'BIO_HEALTH', 'HEALTH'],
     subSectors: {
       MEDICAL_DEVICE: {
         name: '의료기기',
@@ -95,7 +99,7 @@ export const INDUSTRY_TAXONOMY = {
 
   ENERGY: {
     name: '에너지',
-    keywords: ['에너지', '전력', '발전'],
+    keywords: ['에너지', '전력', '발전', 'ENERGY'],
     subSectors: {
       RENEWABLE: {
         name: '신재생에너지',
@@ -114,7 +118,7 @@ export const INDUSTRY_TAXONOMY = {
 
   ENVIRONMENT: {
     name: '환경',
-    keywords: ['환경', '친환경', '그린'],
+    keywords: ['환경', '친환경', '그린', 'ENVIRONMENT'],
     subSectors: {
       CARBON_NEUTRAL: {
         name: '탄소중립',
@@ -133,7 +137,7 @@ export const INDUSTRY_TAXONOMY = {
 
   AGRICULTURE: {
     name: '농업/식품',
-    keywords: ['농업', '농림', '식품', '푸드테크'],
+    keywords: ['농업', '농림', '식품', '푸드테크', 'AGRICULTURE'],
     subSectors: {
       SMART_FARM: {
         name: '스마트팜',
@@ -148,7 +152,7 @@ export const INDUSTRY_TAXONOMY = {
 
   MARINE: {
     name: '해양수산',
-    keywords: ['해양', '수산', '해양수산'],
+    keywords: ['해양', '수산', '해양수산', 'MARINE'],
     subSectors: {
       AQUACULTURE: {
         name: '양식/수산',
@@ -167,7 +171,7 @@ export const INDUSTRY_TAXONOMY = {
 
   CONSTRUCTION: {
     name: '건설',
-    keywords: ['건설', '건축', '토목'],
+    keywords: ['건설', '건축', '토목', 'CONSTRUCTION'],
     subSectors: {
       SMART_CONSTRUCTION: {
         name: '스마트건설',
@@ -182,7 +186,7 @@ export const INDUSTRY_TAXONOMY = {
 
   TRANSPORTATION: {
     name: '교통/운송',
-    keywords: ['교통', '운송', '모빌리티'],
+    keywords: ['교통', '운송', '모빌리티', 'TRANSPORTATION'],
     subSectors: {
       AUTONOMOUS: {
         name: '자율주행',
@@ -432,8 +436,8 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
   },
 
   CULTURAL: {
-    ICT: 0.5, // Reduced from 0.8: ICT includes non-cultural science programs (quantum physics, etc.)
-    MANUFACTURING: 0.3, // Media production hardware
+    ICT: 0.3, // Reduced from 0.5: Only digital content relevant, quantum/deep tech excluded
+    MANUFACTURING: 0.2, // Very low - almost no overlap with cultural institutions
     BIO_HEALTH: 0.2, // Sports health, wellness
     ENERGY: 0.2, // Minimal overlap
     ENVIRONMENT: 0.3, // Cultural heritage preservation
@@ -478,6 +482,17 @@ export function normalizeKoreanKeyword(keyword: string): string {
 export function findIndustrySector(keyword: string): string | null {
   const normalized = normalizeKoreanKeyword(keyword);
 
+  // 1. Direct sector key match (e.g., "MANUFACTURING" -> "MANUFACTURING")
+  // This ensures English enum values are recognized even if not in keywords
+  const sectorKeys = Object.keys(INDUSTRY_TAXONOMY);
+  const directMatch = sectorKeys.find(key =>
+    normalizeKoreanKeyword(key) === normalized
+  );
+  if (directMatch) {
+    return directMatch;
+  }
+
+  // 2. Search through keywords and sub-sector keywords
   for (const [sectorKey, sector] of Object.entries(INDUSTRY_TAXONOMY)) {
     // Check main sector keywords
     const mainKeywords = sector.keywords.map(k => normalizeKoreanKeyword(k));

@@ -393,6 +393,7 @@ model organizations {
   rdExperience                                                   Boolean               @default(false)
   technologyReadinessLevel                                       Int?                  @db.SmallInt
   instituteType                                                  InstituteType?
+  parentDepartment                                               String?
   researchFocusAreas                                             String[]
   annualRdBudget                                                 String?
   researcherCount                                                Int?
@@ -799,6 +800,7 @@ enum OrganizationStatus {
 enum OrganizationType {
   COMPANY
   RESEARCH_INSTITUTE
+  PUBLIC_INSTITUTION
 }
 
 enum PaymentStatus {

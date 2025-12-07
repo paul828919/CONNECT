@@ -9,7 +9,7 @@ import { useSession } from 'next-auth/react';
 
 // Zod validation schema
 const organizationSchema = z.object({
-  type: z.enum(['COMPANY', 'RESEARCH_INSTITUTE'], {
+  type: z.enum(['COMPANY', 'RESEARCH_INSTITUTE', 'PUBLIC_INSTITUTION'], {
     required_error: '조직 유형을 선택해주세요',
   }),
   name: z
@@ -54,6 +54,8 @@ const organizationSchema = z.object({
   instituteType: z.enum(['UNIVERSITY', 'GOVERNMENT', 'PRIVATE']).optional(),
   researchFocusAreas: z.string().optional(), // Comma-separated string
   keyTechnologies: z.string().optional(), // Comma-separated string
+  // Public institution specific field
+  parentDepartment: z.string().max(100, '소속 부처는 100자 이하여야 합니다').optional(), // e.g., 문화체육관광부
   technologyReadinessLevel: z
     .number()
     .min(1, 'TRL은 1 이상이어야 합니다')
@@ -196,7 +198,7 @@ export default function CreateOrganizationProfilePage() {
               <label className="block text-sm font-medium text-gray-700">
                 조직 유형 <span className="text-red-500">*</span>
               </label>
-              <div className="mt-2 grid grid-cols-2 gap-4">
+              <div className="mt-2 grid grid-cols-3 gap-4">
                 <label
                   className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-4 transition-all ${
                     organizationType === 'COMPANY'
@@ -231,6 +233,24 @@ export default function CreateOrganizationProfilePage() {
                   <div className="text-center">
                     <div className="text-2xl">🔬</div>
                     <div className="mt-1 font-medium text-gray-900">연구소</div>
+                  </div>
+                </label>
+                <label
+                  className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-4 transition-all ${
+                    organizationType === 'PUBLIC_INSTITUTION'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value="PUBLIC_INSTITUTION"
+                    {...register('type')}
+                    className="sr-only"
+                  />
+                  <div className="text-center">
+                    <div className="text-2xl">🏛️</div>
+                    <div className="mt-1 font-medium text-gray-900">공공기관</div>
                   </div>
                 </label>
               </div>
@@ -732,6 +752,63 @@ export default function CreateOrganizationProfilePage() {
                   )}
                 </div>
               </>
+            )}
+
+            {/* Public Institution specific fields */}
+            {organizationType === 'PUBLIC_INSTITUTION' && (
+              <>
+                {/* Parent Department */}
+                <div>
+                  <label
+                    htmlFor="parentDepartment"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    소속 부처/기관 (선택사항)
+                  </label>
+                  <input
+                    type="text"
+                    id="parentDepartment"
+                    {...register('parentDepartment')}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="예: 문화체육관광부, 과학기술정보통신부"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    💡 소속 부처 정보를 입력하면 관련 부처 지원 사업 매칭을 받을 수 있습니다
+                  </p>
+                  {errors.parentDepartment && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.parentDepartment.message}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Key Technologies - Available for all organization types */}
+            {(organizationType === 'COMPANY' || organizationType === 'PUBLIC_INSTITUTION') && (
+              <div>
+                <label
+                  htmlFor="keyTechnologies"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  핵심 보유 기술 (선택사항)
+                </label>
+                <input
+                  type="text"
+                  id="keyTechnologies"
+                  {...register('keyTechnologies')}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="예: 문화기술(CT), 디지털 콘텐츠, AR/VR (쉼표로 구분)"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  💡 핵심 기술을 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다
+                </p>
+                {errors.keyTechnologies && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.keyTechnologies.message}
+                  </p>
+                )}
+              </div>
             )}
 
             {/* Description */}

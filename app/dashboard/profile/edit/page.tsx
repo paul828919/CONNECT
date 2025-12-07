@@ -38,6 +38,8 @@ const organizationEditSchema = z.object({
   instituteType: z.enum(['UNIVERSITY', 'GOVERNMENT', 'PRIVATE']).optional().nullable(),
   researchFocusAreas: z.string().optional().nullable(),
   keyTechnologies: z.string().optional().nullable(),
+  // Public institution specific field
+  parentDepartment: z.string().max(100, '소속 부처는 100자 이하여야 합니다').optional().nullable(),
   technologyReadinessLevel: z
     .number()
     .min(1, 'TRL은 1 이상이어야 합니다')
@@ -289,12 +291,12 @@ export default function EditOrganizationProfilePage() {
         {organizationData && (
           <div className="mb-6 flex items-center gap-2 rounded-lg bg-blue-50 p-4">
             <div className="text-2xl">
-              {organizationData.type === 'COMPANY' ? '🏢' : '🔬'}
+              {organizationData.type === 'COMPANY' ? '🏢' : organizationData.type === 'RESEARCH_INSTITUTE' ? '🔬' : '🏛️'}
             </div>
             <div>
               <p className="text-sm font-medium text-gray-700">조직 유형</p>
               <p className="text-lg font-semibold text-gray-900">
-                {organizationData.type === 'COMPANY' ? '기업' : '연구소'}
+                {organizationData.type === 'COMPANY' ? '기업' : organizationData.type === 'RESEARCH_INSTITUTE' ? '연구소' : '공공기관'}
               </p>
               <p className="text-xs text-gray-500">
                 조직 유형은 변경할 수 없습니다
@@ -751,6 +753,63 @@ export default function EditOrganizationProfilePage() {
                   )}
                 </div>
               </>
+            )}
+
+            {/* Public Institution specific fields */}
+            {organizationData?.type === 'PUBLIC_INSTITUTION' && (
+              <>
+                {/* Parent Department */}
+                <div>
+                  <label
+                    htmlFor="parentDepartment"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    소속 부처/기관 (선택사항)
+                  </label>
+                  <input
+                    type="text"
+                    id="parentDepartment"
+                    {...register('parentDepartment')}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="예: 문화체육관광부, 과학기술정보통신부"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    💡 소속 부처 정보를 입력하면 관련 부처 지원 사업 매칭을 받을 수 있습니다
+                  </p>
+                  {errors.parentDepartment && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.parentDepartment.message}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* Key Technologies - Available for COMPANY and PUBLIC_INSTITUTION */}
+            {(organizationData?.type === 'COMPANY' || organizationData?.type === 'PUBLIC_INSTITUTION') && (
+              <div>
+                <label
+                  htmlFor="keyTechnologies"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  핵심 보유 기술 (선택사항)
+                </label>
+                <input
+                  type="text"
+                  id="keyTechnologies"
+                  {...register('keyTechnologies')}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="예: 문화기술(CT), 디지털 콘텐츠, AR/VR (쉼표로 구분)"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  💡 핵심 기술을 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다
+                </p>
+                {errors.keyTechnologies && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.keyTechnologies.message}
+                  </p>
+                )}
+              </div>
             )}
 
             {/* Description */}
