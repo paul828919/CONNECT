@@ -699,19 +699,15 @@ async function processJob(
   updatedBrowser?: BrowserContext | null; // Return updated browser reference
 }> {
   try {
-    // STEP 1: Initialize browser session if needed (lazy initialization)
-    const hwpFileCount = job.attachmentFilenames.filter((f: string) =>
-      f.toLowerCase().endsWith('.hwp')
-    ).length;
+    // NOTE: Browser creation moved to be TRULY lazy - only when pyhwp fails for a specific file
+    // This prevents Hancom auth timeout from blocking jobs that pyhwp can handle successfully.
+    // The workerBrowser is passed through and may be created inside extractTextFromAttachment
+    // when the Hancom fallback is actually needed.
+    //
+    // Previous bug: Browser was pre-created when HWP files detected, but if Hancom auth
+    // timed out, the entire job failed without ever trying pyhwp (which works for most files).
 
-    if (hwpFileCount > 0 && !workerBrowser) {
-      console.log(`   🌐 Creating worker browser session for ${hwpFileCount} HWP file(s)...`);
-      console.log(`   [HANCOM-BROWSER] Logging in once per worker - this session will be reused for all jobs`);
-      workerBrowser = await createAuthenticatedHancomBrowser();
-      console.log(`   ✓ Worker browser ready - will be reused for remaining jobs`);
-    }
-
-    // STEP 2: Parse raw detail page data
+    // STEP 1: Parse raw detail page data
     const detailData = job.detailPageData as {
       title: string;
       ministry: string | null;
@@ -1170,8 +1166,12 @@ async function processJob(
     console.error(`   ❌ Processing error: ${error.message}`);
 
     // Update job with error (will retry if attempts < maxRetries)
+    // FIX: job.processingAttempts contains the value BEFORE the increment that happened
+    // in fetchAndLockNextJob transaction. We need to add 1 to get the current attempt count.
+    // Previous bug: Jobs never transitioned to FAILED because comparison used stale value.
     if (!config.dryRun) {
-      const shouldRetry = job.processingAttempts < config.maxRetries;
+      const currentAttempts = job.processingAttempts + 1; // Account for increment in transaction
+      const shouldRetry = currentAttempts < config.maxRetries;
       await db.scraping_jobs.update({
         where: { id: job.id },
         data: {
