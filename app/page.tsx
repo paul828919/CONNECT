@@ -24,13 +24,15 @@ export default function HomePage() {
               <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
                 국가 R&D 사업,
                 <br />
-                <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                  이제 놓치지 마세요
+                <span className="block mt-4">
+                  <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                    이제 놓치지 마세요
+                  </span>
                 </span>
               </h1>
 
               <p className="text-xl text-gray-600 leading-relaxed">
-                NTIS의 전체 국가 R&D 사업 공고를 커넥트 에이전트가 분석하여
+                NTIS의 전체 국가 R&D사업의 연구과제 공고를 커넥트가 분석하여
                 <br />
                 당신에게 딱 맞는 연구과제의 기회를 매칭해드립니다
               </p>
@@ -95,29 +97,29 @@ export default function HomePage() {
                     <div className="flex flex-col items-center p-4 bg-blue-50 rounded-xl">
                       <Building2 className="w-8 h-8 text-blue-600 mb-2" aria-hidden="true" />
                       <span className="text-sm font-medium text-gray-700">기업</span>
-                      <span className="text-xs text-gray-500 mt-1">목표</span>
+                      <span className="text-lg font-bold text-blue-600 mt-1">1,200+</span>
                     </div>
                     <div className="flex flex-col items-center p-4 bg-green-50 rounded-xl">
                       <GraduationCap className="w-8 h-8 text-green-600 mb-2" aria-hidden="true" />
                       <span className="text-sm font-medium text-gray-700">대학</span>
-                      <span className="text-xs text-gray-500 mt-1">목표</span>
+                      <span className="text-lg font-bold text-green-600 mt-1">1,000+</span>
                     </div>
                     <div className="flex flex-col items-center p-4 bg-purple-50 rounded-xl">
                       <Microscope className="w-8 h-8 text-purple-600 mb-2" aria-hidden="true" />
-                      <span className="text-sm font-medium text-gray-700">연구소</span>
-                      <span className="text-xs text-gray-500 mt-1">목표</span>
+                      <span className="text-sm font-medium text-gray-700">연구기관</span>
+                      <span className="text-lg font-bold text-purple-600 mt-1">800+</span>
                     </div>
                   </div>
 
                   <div className="text-center text-sm text-gray-500 pt-2">
-                    AI가 빠르게 최적의 매칭을 찾습니다
+                    Connect가 최적의 연구과제를 매칭합니다
                   </div>
                 </div>
               </div>
 
               {/* Floating badges */}
               <div className="absolute -top-4 -right-4 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-                정기 업데이트
+                실시간 업데이트
               </div>
             </div>
           </div>
@@ -250,10 +252,10 @@ export default function HomePage() {
                 <span className="text-2xl font-bold text-purple-600">3</span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">
-                협력 시작
+                협업 시작
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                매칭된 기관과 즉시 연결. 협업 제안서 템플릿과 지원 가이드로 빠르게 협력을 시작하세요.
+                매칭된 기관과 즉시 연결. 협업 제안서 템플릿과 지원 가이드로 빠르게 컨소시엄을 시작하세요.
               </p>
               <ul className="mt-6 space-y-2">
                 <li className="flex items-start text-sm text-gray-600">
@@ -262,7 +264,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-start text-sm text-gray-600">
                   <CheckCircle2 className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" aria-hidden="true" />
-                  전문가 매칭 지원
+                  사용자 맞춤형 연구기관 추천
                 </li>
               </ul>
             </div>
@@ -293,7 +295,7 @@ export default function HomePage() {
               </p>
               <div className="bg-white rounded-xl p-4">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">현재 모니터링</span>
+                  <span className="text-gray-600">실시간 분석</span>
                   <span className="font-bold text-blue-600">NTIS 전체 공고</span>
                 </div>
               </div>
@@ -302,10 +304,10 @@ export default function HomePage() {
             <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-2xl p-8 border border-green-200">
               <Users className="w-12 h-12 text-green-600 mb-6" aria-hidden="true" />
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                산학연 협력 네트워크
+                산학연 협업 네트워크
               </h3>
               <p className="text-gray-700 leading-relaxed mb-6">
-                기업, 대학, 연구소가 참여하는 협력 네트워크에서 최적의 파트너를 찾으세요. 기술 이전부터 공동 연구까지 모든 협력이 가능합니다.
+                기업, 대학, 연구소가 참여하는 협업 네트워크에서 최적의 파트너를 찾으세요. 연구과제 신청부터 공동 연구, 기술이전까지 모든 섹터의 협업이 가능합니다.
               </p>
               <div className="bg-white rounded-xl p-4">
                 <div className="flex justify-between items-center text-sm">
@@ -357,7 +359,7 @@ export default function HomePage() {
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Connect가 제공하는 가치
             </h2>
-            <p className="text-lg text-gray-600">기업·대학·연구소가 기대하는 것</p>
+            <p className="text-lg text-gray-600">기업·대학·연구기관들이 기대하는 것</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -403,7 +405,7 @@ export default function HomePage() {
                   <Microscope className="w-6 h-6 text-purple-600" aria-hidden="true" />
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">연구소 사용자</div>
+                  <div className="font-semibold text-gray-900">연구기관 사용자</div>
                   <div className="text-sm text-gray-500">정부출연연구기관</div>
                 </div>
               </div>
