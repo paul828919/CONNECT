@@ -354,7 +354,7 @@ export default function PartnersPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">파트너 검색</h1>
           <p className="mt-2 text-gray-600">
-            협력 가능한 기업 및 연구기관을 검색하세요
+            협업 가능한 기업 및 연구기관을 검색하세요
           </p>
         </div>
 
