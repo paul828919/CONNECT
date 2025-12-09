@@ -169,6 +169,8 @@ export async function PATCH(
       startDate,
       endDate,
       status,
+      leadOrganizationId,
+      memberUpdates,
     } = body;
 
     // Prepare update data with type-safe conversions
@@ -179,6 +181,27 @@ export async function PATCH(
     if (targetProgramId !== undefined) updateData.targetProgramId = targetProgramId;
     if (projectDuration !== undefined) updateData.projectDuration = projectDuration;
     if (status !== undefined) updateData.status = status;
+
+    // Handle lead organization change
+    if (leadOrganizationId !== undefined && leadOrganizationId !== existingConsortium.leadOrganizationId) {
+      // Verify the new lead organization is a member of the consortium
+      const newLeadMember = await db.consortium_members.findFirst({
+        where: {
+          consortiumId,
+          organizationId: leadOrganizationId,
+          status: 'ACCEPTED',
+        },
+      });
+
+      if (!newLeadMember) {
+        return NextResponse.json(
+          { error: 'New lead organization must be an accepted member of the consortium' },
+          { status: 400 }
+        );
+      }
+
+      updateData.leadOrganizationId = leadOrganizationId;
+    }
 
     // Handle BigInt for totalBudget
     if (totalBudget !== undefined) {
@@ -191,6 +214,29 @@ export async function PATCH(
     }
     if (endDate !== undefined) {
       updateData.endDate = endDate ? new Date(endDate) : null;
+    }
+
+    // Update member budgets and roles if provided
+    if (memberUpdates && Array.isArray(memberUpdates)) {
+      for (const memberUpdate of memberUpdates) {
+        const { memberId, budgetShare, role } = memberUpdate;
+        if (memberId) {
+          const memberUpdateData: any = {};
+          if (budgetShare !== undefined) {
+            memberUpdateData.budgetShare = budgetShare !== null ? BigInt(budgetShare) : null;
+          }
+          if (role !== undefined) {
+            memberUpdateData.role = role;
+          }
+
+          if (Object.keys(memberUpdateData).length > 0) {
+            await db.consortium_members.update({
+              where: { id: memberId },
+              data: memberUpdateData,
+            });
+          }
+        }
+      }
     }
 
     // Update consortium

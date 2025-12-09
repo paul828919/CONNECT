@@ -11,8 +11,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import ConsortiumHeader from '@/components/consortium/ConsortiumHeader';
 
 interface OrganizationInfo {
   id: string;
@@ -49,7 +51,6 @@ interface ConsortiumData {
 
 export default function ConsortiumDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const consortiumId = params?.id as string;
 
   const [consortium, setConsortium] = useState<ConsortiumData | null>(null);
@@ -170,24 +171,22 @@ export default function ConsortiumDetailPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8">
-      {/* Header */}
-      <div className="mb-6">
-        <button
-          onClick={() => router.back()}
-          className="text-gray-600 hover:text-gray-900 mb-4 flex items-center gap-2"
-        >
-          <span>←</span> 뒤로 가기
-        </button>
+    <DashboardLayout>
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Shared Header with Tab Navigation */}
+        <ConsortiumHeader
+          activeTab="detail"
+          consortiumId={consortium.id}
+          consortiumName={consortium.name}
+        />
 
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{consortium.name}</h1>
-            <p className="text-gray-600">{consortium.description || '설명이 없습니다'}</p>
-          </div>
-          <div>{getStatusBadge(consortium.status)}</div>
+        {/* Page Subtitle with Status */}
+        <div className="flex items-center gap-3 mb-6">
+          <p className="text-gray-600">
+            {consortium.description || '컨소시엄 상세 정보를 확인하세요'}
+          </p>
+          {getStatusBadge(consortium.status)}
         </div>
-      </div>
 
       {/* Lead Organization */}
       <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
@@ -260,21 +259,7 @@ export default function ConsortiumDetailPage() {
         )}
       </div>
 
-      {/* Action Buttons */}
-      <div className="mt-6 flex gap-4">
-        <Link
-          href={`/dashboard/consortiums/${consortium.id}/edit`}
-          className="flex-1 bg-blue-600 text-white text-center px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-        >
-          컨소시엄 수정
-        </Link>
-        <Link
-          href="/dashboard/consortiums"
-          className="flex-1 bg-gray-100 text-gray-700 text-center px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-        >
-          목록으로
-        </Link>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import ConsortiumHeader from '@/components/consortium/ConsortiumHeader';
 
 type ConsortiumStatus = 'DRAFT' | 'ACTIVE' | 'READY' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'COMPLETED' | 'CANCELLED';
 type MemberStatus = 'INVITED' | 'ACCEPTED' | 'DECLINED' | 'REMOVED';
@@ -221,20 +222,21 @@ export default function ConsortiumsPage() {
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">내 컨소시엄</h1>
+        {/* Shared Header with Tab Navigation */}
+        <ConsortiumHeader
+          activeTab="list"
+          consortiumId={consortiums.length > 0 ? consortiums[0].id : undefined}
+        />
+
+        {/* Page Subtitle */}
+        <div className="flex items-center justify-between mb-6">
           <p className="text-gray-600">
             참여 중인 컨소시엄 프로젝트를 관리하세요
           </p>
-        </div>
-        <div className="flex items-center gap-3">
           <span className="text-sm text-gray-600">
             총 <span className="font-semibold text-blue-600">{consortiums.length}</span>개
           </span>
         </div>
-      </div>
 
       {/* Consortiums List */}
       {consortiums.length === 0 ? (
