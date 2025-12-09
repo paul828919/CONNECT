@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import CompetitivenessCard from '@/components/dashboard/CompetitivenessCard';
-import MatchReadinessAlert from '@/components/dashboard/MatchReadinessAlert';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -31,11 +30,7 @@ export default function DashboardPage() {
     completedCount: number;
     totalCount: number;
   } | null>(null);
-  const [organization, setOrganization] = useState<{
-    keyTechnologies: string[] | null;
-    researchFocusAreas: string[] | null;
-    industrySector: string | null;
-  } | null>(null);
+  const [orgName, setOrgName] = useState<string | null>(null);
 
   const fetchMatchStats = useCallback(async () => {
     try {
@@ -94,7 +89,7 @@ export default function DashboardPage() {
     }
   }, [session]);
 
-  const fetchOrganization = useCallback(async () => {
+  const fetchOrgName = useCallback(async () => {
     try {
       const orgId = (session?.user as any)?.organizationId;
       if (!orgId) return;
@@ -102,14 +97,10 @@ export default function DashboardPage() {
       const res = await fetch(`/api/organizations/${orgId}`);
       if (res.ok) {
         const data = await res.json();
-        setOrganization({
-          keyTechnologies: data.organization.keyTechnologies,
-          researchFocusAreas: data.organization.researchFocusAreas,
-          industrySector: data.organization.industrySector,
-        });
+        setOrgName(data.organization?.name || null);
       }
     } catch (err) {
-      console.error('Error fetching organization:', err);
+      console.error('Error fetching organization name:', err);
     }
   }, [session]);
 
@@ -134,8 +125,8 @@ export default function DashboardPage() {
     fetchSubscription();
     fetchProgramStats();
     fetchProfileCompletion();
-    fetchOrganization();
-  }, [session, status, router, fetchMatchStats, fetchSubscription, fetchProgramStats, fetchProfileCompletion, fetchOrganization]);
+    fetchOrgName();
+  }, [session, status, router, fetchMatchStats, fetchSubscription, fetchProgramStats, fetchProfileCompletion, fetchOrgName]);
 
   const handleGenerateMatches = async () => {
     try {
@@ -204,27 +195,27 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-12">
           {/* Welcome Section */}
           <div className="rounded-xl bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-gray-900">
-              환영합니다! 👋
+              {orgName ? `환영합니다, ${orgName}님! 👋` : '환영합니다! 👋'}
             </h2>
             <p className="mt-2 text-gray-600">
-              Connect에 오신 것을 환영합니다. 프로필이 설정되면 맞춤형 R&D 연구과제와 지원사업을 확인하실 수 있습니다.
+              프로필 설정을 완료하고 맞춤형 연구과제 매칭을 시작하세요.
             </p>
           </div>
 
           {/* Quick Stats */}
-          <div className="grid gap-6 sm:grid-cols-3">
-            <Link href="/dashboard/matches" className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <Link href="/dashboard/matches" className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow text-center min-h-[120px] flex flex-col justify-center">
               <div className="text-sm font-medium text-gray-600">
                 내 매칭
               </div>
               <div className="mt-2 text-3xl font-bold text-blue-600">{matchCount}</div>
               <div className="mt-1 text-xs text-gray-500">저장된 매칭</div>
             </Link>
-            <div className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="rounded-xl bg-white p-6 shadow-sm text-center min-h-[120px] flex flex-col justify-center">
               <div className="text-sm font-medium text-gray-600">
                 접수 중 연구과제
               </div>
@@ -235,7 +226,7 @@ export default function DashboardPage() {
                 {programStats ? `${programStats.totalGoverningOrgs}개 전문기관 공모 중` : '로딩 중...'}
               </div>
             </div>
-            <Link href="/dashboard/subscription" className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow block">
+            <Link href="/dashboard/subscription" className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow text-center min-h-[120px] flex flex-col justify-center sm:col-span-2 lg:col-span-1">
               <div className="text-sm font-medium text-gray-600">
                 구독 플랜
               </div>
@@ -276,7 +267,7 @@ export default function DashboardPage() {
                   </p>
                   {upgradeUrl && (
                     <p className="text-sm text-gray-600 mb-4">
-                      Pro 플랜으로 업그레이드하여 <strong>무제한 매칭</strong>, 실시간 업데이트, 전문가 지원 등을 이용하세요.
+                      Pro 플랜으로 업그레이드하여 <strong>무제한 매칭</strong>, 실시간 업데이트, AI 지원 등을 이용하세요.
                     </p>
                   )}
                 </div>
@@ -295,17 +286,14 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Match Readiness Alert */}
-          {organization && <MatchReadinessAlert organization={organization} />}
-
           {/* Match Generation Section */}
-          <div className="rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 p-8">
+          <div className="rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 p-8 border border-blue-100 shadow-md">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
                 맞춤형 연구과제 찾기
               </h3>
               <p className="text-gray-600">
-                정부의 전체 R&D 사업 중 귀하의 조직 프로필에 최적화된 연구과제를 추천해드립니다.
+                국가 R&D 사업 중 귀하의 조직 프로필에 최적화된 연구과제를 추천해드립니다.
               </p>
             </div>
 
@@ -338,13 +326,13 @@ export default function DashboardPage() {
               </button>
 
               <p className="text-sm text-gray-500">
-                NTIS 기반 전체 정부 R&D 연구과제 대상 (30개+ 부처 · 80개+ 전문기관)
+                NTIS 기반 국가 R&D 통합 연구과제 대상 (30개+ 부처 · 80개+ 전문기관)
               </p>
             </div>
           </div>
 
           {/* Quick Links */}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-8 sm:grid-cols-2">
             <Link
               href="/dashboard/profile/edit"
               className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
@@ -356,7 +344,7 @@ export default function DashboardPage() {
                     <span className="text-xs text-gray-500">프로필 완성도</span>
                     <span className="text-xs font-medium text-gray-700">{profileCompletion.percentage}%</span>
                   </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
                     <div
                       className={`h-full transition-all duration-500 ${
                         profileCompletion.percentage >= 80
