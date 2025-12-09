@@ -173,9 +173,9 @@ function ProfileGapCard({ gap }: { gap: ProfileGap }) {
       </div>
       <Link
         href={gap.profileEditUrl}
-        className="text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap ml-4"
+        className="inline-flex items-center justify-center px-4 py-1.5 text-sm text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 border border-blue-200 hover:border-blue-600 rounded-full font-medium whitespace-nowrap ml-4 transition-all duration-200"
       >
-        입력하기 →
+        입력하기
       </Link>
     </div>
   );
@@ -293,28 +293,9 @@ export default function CompetitivenessPage() {
   if (!data || data.totalMatches === 0) {
     return (
       <DashboardLayout>
-        <div className="space-y-6">
+        <div className="space-y-12">
           {/* Header */}
           <div>
-            <Link
-              href="/dashboard"
-              className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-flex items-center"
-            >
-              <svg
-                className="h-4 w-4 mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              대시보드
-            </Link>
             <h1 className="text-2xl font-bold text-gray-900">📊 선정 경쟁력 분석</h1>
           </div>
 
@@ -357,28 +338,9 @@ export default function CompetitivenessPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-12">
         {/* Header */}
         <div>
-          <Link
-            href="/dashboard"
-            className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-flex items-center"
-          >
-            <svg
-              className="h-4 w-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            대시보드
-          </Link>
           <h1 className="text-2xl font-bold text-gray-900">📊 선정 경쟁력 분석</h1>
           <p className="text-gray-600 mt-1">
             매칭된 연구과제에서 선정 가능성을 높이기 위한 개선점입니다.
