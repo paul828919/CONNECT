@@ -34,6 +34,7 @@ import { startNTISScheduler } from '../ntis-api/scheduler';
 import { initializeCacheScheduler } from '../cache/init';
 import { classifyAnnouncement } from './classification';
 import { startProcessWorkerScheduler } from './process-worker-scheduler';
+import { startEmailCronJobs } from '../email/cron';
 
 
 // Job data interface
@@ -740,6 +741,18 @@ async function waitForRedis(retries = 5, delay = 3000): Promise<boolean> {
     startProcessWorkerScheduler();      // Process Worker (event-driven, auto-start after Discovery)
     // startNTISScheduler();            // NTIS API scraper (completed/in-progress projects only) - NOT announcements
     initializeCacheScheduler();         // Cache warming (6 AM KST = 21:00 UTC)
+
+    // Start email notification cron jobs (deadline reminders + weekly digest)
+    // Graceful failure if SMTP not configured (non-critical for scraping operations)
+    try {
+      startEmailCronJobs();
+      console.log('✅ Email notification cron jobs started');
+      console.log('  - Deadline Reminders: 8 AM KST daily (23:00 UTC)');
+      console.log('  - Weekly Digest: 8 AM KST Sundays (23:00 UTC)');
+    } catch (emailError: any) {
+      console.warn('⚠️  Email notifications disabled:', emailError.message);
+      console.warn('   (This is non-critical - scraping will continue)');
+    }
 
     console.log('✅ Schedulers initialized successfully');
     console.log('  - Discovery Scraper: 10 AM + 2 PM KST (01:00 + 05:00 UTC)');
