@@ -505,13 +505,14 @@ export default function HomePage() {
           </div>
 
           <div className="border-t border-gray-800 pt-8 text-sm">
-            <div className="flex justify-center gap-6 mb-4">
+            <div className="flex flex-wrap justify-start items-center gap-x-6 gap-y-2 mb-4">
+              <span className="mr-12">Copyright © 2025 Innowave Inc. All rights reserved.</span>
               <Link href="/privacy" className="hover:text-white transition-colors">개인정보처리방침</Link>
               <Link href="/terms" className="hover:text-white transition-colors">이용약관</Link>
               <Link href="/refund-policy" className="hover:text-white transition-colors">환불 정책</Link>
             </div>
-            <div className="text-center">
-              © 2025 Innowave. All rights reserved.
+            <div className="text-left text-xs text-gray-500">
+              이노웨이브 | 대표자: 김병진 | 사업자등록번호: 224-38-00690 | 주소: 부산광역시 기장군 정관중앙로 45, 2F | 문의: support@connectplt.kr
             </div>
           </div>
         </div>
