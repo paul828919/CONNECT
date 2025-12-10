@@ -35,12 +35,9 @@ function SignInContent() {
       <div className="w-full max-w-md space-y-8">
         {/* Logo and Header */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900">Connect</h1>
+          <h1 className="text-4xl font-bold text-indigo-500">Connect</h1>
           <p className="mt-2 text-lg text-gray-600">
-            한국 R&D 생태계 매칭 플랫폼
-          </p>
-          <p className="mt-1 text-sm text-gray-500">
-            Korea&apos;s Innovation Ecosystem Matching Platform
+            국가 R&D 생태계 매칭 플랫폼
           </p>
         </div>
 
@@ -176,16 +173,16 @@ function SignInContent() {
         {/* Features */}
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="space-y-1">
-            <div className="text-2xl font-bold text-blue-600">55%</div>
-            <div className="text-xs text-gray-600">R&D 예산 커버리지</div>
+            <div className="text-2xl font-bold text-blue-600">1,600+</div>
+            <div className="text-xs text-gray-600">연구과제</div>
           </div>
           <div className="space-y-1">
-            <div className="text-2xl font-bold text-purple-600">4개</div>
-            <div className="text-xs text-gray-600">주요 기관 실시간 수집</div>
+            <div className="text-2xl font-bold text-purple-600">80+</div>
+            <div className="text-xs text-gray-600">전문기관</div>
           </div>
           <div className="space-y-1">
             <div className="text-2xl font-bold text-green-600">AI</div>
-            <div className="text-xs text-gray-600">설명 가능한 매칭</div>
+            <div className="text-xs text-gray-600">맞춤형 매칭</div>
           </div>
         </div>
       </div>
