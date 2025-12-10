@@ -26,7 +26,7 @@ export default function HomePage() {
                 <br />
                 <span className="block mt-4">
                   <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                    이제 놓치지 마세요
+                    이제 놓치지 마세요.
                   </span>
                 </span>
               </h1>
@@ -34,18 +34,18 @@ export default function HomePage() {
               <p className="text-xl text-gray-600 leading-relaxed">
                 NTIS의 전체 국가 R&D사업의 연구과제 공고를 커넥트가 분석하여
                 <br />
-                당신에게 딱 맞는 연구과제의 기회를 매칭해드립니다
+                당신에게 딱 맞는 연구과제의 기회를 매칭해드립니다.
               </p>
 
               {/* Stats - NTIS Integration */}
               <div className="flex flex-wrap gap-8 pt-4">
                 <div className="relative">
                   <div className="text-3xl font-bold text-blue-600">1,600+</div>
-                  <div className="text-sm text-gray-600">연평균 총 R&D 사업 매칭</div>
+                  <div className="text-sm text-gray-600">연간 총 R&D 과제 </div>
                 </div>
                 <div className="relative">
                   <div className="text-3xl font-bold text-blue-600">NTIS 통합</div>
-                  <div className="text-sm text-gray-600">국가 연구관리 전문기관</div>
+                  <div className="text-sm text-gray-600">국가 연구과제 전문기관</div>
                 </div>
                 <div className="relative">
                   <div className="text-3xl font-bold text-blue-600">&lt;3분</div>
@@ -54,7 +54,7 @@ export default function HomePage() {
               </div>
 
               <p className="text-xs text-gray-500 italic">
-                * NTIS 데이터 기준이며 실제 활성 공고 수는 시기에 따라 변동됩니다
+                * NTIS 데이터 기준이며 실제 활성 공고 수는 시기에 따라 변동됩니다.
               </p>
 
               {/* Primary CTA */}
@@ -112,7 +112,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="text-center text-sm text-gray-500 pt-2">
-                    Connect가 최적의 연구과제를 매칭합니다
+                    Connect가 최적의 연구과제를 매칭합니다.
                   </div>
                 </div>
               </div>
@@ -136,7 +136,7 @@ export default function HomePage() {
               NTIS 국가 R&D 사업
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              NTIS(국가과학기술지식정보서비스)의 전체 국가 R&D 사업을 분석합니다
+              NTIS(국가과학기술지식정보서비스)의 전체 국가 R&D 사업을 분석합니다.
             </p>
           </div>
 
@@ -198,7 +198,7 @@ export default function HomePage() {
               3단계로 완성되는 연구과제 매칭
             </h2>
             <p className="text-xl text-gray-600">
-              복잡한 연구과제 공고 검색은 이제 그만. 커넥트가 대신 찾아드립니다
+              복잡한 연구과제 공고 검색은 이제 그만. 커넥트가 대신 찾아드립니다.
             </p>
           </div>
 
@@ -280,7 +280,7 @@ export default function HomePage() {
               왜 Connect를 선택해야 할까요?
             </h2>
             <p className="text-xl text-gray-600">
-              단순한 공고 검색 게시판이 아닙니다. 성공적인 R&D를 위한 완전한 솔루션입니다
+              단순한 공고 검색 게시판이 아닙니다. 성공적인 R&D를 위한 완전한 솔루션입니다.
             </p>
           </div>
 
@@ -514,7 +514,7 @@ export default function HomePage() {
               <Link href="/refund-policy" className="hover:text-white transition-colors">환불 정책</Link>
             </div>
             <div className="text-left text-xs text-gray-500">
-              이노웨이브 | 대표자: 김병진 | 사업자등록번호: 224-38-00690 | 주소: 부산광역시 기장군 정관중앙로 45, 2F | 문의: support@connectplt.kr
+              이노웨이브 | 대표자: 김병진 | 사업자등록번호: 224-38-00690 | 통신판매업신고번호: 2025-부산기장-0558호 | 주소: 부산광역시 기장군 정관중앙로 45, 2F | 문의: support@connectplt.kr
             </div>
           </div>
         </div>
