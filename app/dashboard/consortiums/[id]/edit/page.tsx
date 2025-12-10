@@ -570,51 +570,23 @@ export default function ConsortiumEditPage() {
                 </div>
               ))}
 
-              {/* Placeholder slots to fill up to 3 members minimum */}
-              {(() => {
-                const currentMemberCount = consortium?.consortium_members?.length || 0;
-                const placeholdersNeeded = Math.max(0, 3 - currentMemberCount);
-                const placeholders = [
-                  { icon: '기', label: '기업', type: 'COMPANY', role: '주관기관', bgClass: 'bg-blue-100', textClass: 'text-blue-600' },
-                  { icon: '대', label: '대학교', type: 'UNIVERSITY', role: '공동연구기관', bgClass: 'bg-green-100', textClass: 'text-green-600' },
-                  { icon: '연', label: '연구기관', type: 'RESEARCH_INSTITUTE', role: '위탁연구기관', bgClass: 'bg-purple-100', textClass: 'text-purple-600' },
-                ];
-
-                // Skip placeholders for types that already exist
-                const existingTypes = consortium?.consortium_members?.map(m => m.organizations.type) || [];
-                const availablePlaceholders = placeholders.filter(p => !existingTypes.includes(p.type));
-
-                return availablePlaceholders.slice(0, placeholdersNeeded).map((placeholder, index) => (
-                  <div key={`placeholder-${index}`} className="p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg ${placeholder.bgClass} flex items-center justify-center`}>
-                          <span className={`text-sm font-bold ${placeholder.textClass}`}>{placeholder.icon}</span>
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-400">{placeholder.label} (파트너 검색에서 추가)</p>
-                          <p className="text-sm text-gray-400">{placeholder.type}</p>
-                        </div>
-                      </div>
-                      <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-500">
-                        미지정
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">기관 역할</label>
-                        <select disabled className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-100 text-gray-400 text-sm">
-                          <option>{placeholder.role}</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">배분 예산 (원)</label>
-                        <input type="text" disabled className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-100 text-gray-400 text-sm" placeholder="예: 100000000" />
-                      </div>
-                    </div>
+              {/* Add Partner Button */}
+              <Link
+                href={`/dashboard/partners?consortiumId=${consortiumId}&consortiumName=${encodeURIComponent(consortium?.name || '')}`}
+                className="block p-6 border-2 border-dashed border-purple-300 rounded-lg bg-purple-50 hover:bg-purple-100 hover:border-purple-400 transition-all group cursor-pointer"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-purple-100 group-hover:bg-purple-200 flex items-center justify-center transition-colors">
+                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
                   </div>
-                ));
-              })()}
+                  <div className="text-left">
+                    <p className="font-semibold text-purple-700 group-hover:text-purple-800">새 파트너 추가하기</p>
+                    <p className="text-sm text-purple-600">파트너 검색에서 기관을 찾아 컨소시엄에 초대하세요</p>
+                  </div>
+                </div>
+              </Link>
             </div>
           </div>
 

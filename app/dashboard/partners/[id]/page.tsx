@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 interface Organization {
@@ -67,9 +68,21 @@ interface CompatibilityScore {
   explanation: string;
 }
 
+interface ConsortiumOption {
+  id: string;
+  name: string;
+  status: string;
+  memberCount: number;
+}
+
 export default function PartnerDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
+
+  // Consortium context from URL parameters
+  const urlConsortiumId = searchParams.get('consortiumId');
+  const urlConsortiumName = searchParams.get('consortiumName');
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [compatibilityScore, setCompatibilityScore] = useState<CompatibilityScore | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -87,7 +100,12 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
   const [connectSuccess, setConnectSuccess] = useState(false);
 
   // Form states for Invite modal
+  const [inviteMode, setInviteMode] = useState<'new' | 'existing'>('new');
   const [consortiumName, setConsortiumName] = useState('');
+  const [selectedConsortiumId, setSelectedConsortiumId] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'PARTICIPANT' | 'SUBCONTRACTOR'>('PARTICIPANT');
+  const [existingConsortiums, setExistingConsortiums] = useState<ConsortiumOption[]>([]);
+  const [loadingConsortiums, setLoadingConsortiums] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
 
@@ -112,6 +130,50 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
 
     fetchPartner();
   }, [params.id]);
+
+  // Fetch user's existing consortiums when invite modal opens
+  const fetchExistingConsortiums = async () => {
+    setLoadingConsortiums(true);
+    try {
+      const response = await fetch('/api/consortiums');
+      const data = await response.json();
+
+      if (data.success && data.consortiums) {
+        // Filter to only show consortiums where user is lead (can invite members)
+        // and that are in editable status (DRAFT or ACTIVE)
+        const leadConsortiums = data.consortiums
+          .filter((c: any) =>
+            ['DRAFT', 'ACTIVE'].includes(c.status) &&
+            c.consortium_members?.some((m: any) =>
+              m.role === 'LEAD' && m.status === 'ACCEPTED'
+            )
+          )
+          .map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            status: c.status,
+            memberCount: c.consortium_members?.length || 0,
+          }));
+        setExistingConsortiums(leadConsortiums);
+      }
+    } catch (error) {
+      console.error('Failed to fetch consortiums:', error);
+    } finally {
+      setLoadingConsortiums(false);
+    }
+  };
+
+  // Open invite modal and fetch consortiums
+  const handleOpenInviteModal = async () => {
+    setShowInviteModal(true);
+    await fetchExistingConsortiums();
+
+    // If consortiumId is in URL, auto-select existing consortium mode
+    if (urlConsortiumId) {
+      setInviteMode('existing');
+      setSelectedConsortiumId(urlConsortiumId);
+    }
+  };
 
   // Handler for Connect (lightweight collaboration request)
   const handleConnect = async () => {
@@ -159,37 +221,64 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
     }
   };
 
-  // Handler for Consortium Invite (formal consortium creation)
+  // Handler for Consortium Invite (supports both new and existing consortium)
   const handleInvite = async () => {
-    if (!consortiumName.trim()) {
-      setInviteError('컨소시엄 이름을 입력해주세요');
-      return;
-    }
-
     setInviteLoading(true);
     setInviteError(null);
 
     try {
-      const response = await fetch('/api/consortiums', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: consortiumName,
-          description: `${organization?.name}과(와)의 협력 컨소시엄`,
-          invitedMemberOrgIds: [organization?.id],
-        }),
-      });
+      if (inviteMode === 'new') {
+        // Create new consortium with invited member
+        if (!consortiumName.trim()) {
+          setInviteError('컨소시엄 이름을 입력해주세요');
+          setInviteLoading(false);
+          return;
+        }
 
-      const data = await response.json();
+        const response = await fetch('/api/consortiums', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: consortiumName,
+            description: `${organization?.name}과(와)의 협력 컨소시엄`,
+            invitedMemberOrgIds: [organization?.id],
+          }),
+        });
 
-      if (data.success) {
-        // Redirect to consortium detail/builder page
-        router.push(`/dashboard/consortiums/${data.consortium.id}`);
+        const data = await response.json();
+
+        if (data.success) {
+          router.push(`/dashboard/consortiums/${data.consortium.id}`);
+        } else {
+          setInviteError(data.error || '컨소시엄 생성에 실패했습니다');
+        }
       } else {
-        setInviteError(data.error || '컨소시엄 생성에 실패했습니다');
+        // Add to existing consortium
+        if (!selectedConsortiumId) {
+          setInviteError('컨소시엄을 선택해주세요');
+          setInviteLoading(false);
+          return;
+        }
+
+        const response = await fetch(`/api/consortiums/${selectedConsortiumId}/members`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            organizationId: organization?.id,
+            role: selectedRole,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          router.push(`/dashboard/consortiums/${selectedConsortiumId}`);
+        } else {
+          setInviteError(data.error || '멤버 초대에 실패했습니다');
+        }
       }
     } catch (error) {
-      setInviteError('컨소시엄 생성 중 오류가 발생했습니다');
+      setInviteError('컨소시엄 초대 중 오류가 발생했습니다');
     } finally {
       setInviteLoading(false);
     }
@@ -235,8 +324,46 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
     );
   }
 
+  // Build back link with consortium context preserved
+  const backToSearchUrl = urlConsortiumId && urlConsortiumName
+    ? `/dashboard/partners?consortiumId=${urlConsortiumId}&consortiumName=${encodeURIComponent(urlConsortiumName)}`
+    : '/dashboard/partners';
+
   return (
     <DashboardLayout>
+      {/* Consortium Context Banner */}
+      {urlConsortiumId && urlConsortiumName && (
+        <div className="mb-6 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 p-4 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-white/20 p-2">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-white/80">컨소시엄에 파트너 추가 중</p>
+                <p className="font-semibold">{decodeURIComponent(urlConsortiumName)}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Link
+                href={backToSearchUrl}
+                className="rounded-lg bg-white/20 px-4 py-2 text-sm font-medium text-white hover:bg-white/30 transition-colors"
+              >
+                파트너 검색으로
+              </Link>
+              <Link
+                href={`/dashboard/consortiums/${urlConsortiumId}/edit`}
+                className="rounded-lg bg-white/20 px-4 py-2 text-sm font-medium text-white hover:bg-white/30 transition-colors"
+              >
+                컨소시엄 설정으로
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Column: Organization Profile */}
         <div className="lg:col-span-2">
@@ -925,7 +1052,7 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
               연결 요청
             </button>
             <button
-              onClick={() => setShowInviteModal(true)}
+              onClick={handleOpenInviteModal}
               className="w-full rounded-lg border-2 border-purple-600 bg-white px-6 py-3 font-medium text-purple-600 transition-all hover:bg-purple-50"
             >
               컨소시엄 초대
@@ -1029,37 +1156,144 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
         </div>
       )}
 
-      {/* Invite Modal - Formal Consortium Creation */}
+      {/* Invite Modal - Supports both new and existing consortium */}
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
           <div className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-2xl">
             <h2 className="mb-2 text-2xl font-bold text-gray-900">컨소시엄 초대</h2>
             <p className="mb-6 text-sm text-gray-600">
-              {organization.name}을(를) 새로운 컨소시엄 프로젝트에 초대합니다
+              {organization.name}을(를) 컨소시엄 프로젝트에 초대합니다
             </p>
 
             <div className="mb-6 space-y-4">
-              {/* Consortium Name Input */}
-              <div>
-                <label htmlFor="consortiumName" className="mb-1 block text-sm font-medium text-gray-700">
-                  컨소시엄 프로젝트 이름 *
+              {/* Mode Selection */}
+              <div className="space-y-3">
+                {/* New Consortium Option */}
+                <label
+                  className={`flex cursor-pointer items-start gap-3 rounded-lg border-2 p-4 transition-all ${
+                    inviteMode === 'new'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="inviteMode"
+                    value="new"
+                    checked={inviteMode === 'new'}
+                    onChange={() => setInviteMode('new')}
+                    className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500"
+                    disabled={inviteLoading}
+                  />
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">새 컨소시엄 생성</p>
+                    <p className="text-sm text-gray-500">새로운 컨소시엄을 만들고 이 파트너를 초대합니다</p>
+                  </div>
                 </label>
-                <input
-                  id="consortiumName"
-                  type="text"
-                  value={consortiumName}
-                  onChange={(e) => setConsortiumName(e.target.value)}
-                  placeholder="예: AI 기반 스마트팜 협력 컨소시엄"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  disabled={inviteLoading}
-                />
+
+                {/* Existing Consortium Option */}
+                <label
+                  className={`flex cursor-pointer items-start gap-3 rounded-lg border-2 p-4 transition-all ${
+                    inviteMode === 'existing'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  } ${existingConsortiums.length === 0 ? 'cursor-not-allowed opacity-50' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name="inviteMode"
+                    value="existing"
+                    checked={inviteMode === 'existing'}
+                    onChange={() => setInviteMode('existing')}
+                    className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500"
+                    disabled={inviteLoading || existingConsortiums.length === 0}
+                  />
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">기존 컨소시엄에 추가</p>
+                    <p className="text-sm text-gray-500">
+                      {loadingConsortiums
+                        ? '컨소시엄 목록 불러오는 중...'
+                        : existingConsortiums.length === 0
+                        ? '추가 가능한 컨소시엄이 없습니다'
+                        : `${existingConsortiums.length}개의 컨소시엄에 추가할 수 있습니다`}
+                    </p>
+                  </div>
+                </label>
               </div>
+
+              {/* New Consortium Name Input */}
+              {inviteMode === 'new' && (
+                <div>
+                  <label htmlFor="consortiumName" className="mb-1 block text-sm font-medium text-gray-700">
+                    컨소시엄 프로젝트 이름 *
+                  </label>
+                  <input
+                    id="consortiumName"
+                    type="text"
+                    value={consortiumName}
+                    onChange={(e) => setConsortiumName(e.target.value)}
+                    placeholder="예: AI 기반 스마트팜 협력 컨소시엄"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    disabled={inviteLoading}
+                  />
+                </div>
+              )}
+
+              {/* Existing Consortium Selection */}
+              {inviteMode === 'existing' && (
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="selectConsortium" className="mb-1 block text-sm font-medium text-gray-700">
+                      컨소시엄 선택 *
+                    </label>
+                    <select
+                      id="selectConsortium"
+                      value={selectedConsortiumId}
+                      onChange={(e) => setSelectedConsortiumId(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      disabled={inviteLoading || loadingConsortiums}
+                    >
+                      <option value="">-- 컨소시엄을 선택하세요 --</option>
+                      {existingConsortiums.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.memberCount}명)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="memberRole" className="mb-1 block text-sm font-medium text-gray-700">
+                      기관 역할 *
+                    </label>
+                    <select
+                      id="memberRole"
+                      value={selectedRole}
+                      onChange={(e) => setSelectedRole(e.target.value as 'PARTICIPANT' | 'SUBCONTRACTOR')}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      disabled={inviteLoading}
+                    >
+                      <option value="PARTICIPANT">공동연구기관</option>
+                      <option value="SUBCONTRACTOR">위탁연구기관</option>
+                    </select>
+                  </div>
+                </div>
+              )}
 
               {/* Info Box */}
               <div className="rounded-lg bg-purple-50 p-4">
                 <p className="text-xs text-purple-700">
-                  <strong>참고:</strong> 컨소시엄이 생성되면 자동으로 상세 페이지로 이동합니다.
-                  해당 페이지에서 과제 선택, 예산 등 추가 정보를 입력할 수 있습니다.
+                  {inviteMode === 'new' ? (
+                    <>
+                      <strong>참고:</strong> 컨소시엄이 생성되면 자동으로 상세 페이지로 이동합니다.
+                      해당 페이지에서 과제 선택, 예산 등 추가 정보를 입력할 수 있습니다.
+                    </>
+                  ) : (
+                    <>
+                      <strong>참고:</strong> 초대가 완료되면 해당 컨소시엄 상세 페이지로 이동합니다.
+                      초대된 기관은 메시지함에서 초대를 확인하고 수락/거절할 수 있습니다.
+                    </>
+                  )}
                 </p>
               </div>
 
@@ -1067,16 +1301,24 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                 <p className="mb-2 text-xs font-medium text-gray-600">초대 대상</p>
                 <div className="flex items-center gap-3">
-                  {organization.logoUrl && (
+                  {organization.logoUrl ? (
                     <img
                       src={organization.logoUrl}
                       alt={organization.name}
                       className="h-10 w-10 rounded-lg object-cover"
                     />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-200">
+                      <span className="text-sm font-bold text-gray-500">
+                        {organization.name.charAt(0)}
+                      </span>
+                    </div>
                   )}
                   <div>
                     <p className="font-medium text-gray-900">{organization.name}</p>
-                    <p className="text-xs text-gray-500">{organization.type}</p>
+                    <p className="text-xs text-gray-500">
+                      {organization.type === 'COMPANY' ? '기업' : '연구기관'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1095,6 +1337,9 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
                 onClick={() => {
                   setShowInviteModal(false);
                   setConsortiumName('');
+                  setSelectedConsortiumId('');
+                  setSelectedRole('PARTICIPANT');
+                  setInviteMode('new');
                   setInviteError(null);
                 }}
                 className="flex-1 rounded-lg border-2 border-gray-300 px-6 py-3 font-medium text-gray-700 hover:bg-gray-50"
@@ -1107,7 +1352,13 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
                 disabled={inviteLoading}
                 className="flex-1 rounded-lg bg-purple-600 px-6 py-3 font-medium text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {inviteLoading ? '생성 중...' : '컨소시엄 생성'}
+                {inviteLoading
+                  ? inviteMode === 'new'
+                    ? '생성 중...'
+                    : '초대 중...'
+                  : inviteMode === 'new'
+                  ? '컨소시엄 생성'
+                  : '초대하기'}
               </button>
             </div>
           </div>

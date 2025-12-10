@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 interface CompatibilityData {
@@ -111,6 +112,7 @@ interface Recommendation {
 
 export default function PartnersPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -120,6 +122,10 @@ export default function PartnersPage() {
   const [sortBy, setSortBy] = useState('compatibility'); // compatibility, profile, name
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  // Consortium context from URL parameters
+  const consortiumId = searchParams.get('consortiumId');
+  const consortiumName = searchParams.get('consortiumName');
 
   // Consortium preferences modal state
   const [showPreferencesModal, setShowPreferencesModal] = useState(false);
@@ -351,10 +357,40 @@ export default function PartnersPage() {
         </div>
       )}
 
+      {/* Consortium Context Banner */}
+      {consortiumId && consortiumName && (
+        <div className="mb-6 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 p-4 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-white/20 p-2">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-white/80">컨소시엄에 파트너 추가 중</p>
+                <p className="font-semibold">{decodeURIComponent(consortiumName)}</p>
+              </div>
+            </div>
+            <Link
+              href={`/dashboard/consortiums/${consortiumId}/edit`}
+              className="rounded-lg bg-white/20 px-4 py-2 text-sm font-medium text-white hover:bg-white/30 transition-colors"
+            >
+              컨소시엄으로 돌아가기
+            </Link>
+          </div>
+          <p className="mt-2 text-sm text-white/80">
+            파트너를 선택하면 자동으로 이 컨소시엄에 초대됩니다
+          </p>
+        </div>
+      )}
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">파트너 검색</h1>
           <p className="mt-2 text-gray-600">
-            협업 가능한 기업 및 연구기관을 검색하세요
+            {consortiumId
+              ? '컨소시엄에 추가할 파트너를 검색하세요'
+              : '협업 가능한 기업 및 연구기관을 검색하세요'}
           </p>
         </div>
 
@@ -412,7 +448,12 @@ export default function PartnersPage() {
                       ? 'border-yellow-200 hover:border-yellow-300'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
-                  onClick={() => router.push(`/dashboard/partners/${rec.organization.id}`)}
+                  onClick={() => {
+                    const url = consortiumId
+                      ? `/dashboard/partners/${rec.organization.id}?consortiumId=${consortiumId}&consortiumName=${consortiumName}`
+                      : `/dashboard/partners/${rec.organization.id}`;
+                    router.push(url);
+                  }}
                 >
                   {/* Compatibility Score Badge */}
                   <div className="absolute right-4 top-4">
@@ -482,7 +523,10 @@ export default function PartnersPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push(`/dashboard/partners/${rec.organization.id}`);
+                      const url = consortiumId
+                        ? `/dashboard/partners/${rec.organization.id}?consortiumId=${consortiumId}&consortiumName=${consortiumName}`
+                        : `/dashboard/partners/${rec.organization.id}`;
+                      router.push(url);
                     }}
                     className="mt-3 w-full rounded-lg border border-purple-600 px-3 py-1.5 text-xs font-medium text-purple-600 hover:bg-purple-50"
                   >
@@ -606,7 +650,12 @@ export default function PartnersPage() {
                         }`
                       : 'border border-gray-200'
                   }`}
-                  onClick={() => router.push(`/dashboard/partners/${org.id}`)}
+                  onClick={() => {
+                    const url = consortiumId
+                      ? `/dashboard/partners/${org.id}?consortiumId=${consortiumId}&consortiumName=${consortiumName}`
+                      : `/dashboard/partners/${org.id}`;
+                    router.push(url);
+                  }}
                 >
                   {/* Compatibility Score Badge (Top Right) */}
                   {org.compatibility && (
@@ -693,7 +742,10 @@ export default function PartnersPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push(`/dashboard/partners/${org.id}`);
+                      const url = consortiumId
+                        ? `/dashboard/partners/${org.id}?consortiumId=${consortiumId}&consortiumName=${consortiumName}`
+                        : `/dashboard/partners/${org.id}`;
+                      router.push(url);
                     }}
                     className="mt-4 w-full rounded-lg border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50"
                   >
