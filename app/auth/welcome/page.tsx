@@ -42,7 +42,7 @@ export default function WelcomePage() {
             Connect에 오신 것을 환영합니다! 🎉
           </h1>
           <p className="text-lg text-gray-600">
-            한국 R&D 생태계 매칭 플랫폼
+            국가 R&D 생태계 플랫폼
           </p>
         </div>
 
@@ -55,7 +55,7 @@ export default function WelcomePage() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">조직 프로필 생성</h3>
               <p className="text-sm text-gray-600">
-                귀하의 기업 또는 연구소 정보를 입력하여 프로필을 완성하세요.
+                귀하의 조직(기업, 국가연구기관, 대학교 연구팀, 공공기관) 프로필을 완성하세요.
               </p>
             </div>
           </div>
@@ -67,19 +67,31 @@ export default function WelcomePage() {
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">맞춤형 매칭</h3>
               <p className="text-sm text-gray-600">
-                4개 주요 기관의 지원 프로그램 중 귀하에게 최적화된 기회를 추천받으세요.
+                연구과제 전문기관의 전체 연구과제 중 귀하에게 최적화된 연구과제 기회를 매칭받으세요.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4 p-4 rounded-lg bg-indigo-50">
+            <div className="mt-1 flex-shrink-0 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-bold">3</span>
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">컨소시엄 구축</h3>
+              <p className="text-sm text-gray-600">
+                귀하의 조직 프로필과 협업 요청사항 기반으로 컨소시엄 기관을 추천받으세요.
               </p>
             </div>
           </div>
 
           <div className="flex items-start gap-4 p-4 rounded-lg bg-green-50">
             <div className="mt-1 flex-shrink-0 w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-bold">3</span>
+              <span className="text-white text-sm font-bold">4</span>
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">쉽고 빠른 지원</h3>
               <p className="text-sm text-gray-600">
-                추천된 프로그램의 공고를 확인하고 간편하게 지원하세요.
+                매칭된 연구과제 공고를 확인하고 간편하게 지원하세요.
               </p>
             </div>
           </div>
@@ -88,16 +100,16 @@ export default function WelcomePage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-8 p-6 bg-gray-50 rounded-lg">
           <div className="text-center">
-            <p className="text-2xl font-bold text-blue-600">4</p>
-            <p className="text-xs text-gray-600 mt-1">주요 기관</p>
+            <p className="text-2xl font-bold text-blue-600">30+</p>
+            <p className="text-xs text-gray-600 mt-1">부처</p>
           </div>
           <div className="text-center border-l border-r border-gray-200">
-            <p className="text-2xl font-bold text-purple-600">8+</p>
-            <p className="text-xs text-gray-600 mt-1">활성 프로그램</p>
+            <p className="text-2xl font-bold text-purple-600">80+</p>
+            <p className="text-xs text-gray-600 mt-1">연구과제 전문기관</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">Free</p>
-            <p className="text-xs text-gray-600 mt-1">무료 시작</p>
+            <p className="text-2xl font-bold text-green-600">1,600+</p>
+            <p className="text-xs text-gray-600 mt-1">연구과제</p>
           </div>
         </div>
 
