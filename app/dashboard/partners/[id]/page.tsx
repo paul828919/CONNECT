@@ -237,19 +237,6 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
 
   return (
     <DashboardLayout>
-      {/* Header with back button */}
-      <div className="mb-6">
-        <button
-          onClick={() => router.push('/dashboard/partners')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          파트너 검색으로 돌아가기
-        </button>
-      </div>
-
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Column: Organization Profile */}
         <div className="lg:col-span-2">
