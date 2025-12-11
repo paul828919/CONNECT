@@ -918,8 +918,19 @@ export default function CreateOrganizationProfilePage() {
                 {...register('description')}
                 rows={4}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
-                placeholder="조직의 주요 사업 분야, 보유 기술, R&D 역량 등을 간단히 설명해주세요."
+                placeholder={
+                  organizationType === 'COMPANY'
+                    ? '예: 당사는 AI 기반 의료영상 진단 솔루션을 개발하는 헬스케어 스타트업입니다. 딥러닝 영상처리, 의료 AI, 클라우드 SaaS 기술을 보유하고 있으며, 현재 TRL 6 단계로 파일럿 임상시험을 진행 중입니다. 대학병원 및 연구기관과의 공동연구를 통해 상용화를 목표로 하고 있습니다.'
+                    : organizationType === 'RESEARCH_INSTITUTE'
+                      ? '예: 본 연구소는 문화유산 디지털화 및 AR/VR 전시기술 연구에 특화된 정부출연연구기관입니다. 3D 스캐닝, 메타버스 콘텐츠 개발, AI 기반 이미지 복원 기술을 보유하고 있으며, TRL 3-4 수준의 원천기술을 기업 기술이전 및 컨소시엄 공동연구를 통해 상용화하고자 합니다.'
+                      : organizationType === 'UNIVERSITY'
+                        ? '예: 본 연구실은 신소재공학과 소속으로 이차전지 양극재 및 차세대 에너지 저장 소재 연구를 수행하고 있습니다. 나노소재 합성, 전기화학 분석, 배터리 셀 설계 기술을 보유하고 있으며, 기업과의 산학협력을 통해 TRL 1-3 기초연구 결과를 실용화 단계까지 발전시키고자 합니다.'
+                        : '예: 본 기관은 과학기술정보통신부 산하 공공기관으로 중소기업 R&D 지원 및 기술사업화를 담당합니다. 기술평가, 사업화 컨설팅, R&D 기획 역량을 보유하고 있으며, 산학연 컨소시엄 구성 및 정부 R&D 과제 기획에 참여하고 있습니다.'
+                }
               />
+              <p className="mt-1 text-xs text-gray-500">
+                💡 조직 설명은 파트너 검색 시 키워드 매칭에 활용됩니다. 주요 연구 분야, 핵심 기술, 협력 희망 분야를 구체적으로 작성해주세요.
+              </p>
               {errors.description && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.description.message}
