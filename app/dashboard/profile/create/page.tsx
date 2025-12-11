@@ -300,7 +300,7 @@ export default function CreateOrganizationProfilePage() {
                 htmlFor="website"
                 className="block text-sm font-medium text-gray-700"
               >
-                웹사이트 (선택사항)
+                웹사이트 <span className="text-red-500">*</span>
               </label>
               <input
                 type="url"
@@ -348,7 +348,7 @@ export default function CreateOrganizationProfilePage() {
                 htmlFor="businessStructure"
                 className="block text-sm font-medium text-gray-700"
               >
-                사업 형태
+                사업 형태 <span className="text-red-500">*</span>
               </label>
               <select
                 id="businessStructure"
@@ -375,7 +375,7 @@ export default function CreateOrganizationProfilePage() {
                 htmlFor="businessEstablishedDate"
                 className="block text-sm font-medium text-gray-700"
               >
-                사업자 설립일 <span className="text-gray-500 text-xs font-normal"></span>
+                사업자 설립일 <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
@@ -456,7 +456,7 @@ export default function CreateOrganizationProfilePage() {
                     htmlFor="revenueRange"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    연간 매출액
+                    연간 매출액 <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="revenueRange"
@@ -484,7 +484,7 @@ export default function CreateOrganizationProfilePage() {
                 {/* Certifications - Custom Multi-select dropdown with checkboxes */}
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    보유 인증
+                    보유 인증 <span className="text-red-500">*</span>
                   </label>
                   {/* Dropdown trigger button */}
                   <button
@@ -576,7 +576,7 @@ export default function CreateOrganizationProfilePage() {
                     htmlFor="patentCount"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    보유 특허 
+                    보유 특허 <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -603,7 +603,7 @@ export default function CreateOrganizationProfilePage() {
                     htmlFor="investmentHistory"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    누적 투자 유치 금액
+                    누적 투자 유치 금액 <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -630,7 +630,7 @@ export default function CreateOrganizationProfilePage() {
                 htmlFor="rdExperienceCount"
                 className="block text-sm font-medium text-gray-700"
               >
-                국가 R&D과제 수행 경험
+                국가 R&D과제 수행 경험 <span className="text-red-500">*</span>
               </label>
               <select
                 id="rdExperienceCount"
@@ -667,7 +667,7 @@ export default function CreateOrganizationProfilePage() {
                   htmlFor="collaborationCount"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  산학연 컨소시엄 연구과제 참여
+                  산학연 컨소시엄 연구과제 참여 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -695,7 +695,7 @@ export default function CreateOrganizationProfilePage() {
                 htmlFor="technologyReadinessLevel"
                 className="block text-sm font-medium text-gray-700"
               >
-                기술성숙도(TRL) <span className="text-gray-500 text-xs font-normal"></span>
+                기술성숙도(TRL) <span className="text-red-500">*</span>
               </label>
               <select
                 id="technologyReadinessLevel"
@@ -731,7 +731,7 @@ export default function CreateOrganizationProfilePage() {
                 {/* Institute Type */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    연구기관 유형
+                    연구기관 유형 <span className="text-red-500">*</span>
                   </label>
                   <div className="mt-2 grid grid-cols-3 gap-3">
                     <label
@@ -802,7 +802,7 @@ export default function CreateOrganizationProfilePage() {
                     htmlFor="researchFocusAreas"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    주요 연구 분야
+                    주요 연구 분야 <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -827,7 +827,7 @@ export default function CreateOrganizationProfilePage() {
                     htmlFor="keyTechnologies"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    보유 핵심 기술
+                    보유 핵심 기술 <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -857,7 +857,7 @@ export default function CreateOrganizationProfilePage() {
                     htmlFor="parentDepartment"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    소속 부처/기관
+                    소속 부처/기관 <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -885,7 +885,7 @@ export default function CreateOrganizationProfilePage() {
                   htmlFor="keyTechnologies"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  핵심 보유 기술
+                  핵심 보유 기술 <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -911,7 +911,7 @@ export default function CreateOrganizationProfilePage() {
                 htmlFor="description"
                 className="block text-sm font-medium text-gray-700"
               >
-                조직 설명
+                조직 설명 <span className="text-red-500">*</span>
               </label>
               <textarea
                 id="description"
