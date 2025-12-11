@@ -52,7 +52,6 @@ const organizationSchema = z.object({
     .max(999, '특허 수는 999 이하여야 합니다.')
     .optional(),
   // Tier 1B: Research institute specific fields
-  instituteType: z.enum(['UNIVERSITY', 'GOVERNMENT', 'PRIVATE']).optional(),
   researchFocusAreas: z.string().optional(), // Comma-separated string
   keyTechnologies: z.string().optional(), // Comma-separated string
   // Public institution specific field
@@ -177,7 +176,7 @@ export default function CreateOrganizationProfilePage() {
       <div className="mx-auto max-w-3xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">조직 프로필 생성</h1>
-          <p className="mt-2 text-gray-600">조직 정보를 업데이트하세요</p>
+          <p className="mt-2 text-gray-600">프로필을 완성하고 연구과제 매칭을 시작해 보세요</p>
         </div>
 
         {/* Form */}
@@ -322,7 +321,7 @@ export default function CreateOrganizationProfilePage() {
                 htmlFor="businessNumber"
                 className="block text-sm font-medium text-gray-700"
               >
-                사업자등록번호 <span className="text-red-500">*</span>
+                사업자등록번호, 고유번호 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -333,7 +332,7 @@ export default function CreateOrganizationProfilePage() {
                 maxLength={12}
               />
               <p className="mt-1 text-xs text-gray-500">
-                🔒 PIPA 규정에 따라 AES-256 암호화로 안전하게 보관됩니다.
+                🔒 PIPA 규정에 따라 AES-256 암호화로 안전하게 보관됩니다. 대학은 산학협력단의 사업자등록번호를 입력하세요.
               </p>
               {errors.businessNumber && (
                 <p className="mt-1 text-sm text-red-600">
@@ -358,9 +357,11 @@ export default function CreateOrganizationProfilePage() {
                 <option value="">선택해주세요.</option>
                 <option value="CORPORATION">법인</option>
                 <option value="SOLE_PROPRIETOR">개인사업자</option>
+                <option value="GOVERNMENT_AGENCY">국가기관</option>
               </select>
               <p className="mt-1 text-xs text-gray-500">
-                일부 연구과제는 법인 전용입니다.
+                일부 연구과제는 법인 전용입니다. 
+                국가연구기관은 인터넷에서 "소속 기관명 + 설립 근거 법률”로 검색. 대학은 법인, 공공기관은 국가기관을 선택.
               </p>
               {errors.businessStructure && (
                 <p className="mt-1 text-sm text-red-600">
@@ -728,74 +729,6 @@ export default function CreateOrganizationProfilePage() {
             {/* Tier 1B: Research Institute and University specific fields */}
             {(organizationType === 'RESEARCH_INSTITUTE' || organizationType === 'UNIVERSITY') && (
               <>
-                {/* Institute Type */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    연구기관 유형 <span className="text-red-500">*</span>
-                  </label>
-                  <div className="mt-2 grid grid-cols-3 gap-3">
-                    <label
-                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all ${
-                        watch('instituteType') === 'UNIVERSITY'
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        value="UNIVERSITY"
-                        {...register('instituteType')}
-                        className="sr-only"
-                      />
-                      <div className="text-center">
-                        <div className="text-xl">🎓</div>
-                        <div className="mt-1 text-sm font-medium text-gray-900">대학</div>
-                      </div>
-                    </label>
-                    <label
-                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all ${
-                        watch('instituteType') === 'GOVERNMENT'
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        value="GOVERNMENT"
-                        {...register('instituteType')}
-                        className="sr-only"
-                      />
-                      <div className="text-center">
-                        <div className="text-xl">🏛️</div>
-                        <div className="mt-1 text-sm font-medium text-gray-900">정부출연</div>
-                      </div>
-                    </label>
-                    <label
-                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all ${
-                        watch('instituteType') === 'PRIVATE'
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        value="PRIVATE"
-                        {...register('instituteType')}
-                        className="sr-only"
-                      />
-                      <div className="text-center">
-                        <div className="text-xl">🏢</div>
-                        <div className="mt-1 text-sm font-medium text-gray-900">민간</div>
-                      </div>
-                    </label>
-                  </div>
-                  {errors.instituteType && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.instituteType.message}
-                    </p>
-                  )}
-                </div>
-
                 {/* Research Focus Areas */}
                 <div>
                   <label

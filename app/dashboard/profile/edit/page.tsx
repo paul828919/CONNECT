@@ -35,7 +35,6 @@ const organizationEditSchema = z.object({
     .optional()
     .nullable(),
   // Tier 1B: Research institute specific fields
-  instituteType: z.enum(['UNIVERSITY', 'GOVERNMENT', 'PRIVATE']).optional().nullable(),
   researchFocusAreas: z.string().optional().nullable(),
   keyTechnologies: z.string().optional().nullable(),
   // Public institution specific field
@@ -177,7 +176,6 @@ export default function EditOrganizationProfilePage() {
         setValue('rdExperience', data.organization.rdExperience);
         // Tier 1B fields
         setValue('collaborationCount', data.organization.collaborationCount);
-        setValue('instituteType', data.organization.instituteType);
         // Convert array to comma-separated string for display
         setValue(
           'researchFocusAreas',
@@ -635,74 +633,6 @@ export default function EditOrganizationProfilePage() {
             {/* Tier 1B: Research Institute specific fields */}
             {organizationData?.type === 'RESEARCH_INSTITUTE' && (
               <>
-                {/* Institute Type */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    연구소 유형 (선택사항)
-                  </label>
-                  <div className="mt-2 grid grid-cols-3 gap-3">
-                    <label
-                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all ${
-                        watch('instituteType') === 'UNIVERSITY'
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        value="UNIVERSITY"
-                        {...register('instituteType')}
-                        className="sr-only"
-                      />
-                      <div className="text-center">
-                        <div className="text-xl">🎓</div>
-                        <div className="mt-1 text-sm font-medium text-gray-900">대학</div>
-                      </div>
-                    </label>
-                    <label
-                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all ${
-                        watch('instituteType') === 'GOVERNMENT'
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        value="GOVERNMENT"
-                        {...register('instituteType')}
-                        className="sr-only"
-                      />
-                      <div className="text-center">
-                        <div className="text-xl">🏛️</div>
-                        <div className="mt-1 text-sm font-medium text-gray-900">정부출연</div>
-                      </div>
-                    </label>
-                    <label
-                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all ${
-                        watch('instituteType') === 'PRIVATE'
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        value="PRIVATE"
-                        {...register('instituteType')}
-                        className="sr-only"
-                      />
-                      <div className="text-center">
-                        <div className="text-xl">🏢</div>
-                        <div className="mt-1 text-sm font-medium text-gray-900">민간</div>
-                      </div>
-                    </label>
-                  </div>
-                  {errors.instituteType && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.instituteType.message}
-                    </p>
-                  )}
-                </div>
-
                 {/* Research Focus Areas */}
                 <div>
                   <label
