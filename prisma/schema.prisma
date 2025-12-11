@@ -800,6 +800,7 @@ enum OrganizationStatus {
 enum OrganizationType {
   COMPANY
   RESEARCH_INSTITUTE
+  UNIVERSITY
   PUBLIC_INSTITUTION
 }
 
