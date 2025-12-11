@@ -31,11 +31,6 @@ export const metadata: Metadata = {
     '중소벤처기업부',
   ],
   authors: [{ name: 'Connect Platform' }],
-  icons: {
-    icon: '/logo.svg',
-    shortcut: '/logo.svg',
-    apple: '/logo.svg',
-  },
   openGraph: {
     title: 'Connect - 국가 R&D 사업|연구과제 매칭',
     description: 'NTIS기반 실시간 연구과제 공고 분석. 귀사에 최적화된 연구과제를 제공합니다.',
