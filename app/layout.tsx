@@ -10,8 +10,8 @@ import StructuredData from './components/StructuredData'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Connect - 한국 R&D 자동화 플랫폼 | 정부 과제 매칭',
-  description: '국내 주요 4개 기관 200-500개 최신 공고 매칭. 귀사에 적합한 정부 R&D 과제를 자동으로 찾아드립니다. IITP, KEIT, TIPA, KIMST 연구과제 실시간 모니터링.',
+  title: 'Connect - 국가 R&D 사업|연구과제 매칭',
+  description: 'NTIS기반 실시간 연구과제 공고 분석. 귀사에 최적화된 연구과제를 제공합니다.',
   keywords: [
     '정부과제',
     'R&D',
@@ -37,8 +37,8 @@ export const metadata: Metadata = {
     apple: '/logo.svg',
   },
   openGraph: {
-    title: 'Connect - 한국 R&D 자동화 플랫폼 | 정부 과제 매칭',
-    description: '국내 주요 4개 기관 200-500개 최신 공고 매칭. 귀사에 적합한 정부 R&D 과제를 자동으로 찾아드립니다.',
+    title: 'Connect - 국가 R&D 사업|연구과제 매칭',
+    description: 'NTIS기반 실시간 연구과제 공고 분석. 귀사에 최적화된 연구과제를 제공합니다.',
     type: 'website',
     locale: 'ko_KR',
     url: 'https://connectplt.kr',
@@ -48,14 +48,14 @@ export const metadata: Metadata = {
         url: 'https://connectplt.kr/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Connect - 한국 R&D 자동화 플랫폼',
+        alt: 'Connect - 국가 R&D 과제 매칭, 컨소시엄 구축',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Connect - 한국 R&D 자동화 플랫폼',
-    description: '국내 주요 4개 기관 200-500개 최신 공고 매칭',
+    title: 'Connect - 국가 R&D 사업|연구과제 매칭',
+    description: 'NTIS기반 실시간 연구과제 공고 분석. 귀사에 최적화된 연구과제를 제공합니다.',
     images: ['https://connectplt.kr/og-image.png'],
   },
   robots: {
