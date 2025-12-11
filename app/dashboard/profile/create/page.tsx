@@ -588,7 +588,7 @@ export default function CreateOrganizationProfilePage() {
                     placeholder="0"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    등록 특허와 출원 특허를 합산하여 입력해주세요. 보유 특허 수가 "0"인 경우 "0"을 입력해 주세요.
+                    등록 특허와 출원 특허를 합산하여 입력해주세요. 보유 특허 수가 0인 경우 0을 입력해 주세요.
                   </p>
                   {errors.patentCount && (
                     <p className="mt-1 text-sm text-red-600">
@@ -613,7 +613,7 @@ export default function CreateOrganizationProfilePage() {
                     placeholder="예: 5억원"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    VC, 엔젤투자, 기업 투자 등을 합산하여 입력해주세요(일부 연구과제는 투자 유치 실적 필수), 투자 유치 실적이 없으면 "없음"을 입력해 주세요.
+                    VC, 엔젤투자, 기업 투자 등을 합산하여 입력해주세요(일부 연구과제는 투자 유치 실적 필수). 투자 유치 실적이 없으면 없음을 입력해 주세요.
                   </p>
                   {errors.investmentHistory && (
                     <p className="mt-1 text-sm text-red-600">
