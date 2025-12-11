@@ -360,8 +360,8 @@ export default function CreateOrganizationProfilePage() {
                 <option value="GOVERNMENT_AGENCY">국가기관</option>
               </select>
               <p className="mt-1 text-xs text-gray-500">
-                일부 연구과제는 법인 전용입니다. 
-                국가연구기관은 인터넷에서 "소속 기관명 + 설립 근거 법률”로 검색. 대학은 법인, 공공기관은 국가기관을 선택.
+                일부 연구과제는 법인 전용입니다.
+                국가연구기관은 인터넷에서 &ldquo;소속 기관명 + 설립 근거 법률&rdquo;로 검색. 대학은 법인, 공공기관은 국가기관을 선택.
               </p>
               {errors.businessStructure && (
                 <p className="mt-1 text-sm text-red-600">
