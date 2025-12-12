@@ -36,6 +36,7 @@ import {
   Trash2,
   ArrowLeft,
 } from 'lucide-react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -188,24 +189,14 @@ export default function WithdrawalPage() {
   };
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
-      {/* Header */}
-      <div className="mb-8">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.back()}
-          className="mb-4"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          뒤로 가기
-        </Button>
-
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">회원 탈퇴</h1>
-        <p className="text-gray-600">
-          Connect 서비스를 이용해 주셔서 감사합니다. 탈퇴 전 아래 내용을 꼭 확인해 주세요.
-        </p>
-      </div>
+    <DashboardLayout>
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">회원 탈퇴</h1>
+          <p className="mt-2 text-gray-600">
+            Connect 서비스를 이용해 주셔서 감사합니다. 탈퇴 전 아래 내용을 꼭 확인해 주세요.
+          </p>
+        </div>
 
       {/* Progress Indicator */}
       <div className="mb-8 flex items-center justify-center space-x-2">
@@ -611,6 +602,7 @@ export default function WithdrawalPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
