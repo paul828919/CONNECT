@@ -12,10 +12,15 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 const organizationEditSchema = z.object({
   name: z
     .string()
-    .min(2, '조직명은 2자 이상이어야 합니다')
-    .max(100, '조직명은 100자 이하여야 합니다')
+    .min(2, '조직명은 2자 이상이어야 합니다.')
+    .max(100, '조직명은 100자 이하여야 합니다.')
     .optional(),
-  industrySector: z.string().min(1, '산업 분야를 선택해주세요').optional(),
+  website: z
+    .string()
+    .url('올바른 웹사이트 주소를 입력해주세요. (예: https://example.com)')
+    .optional()
+    .or(z.literal('')),
+  industrySector: z.string().min(1, '산업 분야를 선택해주세요.').optional(),
   employeeCount: z
     .enum(['UNDER_10', 'FROM_10_TO_50', 'FROM_50_TO_100', 'FROM_100_TO_300', 'OVER_300'])
     .optional(),
@@ -25,41 +30,48 @@ const organizationEditSchema = z.object({
     .optional()
     .nullable(),
   businessStructure: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'GOVERNMENT_AGENCY']).optional().nullable(),
-  rdExperience: z.boolean().optional(),
+  rdExperienceCount: z.string().optional(), // National R&D project experience count
   certifications: z.array(z.string()).optional(),
+  patentCount: z
+    .number()
+    .min(0, '특허 수는 0 이상이어야 합니다.')
+    .max(999, '특허 수는 999 이하여야 합니다.')
+    .optional()
+    .nullable(),
+  investmentHistory: z.string().optional().nullable(), // Investment amount text
   // Tier 1B: Algorithm enhancement fields
   collaborationCount: z
     .number()
-    .min(0, '협력 횟수는 0 이상이어야 합니다')
-    .max(99, '협력 횟수는 99 이하여야 합니다')
+    .min(0, '협력 횟수는 0 이상이어야 합니다.')
+    .max(99, '협력 횟수는 99 이하여야 합니다.')
     .optional()
     .nullable(),
   // Tier 1B: Research institute specific fields
   researchFocusAreas: z.string().optional().nullable(),
   keyTechnologies: z.string().optional().nullable(),
   // Public institution specific field
-  parentDepartment: z.string().max(100, '소속 부처는 100자 이하여야 합니다').optional().nullable(),
+  parentDepartment: z.string().max(100, '소속 부처는 100자 이하여야 합니다.').optional().nullable(),
   technologyReadinessLevel: z
     .number()
-    .min(1, 'TRL은 1 이상이어야 합니다')
-    .max(9, 'TRL은 9 이하여야 합니다')
+    .min(1, 'TRL은 1 이상이어야 합니다.')
+    .max(9, 'TRL은 9 이하여야 합니다.')
     .nullable()
     .optional(),
-  description: z.string().max(500, '설명은 500자 이하여야 합니다').nullable().optional(),
+  description: z.string().max(500, '설명은 500자 이하여야 합니다.').nullable().optional(),
   // Consortium Preferences (optional)
   desiredConsortiumFields: z.string().optional().nullable(),
   desiredTechnologies: z.string().optional().nullable(),
   targetPartnerTRL: z
     .number()
-    .min(1, '목표 TRL은 1 이상이어야 합니다')
-    .max(9, '목표 TRL은 9 이하여야 합니다')
+    .min(1, '목표 TRL은 1 이상이어야 합니다.')
+    .max(9, '목표 TRL은 9 이하여야 합니다.')
     .nullable()
     .optional(),
   commercializationCapabilities: z.string().optional().nullable(),
   expectedTRLLevel: z
     .number()
-    .min(1, '목표 TRL은 1 이상이어야 합니다')
-    .max(9, '목표 TRL은 9 이하여야 합니다')
+    .min(1, '목표 TRL은 1 이상이어야 합니다.')
+    .max(9, '목표 TRL은 9 이하여야 합니다.')
     .nullable()
     .optional(),
   targetOrgScale: z
@@ -110,6 +122,7 @@ export default function EditOrganizationProfilePage() {
   const [organizationData, setOrganizationData] = useState<any>(null);
   const [showConsortiumPreferences, setShowConsortiumPreferences] = useState(false);
   const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
+  const [isCertDropdownOpen, setIsCertDropdownOpen] = useState(false);
 
   // Check if redirected from partner search page with preferences flag
   useEffect(() => {
@@ -135,7 +148,7 @@ export default function EditOrganizationProfilePage() {
     resolver: zodResolver(organizationEditSchema),
   });
 
-  const rdExperience = watch('rdExperience');
+  const rdExperienceCount = watch('rdExperienceCount');
 
   // Handler for certification checkbox toggle
   const handleCertificationToggle = (certValue: string) => {
@@ -168,12 +181,16 @@ export default function EditOrganizationProfilePage() {
 
         // Pre-populate form
         setValue('name', data.organization.name);
+        setValue('website', data.organization.website || '');
         setValue('industrySector', data.organization.industrySector);
         setValue('employeeCount', data.organization.employeeCount);
         // Tier 1A fields
         setValue('revenueRange', data.organization.revenueRange);
         setValue('businessStructure', data.organization.businessStructure);
-        setValue('rdExperience', data.organization.rdExperience);
+        setValue('patentCount', data.organization.patentCount);
+        setValue('investmentHistory', data.organization.investmentHistory || '');
+        // Convert rdExperience boolean to rdExperienceCount string for display
+        setValue('rdExperienceCount', data.organization.rdExperience ? '1' : '0');
         // Tier 1B fields
         setValue('collaborationCount', data.organization.collaborationCount);
         // Convert array to comma-separated string for display
@@ -227,7 +244,7 @@ export default function EditOrganizationProfilePage() {
 
         setIsLoading(false);
       } catch (err: any) {
-        setError('조직 정보를 불러올 수 없습니다');
+        setError('조직 정보를 불러올 수 없습니다.');
         setIsLoading(false);
       }
     }
@@ -252,7 +269,7 @@ export default function EditOrganizationProfilePage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || '프로필 업데이트에 실패했습니다');
+        throw new Error(result.error || '프로필 업데이트에 실패했습니다.');
       }
 
       // Update session
@@ -282,22 +299,28 @@ export default function EditOrganizationProfilePage() {
       <div className="mx-auto max-w-3xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">프로필 수정</h1>
-          <p className="mt-2 text-gray-600">조직 정보를 업데이트하세요</p>
+          <p className="mt-2 text-gray-600">최신 프로필 정보를 업데이트하고 향상된 연구과제와 컨소시엄 매칭 경험해 보세요.</p>
         </div>
 
         {/* Organization Type Badge (Read-only) */}
         {organizationData && (
           <div className="mb-6 flex items-center gap-2 rounded-lg bg-blue-50 p-4">
             <div className="text-2xl">
-              {organizationData.type === 'COMPANY' ? '🏢' : organizationData.type === 'RESEARCH_INSTITUTE' ? '🔬' : '🏛️'}
+              {organizationData.type === 'COMPANY' && '🏢'}
+              {organizationData.type === 'RESEARCH_INSTITUTE' && '🔬'}
+              {organizationData.type === 'UNIVERSITY' && '🎓'}
+              {organizationData.type === 'PUBLIC_INSTITUTION' && '🏛️'}
             </div>
             <div>
               <p className="text-sm font-medium text-gray-700">조직 유형</p>
               <p className="text-lg font-semibold text-gray-900">
-                {organizationData.type === 'COMPANY' ? '기업' : organizationData.type === 'RESEARCH_INSTITUTE' ? '연구소' : '공공기관'}
+                {organizationData.type === 'COMPANY' && '기업'}
+                {organizationData.type === 'RESEARCH_INSTITUTE' && '국가연구기관'}
+                {organizationData.type === 'UNIVERSITY' && '대학'}
+                {organizationData.type === 'PUBLIC_INSTITUTION' && '공공기관'}
               </p>
               <p className="text-xs text-gray-500">
-                조직 유형은 변경할 수 없습니다
+                조직 유형은 변경할 수 없습니다.
               </p>
             </div>
           </div>
@@ -323,7 +346,7 @@ export default function EditOrganizationProfilePage() {
                 />
               </svg>
               <div>
-                <h4 className="font-medium text-amber-800">매칭 품질을 높이세요</h4>
+                <h4 className="font-medium text-amber-800">매칭 품질을 높이세요.</h4>
                 <p className="text-sm text-amber-700 mt-1">
                   연구 분야와 핵심 기술을 입력하면 귀사에 더 적합한 연구 과제를 추천받을 수 있습니다.
                 </p>
@@ -348,7 +371,7 @@ export default function EditOrganizationProfilePage() {
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700"
               >
-                조직명 <span className="text-red-500">*</span>
+                조직명
               </label>
               <input
                 type="text"
@@ -359,6 +382,28 @@ export default function EditOrganizationProfilePage() {
               />
               {errors.name && (
                 <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+              )}
+            </div>
+
+            {/* Website */}
+            <div>
+              <label
+                htmlFor="website"
+                className="block text-sm font-medium text-gray-700"
+              >
+                웹사이트
+              </label>
+              <input
+                type="url"
+                id="website"
+                {...register('website')}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                placeholder="https://www.example.com"
+              />
+              {errors.website && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.website.message}
+                </p>
               )}
             </div>
 
@@ -375,7 +420,7 @@ export default function EditOrganizationProfilePage() {
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-gray-500">
-                  🔒 사업자등록번호는 변경할 수 없습니다
+                  🔒 사업자등록번호는 변경할 수 없습니다.
                 </p>
               </div>
             )}
@@ -386,14 +431,14 @@ export default function EditOrganizationProfilePage() {
                 htmlFor="industrySector"
                 className="block text-sm font-medium text-gray-700"
               >
-                산업 분야 <span className="text-red-500">*</span>
+                산업 분야
               </label>
               <select
                 id="industrySector"
                 {...register('industrySector')}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
               >
-                <option value="">선택해주세요</option>
+                <option value="">선택해주세요.</option>
                 {industrySectors.map((sector) => (
                   <option key={sector.value} value={sector.value}>
                     {sector.label}
@@ -413,14 +458,14 @@ export default function EditOrganizationProfilePage() {
                 htmlFor="employeeCount"
                 className="block text-sm font-medium text-gray-700"
               >
-                직원 수 <span className="text-red-500">*</span>
+                직원 수
               </label>
               <select
                 id="employeeCount"
                 {...register('employeeCount')}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
               >
-                <option value="">선택해주세요</option>
+                <option value="">선택해주세요.</option>
                 <option value="UNDER_10">10명 미만</option>
                 <option value="FROM_10_TO_50">10~50명</option>
                 <option value="FROM_50_TO_100">50~100명</option>
@@ -443,7 +488,7 @@ export default function EditOrganizationProfilePage() {
                     htmlFor="revenueRange"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    연간 매출액 (선택사항)
+                    연간 매출액
                   </label>
                   <select
                     id="revenueRange"
@@ -459,7 +504,7 @@ export default function EditOrganizationProfilePage() {
                     <option value="OVER_100B">1,000억원 이상</option>
                   </select>
                   <p className="mt-1 text-xs text-gray-500">
-                    일부 프로그램은 매출액 기준이 있습니다 (예: 중소기업 전용)
+                    일부 프로그램은 매출액 기준이 있습니다(예: 중소기업 전용).
                   </p>
                   {errors.revenueRange && (
                     <p className="mt-1 text-sm text-red-600">
@@ -470,49 +515,25 @@ export default function EditOrganizationProfilePage() {
 
                 {/* Business Structure */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    사업자 형태 (선택사항)
+                  <label
+                    htmlFor="businessStructure"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    사업 형태
                   </label>
-                  <div className="mt-2 grid grid-cols-2 gap-4">
-                    <label
-                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-4 transition-all ${
-                        watch('businessStructure') === 'CORPORATION'
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        value="CORPORATION"
-                        {...register('businessStructure')}
-                        className="sr-only"
-                      />
-                      <div className="text-center">
-                        <div className="text-2xl">🏛️</div>
-                        <div className="mt-1 font-medium text-gray-900">법인</div>
-                      </div>
-                    </label>
-                    <label
-                      className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-4 transition-all ${
-                        watch('businessStructure') === 'SOLE_PROPRIETOR'
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        value="SOLE_PROPRIETOR"
-                        {...register('businessStructure')}
-                        className="sr-only"
-                      />
-                      <div className="text-center">
-                        <div className="text-2xl">👤</div>
-                        <div className="mt-1 font-medium text-gray-900">개인사업자</div>
-                      </div>
-                    </label>
-                  </div>
+                  <select
+                    id="businessStructure"
+                    {...register('businessStructure')}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  >
+                    <option value="">선택해주세요.</option>
+                    <option value="CORPORATION">법인</option>
+                    <option value="SOLE_PROPRIETOR">개인사업자</option>
+                    <option value="GOVERNMENT_AGENCY">국가기관</option>
+                  </select>
                   <p className="mt-1 text-xs text-gray-500">
-                    일부 프로그램은 법인 전용입니다
+                    일부 연구과제는 법인 전용입니다.
+                    국가연구기관은 인터넷에서 &ldquo;소속 기관명 + 설립 근거 법률&rdquo;로 검색. 대학은 법인, 공공기관은 국가기관을 선택.
                   </p>
                   {errors.businessStructure && (
                     <p className="mt-1 text-sm text-red-600">
@@ -521,58 +542,193 @@ export default function EditOrganizationProfilePage() {
                   )}
                 </div>
 
-                {/* Certifications */}
-                <div>
+                {/* Certifications - Custom Multi-select dropdown with checkboxes */}
+                <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    보유 인증 (선택사항)
+                    보유 인증
                   </label>
-                  <div className="space-y-2">
-                    {commonCertifications.map((cert) => (
-                      <label
-                        key={cert.value}
-                        className="flex items-start cursor-pointer hover:bg-gray-50 p-2 rounded"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedCertifications.includes(cert.value)}
-                          onChange={() => handleCertificationToggle(cert.value)}
-                          className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">{cert.label}</span>
-                      </label>
-                    ))}
-                  </div>
+                  {/* Dropdown trigger button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsCertDropdownOpen(!isCertDropdownOpen)}
+                    className="mt-1 flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-2 text-left focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  >
+                    <span className={selectedCertifications.length === 0 ? 'text-gray-500' : 'text-gray-900'}>
+                      {selectedCertifications.length === 0
+                        ? '인증을 선택해주세요.'
+                        : `${selectedCertifications.length}개 선택됨`}
+                    </span>
+                    <svg
+                      className={`h-5 w-5 text-gray-400 transition-transform ${isCertDropdownOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {/* Dropdown menu with checkboxes */}
+                  {isCertDropdownOpen && (
+                    <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-300 bg-white shadow-lg">
+                      <div className="max-h-60 overflow-y-auto p-2">
+                        {commonCertifications.map((cert) => (
+                          <label
+                            key={cert.value}
+                            className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 hover:bg-gray-50"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedCertifications.includes(cert.value)}
+                              onChange={() => handleCertificationToggle(cert.value)}
+                              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-700">{cert.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="border-t border-gray-200 p-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsCertDropdownOpen(false)}
+                          className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                        >
+                          확인
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Selected certifications display */}
+                  {selectedCertifications.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {selectedCertifications.map((certValue) => {
+                        const cert = commonCertifications.find(c => c.value === certValue);
+                        return (
+                          <span
+                            key={certValue}
+                            className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800"
+                          >
+                            {cert?.label || certValue}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newCerts = selectedCertifications.filter(c => c !== certValue);
+                                setSelectedCertifications(newCerts);
+                                setValue('certifications', newCerts);
+                              }}
+                              className="ml-1 text-blue-600 hover:text-blue-800"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                   <p className="mt-2 text-xs text-gray-500">
-                    보유 인증에 따라 지원 가능한 프로그램이 필터링됩니다
+                    일부 연구과제는 보유인증 기준이 있습니다.
                   </p>
+                </div>
+
+                {/* Patent Count */}
+                <div>
+                  <label
+                    htmlFor="patentCount"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    보유 특허
+                  </label>
+                  <input
+                    type="number"
+                    id="patentCount"
+                    {...register('patentCount', { valueAsNumber: true })}
+                    min="0"
+                    max="999"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="0"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    등록 특허와 출원 특허를 합산하여 입력해주세요. 보유 특허 수가 0인 경우 0을 입력해 주세요.
+                  </p>
+                  {errors.patentCount && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.patentCount.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Investment History (Simplified) */}
+                <div>
+                  <label
+                    htmlFor="investmentHistory"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    누적 투자 유치 금액
+                  </label>
+                  <input
+                    type="text"
+                    id="investmentHistory"
+                    {...register('investmentHistory')}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="예: 5억원"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    VC, 엔젤투자, 기업 투자 등을 합산하여 입력해주세요(일부 연구과제는 투자 유치 실적 필수). 투자 유치 실적이 없으면 없음을 입력해 주세요.
+                  </p>
+                  {errors.investmentHistory && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.investmentHistory.message}
+                    </p>
+                  )}
                 </div>
               </>
             )}
 
-            {/* R&D Experience */}
-            <div className="flex items-start">
-              <input
-                type="checkbox"
-                id="rdExperience"
-                {...register('rdExperience')}
-                className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
+            {/* National R&D Experience Count */}
+            <div>
               <label
-                htmlFor="rdExperience"
-                className="ml-2 block text-sm text-gray-700"
+                htmlFor="rdExperienceCount"
+                className="block text-sm font-medium text-gray-700"
               >
-                정부 R&D 과제 수행 경험이 있습니다
+                국가 R&D과제 수행 경험
               </label>
+              <select
+                id="rdExperienceCount"
+                {...register('rdExperienceCount')}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value="">선택해주세요.</option>
+                <option value="0">없음</option>
+                <option value="1">1회</option>
+                <option value="2">2회</option>
+                <option value="3">3회</option>
+                <option value="4">4회</option>
+                <option value="5">5회</option>
+                <option value="6">6회</option>
+                <option value="7">7회</option>
+                <option value="8">8회</option>
+                <option value="9">9회</option>
+                <option value="10">10회</option>
+                <option value="11">11회</option>
+                <option value="12">12회</option>
+                <option value="13">13회</option>
+                <option value="14">14회</option>
+                <option value="15+">15회 이상</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                국가 R&D과제 수행 경험 횟수를 선택해주세요.
+              </p>
             </div>
 
-            {/* Tier 1B: Collaboration Count (shown when R&D experience is true) */}
-            {rdExperience && (
+            {/* Tier 1B: Collaboration Count (shown when R&D experience exists) */}
+            {rdExperienceCount && rdExperienceCount !== '0' && (
               <div>
                 <label
                   htmlFor="collaborationCount"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  산학/기관 협력 프로젝트 수행 횟수 (선택사항)
+                  산학/기관 협력 프로젝트 수행 횟수
                 </label>
                 <input
                   type="number"
@@ -584,7 +740,7 @@ export default function EditOrganizationProfilePage() {
                   placeholder="0"
                 />
                 <p className="mt-1 text-xs text-gray-500">
-                  산학협력, 기관 간 공동연구 등의 경험이 있다면 입력해주세요 (매칭 점수 +2~5점)
+                  산학협력, 기관 간 공동연구 등의 경험이 있다면 입력해주세요(매칭 점수 +2~5점).
                 </p>
                 {errors.collaborationCount && (
                   <p className="mt-1 text-sm text-red-600">
@@ -600,7 +756,7 @@ export default function EditOrganizationProfilePage() {
                 htmlFor="technologyReadinessLevel"
                 className="block text-sm font-medium text-gray-700"
               >
-                기술성숙도 (TRL) <span className="text-gray-500 text-xs font-normal">(선택사항)</span>
+                기술성숙도 (TRL)
               </label>
               <select
                 id="technologyReadinessLevel"
@@ -621,7 +777,7 @@ export default function EditOrganizationProfilePage() {
                 <option value="9">TRL 9 - 상용화</option>
               </select>
               <p className="mt-1 text-xs text-gray-500">
-                현재 보유 중인 기술의 성숙도를 선택해주세요
+                현재 보유 중인 기술의 성숙도를 선택해주세요.
               </p>
               {errors.technologyReadinessLevel && (
                 <p className="mt-1 text-sm text-red-600">
@@ -630,8 +786,8 @@ export default function EditOrganizationProfilePage() {
               )}
             </div>
 
-            {/* Tier 1B: Research Institute specific fields */}
-            {organizationData?.type === 'RESEARCH_INSTITUTE' && (
+            {/* Tier 1B: Research Institute and University specific fields */}
+            {(organizationData?.type === 'RESEARCH_INSTITUTE' || organizationData?.type === 'UNIVERSITY') && (
               <>
                 {/* Research Focus Areas */}
                 <div>
@@ -639,7 +795,7 @@ export default function EditOrganizationProfilePage() {
                     htmlFor="researchFocusAreas"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    주요 연구 분야 (선택사항)
+                    주요 연구 분야
                   </label>
                   <input
                     type="text"
@@ -649,7 +805,7 @@ export default function EditOrganizationProfilePage() {
                     placeholder="예: 문화유산 디지털화, 전시기술, K-Culture AI (쉼표로 구분)"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    💡 연구 분야를 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다
+                    💡 연구 분야를 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다.
                   </p>
                   {errors.researchFocusAreas && (
                     <p className="mt-1 text-sm text-red-600">
@@ -664,7 +820,7 @@ export default function EditOrganizationProfilePage() {
                     htmlFor="keyTechnologies"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    핵심 보유 기술 (선택사항)
+                    핵심 보유 기술
                   </label>
                   <input
                     type="text"
@@ -674,7 +830,7 @@ export default function EditOrganizationProfilePage() {
                     placeholder="예: AR/VR, 디지털 아카이빙, 콘텐츠 관리 시스템 (쉼표로 구분)"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    💡 핵심 기술을 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다
+                    💡 핵심 기술을 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다.
                   </p>
                   {errors.keyTechnologies && (
                     <p className="mt-1 text-sm text-red-600">
@@ -694,7 +850,7 @@ export default function EditOrganizationProfilePage() {
                     htmlFor="parentDepartment"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    소속 부처/기관 (선택사항)
+                    소속 부처/기관
                   </label>
                   <input
                     type="text"
@@ -704,7 +860,7 @@ export default function EditOrganizationProfilePage() {
                     placeholder="예: 문화체육관광부, 과학기술정보통신부"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    💡 소속 부처 정보를 입력하면 관련 부처 지원 사업 매칭을 받을 수 있습니다
+                    💡 소속 부처 정보를 입력하면 관련 부처 지원 사업 매칭을 받을 수 있습니다.
                   </p>
                   {errors.parentDepartment && (
                     <p className="mt-1 text-sm text-red-600">
@@ -722,7 +878,7 @@ export default function EditOrganizationProfilePage() {
                   htmlFor="keyTechnologies"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  핵심 보유 기술 (선택사항)
+                  핵심 보유 기술
                 </label>
                 <input
                   type="text"
@@ -732,7 +888,7 @@ export default function EditOrganizationProfilePage() {
                   placeholder="예: 문화기술(CT), 디지털 콘텐츠, AR/VR (쉼표로 구분)"
                 />
                 <p className="mt-1 text-xs text-gray-500">
-                  💡 핵심 기술을 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다
+                  💡 핵심 기술을 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다.
                 </p>
                 {errors.keyTechnologies && (
                   <p className="mt-1 text-sm text-red-600">
@@ -748,15 +904,26 @@ export default function EditOrganizationProfilePage() {
                 htmlFor="description"
                 className="block text-sm font-medium text-gray-700"
               >
-                조직 설명 (선택사항)
+                조직 설명
               </label>
               <textarea
                 id="description"
                 {...register('description')}
                 rows={4}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
-                placeholder="조직의 주요 사업 분야, 보유 기술, R&D 역량 등을 간단히 설명해주세요"
+                placeholder={
+                  organizationData?.type === 'COMPANY'
+                    ? '예: 당사는 AI 기반 의료영상 진단 솔루션을 개발하는 헬스케어 스타트업입니다. 딥러닝 영상처리, 의료 AI, 클라우드 SaaS 기술을 보유하고 있으며, 현재 TRL 6 단계로 파일럿 임상시험을 진행 중입니다. 대학병원 및 연구기관과의 공동연구를 통해 상용화를 목표로 하고 있습니다.'
+                    : organizationData?.type === 'RESEARCH_INSTITUTE'
+                      ? '예: 본 연구소는 문화유산 디지털화 및 AR/VR 전시기술 연구에 특화된 정부출연연구기관입니다. 3D 스캐닝, 메타버스 콘텐츠 개발, AI 기반 이미지 복원 기술을 보유하고 있으며, TRL 3-4 수준의 원천기술을 기업 기술이전 및 컨소시엄 공동연구를 통해 상용화하고자 합니다.'
+                      : organizationData?.type === 'UNIVERSITY'
+                        ? '예: 본 연구실은 신소재공학과 소속으로 이차전지 양극재 및 차세대 에너지 저장 소재 연구를 수행하고 있습니다. 나노소재 합성, 전기화학 분석, 배터리 셀 설계 기술을 보유하고 있으며, 기업과의 산학협력을 통해 TRL 1-3 기초연구 결과를 실용화 단계까지 발전시키고자 합니다.'
+                        : '예: 본 기관은 과학기술정보통신부 산하 공공기관으로 중소기업 R&D 지원 및 기술사업화를 담당합니다. 기술평가, 사업화 컨설팅, R&D 기획 역량을 보유하고 있으며, 산학연 컨소시엄 구성 및 정부 R&D 과제 기획에 참여하고 있습니다.'
+                }
               />
+              <p className="mt-1 text-xs text-gray-500">
+                조직 설명은 파트너 검색 시 키워드 매칭에 활용됩니다. 주요 연구 분야, 핵심 기술, 협력 희망 분야를 구체적으로 작성해주세요.
+              </p>
               {errors.description && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.description.message}
@@ -775,10 +942,10 @@ export default function EditOrganizationProfilePage() {
                   <div className="text-2xl">🤝</div>
                   <div className="text-left">
                     <h3 className="text-lg font-semibold text-gray-900">
-                      컨소시엄 파트너 선호도 (선택사항)
+                      컨소시엄 파트너 선호도
                     </h3>
                     <p className="text-sm text-gray-600">
-                      원하는 파트너 유형을 설정하면 더 정확한 매칭을 받을 수 있습니다
+                      원하는 파트너 유형을 설정하면 더 정확한 매칭을 받을 수 있습니다.
                     </p>
                   </div>
                 </div>
@@ -810,7 +977,7 @@ export default function EditOrganizationProfilePage() {
                           htmlFor="desiredConsortiumFields"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          원하는 협력 분야
+                          원하는 협업 분야
                         </label>
                         <input
                           type="text"
@@ -820,7 +987,7 @@ export default function EditOrganizationProfilePage() {
                           placeholder="예: AI, 빅데이터, 클라우드 (쉼표로 구분)"
                         />
                         <p className="mt-1 text-xs text-gray-500">
-                          파트너와 함께 연구하고 싶은 기술 분야를 입력해주세요
+                          파트너와 함께 연구하고 싶은 기술 분야를 입력해주세요.
                         </p>
                       </div>
 
@@ -840,7 +1007,7 @@ export default function EditOrganizationProfilePage() {
                           placeholder="예: 머신러닝, 자연어처리, 컴퓨터비전 (쉼표로 구분)"
                         />
                         <p className="mt-1 text-xs text-gray-500">
-                          필요한 기술 역량을 가진 파트너를 찾아드립니다
+                          필요한 기술 역량을 가진 컨소시엄 파트너를 찾아드립니다.
                         </p>
                       </div>
 
@@ -859,7 +1026,7 @@ export default function EditOrganizationProfilePage() {
                           })}
                           className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
                         >
-                          <option value="">선택해주세요</option>
+                          <option value="">선택해주세요.</option>
                           <option value="1">TRL 1 - 기초 원리 연구</option>
                           <option value="2">TRL 2 - 기술 개념 정립</option>
                           <option value="3">TRL 3 - 개념 증명</option>
@@ -871,7 +1038,7 @@ export default function EditOrganizationProfilePage() {
                           <option value="9">TRL 9 - 상용화</option>
                         </select>
                         <p className="mt-1 text-xs text-gray-500">
-                          초기 단계 기술(TRL 1-4)이나 상용화 단계(TRL 7-9) 중 선택하세요
+                          초기 단계 기술(TRL 1-4)이나 상용화 단계(TRL 7-9) 중 선택하세요.
                         </p>
                         {errors.targetPartnerTRL && (
                           <p className="mt-1 text-sm text-red-600">
@@ -891,7 +1058,7 @@ export default function EditOrganizationProfilePage() {
                           htmlFor="desiredConsortiumFields"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          원하는 협력 분야
+                          원하는 협업 분야
                         </label>
                         <input
                           type="text"
@@ -901,7 +1068,7 @@ export default function EditOrganizationProfilePage() {
                           placeholder="예: ICT, 바이오, 에너지 (쉼표로 구분)"
                         />
                         <p className="mt-1 text-xs text-gray-500">
-                          협력하고 싶은 산업 분야를 입력해주세요
+                          협업하고 싶은 산업 분야를 입력해주세요.
                         </p>
                       </div>
 
@@ -921,7 +1088,7 @@ export default function EditOrganizationProfilePage() {
                           placeholder="예: AI 모델 최적화, 데이터 분석 플랫폼 (쉼표로 구분)"
                         />
                         <p className="mt-1 text-xs text-gray-500">
-                          기업에 제공 가능한 기술을 입력해주세요
+                          기업에 제공 가능한 기술을 입력해주세요.
                         </p>
                       </div>
 
@@ -941,7 +1108,7 @@ export default function EditOrganizationProfilePage() {
                           placeholder="예: 시제품 제작, 기술 검증, 인증 지원 (쉼표로 구분)"
                         />
                         <p className="mt-1 text-xs text-gray-500">
-                          기업의 사업화를 지원할 수 있는 역량을 입력해주세요
+                          기업의 사업화를 지원할 수 있는 역량을 입력해주세요.
                         </p>
                       </div>
 
@@ -960,7 +1127,7 @@ export default function EditOrganizationProfilePage() {
                           })}
                           className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
                         >
-                          <option value="">선택해주세요</option>
+                          <option value="">선택해주세요.</option>
                           <option value="4">TRL 4 - 실험실 환경 검증</option>
                           <option value="5">TRL 5 - 유사 환경 검증</option>
                           <option value="6">TRL 6 - 파일럿 실증</option>
@@ -969,7 +1136,7 @@ export default function EditOrganizationProfilePage() {
                           <option value="9">TRL 9 - 상용화</option>
                         </select>
                         <p className="mt-1 text-xs text-gray-500">
-                          협력을 통해 도달하고자 하는 TRL 수준을 선택해주세요
+                          협업을 통해 도달하고자 하는 TRL 수준을 선택해주세요.
                         </p>
                         {errors.expectedTRLLevel && (
                           <p className="mt-1 text-sm text-red-600">
@@ -991,7 +1158,7 @@ export default function EditOrganizationProfilePage() {
                           {...register('targetOrgScale')}
                           className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
                         >
-                          <option value="">선택해주세요</option>
+                          <option value="">선택해주세요.</option>
                           <option value="UNDER_10">10명 미만 (스타트업)</option>
                           <option value="FROM_10_TO_50">10~50명 (소기업)</option>
                           <option value="FROM_50_TO_100">50~100명 (중소기업)</option>
@@ -999,7 +1166,7 @@ export default function EditOrganizationProfilePage() {
                           <option value="OVER_300">300명 이상 (대기업)</option>
                         </select>
                         <p className="mt-1 text-xs text-gray-500">
-                          협력하고 싶은 기업의 규모를 선택해주세요
+                          협업하고 싶은 기업의 규모를 선택해주세요.
                         </p>
                       </div>
 
@@ -1016,7 +1183,7 @@ export default function EditOrganizationProfilePage() {
                           {...register('targetOrgRevenue')}
                           className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
                         >
-                          <option value="">선택해주세요</option>
+                          <option value="">선택해주세요.</option>
                           <option value="UNDER_1B">10억원 미만</option>
                           <option value="FROM_1B_TO_10B">10억원~100억원</option>
                           <option value="FROM_10B_TO_50B">100억원~500억원</option>
@@ -1024,7 +1191,7 @@ export default function EditOrganizationProfilePage() {
                           <option value="OVER_100B">1,000억원 이상</option>
                         </select>
                         <p className="mt-1 text-xs text-gray-500">
-                          협력하고 싶은 기업의 매출 규모를 선택해주세요
+                          협업하고 싶은 기업의 매출 규모를 선택해주세요.
                         </p>
                       </div>
                     </>
@@ -1037,7 +1204,7 @@ export default function EditOrganizationProfilePage() {
                       <div className="text-sm text-blue-800">
                         <p className="font-medium">더 나은 매칭을 위한 팁</p>
                         <p className="mt-1">
-                          선호도를 자세히 입력할수록 여러분의 목표에 맞는 최적의 파트너를
+                          선호도를 자세히 입력할수록 귀하의 목표에 맞는 최적의 컨소시엄 파트너를
                           추천받을 수 있습니다. 나중에 언제든지 수정 가능합니다.
                         </p>
                       </div>
@@ -1056,7 +1223,7 @@ export default function EditOrganizationProfilePage() {
                       프로필 완성도
                     </p>
                     <p className="text-xs text-gray-500">
-                      완성도가 높을수록 더 정확한 매칭이 가능합니다
+                      완성도가 높을수록 더 정확한 매칭이 가능합니다.
                     </p>
                   </div>
                   <div className="text-3xl font-bold text-green-600">

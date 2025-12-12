@@ -12,6 +12,10 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Connect - 국가 R&D 사업|연구과제 매칭',
   description: 'NTIS기반 실시간 연구과제 공고 분석. 귀사에 최적화된 연구과제를 제공합니다.',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/apple-icon.svg',
+  },
   keywords: [
     '정부과제',
     'R&D',
