@@ -37,6 +37,7 @@ export async function GET(
         id: true,
         type: true,
         name: true,
+        website: true,
         industrySector: true,
         employeeCount: true,
         rdExperience: true,
@@ -46,6 +47,8 @@ export async function GET(
         revenueRange: true,
         businessStructure: true,
         certifications: true,
+        patentCount: true,
+        investmentHistory: true,
         governmentCertifications: true,
         // Tier 1B: Algorithm enhancement fields
         collaborationCount: true,
@@ -163,15 +166,19 @@ export async function PATCH(
     const body = await request.json();
     const {
       name,
+      website,
       industrySector,
       employeeCount,
       rdExperience,
+      rdExperienceCount, // New field for count-based R&D experience
       technologyReadinessLevel,
       description,
       // Tier 1A: Company eligibility fields
       revenueRange,
       businessStructure,
       certifications,
+      patentCount,
+      investmentHistory,
       // Tier 1B: Algorithm enhancement fields
       collaborationCount,
       instituteType,
@@ -191,9 +198,16 @@ export async function PATCH(
     // Build update data (only include fields that are provided)
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
+    if (website !== undefined) updateData.website = website;
     if (industrySector !== undefined) updateData.industrySector = industrySector;
     if (employeeCount !== undefined) updateData.employeeCount = employeeCount;
-    if (rdExperience !== undefined) updateData.rdExperience = rdExperience;
+    // Handle rdExperience: convert rdExperienceCount string to boolean for backward compatibility
+    if (rdExperienceCount !== undefined) {
+      // Convert count to boolean (any value > 0 means true)
+      updateData.rdExperience = rdExperienceCount !== '0' && rdExperienceCount !== '';
+    } else if (rdExperience !== undefined) {
+      updateData.rdExperience = rdExperience;
+    }
     if (technologyReadinessLevel !== undefined)
       updateData.technologyReadinessLevel = technologyReadinessLevel;
     if (description !== undefined) updateData.description = description;
@@ -203,6 +217,8 @@ export async function PATCH(
     if (businessStructure !== undefined)
       updateData.businessStructure = businessStructure;
     if (certifications !== undefined) updateData.certifications = certifications;
+    if (patentCount !== undefined) updateData.patentCount = patentCount;
+    if (investmentHistory !== undefined) updateData.investmentHistory = investmentHistory;
 
     // Tier 1B: Algorithm enhancement fields
     if (collaborationCount !== undefined)
@@ -379,6 +395,7 @@ export async function PATCH(
         id: true,
         type: true,
         name: true,
+        website: true,
         industrySector: true,
         employeeCount: true,
         rdExperience: true,
@@ -388,6 +405,8 @@ export async function PATCH(
         revenueRange: true,
         businessStructure: true,
         certifications: true,
+        patentCount: true,
+        investmentHistory: true,
         governmentCertifications: true,
         // Tier 1B: Algorithm enhancement fields
         collaborationCount: true,
