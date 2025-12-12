@@ -163,52 +163,81 @@ export async function GET(request: NextRequest) {
 /**
  * Query organizations that are complementary to the user's organization
  *
- * Strategy:
- * - For companies: Find research institutes with opposite TRL ranges
- * - For research institutes: Find companies with opposite TRL ranges
+ * Strategy (Updated):
+ * - All organization types can find partners from any other type
+ * - COMPANY, RESEARCH_INSTITUTE, UNIVERSITY, PUBLIC_INSTITUTION all supported
+ * - TRL-based complementary matching for research/commercialization synergy
  * - Match by industry and technology alignment
  * - Exclude own organization
+ *
+ * Consortium patterns:
+ * - COMPANY ↔ RESEARCH_INSTITUTE/UNIVERSITY: Technology development partnerships
+ * - RESEARCH_INSTITUTE/UNIVERSITY ↔ COMPANY: Commercialization partnerships
+ * - PUBLIC_INSTITUTION ↔ All types: Project execution partnerships
  */
 async function queryComplementaryOrganizations(userOrg: any) {
-  const isCompany = userOrg.type === 'COMPANY';
+  const userType = userOrg.type;
   const userTRL = userOrg.technologyReadinessLevel;
 
-  // Build base query
+  // Build base query - allow all organization types except self
   const baseWhere: any = {
     id: { not: userOrg.id }, // Exclude self
     status: 'ACTIVE', // Only active organizations
     profileCompleted: true, // Only organizations with completed profiles
-    type: isCompany ? 'RESEARCH_INSTITUTE' : 'COMPANY', // Opposite type
+    type: { notIn: [userType] }, // All types except user's own type
   };
 
   // Add TRL-based filtering for complementary matching
+  // Strategy varies by organization type to find optimal partners
   if (userTRL !== null && userTRL !== undefined) {
-    if (isCompany) {
-      // Companies (high TRL 7-9) seek research institutes (low TRL 1-4)
+    if (userType === 'COMPANY') {
+      // Companies seek research partners (RESEARCH_INSTITUTE, UNIVERSITY) for technology development
+      // and PUBLIC_INSTITUTION for policy/funding alignment
       if (userTRL >= 7) {
-        baseWhere.technologyReadinessLevel = { gte: 1, lte: 4 };
+        // High TRL companies (commercialization stage) seek early-stage research
+        baseWhere.OR = [
+          { technologyReadinessLevel: { gte: 1, lte: 4 } },
+          { type: 'PUBLIC_INSTITUTION' }, // Public institutions regardless of TRL
+        ];
+      } else if (userTRL >= 4) {
+        // Mid TRL companies seek broader range of research partners
+        baseWhere.OR = [
+          { technologyReadinessLevel: { gte: 1, lte: 6 } },
+          { type: 'PUBLIC_INSTITUTION' },
+        ];
+      } else {
+        // Low TRL companies seek advanced research/commercialization partners
+        baseWhere.OR = [
+          { technologyReadinessLevel: { gte: 4, lte: 9 } },
+          { type: 'PUBLIC_INSTITUTION' },
+        ];
       }
-      // Companies (mid TRL 4-6) seek research institutes (any TRL)
-      else if (userTRL >= 4) {
-        baseWhere.technologyReadinessLevel = { gte: 1, lte: 6 };
-      }
-      // Companies (low TRL 1-3) seek research institutes (mid-high TRL 4-9)
-      else {
-        baseWhere.technologyReadinessLevel = { gte: 4, lte: 9 };
-      }
-    } else {
-      // Research institutes (low TRL 1-4) seek companies (high TRL 7-9)
+    } else if (userType === 'RESEARCH_INSTITUTE' || userType === 'UNIVERSITY') {
+      // Research organizations seek companies for commercialization
+      // and other research orgs for collaborative research
       if (userTRL <= 4) {
-        baseWhere.technologyReadinessLevel = { gte: 7, lte: 9 };
+        // Early-stage research seeks commercialization-ready companies
+        baseWhere.OR = [
+          { type: 'COMPANY', technologyReadinessLevel: { gte: 6, lte: 9 } },
+          { type: { in: ['RESEARCH_INSTITUTE', 'UNIVERSITY', 'PUBLIC_INSTITUTION'] } },
+        ];
+      } else if (userTRL <= 6) {
+        // Mid-stage research seeks broader company range
+        baseWhere.OR = [
+          { type: 'COMPANY', technologyReadinessLevel: { gte: 4, lte: 9 } },
+          { type: { in: ['RESEARCH_INSTITUTE', 'UNIVERSITY', 'PUBLIC_INSTITUTION'] } },
+        ];
+      } else {
+        // Advanced research (near commercialization) seeks any company partner
+        baseWhere.OR = [
+          { type: 'COMPANY' },
+          { type: { in: ['RESEARCH_INSTITUTE', 'UNIVERSITY', 'PUBLIC_INSTITUTION'] } },
+        ];
       }
-      // Research institutes (mid TRL 4-6) seek companies (any TRL)
-      else if (userTRL <= 6) {
-        baseWhere.technologyReadinessLevel = { gte: 4, lte: 9 };
-      }
-      // Research institutes (high TRL 7-9) seek companies (low-mid TRL 1-6)
-      else {
-        baseWhere.technologyReadinessLevel = { gte: 1, lte: 6 };
-      }
+    } else if (userType === 'PUBLIC_INSTITUTION') {
+      // Public institutions can partner with all types for project execution
+      // No TRL restriction - focus on industry/technology alignment instead
+      // baseWhere.type already set to exclude PUBLIC_INSTITUTION
     }
   }
 

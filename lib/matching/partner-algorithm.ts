@@ -130,6 +130,14 @@ export function generatePartnerMatches(
  * - Companies with high target TRL (7-9) matched with research institutes at low current TRL (1-4)
  * - Research institutes expecting high TRL (7-9) matched with companies needing innovation
  *
+ * Supported organization type combinations:
+ * - COMPANY ↔ RESEARCH_INSTITUTE: Technology development/commercialization (optimized scoring)
+ * - COMPANY ↔ UNIVERSITY: Same as RESEARCH_INSTITUTE (universities have similar research characteristics)
+ * - COMPANY ↔ PUBLIC_INSTITUTION: Policy/funding alignment (industry-based scoring)
+ * - RESEARCH_INSTITUTE ↔ UNIVERSITY: Collaborative research (research focus matching)
+ * - RESEARCH_INSTITUTE/UNIVERSITY ↔ PUBLIC_INSTITUTION: Policy/funding alignment
+ * - PUBLIC_INSTITUTION ↔ All types: Project execution partnerships
+ *
  * Perfect complementary fit: 40 points
  * Good complementary fit: 25-35 points
  * Moderate fit: 15-24 points
@@ -142,8 +150,11 @@ function scoreComplementaryTRL(
 ): number {
   let score = 0;
 
-  // Case 1: User is COMPANY seeking RESEARCH_INSTITUTE
-  if (userOrg.type === 'COMPANY' && candidateOrg.type === 'RESEARCH_INSTITUTE') {
+  // Helper: Check if organization is a research-type (RESEARCH_INSTITUTE or UNIVERSITY)
+  const isResearchType = (type: string) => type === 'RESEARCH_INSTITUTE' || type === 'UNIVERSITY';
+
+  // Case 1: User is COMPANY seeking RESEARCH_INSTITUTE or UNIVERSITY
+  if (userOrg.type === 'COMPANY' && isResearchType(candidateOrg.type)) {
     const companyTargetTRL = userOrg.targetPartnerTRL; // What TRL they want in partners
     const companyCurrentTRL = userOrg.technologyReadinessLevel;
     const instituteCurrentTRL = candidateOrg.technologyReadinessLevel;
@@ -196,8 +207,8 @@ function scoreComplementaryTRL(
     }
   }
 
-  // Case 2: User is RESEARCH_INSTITUTE seeking COMPANY
-  else if (userOrg.type === 'RESEARCH_INSTITUTE' && candidateOrg.type === 'COMPANY') {
+  // Case 2: User is RESEARCH_INSTITUTE or UNIVERSITY seeking COMPANY
+  else if (isResearchType(userOrg.type) && candidateOrg.type === 'COMPANY') {
     const instituteCurrentTRL = userOrg.technologyReadinessLevel;
     const instituteExpectedTRL = userOrg.expectedTRLLevel;
     const companyCurrentTRL = candidateOrg.technologyReadinessLevel;
@@ -240,7 +251,65 @@ function scoreComplementaryTRL(
     }
   }
 
-  // No TRL data available
+  // Case 3: Research-type (RESEARCH_INSTITUTE/UNIVERSITY) seeking another research-type
+  // Collaborative research partnerships - focus on TRL similarity for joint development
+  else if (isResearchType(userOrg.type) && isResearchType(candidateOrg.type)) {
+    const userTRL = userOrg.technologyReadinessLevel;
+    const candidateTRL = candidateOrg.technologyReadinessLevel;
+
+    if (userTRL && candidateTRL) {
+      const gap = Math.abs(userTRL - candidateTRL);
+      // Similar TRL is good for collaborative research
+      if (gap === 0) {
+        score = 30;
+        reasons.push('RESEARCH_TRL_PERFECT_MATCH');
+      } else if (gap <= 1) {
+        score = 25;
+        reasons.push('RESEARCH_TRL_STRONG_MATCH');
+      } else if (gap <= 2) {
+        score = 20;
+        reasons.push('RESEARCH_TRL_GOOD_MATCH');
+      } else {
+        // Complementary TRL for joint development (one basic, one applied)
+        score = 18;
+        reasons.push('RESEARCH_TRL_COMPLEMENTARY');
+      }
+    } else {
+      score = 15;
+      reasons.push('RESEARCH_COLLABORATION_POTENTIAL');
+    }
+  }
+
+  // Case 4: COMPANY seeking PUBLIC_INSTITUTION
+  else if (userOrg.type === 'COMPANY' && candidateOrg.type === 'PUBLIC_INSTITUTION') {
+    // Public institutions provide policy guidance, funding coordination, project management
+    // TRL is less relevant - focus on industry alignment instead
+    score = 18;
+    reasons.push('PUBLIC_INSTITUTION_POLICY_PARTNER');
+  }
+
+  // Case 5: PUBLIC_INSTITUTION seeking any partner
+  else if (userOrg.type === 'PUBLIC_INSTITUTION') {
+    // Public institutions can partner with all types for project execution
+    if (candidateOrg.type === 'COMPANY') {
+      // Companies bring commercialization capability
+      score = 20;
+      reasons.push('PUBLIC_COMPANY_EXECUTION_PARTNER');
+    } else if (isResearchType(candidateOrg.type)) {
+      // Research orgs bring technical expertise
+      score = 22;
+      reasons.push('PUBLIC_RESEARCH_EXPERTISE_PARTNER');
+    }
+  }
+
+  // Case 6: Research-type seeking PUBLIC_INSTITUTION
+  else if (isResearchType(userOrg.type) && candidateOrg.type === 'PUBLIC_INSTITUTION') {
+    // Public institutions provide policy guidance and project coordination
+    score = 18;
+    reasons.push('PUBLIC_INSTITUTION_COORDINATION_PARTNER');
+  }
+
+  // No TRL data available or unhandled combination
   if (score === 0) {
     score = 10; // Default modest score when no TRL data
     reasons.push('TRL_DATA_MISSING');
