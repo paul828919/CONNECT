@@ -239,14 +239,6 @@ export default function WithdrawalPage() {
               </AlertDescription>
             </Alert>
 
-            <Alert className="border-amber-200 bg-amber-50">
-              <Shield className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800">
-                <strong>재가입 제한:</strong> 동일한 이메일 주소로 재가입이 불가능합니다.
-                다른 이메일 주소로만 신규 가입할 수 있습니다.
-              </AlertDescription>
-            </Alert>
-
             <Alert className="border-blue-200 bg-blue-50">
               <AlertCircle className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-blue-800">
@@ -526,7 +518,6 @@ export default function WithdrawalPage() {
                   <li>• 모든 개인정보와 서비스 데이터가 즉시 삭제됩니다</li>
                   <li>• 삭제된 데이터는 복구할 수 없습니다</li>
                   <li>• 구독 중인 서비스가 자동으로 취소됩니다</li>
-                  <li>• 동일한 이메일로 재가입할 수 없습니다</li>
                 </ul>
               </AlertDescription>
             </Alert>
@@ -547,7 +538,7 @@ export default function WithdrawalPage() {
                 className="text-sm font-medium text-gray-900 cursor-pointer"
               >
                 위 내용을 모두 확인했으며, 계정 삭제에 동의합니다. 삭제된 데이터는 복구할 수
-                없으며, 재가입이 제한된다는 것을 이해했습니다.
+                없음을 이해했습니다.
               </label>
             </div>
 
