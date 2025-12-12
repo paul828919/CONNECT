@@ -34,7 +34,7 @@ const organizationSchema = z.object({
   revenueRange: z
     .enum(['NONE', 'UNDER_1B', 'FROM_1B_TO_10B', 'FROM_10B_TO_50B', 'FROM_50B_TO_100B', 'OVER_100B'])
     .optional(),
-  businessStructure: z.enum(['CORPORATION', 'SOLE_PROPRIETOR']).optional(),
+  businessStructure: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'GOVERNMENT_AGENCY']).optional(),
   businessEstablishedDate: z.string().optional(), // ISO date string, will be converted to Date in API
   rdExperienceCount: z.string().optional(), // National R&D project experience count
   // Tier 1B: Algorithm enhancement fields

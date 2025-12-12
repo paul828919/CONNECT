@@ -24,7 +24,7 @@ const organizationEditSchema = z.object({
     .enum(['NONE', 'UNDER_1B', 'FROM_1B_TO_10B', 'FROM_10B_TO_50B', 'FROM_50B_TO_100B', 'OVER_100B'])
     .optional()
     .nullable(),
-  businessStructure: z.enum(['CORPORATION', 'SOLE_PROPRIETOR']).optional().nullable(),
+  businessStructure: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'GOVERNMENT_AGENCY']).optional().nullable(),
   rdExperience: z.boolean().optional(),
   certifications: z.array(z.string()).optional(),
   // Tier 1B: Algorithm enhancement fields

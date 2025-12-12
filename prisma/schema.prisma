@@ -703,6 +703,7 @@ enum BillingCycle {
 enum BusinessStructure {
   CORPORATION
   SOLE_PROPRIETOR
+  GOVERNMENT_AGENCY
 }
 
 enum ConsortiumRole {
