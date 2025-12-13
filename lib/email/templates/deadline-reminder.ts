@@ -46,7 +46,7 @@ export function deadlineReminderEmailTemplate(data: DeadlineReminderEmailData): 
     </div>
 
     <p style="margin: 0 0 24px; font-size: 16px; color: #6b7280;">
-      안녕하세요 ${userName}님, <strong>${organizationName}</strong>이 관심 있는 R&D 과제의 마감일이 다가왔습니다.
+      안녕하세요 ${userName}님, <strong>${organizationName}</strong>가 관심 있는 R&D 과제의 마감일이 다가왔습니다.
     </p>
 
     <div style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; background-color: #ffffff;">
@@ -105,11 +105,11 @@ export function deadlineReminderEmailTemplate(data: DeadlineReminderEmailData): 
       </div>
     </div>
 
-    <div style="margin-top: 24px; padding: 16px; background-color: #eff6ff; border-radius: 8px;">
+    <div style="margin-top: 24px; padding: 16px; background-color: #eff6ff; border-radius: 8px; text-align: left;">
       <p style="margin: 0; font-size: 14px; color: #1e40af;">
         <strong>💡 지원 전 체크리스트:</strong>
       </p>
-      <ul style="margin: 8px 0 0; padding-left: 20px; font-size: 14px; color: #1e40af;">
+      <ul style="margin: 8px 0 0; padding-left: 20px; font-size: 14px; color: #1e40af; list-style-position: inside;">
         <li style="margin: 4px 0;">지원 자격 요건 확인</li>
         <li style="margin: 4px 0;">필수 서류 준비 (사업자등록증, 재무제표 등)</li>
         <li style="margin: 4px 0;">연구개발계획서 작성</li>
