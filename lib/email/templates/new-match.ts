@@ -82,10 +82,10 @@ export function newMatchEmailTemplate(data: NewMatchEmailData): string {
 
   const content = `
     <h2 style="margin: 0 0 8px; font-size: 24px; font-weight: bold; color: #111827;">
-      🎯 새로운 펀딩 매칭을 찾았어요!
+      🎯 새로운 연구과제 매칭을 찾았어요!
     </h2>
     <p style="margin: 0 0 24px; font-size: 16px; color: #6b7280;">
-      안녕하세요 ${userName}님, <strong>${organizationName}</strong>에 적합한 ${matches.length}개의 새로운 R&D 과제가 발견되었습니다.
+      안녕하세요 ${userName}님, <strong>${organizationName}</strong>에 적합한 ${matches.length}개의 새로운 연구과제가 발견되었습니다.
     </p>
 
     ${matchCards}
@@ -106,8 +106,8 @@ export function newMatchEmailTemplate(data: NewMatchEmailData): string {
   `;
 
   return baseEmailTemplate({
-    title: `새로운 펀딩 매칭 ${matches.length}건`,
-    preheader: `${organizationName}에 적합한 R&D 과제 ${matches.length}개 발견`,
+    title: `새로운 연구과제 매칭 ${matches.length}건`,
+    preheader: `${organizationName}에 적합한 연구과제 ${matches.length}개 발견`,
     content,
   });
 }
