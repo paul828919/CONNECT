@@ -41,7 +41,7 @@ export function weeklyDigestEmailTemplate(data: WeeklyDigestEmailData): string {
 
   const content = `
     <h2 style="margin: 0 0 8px; font-size: 24px; font-weight: bold; color: #111827;">
-      📊 주간 펀딩 리포트
+      📊 주간 연구과제 매칭 리포트
     </h2>
     <p style="margin: 0 0 24px; font-size: 16px; color: #6b7280;">
       ${formatKoreanDate(weekStart)} ~ ${formatKoreanDate(weekEnd)}
@@ -145,7 +145,7 @@ export function weeklyDigestEmailTemplate(data: WeeklyDigestEmailData): string {
     <div style="margin: 32px 0; padding: 24px; background-color: #f9fafb; border-radius: 12px; text-align: center;">
       <p style="margin: 0; font-size: 16px; color: #6b7280;">
         이번 주에는 새로운 매칭이나 마감일이 없습니다.<br />
-        프로필을 업데이트하면 더 많은 기회를 찾을 수 있어요!
+        프로필을 업데이트하면 더 많은 R&D기회를 찾을 수 있어요!
       </p>
       <a href="${emailBaseUrl}/dashboard/profile/edit"
          class="btn"
@@ -173,7 +173,7 @@ export function weeklyDigestEmailTemplate(data: WeeklyDigestEmailData): string {
   `;
 
   return baseEmailTemplate({
-    title: '주간 펀딩 리포트',
+    title: '주간 연구과제 매칭 리포트',
     preheader: `새 과제 ${stats.newPrograms}개, 새 매칭 ${stats.newMatches}개`,
     content,
   });
