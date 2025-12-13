@@ -92,7 +92,7 @@ export function baseEmailTemplate({ title, preheader, content }: BaseEmailProps)
           <!-- Header -->
           <div class="header">
             <h1>Connect</h1>
-            <p>한국 R&D 생태계 매칭 플랫폼</p>
+            <p>국가 R&D 생태계 매칭 플랫폼</p>
           </div>
 
           <!-- Content -->
