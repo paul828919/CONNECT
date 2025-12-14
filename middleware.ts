@@ -43,18 +43,27 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(signInUrl);
     }
 
-    // Track active user via internal API (non-blocking, silent fail)
+    // Track active user via internal API
     // Uses fetch to Node.js API route because Edge Runtime doesn't support `redis` package
+    // IMPORTANT: Must await with timeout for Edge Runtime compatibility
+    // (fire-and-forget pattern fails in Edge Runtime as execution context ends on return)
     if (sessionToken?.value) {
       const trackingUrl = new URL('/api/internal/track-user', request.url);
-      fetch(trackingUrl.toString(), {
+
+      const trackingPromise = fetch(trackingUrl.toString(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-internal-request': 'middleware',
         },
         body: JSON.stringify({ sessionToken: sessionToken.value }),
-      }).catch(() => {
+      });
+
+      // Race with 200ms timeout to ensure tracking completes in Edge Runtime
+      // but doesn't block user requests for too long
+      const timeoutPromise = new Promise<void>((resolve) => setTimeout(resolve, 200));
+
+      await Promise.race([trackingPromise, timeoutPromise]).catch(() => {
         // Silent fail - tracking should never block user requests
       });
     }
