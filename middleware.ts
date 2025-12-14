@@ -48,9 +48,13 @@ export async function middleware(request: NextRequest) {
     // IMPORTANT: Must await with timeout for Edge Runtime compatibility
     // (fire-and-forget pattern fails in Edge Runtime as execution context ends on return)
     if (sessionToken?.value) {
-      const trackingUrl = new URL('/api/internal/track-user', request.url);
+      // Use internal localhost URL to avoid hairpin NAT through public network
+      // Production containers have PORT env (3001/3002), development uses 3000
+      // This ensures direct container-to-container communication without DNS/SSL overhead
+      const port = process.env.PORT || '3000';
+      const trackingUrl = `http://localhost:${port}/api/internal/track-user`;
 
-      const trackingPromise = fetch(trackingUrl.toString(), {
+      const trackingPromise = fetch(trackingUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
