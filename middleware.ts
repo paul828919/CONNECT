@@ -13,11 +13,14 @@
  * - /api/auth/* (NextAuth API routes)
  * - /_next/* (Next.js static assets)
  * - /favicon.ico
+ *
+ * User Tracking:
+ * - Calls internal API endpoint (Node.js runtime) for Redis tracking
+ * - Edge Runtime doesn't support `redis` package directly
  */
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { trackActiveUser } from '@/lib/analytics/active-user-tracking';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -40,10 +43,19 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(signInUrl);
     }
 
-    // Track active user (async, non-blocking, silent fail)
+    // Track active user via internal API (non-blocking, silent fail)
+    // Uses fetch to Node.js API route because Edge Runtime doesn't support `redis` package
     if (sessionToken?.value) {
-      trackActiveUser(sessionToken.value).catch((error) => {
-        console.error('[Middleware] Failed to track active user:', error);
+      const trackingUrl = new URL('/api/internal/track-user', request.url);
+      fetch(trackingUrl.toString(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-request': 'middleware',
+        },
+        body: JSON.stringify({ sessionToken: sessionToken.value }),
+      }).catch(() => {
+        // Silent fail - tracking should never block user requests
       });
     }
   }
