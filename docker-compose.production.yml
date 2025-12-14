@@ -34,6 +34,7 @@ services:
     environment:
       TZ: UTC
       NODE_ENV: production
+      HOSTNAME: "0.0.0.0"
       PORT: 3001
       INSTANCE_ID: app1
 
@@ -149,6 +150,7 @@ services:
     environment:
       TZ: UTC
       NODE_ENV: production
+      HOSTNAME: "0.0.0.0"
       PORT: 3002
       INSTANCE_ID: app2
       DATABASE_URL: postgresql://connect:${DB_PASSWORD}@postgres:5432/connect?schema=public&pool_timeout=30&connection_limit=50
