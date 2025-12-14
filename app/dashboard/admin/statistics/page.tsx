@@ -19,6 +19,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
@@ -35,12 +36,15 @@ import {
   ArrowUp,
   ArrowDown,
   Minus,
+  Percent,
 } from 'lucide-react';
 import {
   LineChart,
   Line,
   AreaChart,
   Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -48,7 +52,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { format } from 'date-fns';
+import { format, differenceInDays, subDays } from 'date-fns';
 
 // Types
 type TimePeriod = 'daily' | 'weekly' | 'monthly';
@@ -83,18 +87,68 @@ interface AnalyticsResponse {
     totalPageViews: number;
     date: string;
   };
+  engagement: {
+    description: string;
+    dau: number;
+    mau: number;
+    ratio: number;
+    benchmark: string;
+  };
   generatedAt: string;
 }
 
+// Preset periods in days
+const PRESET_PERIODS = {
+  '7': '최근 7일',
+  '14': '최근 14일',
+  '30': '최근 30일',
+  '90': '최근 90일',
+  'custom': '사용자 지정',
+} as const;
+
 export default function AdminStatisticsDashboard() {
   const [period, setPeriod] = useState<TimePeriod>('daily');
+  const [days, setDays] = useState<number>(30);
+  const [selectedPreset, setSelectedPreset] = useState<string>('30');
+  const [customStartDate, setCustomStartDate] = useState<string>(
+    format(subDays(new Date(), 30), 'yyyy-MM-dd')
+  );
+  const [customEndDate, setCustomEndDate] = useState<string>(
+    format(new Date(), 'yyyy-MM-dd')
+  );
   const [isExporting, setIsExporting] = useState(false);
+
+  // Handle preset period selection
+  const handlePresetChange = (preset: string) => {
+    setSelectedPreset(preset);
+    if (preset !== 'custom') {
+      const numDays = parseInt(preset, 10);
+      setDays(numDays);
+      setCustomStartDate(format(subDays(new Date(), numDays), 'yyyy-MM-dd'));
+      setCustomEndDate(format(new Date(), 'yyyy-MM-dd'));
+    }
+  };
+
+  // Handle custom date range change
+  const handleCustomDateChange = (start: string, end: string) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const calculatedDays = differenceInDays(endDate, startDate);
+
+    if (calculatedDays > 0 && calculatedDays <= 365) {
+      setDays(calculatedDays);
+      setCustomStartDate(start);
+      setCustomEndDate(end);
+    } else {
+      toast.error('날짜 범위는 1일에서 365일 사이여야 합니다');
+    }
+  };
 
   // Fetch analytics data
   const { data, isLoading, error } = useQuery<AnalyticsResponse>({
-    queryKey: ['admin-statistics', period],
+    queryKey: ['admin-statistics', period, days],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/statistics/users?period=${period}`);
+      const res = await fetch(`/api/admin/statistics/users?period=${period}&days=${days}`);
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.error || 'Failed to fetch statistics');
@@ -108,7 +162,7 @@ export default function AdminStatisticsDashboard() {
   const handleExportCSV = async () => {
     try {
       setIsExporting(true);
-      const res = await fetch(`/api/admin/statistics/users?period=${period}&format=csv`);
+      const res = await fetch(`/api/admin/statistics/users?period=${period}&days=${days}&format=csv`);
 
       if (!res.ok) {
         const error = await res.json();
@@ -206,19 +260,75 @@ export default function AdminStatisticsDashboard() {
           </Button>
         </div>
 
-        {/* Period Selector */}
-        <div className="flex gap-2 mb-6">
-          {(['daily', 'weekly', 'monthly'] as TimePeriod[]).map((p) => (
-            <Button
-              key={p}
-              onClick={() => setPeriod(p)}
-              variant={period === p ? 'default' : 'outline'}
-              size="sm"
-            >
-              {p === 'daily' ? '일간' : p === 'weekly' ? '주간' : '월간'}
-            </Button>
-          ))}
-        </div>
+        {/* Date Range & Period Selector */}
+        <Card className="mb-6">
+          <CardContent className="py-4">
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+              {/* Aggregation Period */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-600 whitespace-nowrap">집계 단위:</span>
+                <div className="flex gap-1">
+                  {(['daily', 'weekly', 'monthly'] as TimePeriod[]).map((p) => (
+                    <Button
+                      key={p}
+                      onClick={() => setPeriod(p)}
+                      variant={period === p ? 'default' : 'outline'}
+                      size="sm"
+                    >
+                      {p === 'daily' ? '일간' : p === 'weekly' ? '주간' : '월간'}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="hidden lg:block h-8 w-px bg-gray-200" />
+
+              {/* Date Range Presets */}
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-600 whitespace-nowrap">기간:</span>
+                <div className="flex gap-1 flex-wrap">
+                  {Object.entries(PRESET_PERIODS).map(([key, label]) => (
+                    <Button
+                      key={key}
+                      onClick={() => handlePresetChange(key)}
+                      variant={selectedPreset === key ? 'default' : 'outline'}
+                      size="sm"
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Custom Date Range (visible when custom is selected) */}
+              {selectedPreset === 'custom' && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => handleCustomDateChange(e.target.value, customEndDate)}
+                    className="w-36 text-sm"
+                    max={customEndDate}
+                  />
+                  <span className="text-gray-500">~</span>
+                  <Input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => handleCustomDateChange(customStartDate, e.target.value)}
+                    className="w-36 text-sm"
+                    min={customStartDate}
+                    max={format(new Date(), 'yyyy-MM-dd')}
+                  />
+                  <span className="text-xs text-gray-500">
+                    ({days}일)
+                  </span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Loading State */}
         {isLoading && (
@@ -244,11 +354,11 @@ export default function AdminStatisticsDashboard() {
           <div className="space-y-6">
             {/* KPI Cards Row 1 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Total Users */}
+              {/* Total Active Sessions */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">
-                    총 사용자
+                    총 활성 세션 수
                   </CardTitle>
                   <Users className="h-5 w-5 text-blue-600" />
                 </CardHeader>
@@ -262,11 +372,11 @@ export default function AdminStatisticsDashboard() {
                 </CardContent>
               </Card>
 
-              {/* Avg Daily Users */}
+              {/* Daily Active Users (DAU) */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">
-                    평균 일일 사용자
+                    평균 일일 활성 사용자 (DAU)
                   </CardTitle>
                   <Activity className="h-5 w-5 text-green-600" />
                 </CardHeader>
@@ -296,11 +406,11 @@ export default function AdminStatisticsDashboard() {
                 </CardContent>
               </Card>
 
-              {/* Peak Users */}
+              {/* Daily Peak Active Users */}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">
-                    최고 사용자
+                    일일 최고 활성 사용자
                   </CardTitle>
                   <TrendingUp className="h-5 w-5 text-purple-600" />
                 </CardHeader>
@@ -330,6 +440,61 @@ export default function AdminStatisticsDashboard() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* DAU/MAU Engagement Card */}
+            {data.engagement && (
+              <Card className="border-indigo-200 bg-indigo-50">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Percent className="h-5 w-5 text-indigo-600" />
+                    사용자 참여도 (DAU/MAU)
+                  </CardTitle>
+                  <CardDescription>
+                    사용자 고착도를 측정하는 SaaS 업계 표준 지표
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">DAU (오늘)</p>
+                      <p className="text-2xl font-bold text-indigo-600">
+                        {data.engagement.dau.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">MAU (30일)</p>
+                      <p className="text-2xl font-bold text-indigo-600">
+                        {data.engagement.mau.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">DAU/MAU 비율</p>
+                      <p className="text-2xl font-bold text-indigo-600">
+                        {data.engagement.ratio.toFixed(1)}%
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <Badge
+                      className={`${
+                        data.engagement.ratio >= 25
+                          ? 'bg-green-100 text-green-700'
+                          : data.engagement.ratio >= 20
+                          ? 'bg-blue-100 text-blue-700'
+                          : data.engagement.ratio >= 10
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : 'bg-red-100 text-red-700'
+                      } border-0`}
+                    >
+                      {data.engagement.benchmark}
+                    </Badge>
+                    <span className="text-xs text-gray-500">
+                      업계 기준: 20-25%가 양호
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Real-time Stats Card */}
             {data.realtime && (
@@ -422,7 +587,7 @@ export default function AdminStatisticsDashboard() {
               </CardContent>
             </Card>
 
-            {/* Page Views Chart */}
+            {/* Page Views Chart (Bar Chart) */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">페이지 뷰 추이</CardTitle>
@@ -432,7 +597,64 @@ export default function AdminStatisticsDashboard() {
                     : period === 'weekly'
                     ? '주별'
                     : '월별'}{' '}
-                  페이지 뷰 및 사용자당 평균
+                  총 페이지 뷰 수
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorPageViews" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.4} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => {
+                        const date = new Date(value);
+                        return period === 'daily'
+                          ? format(date, 'MM/dd')
+                          : period === 'weekly'
+                          ? format(date, 'MM/dd')
+                          : format(date, 'yyyy-MM');
+                      }}
+                    />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#fff',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                      }}
+                      formatter={(value: any) => [
+                        typeof value === 'number' ? value.toLocaleString() : value,
+                      ]}
+                    />
+                    <Legend />
+                    <Bar
+                      dataKey="페이지 뷰"
+                      fill="url(#colorPageViews)"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Average Page Views per User Chart (Line Chart) */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">사용자당 평균 페이지뷰</CardTitle>
+                <CardDescription>
+                  {period === 'daily'
+                    ? '일별'
+                    : period === 'weekly'
+                    ? '주별'
+                    : '월별'}{' '}
+                  사용자 참여도 지표
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -451,13 +673,7 @@ export default function AdminStatisticsDashboard() {
                           : format(date, 'yyyy-MM');
                       }}
                     />
-                    <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
-                    <YAxis
-                      yAxisId="right"
-                      orientation="right"
-                      tick={{ fontSize: 12 }}
-                      domain={[0, 'auto']}
-                    />
+                    <YAxis tick={{ fontSize: 12 }} domain={[0, 'auto']} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: '#fff',
@@ -465,26 +681,17 @@ export default function AdminStatisticsDashboard() {
                         borderRadius: '6px',
                       }}
                       formatter={(value: any) => [
-                        typeof value === 'number' ? value.toLocaleString() : value,
+                        typeof value === 'number' ? value.toFixed(1) : value,
                       ]}
                     />
                     <Legend />
                     <Line
-                      yAxisId="left"
-                      type="monotone"
-                      dataKey="페이지 뷰"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                    />
-                    <Line
-                      yAxisId="right"
                       type="monotone"
                       dataKey="평균 페이지뷰/사용자"
                       stroke="#f59e0b"
                       strokeWidth={2}
-                      dot={{ r: 3 }}
-                      strokeDasharray="5 5"
+                      dot={{ r: 4, fill: '#f59e0b' }}
+                      activeDot={{ r: 6 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>

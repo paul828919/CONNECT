@@ -49,6 +49,7 @@ import {
   getUserAnalytics,
   getTodayStats,
   exportToCSV,
+  getDAUMAURatio,
   type TimePeriod,
 } from '@/lib/analytics/user-analytics';
 
@@ -116,6 +117,9 @@ export async function GET(request: NextRequest) {
     // 5. Get today's real-time stats (optional enhancement)
     const todayStats = await getTodayStats();
 
+    // 5.5 Get DAU/MAU ratio (stickiness metric)
+    const dauMauRatio = await getDAUMAURatio();
+
     // 6. Return CSV export if requested
     if (format === 'csv') {
       const csv = exportToCSV(analytics);
@@ -138,6 +142,10 @@ export async function GET(request: NextRequest) {
         realtime: {
           description: "Today's real-time data (not yet aggregated)",
           ...todayStats,
+        },
+        engagement: {
+          description: 'DAU/MAU ratio (stickiness metric)',
+          ...dauMauRatio,
         },
       },
       {

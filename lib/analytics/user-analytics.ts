@@ -373,14 +373,96 @@ export function exportToCSV(analytics: UserAnalytics): string {
     `기간,${analytics.period}\n` +
     `시작일,${analytics.startDate}\n` +
     `종료일,${analytics.endDate}\n` +
-    `총 사용자 수,${analytics.summary.totalUsers}\n` +
+    `총 활성 세션 수,${analytics.summary.totalUsers}\n` +
     `총 페이지 뷰,${analytics.summary.totalPageViews}\n` +
-    `평균 일일 사용자,${analytics.summary.avgDailyUsers}\n` +
+    `평균 일일 활성 사용자 (DAU),${analytics.summary.avgDailyUsers}\n` +
     `평균 페이지뷰/사용자,${analytics.summary.avgPageViewsPerUser}\n` +
-    `최고 사용자 수,${analytics.summary.peakUsers}\n` +
+    `일일 최고 활성 사용자,${analytics.summary.peakUsers}\n` +
     `최고 기록일,${analytics.summary.peakDate}\n` +
     `성장률,${analytics.summary.growthRate}%\n` +
     `추세,${analytics.summary.trend === 'up' ? '상승' : analytics.summary.trend === 'down' ? '하락' : '안정'}\n`;
 
   return BOM + header + rows + summary;
+}
+
+/**
+ * DAU/MAU Ratio Interface
+ */
+export interface DAUMAURatio {
+  dau: number;        // Today's active users
+  mau: number;        // Monthly active users (30-day rolling)
+  ratio: number;      // DAU/MAU ratio as percentage
+  benchmark: string;  // Industry benchmark comparison
+}
+
+/**
+ * Calculate DAU/MAU (Stickiness) Ratio
+ *
+ * Industry standard engagement metric:
+ * - 10-20%: Average SaaS product
+ * - 20-25%: Good engagement
+ * - 25%+: Excellent engagement (daily habit-forming products)
+ *
+ * @returns DAU, MAU, ratio, and benchmark comparison
+ *
+ * @example
+ * const ratio = await getDAUMAURatio();
+ * console.log(`Stickiness: ${ratio.ratio}% (${ratio.benchmark})`);
+ */
+export async function getDAUMAURatio(): Promise<DAUMAURatio> {
+  try {
+    const today = new Date();
+    const thirtyDaysAgo = subDays(today, 30);
+
+    // Get today's DAU from Redis
+    const todayStats = await getTodayStats();
+    const dau = todayStats.uniqueUsers;
+
+    // Get MAU (sum of unique users over 30 days)
+    // Note: This is an approximation using daily aggregates
+    const monthlyData = await prisma.active_user_stats.findMany({
+      where: {
+        date: {
+          gte: thirtyDaysAgo,
+          lte: today,
+        },
+      },
+      select: {
+        uniqueUsers: true,
+      },
+    });
+
+    // Sum unique users (upper bound, as some users may repeat across days)
+    const mau = monthlyData.reduce((sum, day) => sum + day.uniqueUsers, 0);
+
+    // Calculate ratio (avoid division by zero)
+    const ratio = mau > 0 ? (dau / mau) * 100 : 0;
+
+    // Determine benchmark category
+    let benchmark: string;
+    if (ratio >= 25) {
+      benchmark = '우수 (일상적 사용)';
+    } else if (ratio >= 20) {
+      benchmark = '양호 (좋은 참여도)';
+    } else if (ratio >= 10) {
+      benchmark = '평균 (일반적인 SaaS)';
+    } else {
+      benchmark = '개선 필요';
+    }
+
+    return {
+      dau,
+      mau,
+      ratio: parseFloat(ratio.toFixed(1)),
+      benchmark,
+    };
+  } catch (error) {
+    console.error('[ANALYTICS] Failed to calculate DAU/MAU:', error instanceof Error ? error.message : error);
+    return {
+      dau: 0,
+      mau: 0,
+      ratio: 0,
+      benchmark: '데이터 없음',
+    };
+  }
 }
