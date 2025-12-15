@@ -134,14 +134,14 @@ export function startWeeklyDigestCron() {
 
 /**
  * Process recurring subscription billings
- * Runs daily at 00:00 UTC (09:00 KST)
+ * Runs daily at 08:00 UTC (17:00 KST)
  *
  * Uses Anniversary Billing: Each user billed on their individual nextBillingDate
  * Retry schedule: 1 day → 3 days → 7 days after initial failure
  */
 export function startRecurringBillingCron() {
   cron.schedule(
-    '0 0 * * *', // Daily at 00:00 UTC
+    '0 8 * * *', // Daily at 08:00 UTC (17:00 KST)
     async () => {
       console.log('💳 Running recurring billing cron...');
 
@@ -157,7 +157,7 @@ export function startRecurringBillingCron() {
     }
   );
 
-  console.log('✓ Recurring billing cron started (daily at 00:00 UTC / 09:00 KST)');
+  console.log('✓ Recurring billing cron started (daily at 08:00 UTC / 17:00 KST)');
 }
 
 /**

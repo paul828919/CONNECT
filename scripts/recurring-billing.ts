@@ -2,7 +2,7 @@
  * Recurring Billing Cron Job
  *
  * This script processes automatic subscription renewals.
- * Should be run daily via cron job (e.g., at 00:00 UTC).
+ * Should be run daily via cron job (at 08:00 UTC / 17:00 KST).
  *
  * Features:
  * - Anniversary billing: Each user billed on their own nextBillingDate
