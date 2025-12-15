@@ -106,15 +106,13 @@ function BillingSuccessContent() {
       setSubscriptionId(chargeData.subscription?.id);
       setIsComplete(true);
 
-      // Redirect to success page after a short delay
-      setTimeout(() => {
-        router.push(`/payments/success?subscriptionId=${chargeData.subscription?.id}&plan=${plan}`);
-      }, 2000);
+      // No redirect - show inline success UI instead
+      // This eliminates the double-redirect pattern that causes UI instability
     } catch (err) {
       console.error('Payment processing error:', err);
       setError('결제 처리 중 오류가 발생했습니다. 다시 시도해 주세요.');
     }
-  }, [authKey, customerKey, plan, billingCycle, amount, updateStep, updateSession, router]);
+  }, [authKey, customerKey, plan, billingCycle, amount, updateStep, updateSession]);
 
   useEffect(() => {
     if (sessionStatus === 'loading') return;
@@ -247,19 +245,115 @@ function BillingSuccessContent() {
           </div>
         )}
 
-        {/* Success Message */}
+        {/* Success Message - Expanded inline UI */}
         {isComplete && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <h3 className="font-semibold text-green-900 mb-1">결제가 완료되었습니다!</h3>
-                <p className="text-sm text-green-700">
-                  {getPlanName(plan)} 플랜이 활성화되었습니다. 잠시 후 결과 페이지로 이동합니다.
-                </p>
+          <div className="space-y-6">
+            {/* Success Header */}
+            <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
               </div>
+              <h3 className="text-xl font-bold text-green-900 text-center mb-2">결제가 완료되었습니다!</h3>
+              <p className="text-green-700 text-center">
+                {getPlanName(plan)} 플랜이 성공적으로 활성화되었습니다.
+              </p>
+            </div>
+
+            {/* Plan Features */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+              <h4 className="font-semibold text-blue-900 mb-4 text-center">
+                🎉 이제 다음 기능을 이용할 수 있습니다
+              </h4>
+              <div className="space-y-3">
+                {plan === 'PRO' ? (
+                  <>
+                    <div className="flex items-center gap-3 text-blue-800">
+                      <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>무제한 매칭 생성</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-blue-800">
+                      <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>상세 매칭 설명</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-blue-800">
+                      <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>실시간 업데이트</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-blue-800">
+                      <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>우선 기술 지원</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3 text-blue-800">
+                      <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Pro 플랜의 모든 기능</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-blue-800">
+                      <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>최대 5명 팀 멤버</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-blue-800">
+                      <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>무제한 Warm Intro</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-blue-800">
+                      <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>전담 고객 성공 매니저</span>
+                    </div>
+                  </>
+                )}
+              </div>
+              {subscriptionId && (
+                <div className="mt-4 pt-4 border-t border-blue-200">
+                  <p className="text-sm text-blue-600 text-center">
+                    구독 ID: <span className="font-mono">{subscriptionId}</span>
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/dashboard"
+                className="flex-1 inline-flex items-center justify-center px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold transition-all"
+              >
+                <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                대시보드로 이동
+              </Link>
+              <Link
+                href="/dashboard/matches"
+                className="flex-1 inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white border-2 border-blue-600 text-blue-600 font-semibold hover:bg-blue-50 transition-all"
+              >
+                <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                매칭 생성하기
+              </Link>
             </div>
           </div>
         )}
