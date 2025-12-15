@@ -126,6 +126,65 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ========== IDEMPOTENCY CHECK ==========
+    // Prevent duplicate charges from React Strict Mode or client re-renders
+    // Check if subscription was recently activated (within last 60 seconds)
+    const existingSubscription = await db.subscriptions.findUnique({
+      where: { userId },
+    });
+
+    if (existingSubscription) {
+      const timeSinceUpdate = Date.now() - existingSubscription.updatedAt.getTime();
+      const IDEMPOTENCY_WINDOW_MS = 60 * 1000; // 60 seconds
+
+      // If subscription is ACTIVE with same plan/cycle and was updated recently, return existing
+      if (
+        existingSubscription.status === 'ACTIVE' &&
+        existingSubscription.plan === plan &&
+        existingSubscription.billingCycle === billingCycle &&
+        existingSubscription.tossBillingKey === billingKey &&
+        timeSinceUpdate < IDEMPOTENCY_WINDOW_MS
+      ) {
+        console.log('[BILLING] Idempotency check: returning existing subscription', {
+          userId,
+          subscriptionId: existingSubscription.id,
+          timeSinceUpdate: `${(timeSinceUpdate / 1000).toFixed(1)}s`,
+        });
+
+        // Fetch the most recent payment for this subscription
+        const recentPayment = await db.payments.findFirst({
+          where: { subscriptionId: existingSubscription.id },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        return NextResponse.json({
+          success: true,
+          mode: process.env.TOSS_TEST_MODE === 'true' ? 'TEST' : 'PRODUCTION',
+          idempotent: true, // Flag to indicate this was a duplicate request
+          subscription: {
+            id: existingSubscription.id,
+            plan: existingSubscription.plan,
+            status: existingSubscription.status,
+            billingCycle: existingSubscription.billingCycle,
+            startedAt: existingSubscription.startedAt.toISOString(),
+            expiresAt: existingSubscription.expiresAt.toISOString(),
+            nextBillingDate: existingSubscription.nextBillingDate?.toISOString(),
+            amount: existingSubscription.amount,
+          },
+          payment: recentPayment ? {
+            id: recentPayment.id,
+            orderId: recentPayment.tossOrderId,
+            paymentKey: recentPayment.tossPaymentKey,
+            amount: recentPayment.amount,
+            status: recentPayment.status,
+            paidAt: recentPayment.paidAt?.toISOString(),
+          } : null,
+          message: '구독이 이미 활성화되어 있습니다.',
+        });
+      }
+    }
+    // ========== END IDEMPOTENCY CHECK ==========
+
     // 6. Generate unique order ID
     const orderId = `order_${Date.now()}_${userId.slice(0, 8)}`;
     const orderName = `Connect ${plan} 플랜 (${billingCycle === 'MONTHLY' ? '월간' : '연간'})`;
@@ -213,10 +272,7 @@ export async function POST(request: NextRequest) {
     const nextBillingDate = new Date(expiresAt);
 
     // 9. Create or update subscription
-    const existingSubscription = await db.subscriptions.findUnique({
-      where: { userId },
-    });
-
+    // Note: existingSubscription was already fetched in idempotency check above
     let subscription;
 
     if (existingSubscription) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense, useCallback } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -10,6 +10,34 @@ interface ProcessingStep {
   label: string;
   status: 'pending' | 'loading' | 'completed' | 'failed';
   error?: string;
+}
+
+/**
+ * Check if an authKey has already been processed (persists across React remounts)
+ * Uses sessionStorage to survive React Strict Mode double-invocation
+ */
+function isAuthKeyProcessed(authKey: string | null): boolean {
+  if (!authKey || typeof window === 'undefined') return false;
+  const key = `billing_processed_${authKey}`;
+  return sessionStorage.getItem(key) === 'true';
+}
+
+/**
+ * Mark an authKey as processed (prevents duplicate payments)
+ */
+function markAuthKeyProcessed(authKey: string): void {
+  if (typeof window === 'undefined') return;
+  const key = `billing_processed_${authKey}`;
+  sessionStorage.setItem(key, 'true');
+}
+
+/**
+ * Clear processed flag for an authKey (used on error to allow retry)
+ */
+function clearAuthKeyProcessed(authKey: string): void {
+  if (typeof window === 'undefined') return;
+  const key = `billing_processed_${authKey}`;
+  sessionStorage.removeItem(key);
 }
 
 function BillingSuccessContent() {
@@ -27,6 +55,9 @@ function BillingSuccessContent() {
   const [isComplete, setIsComplete] = useState(false);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
 
+  // Additional ref guard as backup (works in production where Strict Mode is less aggressive)
+  const isProcessingRef = useRef(false);
+
   // Parse query parameters
   const authKey = searchParams.get('authKey');
   const customerKey = searchParams.get('customerKey');
@@ -34,97 +65,128 @@ function BillingSuccessContent() {
   const billingCycle = searchParams.get('billingCycle') as 'MONTHLY' | 'ANNUAL' | null;
   const amount = searchParams.get('amount');
 
-  const updateStep = useCallback((stepId: string, status: ProcessingStep['status'], error?: string) => {
+  // Helper to update step status
+  const updateStep = (stepId: string, status: ProcessingStep['status'], stepError?: string) => {
     setSteps((prev) =>
       prev.map((step) =>
-        step.id === stepId ? { ...step, status, error } : step
+        step.id === stepId ? { ...step, status, error: stepError } : step
       )
     );
-  }, []);
+  };
 
-  const processPayment = useCallback(async () => {
-    if (!authKey || !customerKey || !plan || !billingCycle || !amount) {
-      setError('결제 정보가 올바르지 않습니다. 다시 시도해 주세요.');
-      return;
-    }
-
-    try {
-      // Step 1: Auth verification (already done by redirect)
-      updateStep('auth', 'completed');
-
-      // Step 2: Issue billing key
-      updateStep('billing_key', 'loading');
-
-      const issueResponse = await fetch('/api/billing/issue', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ authKey, customerKey }),
-      });
-
-      const issueData = await issueResponse.json();
-
-      if (!issueResponse.ok) {
-        updateStep('billing_key', 'failed', issueData.message || '빌링키 발급 실패');
-        setError(issueData.message || '빌링키 발급에 실패했습니다.');
-        return;
-      }
-
-      updateStep('billing_key', 'completed');
-
-      // Step 3: Charge first payment
-      updateStep('charge', 'loading');
-
-      const chargeResponse = await fetch('/api/billing/charge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          billingKey: issueData.billingKey,
-          customerKey,
-          amount: parseInt(amount),
-          plan,
-          billingCycle,
-        }),
-      });
-
-      const chargeData = await chargeResponse.json();
-
-      if (!chargeResponse.ok) {
-        updateStep('charge', 'failed', chargeData.message || '결제 처리 실패');
-        setError(chargeData.message || '결제 처리에 실패했습니다.');
-        return;
-      }
-
-      updateStep('charge', 'completed');
-
-      // Step 4: Subscription activation
-      updateStep('activation', 'loading');
-
-      // Update session to reflect new subscription
-      await updateSession();
-
-      updateStep('activation', 'completed');
-      setSubscriptionId(chargeData.subscription?.id);
-      setIsComplete(true);
-
-      // No redirect - show inline success UI instead
-      // This eliminates the double-redirect pattern that causes UI instability
-    } catch (err) {
-      console.error('Payment processing error:', err);
-      setError('결제 처리 중 오류가 발생했습니다. 다시 시도해 주세요.');
-    }
-  }, [authKey, customerKey, plan, billingCycle, amount, updateStep, updateSession]);
-
+  // Single useEffect with robust duplicate prevention
   useEffect(() => {
+    // Wait for session to load
     if (sessionStatus === 'loading') return;
 
+    // Redirect if not authenticated
     if (!session) {
       router.push('/auth/signin?callbackUrl=' + encodeURIComponent(window.location.href));
       return;
     }
 
-    // Start payment processing
-    processPayment();
-  }, [session, sessionStatus, router, processPayment]);
+    // Validate required parameters
+    if (!authKey || !customerKey || !plan || !billingCycle || !amount) {
+      setError('결제 정보가 올바르지 않습니다. 다시 시도해 주세요.');
+      return;
+    }
+
+    // CRITICAL: Prevent duplicate execution using sessionStorage (survives React Strict Mode remounts)
+    if (isAuthKeyProcessed(authKey)) {
+      console.log('[BillingSuccess] authKey already processed, skipping');
+      return;
+    }
+
+    // CRITICAL: Prevent concurrent execution using ref (handles rapid state updates)
+    if (isProcessingRef.current) {
+      console.log('[BillingSuccess] Already processing, skipping');
+      return;
+    }
+    isProcessingRef.current = true;
+
+    // Mark as processed BEFORE starting (prevents race conditions)
+    markAuthKeyProcessed(authKey);
+
+    // Process payment (async IIFE to handle async operations in useEffect)
+    (async () => {
+      try {
+        // Step 1: Auth verification (already done by redirect)
+        updateStep('auth', 'completed');
+
+        // Step 2: Issue billing key
+        updateStep('billing_key', 'loading');
+
+        const issueResponse = await fetch('/api/billing/issue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ authKey, customerKey }),
+        });
+
+        const issueData = await issueResponse.json();
+
+        if (!issueResponse.ok) {
+          updateStep('billing_key', 'failed', issueData.message || '빌링키 발급 실패');
+          setError(issueData.message || '빌링키 발급에 실패했습니다.');
+          clearAuthKeyProcessed(authKey); // Allow retry
+          isProcessingRef.current = false;
+          return;
+        }
+
+        updateStep('billing_key', 'completed');
+
+        // Step 3: Charge first payment
+        updateStep('charge', 'loading');
+
+        const chargeResponse = await fetch('/api/billing/charge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            billingKey: issueData.billingKey,
+            customerKey,
+            amount: parseInt(amount),
+            plan,
+            billingCycle,
+          }),
+        });
+
+        const chargeData = await chargeResponse.json();
+
+        if (!chargeResponse.ok) {
+          updateStep('charge', 'failed', chargeData.message || '결제 처리 실패');
+          setError(chargeData.message || '결제 처리에 실패했습니다.');
+          clearAuthKeyProcessed(authKey); // Allow retry
+          isProcessingRef.current = false;
+          return;
+        }
+
+        updateStep('charge', 'completed');
+
+        // Step 4: Subscription activation
+        updateStep('activation', 'loading');
+
+        // Update session to reflect new subscription
+        await updateSession();
+
+        updateStep('activation', 'completed');
+        setSubscriptionId(chargeData.subscription?.id);
+        setIsComplete(true);
+
+        // Success - keep authKey marked as processed to prevent duplicate on page refresh
+        console.log('[BillingSuccess] Payment completed successfully');
+      } catch (err) {
+        console.error('Payment processing error:', err);
+        setError('결제 처리 중 오류가 발생했습니다. 다시 시도해 주세요.');
+        clearAuthKeyProcessed(authKey); // Allow retry
+        isProcessingRef.current = false;
+      }
+    })();
+
+    // Cleanup: Reset processing flag on unmount (but NOT sessionStorage - that's intentional)
+    return () => {
+      isProcessingRef.current = false;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionStatus, session, authKey]); // Minimal dependencies - only what truly matters
 
   if (sessionStatus === 'loading') {
     return (
