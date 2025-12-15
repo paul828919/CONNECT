@@ -94,15 +94,15 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.tosspayments.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://api.anthropic.com https://kauth.kakao.com https://kapi.kakao.com https://nid.naver.com https://openapi.naver.com",
-              "frame-src 'self'",
+              "connect-src 'self' https://api.anthropic.com https://kauth.kakao.com https://kapi.kakao.com https://nid.naver.com https://openapi.naver.com https://api.tosspayments.com",
+              "frame-src 'self' https://*.tosspayments.com",
               "object-src 'none'",
               "base-uri 'self'",
-              "form-action 'self'",
+              "form-action 'self' https://*.tosspayments.com",
               "frame-ancestors 'none'",
               "upgrade-insecure-requests"
             ].join('; ')
