@@ -1,12 +1,16 @@
 /**
- * Email Notification Cron Jobs
+ * Email Notification & Billing Cron Jobs
  *
- * Scheduled tasks for deadline reminders and weekly digest.
+ * Scheduled tasks for:
+ * - Deadline reminders (daily at 8:00 AM KST)
+ * - Weekly digest (Sundays at 8:00 AM KST)
+ * - Recurring billing (daily at 00:00 UTC)
  */
 
 import cron from 'node-cron';
 import { db } from '@/lib/db';
 import { sendDeadlineReminder, sendWeeklyDigestToAll } from './notifications';
+import { processRecurringBillings } from '@/scripts/recurring-billing';
 
 
 /**
@@ -129,17 +133,46 @@ export function startWeeklyDigestCron() {
 }
 
 /**
- * Start all email notification cron jobs
+ * Process recurring subscription billings
+ * Runs daily at 00:00 UTC (09:00 KST)
+ *
+ * Uses Anniversary Billing: Each user billed on their individual nextBillingDate
+ * Retry schedule: 1 day → 3 days → 7 days after initial failure
+ */
+export function startRecurringBillingCron() {
+  cron.schedule(
+    '0 0 * * *', // Daily at 00:00 UTC
+    async () => {
+      console.log('💳 Running recurring billing cron...');
+
+      try {
+        await processRecurringBillings();
+        console.log('✓ Recurring billing cron completed');
+      } catch (error) {
+        console.error('Recurring billing cron failed:', error);
+      }
+    },
+    {
+      timezone: 'UTC', // Use UTC for billing consistency
+    }
+  );
+
+  console.log('✓ Recurring billing cron started (daily at 00:00 UTC / 09:00 KST)');
+}
+
+/**
+ * Start all cron jobs (email notifications + billing)
  */
 export function startEmailCronJobs() {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('📧 Starting Email Notification Cron Jobs');
+  console.log('📧 Starting Notification & Billing Cron Jobs');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   startDeadlineReminderCron();
   startWeeklyDigestCron();
+  startRecurringBillingCron();
 
   console.log('');
-  console.log('✅ All email cron jobs started successfully');
+  console.log('✅ All cron jobs started successfully');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }

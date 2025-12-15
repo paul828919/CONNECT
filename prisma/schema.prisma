@@ -613,6 +613,8 @@ model User {
   image                  String?
   lastNotificationSentAt DateTime?
   notificationSettings   Json?
+  // Toss Payments customer key (UUID, persists across subscriptions)
+  tossCustomerKey        String?               @unique
   accounts               Account[]
   ai_cost_logs           ai_cost_logs[]
   ai_feedback            ai_feedback[]

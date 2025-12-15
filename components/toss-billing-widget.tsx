@@ -3,15 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 
-// Simple UUID v4 generator (avoid external dependency)
-function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
-
 // Toss Payments SDK v2 types
 declare global {
   interface Window {
@@ -57,6 +48,8 @@ export function TossBillingWidget({
   const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [sdkLoaded, setSdkLoaded] = useState(false);
+  const [customerKey, setCustomerKey] = useState<string | null>(null);
+  const [customerKeyLoading, setCustomerKeyLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Load Toss Payments SDK v2
@@ -77,20 +70,35 @@ export function TossBillingWidget({
     }
   }, []);
 
-  // Generate or retrieve customerKey
-  const getCustomerKey = useCallback((): string => {
-    // customerKey should be a secure random UUID, not user email or auto-increment ID
-    // Store in localStorage for consistency across sessions
-    const storageKey = 'toss_customer_key';
-    let customerKey = localStorage.getItem(storageKey);
+  // Fetch customerKey from server (stored in database, not localStorage)
+  // This ensures consistency across devices and browser cache clears
+  const fetchCustomerKey = useCallback(async () => {
+    if (customerKey || customerKeyLoading) return;
 
-    if (!customerKey) {
-      customerKey = generateUUID();
-      localStorage.setItem(storageKey, customerKey);
+    setCustomerKeyLoading(true);
+    try {
+      const response = await fetch('/api/billing/customer-key');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'customerKey 조회에 실패했습니다.');
+      }
+
+      setCustomerKey(data.customerKey);
+    } catch (err) {
+      console.error('Failed to fetch customerKey:', err);
+      setError(err instanceof Error ? err.message : 'customerKey 조회에 실패했습니다.');
+    } finally {
+      setCustomerKeyLoading(false);
     }
+  }, [customerKey, customerKeyLoading]);
 
-    return customerKey;
-  }, []);
+  // Fetch customerKey when session is available
+  useEffect(() => {
+    if (session?.user && !customerKey && !customerKeyLoading) {
+      fetchCustomerKey();
+    }
+  }, [session, customerKey, customerKeyLoading, fetchCustomerKey]);
 
   const handleBillingAuth = async () => {
     if (!sdkLoaded || !window.TossPayments) {
@@ -100,6 +108,13 @@ export function TossBillingWidget({
 
     if (!session?.user) {
       setError('로그인이 필요합니다.');
+      return;
+    }
+
+    if (!customerKey) {
+      setError('결제 준비 중입니다. 잠시 후 다시 시도해주세요.');
+      // Try to fetch customerKey again
+      await fetchCustomerKey();
       return;
     }
 
@@ -121,7 +136,6 @@ export function TossBillingWidget({
         throw new Error('결제 설정이 완료되지 않았습니다.');
       }
 
-      const customerKey = getCustomerKey();
       const tossPayments = window.TossPayments(clientKey);
       const payment = tossPayments.payment({ customerKey });
 
@@ -162,6 +176,8 @@ export function TossBillingWidget({
     handleBillingAuth();
   };
 
+  const isReady = sdkLoaded && customerKey && !customerKeyLoading;
+
   return (
     <div className="w-full">
       {error && (
@@ -172,9 +188,9 @@ export function TossBillingWidget({
 
       <button
         onClick={handleClick}
-        disabled={isLoading || !sdkLoaded}
+        disabled={isLoading || !isReady}
         className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all ${
-          isLoading || !sdkLoaded
+          isLoading || !isReady
             ? 'bg-gray-400 cursor-not-allowed'
             : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95'
         }`}
@@ -189,6 +205,8 @@ export function TossBillingWidget({
           </span>
         ) : !sdkLoaded ? (
           '결제 모듈 로딩 중...'
+        ) : customerKeyLoading ? (
+          '결제 준비 중...'
         ) : (
           <>
             <svg className="inline-block h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

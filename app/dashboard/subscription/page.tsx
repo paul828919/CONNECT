@@ -20,6 +20,7 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { RefundRequestModal } from '@/components/refund-request-modal';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { calculateRefund } from '@/lib/refund-calculator';
+import { BillingStatusBanner, PaymentMethodUpdateLink } from '@/components/billing-status-banner';
 
 export default function SubscriptionPage() {
   const { data: session } = useSession();
@@ -136,10 +137,21 @@ export default function SubscriptionPage() {
     );
   }
 
+  // Determine billing status for banner
+  const getBillingStatus = () => {
+    if (subscription?.status === 'PAST_DUE') return 'past_due' as const;
+    // Note: Card expiry check would require card info from Toss (not currently stored)
+    // For now, we only show past_due status
+    return 'active' as const;
+  };
+
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6 max-w-4xl">
         <h1 className="text-2xl font-bold mb-6">구독 관리</h1>
+
+        {/* Billing Status Banner - shows warnings for payment issues */}
+        <BillingStatusBanner status={getBillingStatus()} />
 
         <Card className="mb-6">
           <CardHeader>
@@ -336,10 +348,13 @@ export default function SubscriptionPage() {
           <CardHeader>
             <CardTitle>결제 수단</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <p className="text-sm text-gray-600">
               {subscription.paymentMethod || '등록된 결제 수단이 없습니다'}
             </p>
+            <div className="pt-2">
+              <PaymentMethodUpdateLink />
+            </div>
           </CardContent>
         </Card>
 
