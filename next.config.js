@@ -94,11 +94,11 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.tosspayments.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.tosspayments.com https://static.toss.im",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://api.anthropic.com https://kauth.kakao.com https://kapi.kakao.com https://nid.naver.com https://openapi.naver.com https://api.tosspayments.com",
+              "connect-src 'self' https://api.anthropic.com https://kauth.kakao.com https://kapi.kakao.com https://nid.naver.com https://openapi.naver.com https://*.tosspayments.com wss://*.tosspayments.com https://static.toss.im",
               "frame-src 'self' https://*.tosspayments.com",
               "object-src 'none'",
               "base-uri 'self'",

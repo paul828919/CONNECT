@@ -152,43 +152,14 @@ export function TossBillingWidget({
     }
   };
 
-  // Test mode handler for TOSS_TEST_MODE=true
-  const handleTestModeBilling = async () => {
-    if (!session?.user) {
-      setError('로그인이 필요합니다.');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const customerKey = getCustomerKey();
-      const baseUrl = window.location.origin;
-
-      // In test mode, simulate success redirect with mock authKey
-      const mockAuthKey = `test_auth_${Date.now()}`;
-      const successUrl = `${baseUrl}/billing/success?authKey=${mockAuthKey}&customerKey=${customerKey}&plan=${plan}&billingCycle=${billingCycle}&amount=${amount}`;
-
-      // Redirect to success page
-      window.location.href = successUrl;
-    } catch (err) {
-      console.error('Test mode billing error:', err);
-      setError('테스트 결제 처리 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Handle click - always use real Toss SDK
+  // Note: Test mode (NEXT_PUBLIC_TOSS_TEST_MODE=true) affects Toss SDK behavior:
+  // - SMS verification: enter 000000 instead of real code
+  // - Card validation: only BIN (first 6 digits) needs to be valid
+  // - No actual charges are made
+  // But the SDK still opens the card registration UI for proper testing
   const handleClick = () => {
-    // Check if in test mode
-    const isTestMode = process.env.NEXT_PUBLIC_TOSS_TEST_MODE === 'true';
-
-    if (isTestMode) {
-      handleTestModeBilling();
-    } else {
-      handleBillingAuth();
-    }
+    handleBillingAuth();
   };
 
   return (
@@ -201,9 +172,9 @@ export function TossBillingWidget({
 
       <button
         onClick={handleClick}
-        disabled={isLoading || (!sdkLoaded && process.env.NEXT_PUBLIC_TOSS_TEST_MODE !== 'true')}
+        disabled={isLoading || !sdkLoaded}
         className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all ${
-          isLoading || (!sdkLoaded && process.env.NEXT_PUBLIC_TOSS_TEST_MODE !== 'true')
+          isLoading || !sdkLoaded
             ? 'bg-gray-400 cursor-not-allowed'
             : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95'
         }`}
@@ -216,7 +187,7 @@ export function TossBillingWidget({
             </svg>
             처리 중...
           </span>
-        ) : !sdkLoaded && process.env.NEXT_PUBLIC_TOSS_TEST_MODE !== 'true' ? (
+        ) : !sdkLoaded ? (
           '결제 모듈 로딩 중...'
         ) : (
           <>
