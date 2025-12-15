@@ -10,6 +10,7 @@
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { Prisma } from '@prisma/client';
 import { calculateRefund } from '@/lib/refund-calculator';
 import { db } from '@/lib/db';
 import { authOptions } from '@/lib/auth.config';
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
         refundAmount: refundCalculation.refundAmount, // in KRW (won)
         penalty: refundCalculation.penalty, // in KRW (won)
         reasonCategory, // v3.1 NEW
-        calculationJson: refundCalculation, // v3.1 NEW
+        calculationJson: JSON.parse(JSON.stringify(refundCalculation)), // v3.1 NEW
         isStatutory,
         reason: reasonText || reasonCategory,
         status: 'PENDING',

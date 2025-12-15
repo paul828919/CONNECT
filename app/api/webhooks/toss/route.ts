@@ -153,7 +153,7 @@ async function handlePaymentConfirmed(event: TossWebhookEvent) {
     // Find payment by tossPaymentKey
     const payment = await db.payments.findFirst({
       where: { tossPaymentKey: paymentKey },
-      include: { subscription: true },
+      include: { subscriptions: true },
     });
 
     if (!payment) {
@@ -171,9 +171,9 @@ async function handlePaymentConfirmed(event: TossWebhookEvent) {
     });
 
     // Update subscription status to ACTIVE if not already
-    if (payment.subscription && payment.subscription.status !== 'ACTIVE') {
+    if (payment.subscriptions && payment.subscriptions.status !== 'ACTIVE') {
       await db.subscriptions.update({
-        where: { id: payment.subscription.id },
+        where: { id: payment.subscriptions.id },
         data: {
           status: 'ACTIVE' as SubscriptionStatus,
           lastPaymentId: payment.id,
@@ -209,7 +209,7 @@ async function handlePaymentFailed(event: TossWebhookEvent) {
     // Find payment by tossPaymentKey
     const payment = await db.payments.findFirst({
       where: { tossPaymentKey: paymentKey },
-      include: { subscription: true },
+      include: { subscriptions: true },
     });
 
     if (!payment) {
@@ -226,9 +226,9 @@ async function handlePaymentFailed(event: TossWebhookEvent) {
     });
 
     // Update subscription status to PAST_DUE
-    if (payment.subscription) {
+    if (payment.subscriptions) {
       await db.subscriptions.update({
-        where: { id: payment.subscription.id },
+        where: { id: payment.subscriptions.id },
         data: {
           status: 'PAST_DUE' as SubscriptionStatus,
         },
@@ -241,7 +241,7 @@ async function handlePaymentFailed(event: TossWebhookEvent) {
     });
 
     // TODO: Send email notification to user about failed payment
-    // await sendPaymentFailedEmail(payment.subscription?.userId);
+    // await sendPaymentFailedEmail(payment.subscriptions?.userId);
   } catch (error) {
     console.error('[WEBHOOK] Error handling PAYMENT_FAILED:', error);
   }
@@ -262,7 +262,7 @@ async function handlePaymentCanceled(event: TossWebhookEvent) {
     // Find payment by tossPaymentKey
     const payment = await db.payments.findFirst({
       where: { tossPaymentKey: paymentKey },
-      include: { subscription: true },
+      include: { subscriptions: true },
     });
 
     if (!payment) {
@@ -281,15 +281,14 @@ async function handlePaymentCanceled(event: TossWebhookEvent) {
       data: {
         status: 'REFUNDED' as PaymentStatus,
         refundedAt: new Date(),
-        refundAmount: cancelAmount,
-        refundReason: cancelReason,
+        failureReason: cancelReason,
       },
     });
 
     // Update subscription status to CANCELED
-    if (payment.subscription) {
+    if (payment.subscriptions) {
       await db.subscriptions.update({
-        where: { id: payment.subscription.id },
+        where: { id: payment.subscriptions.id },
         data: {
           status: 'CANCELED' as SubscriptionStatus,
           canceledAt: new Date(),
@@ -305,7 +304,7 @@ async function handlePaymentCanceled(event: TossWebhookEvent) {
     });
 
     // TODO: Send email notification to user about refund
-    // await sendRefundConfirmationEmail(payment.subscription?.userId, cancelAmount);
+    // await sendRefundConfirmationEmail(payment.subscriptions?.userId, cancelAmount);
   } catch (error) {
     console.error('[WEBHOOK] Error handling PAYMENT_CANCELED:', error);
   }
