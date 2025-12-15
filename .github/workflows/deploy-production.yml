@@ -392,9 +392,13 @@ jobs:
           # ============================================
           # Payment Integration (Toss Payments)
           # ============================================
+          # Server-side (API routes)
           TOSS_CLIENT_KEY=${{ secrets.TOSS_CLIENT_KEY }}
           TOSS_SECRET_KEY=${{ secrets.TOSS_SECRET_KEY }}
           TOSS_TEST_MODE=${{ secrets.TOSS_TEST_MODE }}
+          # Client-side (browser) - NEXT_PUBLIC_ prefix required for Next.js
+          NEXT_PUBLIC_TOSS_CLIENT_KEY=${{ secrets.NEXT_PUBLIC_TOSS_CLIENT_KEY }}
+          NEXT_PUBLIC_TOSS_TEST_MODE=${{ secrets.NEXT_PUBLIC_TOSS_TEST_MODE }}
 
           # ============================================
           # Monitoring & Error Tracking
