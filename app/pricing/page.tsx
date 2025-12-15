@@ -82,20 +82,34 @@ export default function PricingPage() {
   };
 
   const handleUpgrade = (plan: Plan, planName: string, amount: number) => {
+    // For unauthenticated users, redirect to signin for any plan (including Free)
     if (!session?.user) {
-      router.push('/auth/signin?callbackUrl=/pricing');
+      router.push('/auth/signin?callbackUrl=/dashboard');
       return;
     }
 
+    // Skip if already on this plan
     if (isCurrentPlan(plan)) return;
-    if (plan === 'FREE') return;
 
+    // Free plan: redirect to dashboard (no payment needed)
+    if (plan === 'FREE') {
+      router.push('/dashboard');
+      return;
+    }
+
+    // Paid plans: show checkout confirmation dialog
     setPendingCheckout({ plan, planName, amount });
     setShowConfirmDialog(true);
   };
 
   const proceedToCheckout = async () => {
     if (!pendingCheckout) return;
+
+    // Frontend validation for billing cycle
+    if (!['monthly', 'yearly'].includes(billingCycle)) {
+      alert('유효하지 않은 결제 주기입니다. 페이지를 새로고침 후 다시 시도해주세요.');
+      return;
+    }
 
     try {
       setLoading(pendingCheckout.plan);
@@ -208,7 +222,7 @@ export default function PricingPage() {
         border: 'border-gray-200',
         bg: 'bg-white',
         text: 'text-gray-900',
-        button: 'bg-gray-100 text-gray-400 cursor-not-allowed',
+        button: 'bg-gray-600 hover:bg-gray-700 text-white shadow-md hover:shadow-lg',
         badge: 'bg-gray-100 text-gray-600',
       },
       blue: {
@@ -371,7 +385,7 @@ export default function PricingPage() {
                 {/* CTA Button */}
                 <button
                   onClick={() => handleUpgrade(plan.key, plan.name, price)}
-                  disabled={isCurrent || (plan.key === 'FREE' && !session?.user) || isLoading}
+                  disabled={isCurrent || isLoading}
                   className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
                     isCurrent
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
