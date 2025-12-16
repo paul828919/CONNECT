@@ -93,7 +93,27 @@ function BillingSuccessContent() {
 
     // CRITICAL: Prevent duplicate execution using sessionStorage (survives React Strict Mode remounts)
     if (isAuthKeyProcessed(authKey)) {
-      console.log('[BillingSuccess] authKey already processed, skipping');
+      console.log('[BillingSuccess] authKey already processed, checking subscription status');
+      // Instead of just returning, check if subscription is active and show success UI
+      (async () => {
+        try {
+          const response = await fetch('/api/subscriptions/me');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.subscription?.status === 'ACTIVE') {
+              // Show success UI for already processed payment
+              setSteps((prev) =>
+                prev.map((step) => ({ ...step, status: 'completed' as const }))
+              );
+              setSubscriptionId(data.subscription.id);
+              setIsComplete(true);
+              console.log('[BillingSuccess] Showing cached success state');
+            }
+          }
+        } catch (err) {
+          console.error('[BillingSuccess] Error checking subscription:', err);
+        }
+      })();
       return;
     }
 
@@ -226,7 +246,7 @@ function BillingSuccessContent() {
           </h1>
           <p className="text-gray-600">
             {isComplete
-              ? '잠시 후 결과 페이지로 이동합니다.'
+              ? '아래에서 대시보드로 이동하실 수 있습니다.'
               : `${getPlanName(plan)} 플랜 (₩${formatAmount(amount)})`}
           </p>
         </div>

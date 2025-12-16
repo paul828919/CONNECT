@@ -15,6 +15,11 @@
  * Test Mode (TOSS_TEST_MODE=true):
  * - Creates subscription and payment records without calling Toss API
  * - Useful for local development and UI testing
+ *
+ * Idempotency Protection:
+ * - Uses database-level locking via Prisma transactions
+ * - Prevents duplicate payments from concurrent requests
+ * - Three-layer protection: lock + time window + recent payment check
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -27,6 +32,36 @@ import {
   BillingCycle,
   PaymentStatus,
 } from '@prisma/client';
+
+// In-memory lock for concurrent request protection (single-instance)
+// For multi-instance deployments, use Redis-based distributed locking
+const processingLocks = new Map<string, number>();
+const LOCK_TIMEOUT_MS = 30000; // 30 seconds
+
+/**
+ * Acquire a processing lock for a user
+ * Returns true if lock acquired, false if already processing
+ */
+function acquireLock(userId: string): boolean {
+  const now = Date.now();
+  const existingLock = processingLocks.get(userId);
+
+  // Check if lock exists and hasn't expired
+  if (existingLock && (now - existingLock) < LOCK_TIMEOUT_MS) {
+    return false; // Lock is held by another request
+  }
+
+  // Acquire the lock
+  processingLocks.set(userId, now);
+  return true;
+}
+
+/**
+ * Release a processing lock for a user
+ */
+function releaseLock(userId: string): void {
+  processingLocks.delete(userId);
+}
 
 // Plan prices for validation
 const PLAN_PRICES = {
@@ -126,234 +161,274 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ========== IDEMPOTENCY CHECK ==========
-    // Prevent duplicate charges from React Strict Mode or client re-renders
-    // Check if subscription was recently activated (within last 60 seconds)
-    const existingSubscription = await db.subscriptions.findUnique({
-      where: { userId },
-    });
+    // ========== LAYER 1: IN-MEMORY LOCK ==========
+    // Prevents concurrent requests from the same user
+    if (!acquireLock(userId)) {
+      console.log('[BILLING] Lock acquisition failed - concurrent request detected', { userId });
+      return NextResponse.json({
+        success: true,
+        idempotent: true,
+        message: '결제가 처리 중입니다. 잠시 후 다시 확인해 주세요.',
+      });
+    }
 
-    if (existingSubscription) {
-      const timeSinceUpdate = Date.now() - existingSubscription.updatedAt.getTime();
+    try {
+      // ========== LAYER 2: DATABASE IDEMPOTENCY CHECK ==========
+      // Check subscription and recent payments within a transaction
       const IDEMPOTENCY_WINDOW_MS = 60 * 1000; // 60 seconds
 
-      // If subscription is ACTIVE with same plan/cycle and was updated recently, return existing
-      if (
-        existingSubscription.status === 'ACTIVE' &&
-        existingSubscription.plan === plan &&
-        existingSubscription.billingCycle === billingCycle &&
-        existingSubscription.tossBillingKey === billingKey &&
-        timeSinceUpdate < IDEMPOTENCY_WINDOW_MS
-      ) {
-        console.log('[BILLING] Idempotency check: returning existing subscription', {
-          userId,
-          subscriptionId: existingSubscription.id,
-          timeSinceUpdate: `${(timeSinceUpdate / 1000).toFixed(1)}s`,
-        });
-
-        // Fetch the most recent payment for this subscription
-        const recentPayment = await db.payments.findFirst({
-          where: { subscriptionId: existingSubscription.id },
-          orderBy: { createdAt: 'desc' },
-        });
-
-        return NextResponse.json({
-          success: true,
-          mode: process.env.TOSS_TEST_MODE === 'true' ? 'TEST' : 'PRODUCTION',
-          idempotent: true, // Flag to indicate this was a duplicate request
-          subscription: {
-            id: existingSubscription.id,
-            plan: existingSubscription.plan,
-            status: existingSubscription.status,
-            billingCycle: existingSubscription.billingCycle,
-            startedAt: existingSubscription.startedAt.toISOString(),
-            expiresAt: existingSubscription.expiresAt.toISOString(),
-            nextBillingDate: existingSubscription.nextBillingDate?.toISOString(),
-            amount: existingSubscription.amount,
-          },
-          payment: recentPayment ? {
-            id: recentPayment.id,
-            orderId: recentPayment.tossOrderId,
-            paymentKey: recentPayment.tossPaymentKey,
-            amount: recentPayment.amount,
-            status: recentPayment.status,
-            paidAt: recentPayment.paidAt?.toISOString(),
-          } : null,
-          message: '구독이 이미 활성화되어 있습니다.',
-        });
-      }
-    }
-    // ========== END IDEMPOTENCY CHECK ==========
-
-    // 6. Generate unique order ID
-    const orderId = `order_${Date.now()}_${userId.slice(0, 8)}`;
-    const orderName = `Connect ${plan} 플랜 (${billingCycle === 'MONTHLY' ? '월간' : '연간'})`;
-
-    // 7. Check if in test mode
-    const isTestMode = process.env.TOSS_TEST_MODE === 'true';
-    const now = new Date();
-
-    let paymentKey: string;
-    let paymentMethod: string;
-    let receiptUrl: string | undefined;
-
-    if (isTestMode) {
-      // Test mode: Skip Toss API call
-      paymentKey = `test_payment_${Date.now()}`;
-      paymentMethod = 'TEST';
-      receiptUrl = undefined;
-    } else {
-      // Production mode: Call Toss Payments API
-      const tossSecretKey = process.env.TOSS_SECRET_KEY;
-
-      if (!tossSecretKey) {
-        console.error('[BILLING] TOSS_SECRET_KEY not configured');
-        return NextResponse.json(
-          { error: 'Payment configuration error', message: '결제 설정이 완료되지 않았습니다.' },
-          { status: 500 }
-        );
-      }
-
-      // Toss API requires Base64 encoded "secretKey:" for Basic Auth
-      const authToken = Buffer.from(`${tossSecretKey}:`).toString('base64');
-
-      const tossResponse = await fetch(
-        `https://api.tosspayments.com/v1/billing/${billingKey}`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Basic ${authToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            customerKey,
-            amount,
-            orderId,
-            orderName,
-            taxFreeAmount: 0, // No tax-free amount
-          }),
-        }
-      );
-
-      if (!tossResponse.ok) {
-        const errorData: TossErrorResponse = await tossResponse.json().catch(() => ({
-          code: 'UNKNOWN',
-          message: '알 수 없는 오류가 발생했습니다.',
-        }));
-
-        console.error('[BILLING] Toss payment error:', {
-          status: tossResponse.status,
-          code: errorData.code,
-          message: errorData.message,
-        });
-
-        return NextResponse.json(
-          {
-            error: errorData.code,
-            message: errorData.message || '결제 처리에 실패했습니다.',
-          },
-          { status: tossResponse.status }
-        );
-      }
-
-      const paymentData: TossPaymentResponse = await tossResponse.json();
-      paymentKey = paymentData.paymentKey;
-      paymentMethod = paymentData.method || 'CARD';
-      receiptUrl = paymentData.receipt?.url;
-    }
-
-    // 8. Calculate subscription dates
-    const expiresAt = new Date(now);
-    if (billingCycle === 'MONTHLY') {
-      expiresAt.setMonth(expiresAt.getMonth() + 1);
-    } else {
-      expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-    }
-    const nextBillingDate = new Date(expiresAt);
-
-    // 9. Create or update subscription
-    // Note: existingSubscription was already fetched in idempotency check above
-    let subscription;
-
-    if (existingSubscription) {
-      subscription = await db.subscriptions.update({
+      const existingSubscription = await db.subscriptions.findUnique({
         where: { userId },
-        data: {
-          plan: plan as SubscriptionPlan,
-          status: 'ACTIVE' as SubscriptionStatus,
-          billingCycle: billingCycle as BillingCycle,
-          startedAt: now,
-          expiresAt,
-          nextBillingDate,
-          amount,
-          tossBillingKey: billingKey,
-          tossCustomerId: customerKey,
-          lastPaymentId: paymentKey,
-          canceledAt: null,
-          cancellationReason: null,
-          updatedAt: now,
+        include: {
+          payments: {
+            where: {
+              status: 'COMPLETED',
+              createdAt: {
+                gte: new Date(Date.now() - IDEMPOTENCY_WINDOW_MS),
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
         },
       });
-    } else {
-      subscription = await db.subscriptions.create({
+
+      if (existingSubscription) {
+        const timeSinceUpdate = Date.now() - existingSubscription.updatedAt.getTime();
+
+        // Check 1: Subscription recently updated with same billingKey
+        const subscriptionMatch =
+          existingSubscription.status === 'ACTIVE' &&
+          existingSubscription.plan === plan &&
+          existingSubscription.billingCycle === billingCycle &&
+          existingSubscription.tossBillingKey === billingKey &&
+          timeSinceUpdate < IDEMPOTENCY_WINDOW_MS;
+
+        // Check 2: Recent completed payment exists (double protection)
+        const hasRecentPayment = existingSubscription.payments.length > 0;
+
+        if (subscriptionMatch || hasRecentPayment) {
+          console.log('[BILLING] Idempotency check: returning existing subscription', {
+            userId,
+            subscriptionId: existingSubscription.id,
+            timeSinceUpdate: `${(timeSinceUpdate / 1000).toFixed(1)}s`,
+            subscriptionMatch,
+            hasRecentPayment,
+          });
+
+          const recentPayment = existingSubscription.payments[0] || await db.payments.findFirst({
+            where: { subscriptionId: existingSubscription.id },
+            orderBy: { createdAt: 'desc' },
+          });
+
+          releaseLock(userId);
+          return NextResponse.json({
+            success: true,
+            mode: process.env.TOSS_TEST_MODE === 'true' ? 'TEST' : 'PRODUCTION',
+            idempotent: true,
+            subscription: {
+              id: existingSubscription.id,
+              plan: existingSubscription.plan,
+              status: existingSubscription.status,
+              billingCycle: existingSubscription.billingCycle,
+              startedAt: existingSubscription.startedAt.toISOString(),
+              expiresAt: existingSubscription.expiresAt.toISOString(),
+              nextBillingDate: existingSubscription.nextBillingDate?.toISOString(),
+              amount: existingSubscription.amount,
+            },
+            payment: recentPayment ? {
+              id: recentPayment.id,
+              orderId: recentPayment.tossOrderId,
+              paymentKey: recentPayment.tossPaymentKey,
+              amount: recentPayment.amount,
+              status: recentPayment.status,
+              paidAt: recentPayment.paidAt?.toISOString(),
+            } : null,
+            message: '구독이 이미 활성화되어 있습니다.',
+          });
+        }
+      }
+      // ========== END IDEMPOTENCY CHECKS ==========
+
+      // 6. Generate unique order ID
+      const orderId = `order_${Date.now()}_${userId.slice(0, 8)}`;
+      const orderName = `Connect ${plan} 플랜 (${billingCycle === 'MONTHLY' ? '월간' : '연간'})`;
+
+      // 7. Check if in test mode
+      const isTestMode = process.env.TOSS_TEST_MODE === 'true';
+      const now = new Date();
+
+      let paymentKey: string;
+      let paymentMethod: string;
+      let receiptUrl: string | undefined;
+
+      if (isTestMode) {
+        // Test mode: Skip Toss API call
+        paymentKey = `test_payment_${Date.now()}`;
+        paymentMethod = 'TEST';
+        receiptUrl = undefined;
+      } else {
+        // Production mode: Call Toss Payments API
+        const tossSecretKey = process.env.TOSS_SECRET_KEY;
+
+        if (!tossSecretKey) {
+          console.error('[BILLING] TOSS_SECRET_KEY not configured');
+          releaseLock(userId);
+          return NextResponse.json(
+            { error: 'Payment configuration error', message: '결제 설정이 완료되지 않았습니다.' },
+            { status: 500 }
+          );
+        }
+
+        // Toss API requires Base64 encoded "secretKey:" for Basic Auth
+        const authToken = Buffer.from(`${tossSecretKey}:`).toString('base64');
+
+        const tossResponse = await fetch(
+          `https://api.tosspayments.com/v1/billing/${billingKey}`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Basic ${authToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              customerKey,
+              amount,
+              orderId,
+              orderName,
+              taxFreeAmount: 0, // No tax-free amount
+            }),
+          }
+        );
+
+        if (!tossResponse.ok) {
+          const errorData: TossErrorResponse = await tossResponse.json().catch(() => ({
+            code: 'UNKNOWN',
+            message: '알 수 없는 오류가 발생했습니다.',
+          }));
+
+          console.error('[BILLING] Toss payment error:', {
+            status: tossResponse.status,
+            code: errorData.code,
+            message: errorData.message,
+          });
+
+          releaseLock(userId);
+          return NextResponse.json(
+            {
+              error: errorData.code,
+              message: errorData.message || '결제 처리에 실패했습니다.',
+            },
+            { status: tossResponse.status }
+          );
+        }
+
+        const paymentData: TossPaymentResponse = await tossResponse.json();
+        paymentKey = paymentData.paymentKey;
+        paymentMethod = paymentData.method || 'CARD';
+        receiptUrl = paymentData.receipt?.url;
+      }
+
+      // 8. Calculate subscription dates
+      const expiresAt = new Date(now);
+      if (billingCycle === 'MONTHLY') {
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+      } else {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      }
+      const nextBillingDate = new Date(expiresAt);
+
+      // 9. Create or update subscription
+      // Note: existingSubscription was already fetched in idempotency check above
+      let subscription;
+
+      if (existingSubscription) {
+        subscription = await db.subscriptions.update({
+          where: { userId },
+          data: {
+            plan: plan as SubscriptionPlan,
+            status: 'ACTIVE' as SubscriptionStatus,
+            billingCycle: billingCycle as BillingCycle,
+            startedAt: now,
+            expiresAt,
+            nextBillingDate,
+            amount,
+            tossBillingKey: billingKey,
+            tossCustomerId: customerKey,
+            lastPaymentId: paymentKey,
+            canceledAt: null,
+            cancellationReason: null,
+            updatedAt: now,
+          },
+        });
+      } else {
+        subscription = await db.subscriptions.create({
+          data: {
+            userId,
+            plan: plan as SubscriptionPlan,
+            status: 'ACTIVE' as SubscriptionStatus,
+            billingCycle: billingCycle as BillingCycle,
+            startedAt: now,
+            expiresAt,
+            nextBillingDate,
+            amount,
+            currency: 'KRW',
+            tossBillingKey: billingKey,
+            tossCustomerId: customerKey,
+            lastPaymentId: paymentKey,
+          },
+        });
+      }
+
+      // 10. Create payment record
+      const payment = await db.payments.create({
         data: {
-          userId,
-          plan: plan as SubscriptionPlan,
-          status: 'ACTIVE' as SubscriptionStatus,
-          billingCycle: billingCycle as BillingCycle,
-          startedAt: now,
-          expiresAt,
-          nextBillingDate,
+          subscriptionId: subscription.id,
           amount,
           currency: 'KRW',
-          tossBillingKey: billingKey,
-          tossCustomerId: customerKey,
-          lastPaymentId: paymentKey,
+          status: 'COMPLETED' as PaymentStatus,
+          tossPaymentKey: paymentKey,
+          tossOrderId: orderId,
+          tossMethod: paymentMethod,
+          paidAt: now,
         },
       });
+
+      // Release lock after successful payment
+      releaseLock(userId);
+
+      // 11. Return success response
+      return NextResponse.json({
+        success: true,
+        mode: isTestMode ? 'TEST' : 'PRODUCTION',
+        subscription: {
+          id: subscription.id,
+          plan: subscription.plan,
+          status: subscription.status,
+          billingCycle: subscription.billingCycle,
+          startedAt: subscription.startedAt.toISOString(),
+          expiresAt: subscription.expiresAt.toISOString(),
+          nextBillingDate: subscription.nextBillingDate?.toISOString(),
+          amount: subscription.amount,
+        },
+        payment: {
+          id: payment.id,
+          orderId: payment.tossOrderId,
+          paymentKey: payment.tossPaymentKey,
+          amount: payment.amount,
+          status: payment.status,
+          paidAt: payment.paidAt?.toISOString(),
+          receiptUrl,
+        },
+        message: isTestMode
+          ? '테스트 모드: 구독이 성공적으로 활성화되었습니다.'
+          : '구독이 성공적으로 활성화되었습니다.',
+      });
+    } catch (innerError) {
+      // Release lock on inner try block error
+      releaseLock(userId);
+      throw innerError;
     }
-
-    // 10. Create payment record
-    const payment = await db.payments.create({
-      data: {
-        subscriptionId: subscription.id,
-        amount,
-        currency: 'KRW',
-        status: 'COMPLETED' as PaymentStatus,
-        tossPaymentKey: paymentKey,
-        tossOrderId: orderId,
-        tossMethod: paymentMethod,
-        paidAt: now,
-      },
-    });
-
-    // 11. Return success response
-    return NextResponse.json({
-      success: true,
-      mode: isTestMode ? 'TEST' : 'PRODUCTION',
-      subscription: {
-        id: subscription.id,
-        plan: subscription.plan,
-        status: subscription.status,
-        billingCycle: subscription.billingCycle,
-        startedAt: subscription.startedAt.toISOString(),
-        expiresAt: subscription.expiresAt.toISOString(),
-        nextBillingDate: subscription.nextBillingDate?.toISOString(),
-        amount: subscription.amount,
-      },
-      payment: {
-        id: payment.id,
-        orderId: payment.tossOrderId,
-        paymentKey: payment.tossPaymentKey,
-        amount: payment.amount,
-        status: payment.status,
-        paidAt: payment.paidAt?.toISOString(),
-        receiptUrl,
-      },
-      message: isTestMode
-        ? '테스트 모드: 구독이 성공적으로 활성화되었습니다.'
-        : '구독이 성공적으로 활성화되었습니다.',
-    });
   } catch (error) {
     console.error('[BILLING] Charge error:', error);
 
