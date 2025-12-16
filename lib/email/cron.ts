@@ -2,9 +2,12 @@
  * Email Notification & Billing Cron Jobs
  *
  * Scheduled tasks for:
- * - Deadline reminders (daily at 8:00 AM KST)
- * - Weekly digest (Sundays at 8:00 AM KST)
- * - Recurring billing (daily at 00:00 UTC)
+ * - Deadline reminders (daily at 23:00 UTC / 08:00 KST next day)
+ * - Weekly digest (Saturdays at 23:00 UTC / Sundays 08:00 KST)
+ * - Recurring billing (daily at 08:00 UTC / 17:00 KST)
+ *
+ * Note: All cron jobs use UTC as the base timezone for consistency
+ * with backend/database containers. KST equivalents are provided in comments.
  */
 
 import cron from 'node-cron';
@@ -15,11 +18,11 @@ import { processRecurringBillings } from '@/scripts/recurring-billing';
 
 /**
  * Send deadline reminders (7 days, 3 days, 1 day before)
- * Runs daily at 8:00 AM KST
+ * Runs daily at 23:00 UTC (08:00 KST next day)
  */
 export function startDeadlineReminderCron() {
   cron.schedule(
-    '0 8 * * *',
+    '0 23 * * *', // Daily at 23:00 UTC (= 08:00 KST next day)
     async () => {
       console.log('⏰ Running deadline reminder cron...');
 
@@ -98,20 +101,20 @@ export function startDeadlineReminderCron() {
       }
     },
     {
-      timezone: 'Asia/Seoul',
+      timezone: 'UTC',
     }
   );
 
-  console.log('✓ Deadline reminder cron started (daily at 8:00 AM KST)');
+  console.log('✓ Deadline reminder cron started (daily at 23:00 UTC / 08:00 KST)');
 }
 
 /**
  * Send weekly digest
- * Runs every Sunday at 8:00 AM KST
+ * Runs every Saturday at 23:00 UTC (Sunday 08:00 KST)
  */
 export function startWeeklyDigestCron() {
   cron.schedule(
-    '0 8 * * 0',
+    '0 23 * * 6', // Every Saturday at 23:00 UTC (= Sunday 08:00 KST)
     async () => {
       console.log('📊 Running weekly digest cron...');
 
@@ -125,11 +128,11 @@ export function startWeeklyDigestCron() {
       }
     },
     {
-      timezone: 'Asia/Seoul',
+      timezone: 'UTC',
     }
   );
 
-  console.log('✓ Weekly digest cron started (Sundays at 8:00 AM KST)');
+  console.log('✓ Weekly digest cron started (Saturdays 23:00 UTC / Sundays 08:00 KST)');
 }
 
 /**
@@ -141,7 +144,7 @@ export function startWeeklyDigestCron() {
  */
 export function startRecurringBillingCron() {
   cron.schedule(
-    '0 8 * * *', // Daily at 08:00 UTC (17:00 KST)
+    '0 8 * * *', // Daily at 08:00 UTC (= 17:00 KST)
     async () => {
       console.log('💳 Running recurring billing cron...');
 
