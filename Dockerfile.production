@@ -41,8 +41,22 @@ ENV NODE_ENV=production
 # Skip static page generation for routes that need runtime data (MVP - optimize later)
 ENV SKIP_ENV_VALIDATION=1
 
+# =============================================
+# Client-side environment variables (build-time)
+# These are inlined into the JavaScript bundle by Next.js
+# NEXT_PUBLIC_* variables MUST be available at build time
+# =============================================
+ARG NEXT_PUBLIC_TOSS_CLIENT_KEY
+ARG NEXT_PUBLIC_TOSS_TEST_MODE
+ARG NEXT_PUBLIC_APP_URL
+
+ENV NEXT_PUBLIC_TOSS_CLIENT_KEY=$NEXT_PUBLIC_TOSS_CLIENT_KEY
+ENV NEXT_PUBLIC_TOSS_TEST_MODE=$NEXT_PUBLIC_TOSS_TEST_MODE
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+# =============================================
+
 # Create empty .env file to satisfy Next.js build requirements
-# Actual environment variables are provided at runtime via docker-compose
+# Server-side variables are provided at runtime via docker-compose
 RUN touch .env
 
 RUN npm run build
