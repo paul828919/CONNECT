@@ -343,19 +343,25 @@ function BillingSuccessContent() {
                       <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>상세 매칭 설명</span>
+                      <span>AI 기반 상세 매칭 분석</span>
                     </div>
                     <div className="flex items-center gap-3 text-blue-800">
                       <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>실시간 업데이트</span>
+                      <span>실시간 매칭</span>
                     </div>
                     <div className="flex items-center gap-3 text-blue-800">
                       <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>우선 기술 지원</span>
+                      <span>협업 제안 월 10회</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-blue-800">
+                      <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>우선 이메일 지원 (24시간 내)</span>
                     </div>
                   </>
                 ) : (
@@ -376,13 +382,19 @@ function BillingSuccessContent() {
                       <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>무제한 Warm Intro</span>
+                      <span>무제한 협업 제안</span>
                     </div>
                     <div className="flex items-center gap-3 text-blue-800">
                       <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>전담 고객 성공 매니저</span>
+                      <span>셀프서비스 온보딩 가이드</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-blue-800">
+                      <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>프리미엄 이메일 지원 (12시간 내)</span>
                     </div>
                   </>
                 )}
