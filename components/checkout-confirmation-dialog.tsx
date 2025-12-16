@@ -87,13 +87,20 @@ export function CheckoutConfirmationDialog({
               </span>
             </p>
             <p className="text-sm text-gray-700 mt-2">
-              언제든지 대시보드에서 해지할 수 있으며, 자세한 내용은{' '}
+              언제든지 구독 플랜을 해지·환불할 수 있으며, 자세한 내용은{' '}
+              <Link
+                href="/dashboard/subscription"
+                className="text-blue-600 underline hover:text-blue-800"
+              >
+                구독관리
+              </Link>
+              와{' '}
               <Link
                 href="/refund-policy"
                 className="text-blue-600 underline hover:text-blue-800"
                 target="_blank"
               >
-                환불 정책
+                환불정책
               </Link>
               을 참고해 주세요.
             </p>
@@ -108,15 +115,7 @@ export function CheckoutConfirmationDialog({
               className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="auto-renewal-consent" className="text-sm text-gray-700">
-              이 플랜이 {billingCycle} 자동 갱신되며, 다음 결제일과 환불·해지 조건을{' '}
-              <Link
-                href="/refund-policy"
-                className="underline text-blue-600 hover:text-blue-800"
-                target="_blank"
-              >
-                확인
-              </Link>
-              했습니다.
+              이 플랜이 {billingCycle} 자동 갱신되며, 다음 결제일과 해지·환불 내용을 확인했습니다.
             </label>
           </div>
         </div>
