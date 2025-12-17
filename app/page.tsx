@@ -514,7 +514,7 @@ export default function HomePage() {
               <Link href="/refund-policy" className="hover:text-white transition-colors">환불 정책</Link>
             </div>
             <div className="text-left text-xs text-gray-500">
-              이노웨이브 | 대표자: 김병진 | 사업자등록번호: 224-38-00690 | 통신판매업신고번호: 2025-부산기장-0558호 | 주소: 부산광역시 기장군 정관중앙로 45, 2F | 문의: support@connectplt.kr
+              이노웨이브 | 대표자: 김병진 | 사업자등록번호: 224-38-00690 | 통신판매업신고번호: 2025-부산기장-0558호 | 주소: 부산광역시 기장군 정관중앙로 45, 2F | 고객지원: support@connectplt.kr | Tel.: 070 - 8778 - 2378
             </div>
           </div>
         </div>
