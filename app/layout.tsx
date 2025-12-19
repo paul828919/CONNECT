@@ -72,12 +72,10 @@ export const metadata: Metadata = {
     canonical: 'https://connectplt.kr',
   },
   verification: {
-    // Add Google Search Console verification when available
-    // google: 'your-google-verification-code',
-    // Add Naver verification when available
-    // other: {
-    //   'naver-site-verification': 'your-naver-verification-code',
-    // },
+    google: 'hmur8qqedtnvduHHX64f_rvO9RkM5xtY7F3LESchgHU',
+    other: {
+      'naver-site-verification': 'e74cc11c3cd7758dc96873d13334153c10e09ad1',
+    },
   },
 }
 
