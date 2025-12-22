@@ -630,6 +630,7 @@ model User {
   refundRequests         RefundRequest[]       @relation("RefundRequests")
   processedRefunds       RefundRequest[]       @relation("RefundProcessedBy")
   teamInviteLinks        team_invite_links[]
+  accountLinkingRequests AccountLinkingRequest[]
 
   @@index([email])
   @@index([organizationId])
@@ -643,6 +644,25 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+/// Temporary storage for OAuth account linking requests.
+/// When a logged-in user wants to link a new OAuth provider,
+/// we store the request here and verify it in the signIn callback.
+model AccountLinkingRequest {
+  id        String   @id @default(cuid())
+  userId    String
+  provider  String   // 'kakao' or 'naver'
+  token     String   @unique // Random token for verification
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("account_linking_requests")
 }
 
 model team_invite_links {

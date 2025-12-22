@@ -6,17 +6,131 @@
  * - Naver OAuth
  * - JWT sessions
  * - Database user storage
+ * - OAuth Account Linking (multiple providers per user)
  *
  * See: https://next-auth.js.org/configuration/options
  */
 
 import { NextAuthOptions } from 'next-auth';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import { Adapter, AdapterAccount } from 'next-auth/adapters';
 import { db } from '@/lib/db';
 
+/**
+ * Custom Adapter that extends PrismaAdapter with account linking support
+ *
+ * When there's an active linking request in the database,
+ * we return the existing user instead of creating a new one.
+ * This enables linking OAuth accounts with different emails.
+ */
+function createCustomAdapter(): Adapter {
+  const prismaAdapter = PrismaAdapter(db);
+
+  return {
+    ...prismaAdapter,
+
+    // Override createUser to handle linking mode
+    async createUser(user: any) {
+      // Check for active linking requests for this OAuth provider
+      // We find requests by provider and email (from OAuth profile)
+      // This is a more reliable approach than cookies
+      const provider = (globalThis as any).__linkingProvider;
+      const oauthEmail = user.email;
+
+      console.log(`[AUTH_ADAPTER] createUser called: email=${oauthEmail}, provider=${provider}`);
+
+      if (provider) {
+        try {
+          // Find an active linking request for this provider
+          const linkingRequest = await db.accountLinkingRequest.findFirst({
+            where: {
+              provider: provider,
+              expiresAt: { gt: new Date() },
+            },
+            orderBy: { createdAt: 'desc' },
+          });
+
+          if (linkingRequest) {
+            console.log(`[AUTH_ADAPTER] Found linking request for user ${linkingRequest.userId}`);
+
+            // Return the existing user instead of creating a new one
+            const existingUser = await db.user.findUnique({
+              where: { id: linkingRequest.userId },
+            });
+
+            if (existingUser) {
+              // Delete the linking request (one-time use)
+              await db.accountLinkingRequest.delete({
+                where: { id: linkingRequest.id },
+              });
+
+              console.log(`[AUTH_ADAPTER] Returning existing user for linking: ${existingUser.id}`);
+              return existingUser as any;
+            }
+          }
+        } catch (error) {
+          console.error('[AUTH_ADAPTER] Error checking linking request:', error);
+        }
+      }
+
+      // Normal flow: create new user
+      console.log(`[AUTH_ADAPTER] Creating new user: ${user.email}`);
+      return prismaAdapter.createUser!(user);
+    },
+
+    // Override getUserByAccount to set the provider context
+    async getUserByAccount(account: { providerAccountId: string; provider: string }) {
+      // Set the provider for the createUser function to use
+      (globalThis as any).__linkingProvider = account.provider;
+
+      const result = await prismaAdapter.getUserByAccount!(account);
+      console.log(`[AUTH_ADAPTER] getUserByAccount: provider=${account.provider}, found=${!!result}`);
+      return result;
+    },
+
+    // Override linkAccount for duplicate detection and cleanup
+    async linkAccount(account: AdapterAccount) {
+      try {
+        // Check if this OAuth account is already linked to another user
+        const existingAccount = await db.account.findUnique({
+          where: {
+            provider_providerAccountId: {
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+            },
+          },
+        });
+
+        if (existingAccount && existingAccount.userId !== account.userId) {
+          console.log('[AUTH_ADAPTER] OAuth account already linked to different user');
+          throw new Error('OAuthAccountAlreadyLinked');
+        }
+
+        if (existingAccount) {
+          // Account already linked to this user, skip
+          console.log('[AUTH_ADAPTER] Account already linked to this user, skipping');
+          return existingAccount as any;
+        }
+      } catch (error: any) {
+        if (error.message === 'OAuthAccountAlreadyLinked') {
+          throw error;
+        }
+        // Continue with normal linking
+      }
+
+      const result = await prismaAdapter.linkAccount!(account);
+      console.log(`[AUTH_ADAPTER] Linked account: provider=${account.provider}, userId=${account.userId}`);
+
+      // Clean up the global provider context
+      delete (globalThis as any).__linkingProvider;
+
+      return result;
+    },
+  };
+}
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(db),
+  adapter: createCustomAdapter(),
   providers: [
     {
       id: 'kakao',
@@ -33,7 +147,7 @@ export const authOptions: NextAuthOptions = {
       token: {
         url: 'https://kauth.kakao.com/oauth/token',
         async request(context) {
-          const { provider, params, checks } = context;
+          const { provider, params } = context;
 
           const body = new URLSearchParams({
             grant_type: 'authorization_code',
@@ -157,6 +271,34 @@ export const authOptions: NextAuthOptions = {
     newUser: '/auth/welcome',
   },
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (!user || !account) {
+        return false;
+      }
+
+      try {
+        // Check if this OAuth account is already linked to a different user
+        const existingAccount = await db.account.findUnique({
+          where: {
+            provider_providerAccountId: {
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+            },
+          },
+        });
+
+        if (existingAccount && existingAccount.userId !== user.id) {
+          console.log(`[AUTH] OAuth account already linked to different user: ${existingAccount.userId}`);
+          return '/auth/error?error=OAuthAccountAlreadyLinked';
+        }
+
+        console.log(`[AUTH] signIn success: userId=${user.id}, provider=${account.provider}`);
+      } catch (error) {
+        console.error('[AUTH] Error checking existing account:', error);
+      }
+
+      return true;
+    },
     async jwt({ token, user, account, trigger }) {
       // On initial sign in, add user data to token
       if (user) {
@@ -186,6 +328,13 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).organizationId = token.organizationId;
       }
       return session;
+    },
+  },
+  events: {
+    async signIn({ user, account }) {
+      if (account) {
+        console.log(`[AUTH_EVENT] User signed in: ${user.id} via ${account.provider}`);
+      }
     },
   },
   secret: process.env.NEXTAUTH_SECRET,

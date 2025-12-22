@@ -38,6 +38,9 @@ export default function UserMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>내 계정</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => router.push('/dashboard/accounts')}>
+          계정 관리
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push('/dashboard/profile/edit')}>
           프로필 수정
         </DropdownMenuItem>
