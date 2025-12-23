@@ -451,6 +451,12 @@ jobs:
           ENABLE_ANALYTICS=true
           ENABLE_ERROR_TRACKING=false
           MAINTENANCE_MODE=false
+
+          # ============================================
+          # Hancom Docs (HWP to PDF Converter)
+          # ============================================
+          HANCOM_DOCS_ID=${{ secrets.HANCOM_DOCS_ID }}
+          HANCOM_DOCS_PW=${{ secrets.HANCOM_DOCS_PW }}
           EOF
 
           echo "✓ .env.production generated from GitHub Secrets (149 lines)"

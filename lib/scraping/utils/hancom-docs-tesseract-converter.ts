@@ -29,9 +29,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
-// Hancom Docs credentials
-const HANCOM_EMAIL = process.env.HANCOM_DOCS_ID || process.env.HANCOM_EMAIL || 'kbj20415@gmail.com';
-const HANCOM_PASSWORD = process.env.HANCOM_DOCS_PW || process.env.HANCOM_PASSWORD || 'BSiw237877^^';
+// Hancom Docs credentials (from environment variables - no hardcoded fallback)
+const HANCOM_EMAIL = process.env.HANCOM_DOCS_ID || process.env.HANCOM_EMAIL;
+const HANCOM_PASSWORD = process.env.HANCOM_DOCS_PW || process.env.HANCOM_PASSWORD;
+
+// Validate credentials at module load time (fail fast)
+if (!HANCOM_EMAIL || !HANCOM_PASSWORD) {
+  console.warn('[HANCOM-TESSERACT] WARNING: Hancom Docs credentials not configured.');
+  console.warn('[HANCOM-TESSERACT] Set HANCOM_DOCS_ID and HANCOM_DOCS_PW environment variables.');
+  console.warn('[HANCOM-TESSERACT] HWP → Screenshot → OCR fallback will fail until configured.');
+}
 
 // Timeouts
 const LOGIN_TIMEOUT = 60000; // 60 seconds
