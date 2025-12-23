@@ -88,6 +88,44 @@ function createCustomAdapter(): Adapter {
       return result;
     },
 
+    // Override getUserByEmail to bypass email matching during account linking
+    // This is CRITICAL for the linking flow to work properly.
+    // Without this override, NextAuth throws OAuthAccountNotLinked when:
+    // 1. OAuth account doesn't exist (getUserByAccount returns null)
+    // 2. But email matches an existing user (getUserByEmail returns user)
+    // By returning null here during linking mode, we force NextAuth to call
+    // createUser, where our linking logic properly handles the account linking.
+    async getUserByEmail(email: string) {
+      const provider = (globalThis as any).__linkingProvider;
+
+      console.log(`[AUTH_ADAPTER] getUserByEmail: email=${email}, provider=${provider}`);
+
+      // If in linking mode, check for active linking request
+      if (provider) {
+        try {
+          const linkingRequest = await db.accountLinkingRequest.findFirst({
+            where: {
+              provider: provider,
+              expiresAt: { gt: new Date() },
+            },
+          });
+
+          if (linkingRequest) {
+            console.log(`[AUTH_ADAPTER] getUserByEmail: Active linking request found for user ${linkingRequest.userId}, returning null to bypass email check`);
+            // Return null to make NextAuth call createUser instead of throwing OAuthAccountNotLinked
+            return null;
+          }
+        } catch (error) {
+          console.error('[AUTH_ADAPTER] Error checking linking request in getUserByEmail:', error);
+        }
+      }
+
+      // Normal flow: return the user by email
+      const result = await prismaAdapter.getUserByEmail!(email);
+      console.log(`[AUTH_ADAPTER] getUserByEmail: found=${!!result}`);
+      return result;
+    },
+
     // Override linkAccount for duplicate detection and cleanup
     async linkAccount(account: AdapterAccount) {
       try {
