@@ -10,18 +10,13 @@ export async function GET() {
   const today = getToday();
 
   // Launch-week rule: ONLY include URLs that exist and return 200
+  // Note: /auth/signin removed - blocked by robots.txt, shouldn't be in sitemap
   const urls = [
     {
       loc: `${BASE_URL}/`,
       lastmod: today,
       changefreq: 'daily',
       priority: '1.0',
-    },
-    {
-      loc: `${BASE_URL}/auth/signin`,
-      lastmod: today,
-      changefreq: 'weekly',
-      priority: '0.8',
     },
     {
       loc: `${BASE_URL}/pricing`,
