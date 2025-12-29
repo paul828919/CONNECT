@@ -3,7 +3,7 @@
  *
  * Schedules NTIS announcement scraping using node-cron:
  * - Fixed schedule: 10 AM + 2 PM KST daily (2x daily) - Updated Nov 20, 2025
- * - Date range: Yesterday to today (dynamic KST-based calculation)
+ * - Date range: 3-day window (2 days ago → today) to handle NTIS indexing delays
  * - Target: NTIS funding announcements only (IITP, KEIT, TIPA, KIMST disabled)
  * - Architecture: Runs standalone Discovery Scraper script → Triggers Process Worker via BullMQ
  */
@@ -12,7 +12,7 @@ import cron from 'node-cron';
 import { Queue } from 'bullmq';
 import { getAllAgencyConfigs } from './config';
 import { logScraping } from './utils';
-import { getYesterdayToTodayRange } from './utils/date-utils';
+import { getDailyScrapeDateRange } from './utils/date-utils';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -28,10 +28,11 @@ export const scrapingQueue = new Queue('scraping-queue', {
 
 /**
  * Run Discovery Scraper script and trigger Process Worker
- * NOTE: Runs standalone script with "yesterday to today" date range
+ * NOTE: Runs standalone script with 3-day window (2 days ago → today)
+ * to handle NTIS delayed indexing (announcements may not be searchable until 1-2 days after posting)
  */
 async function runDiscoveryScraper() {
-  const { fromDate, toDate } = getYesterdayToTodayRange();
+  const { fromDate, toDate } = getDailyScrapeDateRange(2); // 3-day window: 2 days ago → today
 
   console.log(`  📅 Date range: ${fromDate} → ${toDate}`);
   console.log(`  🔍 Running Discovery Scraper...`);
@@ -209,7 +210,7 @@ export function startScheduler() {
 
   console.log('✓ NTIS announcement scraping scheduler started successfully');
   console.log(`  - Schedule: 10 AM + 2 PM KST (01:00 + 05:00 UTC)`);
-  console.log(`  - Date Range: Yesterday to today (dynamic)`);
+  console.log(`  - Date Range: 3-day window (2 days ago → today)`);
   console.log(`  - Target: NTIS funding announcements only`);
   console.log(`  - Architecture: Discovery Scraper → Process Worker (event-driven)`);
 }
