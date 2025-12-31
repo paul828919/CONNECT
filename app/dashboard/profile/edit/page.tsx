@@ -10,6 +10,11 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 
 // Zod validation schema (same as create, but all fields optional for edit)
 const organizationEditSchema = z.object({
+  primaryContactEmail: z
+    .string()
+    .email('올바른 이메일 형식을 입력해주세요.')
+    .optional()
+    .or(z.literal('')),
   name: z
     .string()
     .min(2, '조직명은 2자 이상이어야 합니다.')
@@ -180,6 +185,7 @@ export default function EditOrganizationProfilePage() {
         setOrganizationData(data.organization);
 
         // Pre-populate form
+        setValue('primaryContactEmail', data.organization.primaryContactEmail || '');
         setValue('name', data.organization.name);
         setValue('website', data.organization.website || '');
         setValue('industrySector', data.organization.industrySector);
@@ -364,6 +370,29 @@ export default function EditOrganizationProfilePage() {
                 {error}
               </div>
             )}
+
+            {/* Primary Contact Email */}
+            <div>
+              <label
+                htmlFor="primaryContactEmail"
+                className="block text-sm font-medium text-gray-700"
+              >
+                알림 수신 이메일
+              </label>
+              <input
+                type="email"
+                id="primaryContactEmail"
+                {...register('primaryContactEmail')}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                placeholder="work@company.com"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                새 매칭 알림, 마감 알림, 주간 리포트가 이 이메일로 발송됩니다.
+              </p>
+              {errors.primaryContactEmail && (
+                <p className="mt-1 text-sm text-red-600">{errors.primaryContactEmail.message}</p>
+              )}
+            </div>
 
             {/* Organization Name */}
             <div>

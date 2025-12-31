@@ -67,6 +67,7 @@ export async function sendNewMatchNotification(
         organization: {
           select: {
             name: true,
+            primaryContactEmail: true,
           },
         },
       },
@@ -76,6 +77,9 @@ export async function sendNewMatchNotification(
       console.error(`User ${userId} not found or missing data`);
       return false;
     }
+
+    // Use organization's work email if available, fallback to OAuth email
+    const recipientEmail = user.organization.primaryContactEmail || user.email;
 
     // 3. Fetch matches with details
     const matches = await db.funding_matches.findMany({
@@ -115,7 +119,7 @@ export async function sendNewMatchNotification(
     // 5. Send email
     const html = newMatchEmailTemplate(emailData);
     const success = await sendEmail({
-      to: user.email,
+      to: recipientEmail,
       subject: `🎯 새로운 펀딩 매칭 ${matches.length}건 발견`,
       html,
     });
@@ -159,7 +163,10 @@ export async function sendDeadlineReminder(
       where: { id: userId },
       include: {
         organization: {
-          select: { name: true },
+          select: {
+            name: true,
+            primaryContactEmail: true,
+          },
         },
       },
     });
@@ -167,6 +174,9 @@ export async function sendDeadlineReminder(
     if (!user || !user.email || !user.organization) {
       return false;
     }
+
+    // Use organization's work email if available, fallback to OAuth email
+    const recipientEmail = user.organization.primaryContactEmail || user.email;
 
     const match = await db.funding_matches.findUnique({
       where: { id: matchId },
@@ -200,7 +210,7 @@ export async function sendDeadlineReminder(
     // 4. Send email
     const html = deadlineReminderEmailTemplate(emailData);
     const success = await sendEmail({
-      to: user.email,
+      to: recipientEmail,
       subject: `⏰ D-${daysUntilDeadline} 마감 알림: ${match.funding_programs.title.substring(0, 40)}...`,
       html,
     });
@@ -230,7 +240,11 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
       where: { id: userId },
       include: {
         organization: {
-          select: { id: true, name: true },
+          select: {
+            id: true,
+            name: true,
+            primaryContactEmail: true,
+          },
         },
       },
     });
@@ -238,6 +252,9 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
     if (!user || !user.email || !user.organization) {
       return false;
     }
+
+    // Use organization's work email if available, fallback to OAuth email
+    const recipientEmail = user.organization.primaryContactEmail || user.email;
 
     // 3. Calculate week range
     const weekEnd = new Date();
@@ -359,7 +376,7 @@ export async function sendWeeklyDigest(userId: string): Promise<boolean> {
     // 8. Send email
     const html = weeklyDigestEmailTemplate(emailData);
     const success = await sendEmail({
-      to: user.email,
+      to: recipientEmail,
       subject: `📊 주간 펀딩 리포트 (${newMatches}개 새 매칭)`,
       html,
     });

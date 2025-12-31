@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
       type,
       name,
       businessNumber,
+      primaryContactEmail,
       industrySector,
       employeeCount,
       // Tier 1A: Company eligibility fields
@@ -95,9 +96,18 @@ export async function POST(request: NextRequest) {
     const hasResearchInstitute = certifications?.includes('기업부설연구소') || false;
 
     // 1. Validate required fields
-    if (!type || !name || !businessNumber || !industrySector || !employeeCount) {
+    if (!type || !name || !businessNumber || !primaryContactEmail || !industrySector || !employeeCount) {
       return NextResponse.json(
         { error: '필수 항목을 모두 입력해주세요' },
+        { status: 400 }
+      );
+    }
+
+    // 1.1. Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(primaryContactEmail)) {
+      return NextResponse.json(
+        { error: '올바른 이메일 형식을 입력해주세요' },
         { status: 400 }
       );
     }
@@ -166,6 +176,7 @@ export async function POST(request: NextRequest) {
       data: {
         type,
         name,
+        primaryContactEmail,
         businessNumberEncrypted,
         businessNumberHash,
         industrySector,

@@ -37,6 +37,7 @@ export async function GET(
         id: true,
         type: true,
         name: true,
+        primaryContactEmail: true,
         website: true,
         industrySector: true,
         employeeCount: true,
@@ -166,6 +167,7 @@ export async function PATCH(
     const body = await request.json();
     const {
       name,
+      primaryContactEmail,
       website,
       industrySector,
       employeeCount,
@@ -198,6 +200,7 @@ export async function PATCH(
     // Build update data (only include fields that are provided)
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
+    if (primaryContactEmail !== undefined) updateData.primaryContactEmail = primaryContactEmail;
     if (website !== undefined) updateData.website = website;
     if (industrySector !== undefined) updateData.industrySector = industrySector;
     if (employeeCount !== undefined) updateData.employeeCount = employeeCount;
@@ -395,6 +398,7 @@ export async function PATCH(
         id: true,
         type: true,
         name: true,
+        primaryContactEmail: true,
         website: true,
         industrySector: true,
         employeeCount: true,
