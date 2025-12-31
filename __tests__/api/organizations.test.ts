@@ -134,6 +134,7 @@ describe('/api/organizations POST', () => {
         type: 'COMPANY',
         name: 'Minimal Company',
         businessNumber: generateTestBusinessNumber(),
+        primaryContactEmail: 'minimal@test.com',
         industrySector: 'ICT',
         employeeCount: 'FROM_10_TO_50',
       };
