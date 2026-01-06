@@ -226,7 +226,7 @@ export default function DashboardPage() {
                 {programStats ? `${programStats.totalGoverningOrgs}개 전문기관 공모 중` : '로딩 중...'}
               </div>
             </div>
-            <Link href="/dashboard/subscription" className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow text-center min-h-[120px] flex flex-col justify-center sm:col-span-2 lg:col-span-1">
+            <Link href="/pricing" className="rounded-xl bg-white p-6 shadow-sm hover:shadow-md transition-shadow text-center min-h-[120px] flex flex-col justify-center sm:col-span-2 lg:col-span-1">
               <div className="text-sm font-medium text-gray-600">
                 구독 플랜
               </div>
