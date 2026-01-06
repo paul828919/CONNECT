@@ -17,6 +17,7 @@ interface DowngradeConfirmationDialogProps {
   currentPlan: string;
   targetPlan: string;
   expiresAt: Date;
+  existingDowngradePlan?: string | null;
   onConfirm: () => void;
   loading?: boolean;
 }
@@ -27,6 +28,7 @@ export function DowngradeConfirmationDialog({
   currentPlan,
   targetPlan,
   expiresAt,
+  existingDowngradePlan,
   onConfirm,
   loading = false,
 }: DowngradeConfirmationDialogProps) {
@@ -58,6 +60,19 @@ export function DowngradeConfirmationDialog({
               <span className="font-medium">{formattedDate}</span>
             </div>
           </div>
+
+          {/* Warning for existing scheduled downgrade */}
+          {existingDowngradePlan && (
+            <div className="border-l-4 border-blue-500 bg-blue-50 p-4">
+              <p className="text-sm text-blue-800">
+                <strong>기존 예약 변경 안내</strong>
+              </p>
+              <p className="text-sm text-blue-700 mt-1">
+                현재 <strong>{existingDowngradePlan}</strong> 플랜으로 다운그레이드가 예약되어 있습니다.
+                확인을 누르시면 <strong>{targetPlan}</strong> 플랜으로 변경됩니다.
+              </p>
+            </div>
+          )}
 
           <div className="border-l-4 border-amber-500 bg-amber-50 p-4 space-y-2">
             <p className="text-sm font-medium text-gray-800">

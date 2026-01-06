@@ -32,6 +32,7 @@ interface PendingDowngrade {
   targetPlanName: string;
   currentPlanName: string;
   expiresAt: Date;
+  existingDowngradePlan: string | null;
 }
 
 export default function PricingPage() {
@@ -48,6 +49,7 @@ export default function PricingPage() {
   const [showDowngradeDialog, setShowDowngradeDialog] = useState(false);
   const [pendingDowngrade, setPendingDowngrade] = useState<PendingDowngrade | null>(null);
   const [downgradeLoading, setDowngradeLoading] = useState(false);
+  const [existingDowngradePlan, setExistingDowngradePlan] = useState<string | null>(null);
 
   const fetchCurrentSubscription = useCallback(async () => {
     if (!session?.user) return;
@@ -61,14 +63,23 @@ export default function PricingPage() {
         if (data.subscription?.expiresAt) {
           setSubscriptionExpiresAt(new Date(data.subscription.expiresAt));
         }
+        // Extract existing downgrade plan from cancellationReason
+        const cancellationReason = data.subscription?.cancellationReason;
+        if (cancellationReason?.startsWith('DOWNGRADE:')) {
+          setExistingDowngradePlan(cancellationReason.replace('DOWNGRADE:', ''));
+        } else {
+          setExistingDowngradePlan(null);
+        }
       } else {
         setCurrentPlan('FREE');
         setSubscriptionExpiresAt(null);
+        setExistingDowngradePlan(null);
       }
     } catch (error) {
       console.error('Error fetching subscription:', error);
       setCurrentPlan('FREE');
       setSubscriptionExpiresAt(null);
+      setExistingDowngradePlan(null);
     } finally {
       setLoadingSubscription(false);
     }
@@ -130,6 +141,7 @@ export default function PricingPage() {
         targetPlanName: planName,
         currentPlanName,
         expiresAt: subscriptionExpiresAt || new Date(),
+        existingDowngradePlan,
       });
       setShowDowngradeDialog(true);
       return;
@@ -737,6 +749,7 @@ export default function PricingPage() {
           currentPlan={pendingDowngrade.currentPlanName}
           targetPlan={pendingDowngrade.targetPlanName}
           expiresAt={pendingDowngrade.expiresAt}
+          existingDowngradePlan={pendingDowngrade.existingDowngradePlan}
           onConfirm={handleDowngrade}
           loading={downgradeLoading}
         />

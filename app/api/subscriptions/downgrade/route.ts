@@ -75,20 +75,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Check if already canceled/downgraded
+    // 6. Check if already canceled/downgraded - Allow overwriting scheduled downgrades
+    let isOverwritingDowngrade = false;
+    let previousDowngradePlan: string | null = null;
+
     if (subscription.status === 'CANCELED') {
-      return NextResponse.json(
-        {
-          error: 'Subscription is already scheduled for cancellation or downgrade.',
-          currentStatus: subscription.status,
-          cancellationReason: subscription.cancellationReason,
-        },
-        { status: 400 }
-      );
+      // Check if this is a scheduled downgrade (can be overwritten)
+      if (subscription.cancellationReason?.startsWith('DOWNGRADE:')) {
+        previousDowngradePlan = subscription.cancellationReason.replace('DOWNGRADE:', '');
+
+        // Check if target plan is same as existing scheduled downgrade
+        if (previousDowngradePlan === targetPlan) {
+          return NextResponse.json(
+            { error: `이미 ${targetPlan} 플랜으로 다운그레이드가 예약되어 있습니다.` },
+            { status: 400 }
+          );
+        }
+
+        // Allow overwriting the existing downgrade
+        isOverwritingDowngrade = true;
+      } else {
+        // This is a regular cancellation (not a downgrade), don't allow changes
+        return NextResponse.json(
+          {
+            error: '구독이 이미 해지 예약되어 있습니다. 다운그레이드를 예약하려면 먼저 해지를 취소해주세요.',
+            currentStatus: subscription.status,
+            cancellationReason: subscription.cancellationReason,
+          },
+          { status: 400 }
+        );
+      }
     }
 
-    // 7. Check if subscription is active
-    if (subscription.status !== 'ACTIVE') {
+    // 7. Check if subscription is active or scheduled for downgrade (overwriting)
+    if (subscription.status !== 'ACTIVE' && !isOverwritingDowngrade) {
       return NextResponse.json(
         { error: `Cannot downgrade subscription with status: ${subscription.status}` },
         { status: 400 }
@@ -98,13 +118,16 @@ export async function POST(request: NextRequest) {
     // 8. Determine cancellation reason based on target plan
     let cancellationReason: string;
     let message: string;
+    const overwritePrefix = isOverwritingDowngrade
+      ? `기존 ${previousDowngradePlan} 플랜 다운그레이드 예약이 변경되었습니다. `
+      : '';
 
     if (targetPlan === 'FREE') {
       cancellationReason = 'DOWNGRADE:FREE';
-      message = `구독이 ${subscription.plan}에서 Free로 다운그레이드 예약되었습니다. ${new Date(subscription.expiresAt).toLocaleDateString('ko-KR')}까지 현재 플랜을 이용하실 수 있습니다.`;
+      message = `${overwritePrefix}구독이 ${subscription.plan}에서 Free로 다운그레이드 예약되었습니다. ${new Date(subscription.expiresAt).toLocaleDateString('ko-KR')}까지 현재 플랜을 이용하실 수 있습니다.`;
     } else if (targetPlan === 'PRO') {
       cancellationReason = 'DOWNGRADE:PRO';
-      message = `구독이 Team에서 Pro로 다운그레이드 예약되었습니다. ${new Date(subscription.expiresAt).toLocaleDateString('ko-KR')}까지 Team 기능을 이용하실 수 있으며, 이후 Pro 플랜으로 자동 갱신됩니다.`;
+      message = `${overwritePrefix}구독이 Team에서 Pro로 다운그레이드 예약되었습니다. ${new Date(subscription.expiresAt).toLocaleDateString('ko-KR')}까지 Team 기능을 이용하실 수 있으며, 이후 Pro 플랜으로 자동 갱신됩니다.`;
     } else {
       return NextResponse.json(
         { error: 'Invalid downgrade path' },

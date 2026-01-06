@@ -551,9 +551,71 @@ async function processRecurringBillings(): Promise<void> {
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
+    // ========== Process Scheduled Downgrades (Pro/Team → Free) ==========
+    console.log('-'.repeat(60));
+    console.log('[BILLING] Checking for scheduled downgrades to FREE...');
+
+    // Find CANCELED subscriptions with DOWNGRADE:FREE that have expired
+    const freeDowngrades = await db.subscriptions.findMany({
+      where: {
+        status: 'CANCELED',
+        cancellationReason: 'DOWNGRADE:FREE',
+        expiresAt: {
+          lte: now,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    console.log(`[BILLING] Found ${freeDowngrades.length} expired subscriptions to downgrade to FREE`);
+
+    for (const subscription of freeDowngrades) {
+      console.log('-'.repeat(40));
+      console.log(`[BILLING] Processing FREE downgrade for subscription ${subscription.id}`);
+      console.log(`[BILLING] User: ${subscription.user.email} (${subscription.plan} → FREE)`);
+
+      try {
+        // Delete the subscription record - user becomes FREE
+        // This is the cleanest approach: no subscription record = FREE plan
+        await db.subscriptions.delete({
+          where: { id: subscription.id },
+        });
+
+        console.log(`[BILLING] Successfully downgraded ${subscription.user.email} to FREE plan`);
+        console.log(`[BILLING] Subscription record deleted - user is now on FREE plan`);
+      } catch (deleteError) {
+        console.error(`[BILLING] Failed to delete subscription ${subscription.id}:`, deleteError);
+
+        // Fallback: Mark as EXPIRED instead of deleting
+        try {
+          await db.subscriptions.update({
+            where: { id: subscription.id },
+            data: {
+              status: 'EXPIRED',
+              tossBillingKey: null,
+              tossCustomerId: null,
+              updatedAt: now,
+            },
+          });
+          console.log(`[BILLING] Fallback: Marked subscription ${subscription.id} as EXPIRED`);
+        } catch (updateError) {
+          console.error(`[BILLING] Fallback also failed for ${subscription.id}:`, updateError);
+        }
+      }
+    }
+
     console.log('='.repeat(60));
     console.log(`[BILLING] Job completed at ${new Date().toISOString()}`);
     console.log(`[BILLING] Results: ${successCount} successful, ${failureCount} failed`);
+    console.log(`[BILLING] FREE downgrades processed: ${freeDowngrades.length}`);
     console.log('='.repeat(60));
   } catch (error) {
     console.error('[BILLING] Fatal error in recurring billing job:', error);
