@@ -457,6 +457,100 @@ async function processRecurringBillings(): Promise<void> {
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
+    // ========== Process Scheduled Downgrades (Team → Pro) ==========
+    console.log('-'.repeat(60));
+    console.log('[BILLING] Checking for scheduled downgrades (Team → Pro)...');
+
+    // Find CANCELED subscriptions with DOWNGRADE:PRO that have expired
+    const scheduledDowngrades = await db.subscriptions.findMany({
+      where: {
+        status: 'CANCELED',
+        cancellationReason: 'DOWNGRADE:PRO',
+        expiresAt: {
+          lte: now,
+        },
+        tossBillingKey: {
+          not: null,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            tossCustomerKey: true,
+            organization: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        payments: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+          select: {
+            retryCount: true,
+          },
+        },
+      },
+    });
+
+    console.log(`[BILLING] Found ${scheduledDowngrades.length} scheduled downgrades to process`);
+
+    for (const subscription of scheduledDowngrades) {
+      console.log('-'.repeat(40));
+      console.log(`[BILLING] Processing downgrade for subscription ${subscription.id}`);
+      console.log(`[BILLING] User: ${subscription.user.email} (Team → Pro)`);
+
+      // Update subscription to PRO before processing billing
+      await db.subscriptions.update({
+        where: { id: subscription.id },
+        data: {
+          plan: 'PRO',
+          status: 'ACTIVE',
+          amount: PLAN_PRICES.PRO[subscription.billingCycle],
+          canceledAt: null,
+          cancellationReason: null,
+          updatedAt: now,
+        },
+      });
+
+      // Process billing with updated plan
+      const updatedSubscription = {
+        ...subscription,
+        plan: 'PRO' as const,
+        status: 'ACTIVE' as const,
+        amount: PLAN_PRICES.PRO[subscription.billingCycle],
+      };
+
+      const result = await processSubscriptionBilling(updatedSubscription as any);
+
+      if (result.success) {
+        successCount++;
+        console.log(`[BILLING] Downgrade billing successful for ${subscription.id}`);
+      } else {
+        failureCount++;
+        console.log(`[BILLING] Downgrade billing failed: ${result.error}`);
+        // Revert plan if billing failed
+        await db.subscriptions.update({
+          where: { id: subscription.id },
+          data: {
+            plan: 'TEAM',
+            status: 'CANCELED',
+            amount: PLAN_PRICES.TEAM[subscription.billingCycle],
+            cancellationReason: 'DOWNGRADE:PRO',
+            updatedAt: now,
+          },
+        });
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
     console.log('='.repeat(60));
     console.log(`[BILLING] Job completed at ${new Date().toISOString()}`);
     console.log(`[BILLING] Results: ${successCount} successful, ${failureCount} failed`);

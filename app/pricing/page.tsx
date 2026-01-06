@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { CheckoutConfirmationDialog } from '@/components/checkout-confirmation-dialog';
+import { DowngradeConfirmationDialog } from '@/components/downgrade-confirmation-dialog';
 import PublicHeader from '@/components/layout/PublicHeader';
 import { TossBillingWidget } from '@/components/toss-billing-widget';
 
@@ -26,6 +27,13 @@ interface BillingWidgetState {
   amount: number;
 }
 
+interface PendingDowngrade {
+  targetPlan: Plan;
+  targetPlanName: string;
+  currentPlanName: string;
+  expiresAt: Date;
+}
+
 export default function PricingPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -34,8 +42,12 @@ export default function PricingPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingCheckout, setPendingCheckout] = useState<PendingCheckout | null>(null);
   const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan | null>(null);
+  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<Date | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(false);
   const [billingWidgetState, setBillingWidgetState] = useState<BillingWidgetState | null>(null);
+  const [showDowngradeDialog, setShowDowngradeDialog] = useState(false);
+  const [pendingDowngrade, setPendingDowngrade] = useState<PendingDowngrade | null>(null);
+  const [downgradeLoading, setDowngradeLoading] = useState(false);
 
   const fetchCurrentSubscription = useCallback(async () => {
     if (!session?.user) return;
@@ -46,12 +58,17 @@ export default function PricingPage() {
       if (res.ok) {
         const data = await res.json();
         setCurrentPlan(data.subscription?.plan || 'FREE');
+        if (data.subscription?.expiresAt) {
+          setSubscriptionExpiresAt(new Date(data.subscription.expiresAt));
+        }
       } else {
         setCurrentPlan('FREE');
+        setSubscriptionExpiresAt(null);
       }
     } catch (error) {
       console.error('Error fetching subscription:', error);
       setCurrentPlan('FREE');
+      setSubscriptionExpiresAt(null);
     } finally {
       setLoadingSubscription(false);
     }
@@ -101,15 +118,62 @@ export default function PricingPage() {
     // Skip if already on this plan
     if (isCurrentPlan(plan)) return;
 
-    // Free plan: redirect to dashboard (no payment needed)
+    // Check if this is a downgrade
+    const planOrder: Record<Plan, number> = { FREE: 0, PRO: 1, TEAM: 2 };
+    const isDowngrade = currentPlan && planOrder[plan] < planOrder[currentPlan];
+
+    if (isDowngrade) {
+      // Show downgrade confirmation dialog
+      const currentPlanName = currentPlan === 'PRO' ? 'Pro' : currentPlan === 'TEAM' ? 'Team' : 'Free';
+      setPendingDowngrade({
+        targetPlan: plan,
+        targetPlanName: planName,
+        currentPlanName,
+        expiresAt: subscriptionExpiresAt || new Date(),
+      });
+      setShowDowngradeDialog(true);
+      return;
+    }
+
+    // Free plan for new users: redirect to dashboard
     if (plan === 'FREE') {
       router.push('/dashboard');
       return;
     }
 
-    // Paid plans: show checkout confirmation dialog
+    // Paid plans (upgrade): show checkout confirmation dialog
     setPendingCheckout({ plan, planName, amount });
     setShowConfirmDialog(true);
+  };
+
+  const handleDowngrade = async () => {
+    if (!pendingDowngrade) return;
+
+    setDowngradeLoading(true);
+    try {
+      const res = await fetch('/api/subscriptions/downgrade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetPlan: pendingDowngrade.targetPlan }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setShowDowngradeDialog(false);
+        setPendingDowngrade(null);
+        // Show success message and redirect
+        alert(data.message);
+        router.push('/dashboard');
+      } else {
+        alert(data.error || '다운그레이드 처리 중 오류가 발생했습니다.');
+      }
+    } catch (error) {
+      console.error('Downgrade error:', error);
+      alert('다운그레이드 처리 중 오류가 발생했습니다.');
+    } finally {
+      setDowngradeLoading(false);
+    }
   };
 
   const proceedToCheckout = async () => {
@@ -663,6 +727,19 @@ export default function PricingPage() {
             </p>
           </div>
         </div>
+      )}
+
+      {/* Downgrade Confirmation Dialog */}
+      {pendingDowngrade && (
+        <DowngradeConfirmationDialog
+          open={showDowngradeDialog}
+          onOpenChange={setShowDowngradeDialog}
+          currentPlan={pendingDowngrade.currentPlanName}
+          targetPlan={pendingDowngrade.targetPlanName}
+          expiresAt={pendingDowngrade.expiresAt}
+          onConfirm={handleDowngrade}
+          loading={downgradeLoading}
+        />
       )}
     </div>
   );
