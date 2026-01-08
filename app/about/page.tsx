@@ -182,8 +182,8 @@ export default function AboutPage() {
 
             <div className="bg-blue-50 rounded-lg p-6">
               <p className="text-center text-gray-800 font-medium">
-                "혁신의 선순환을 통해 대한민국이 글로벌 R&D 강국으로 도약하는 그날까지,
-                이노웨이브는 Connect를 통해 모든 연구자들과 함께 R&D 생태계를 만들어가겠습니다."
+                &ldquo;혁신의 선순환을 통해 대한민국이 글로벌 R&D 강국으로 도약하는 그날까지,
+                이노웨이브는 Connect를 통해 모든 연구자들과 함께 R&D 생태계를 만들어가겠습니다.&rdquo;
               </p>
             </div>
           </div>
