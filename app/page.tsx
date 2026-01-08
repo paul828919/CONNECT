@@ -500,8 +500,8 @@ export default function HomePage() {
             <div>
               <h4 className="text-white font-semibold mb-4">회사</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">회사 소개</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">문의</a></li>
+                <li><Link href="/about" className="hover:text-white transition-colors">회사 소개</Link></li>
+                <li><Link href="/support" className="hover:text-white transition-colors">문의</Link></li>
               </ul>
             </div>
           </div>

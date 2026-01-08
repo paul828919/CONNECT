@@ -9,6 +9,7 @@ import MobileNav from './MobileNav';
 import { cn } from '@/lib/utils';
 
 const publicNavLinks = [
+  { href: '/about', label: '회사 소개' },
   { href: '/pricing', label: '요금제' },
   { href: '/refund-policy', label: '환불 정책' },
   { href: '/support', label: '고객 지원' },
