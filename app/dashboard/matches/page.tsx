@@ -78,6 +78,7 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [upgradeUrl, setUpgradeUrl] = useState<string | null>(null);
   const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
   const [historicalMatches, setHistoricalMatches] = useState<Match[]>([]);
   const [showHistorical, setShowHistorical] = useState(false);
@@ -235,6 +236,7 @@ export default function MatchesPage() {
     try {
       setIsRegenerating(true);
       setError(null);
+      setUpgradeUrl(null);
 
       const orgId = (session?.user as any)?.organizationId;
       if (!orgId) {
@@ -249,6 +251,14 @@ export default function MatchesPage() {
 
       if (!res.ok) {
         const errorData = await res.json();
+
+        // Handle rate limit (429) with upgrade prompt
+        if (res.status === 429) {
+          setError(errorData.message || '이번 달 무료 매칭 횟수를 모두 사용하셨습니다.');
+          setUpgradeUrl(errorData.upgradeUrl || '/pricing');
+          return;
+        }
+
         throw new Error(errorData.error || 'Failed to regenerate matches');
       }
 
@@ -428,8 +438,44 @@ export default function MatchesPage() {
         </div>
 
         {error && (
-          <div className="mb-6 rounded-lg bg-red-50 border border-red-200 p-4">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className={`mb-6 rounded-xl border p-6 ${upgradeUrl ? 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200' : 'bg-red-50 border-red-200'}`}>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  {upgradeUrl ? (
+                    <svg className="h-5 w-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  ) : (
+                    <svg className="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                  <h3 className={`font-semibold ${upgradeUrl ? 'text-orange-900' : 'text-red-900'}`}>
+                    {upgradeUrl ? '매칭 횟수 제한' : '오류'}
+                  </h3>
+                </div>
+                <p className={`text-sm ${upgradeUrl ? 'text-orange-700' : 'text-red-600'} mb-3`}>
+                  {error}
+                </p>
+                {upgradeUrl && (
+                  <p className="text-sm text-gray-600">
+                    Pro 플랜으로 업그레이드하여 <strong>무제한 매칭</strong>, 실시간 업데이트, AI 지원 등을 이용하세요.
+                  </p>
+                )}
+              </div>
+              {upgradeUrl && (
+                <Link
+                  href={upgradeUrl}
+                  className="inline-flex items-center px-6 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 whitespace-nowrap"
+                >
+                  <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                  Pro 업그레이드
+                </Link>
+              )}
+            </div>
           </div>
         )}
 
