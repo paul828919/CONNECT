@@ -252,8 +252,8 @@ export default function PricingPage() {
       description: '과제 수주를 본격 추진하는 연구팀',
       secondaryDescription: '단일 부서/연구실의 실무 활용',
       pricing: {
-        monthly: 49000,
-        yearly: 490000,
+        monthly: 20900,  // VAT-inclusive (₩19,000 + ₩1,900 VAT)
+        yearly: 490000,  // Keep for future use
       },
       features: [
         '무제한 매칭 생성',
@@ -273,8 +273,8 @@ export default function PricingPage() {
       description: '조직 전체의 R&D 경쟁력을 관리하는 기관',
       secondaryDescription: '다수 부서의 통합 관리',
       pricing: {
-        monthly: 99000,
-        yearly: 990000,
+        monthly: 75900,  // VAT-inclusive (₩69,000 + ₩6,900 VAT)
+        yearly: 990000,  // Keep for future use
       },
       features: [
         'Pro 플랜의 모든 기능',
@@ -335,7 +335,7 @@ export default function PricingPage() {
             연구 단계와 팀 규모에 맞는 최적의 플랜으로 시작하세요
           </p>
 
-          {/* Billing Cycle Toggle */}
+          {/* Billing Cycle Toggle - Commented out for monthly-only display
           <div className="inline-flex items-center bg-white rounded-full p-1 shadow-md">
             <button
               onClick={() => setBillingCycle('monthly')}
@@ -361,6 +361,7 @@ export default function PricingPage() {
               </span>
             </button>
           </div>
+          */}
         </div>
 
         {/* Pricing Cards */}
@@ -413,11 +414,16 @@ export default function PricingPage() {
                       </span>
                     )}
                   </div>
+                  {price > 0 && (
+                    <p className="text-xs text-gray-500">(VAT 포함)</p>
+                  )}
+                  {/* Commented out - yearly only display
                   {billingCycle === 'yearly' && price > 0 && (
                     <p className="text-sm text-gray-500">
                       월 ₩{formatPrice(Math.floor(price / 12))} 상당
                     </p>
                   )}
+                  */}
                 </div>
 
                 {/* Features */}
@@ -544,7 +550,7 @@ export default function PricingPage() {
               <tbody className="divide-y divide-gray-100">
                 <tr>
                   <td className="py-4 px-6 text-gray-700">매칭 생성 횟수</td>
-                  <td className="py-4 px-6 text-center text-gray-600">3 / 월</td>
+                  <td className="py-4 px-6 text-center text-gray-600">2 / 월</td>
                   <td className="py-4 px-6 text-center text-green-600 font-semibold">
                     무제한
                   </td>

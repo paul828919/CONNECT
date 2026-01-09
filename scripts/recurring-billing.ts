@@ -28,10 +28,10 @@ import { generatePaymentFailedEmail } from '../lib/email/templates/payment-faile
 import { calculateNextBillingDate } from '../lib/billing-date-calculator';
 import { PaymentStatus, SubscriptionStatus } from '@prisma/client';
 
-// Plan prices (must match PLAN_PRICES in charge API)
+// Plan prices (must match pricing page, widget, and charge API)
 const PLAN_PRICES = {
-  PRO: { MONTHLY: 49000, ANNUAL: 490000 },
-  TEAM: { MONTHLY: 99000, ANNUAL: 990000 },
+  PRO: { MONTHLY: 20900, ANNUAL: 490000 },   // MONTHLY: VAT-inclusive (₩19,000 + ₩1,900)
+  TEAM: { MONTHLY: 75900, ANNUAL: 990000 },  // MONTHLY: VAT-inclusive (₩69,000 + ₩6,900)
 };
 
 // Retry intervals in days

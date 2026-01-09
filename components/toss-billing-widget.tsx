@@ -33,10 +33,10 @@ interface TossBillingWidgetProps {
   onError?: (error: Error) => void;
 }
 
-// Plan prices for validation
+// Plan prices for validation (must match pricing page and billing APIs)
 const PLAN_PRICES = {
-  PRO: { MONTHLY: 49000, ANNUAL: 490000 },
-  TEAM: { MONTHLY: 99000, ANNUAL: 990000 },
+  PRO: { MONTHLY: 20900, ANNUAL: 490000 },   // MONTHLY: VAT-inclusive (₩19,000 + ₩1,900)
+  TEAM: { MONTHLY: 75900, ANNUAL: 990000 },  // MONTHLY: VAT-inclusive (₩69,000 + ₩6,900)
 };
 
 export function TossBillingWidget({
