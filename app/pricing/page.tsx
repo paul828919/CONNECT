@@ -235,7 +235,7 @@ export default function PricingPage() {
         yearly: 0,
       },
       features: [
-        '3회 매칭 / 월',
+        '2회 매칭 / 월',
         '기본 프로필 관리',
         '실시간 과제 공고 매칭',
         '매칭 스코어 확인',

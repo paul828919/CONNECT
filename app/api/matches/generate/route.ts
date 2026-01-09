@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
           ...cachedMatches,
           usage: {
             plan: subscriptionPlan,
-            matchesUsed: 3 - currentUsage.remaining,
+            matchesUsed: 2 - currentUsage.remaining,
             matchesRemaining: currentUsage.remaining,
             resetDate: currentUsage.resetDate.toISOString(),
           },
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Monthly match limit reached',
-          limit: 3,
+          limit: 2,
           remaining: 0,
           resetDate: rateLimitCheck.resetDate.toISOString(),
           message: '이번 달 무료 매칭 횟수를 모두 사용하셨습니다. Pro 플랜으로 업그레이드하여 무제한 매칭을 받으세요.',
@@ -285,7 +285,7 @@ export async function POST(request: NextRequest) {
           matches: [],
           usage: {
             plan: subscriptionPlan,
-            matchesUsed: 3 - rateLimitCheck.remaining + 1, // +1 for current request
+            matchesUsed: 2 - rateLimitCheck.remaining + 1, // +1 for current request
             matchesRemaining: rateLimitCheck.remaining - 1,
             resetDate: rateLimitCheck.resetDate.toISOString(),
           },
@@ -372,7 +372,7 @@ export async function POST(request: NextRequest) {
       })),
       usage: {
         plan: subscriptionPlan,
-        matchesUsed: 3 - rateLimitCheck.remaining + 1, // +1 for current request
+        matchesUsed: 2 - rateLimitCheck.remaining + 1, // +1 for current request
         matchesRemaining: rateLimitCheck.remaining - 1,
         resetDate: rateLimitCheck.resetDate.toISOString(),
       },

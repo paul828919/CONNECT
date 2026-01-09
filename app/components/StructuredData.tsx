@@ -56,7 +56,7 @@ export default function StructuredData() {
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'KRW',
-      description: '무료 플랜 제공 - 매월 3회 무료 매칭',
+      description: '무료 플랜 제공 - 매월 2회 무료 매칭',
     },
     featureList: [
       '4개 핵심 연구관리 전문기관 모니터링',
@@ -112,7 +112,7 @@ export default function StructuredData() {
         name: '무료 플랜으로 이용할 수 있나요?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: '네, 무료 플랜은 매월 3회 매칭을 제공합니다. 신용카드 등록 없이 3분 만에 시작하실 수 있습니다.',
+          text: '네, 무료 플랜은 매월 2회 매칭을 제공합니다. 신용카드 등록 없이 3분 만에 시작하실 수 있습니다.',
         },
       },
       {

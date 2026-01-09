@@ -3,7 +3,7 @@
  *
  * Enforces:
  * - General API rate limits (prevent DDoS)
- * - Free tier usage limits (3 matches/month)
+ * - Free tier usage limits (2 matches/month)
  * - Pro tier rate limits (unlimited matches, but rate limited to prevent abuse)
  * - Authentication endpoint protection (prevent brute force)
  *
@@ -107,7 +107,7 @@ export const authRateLimiter: RateLimitConfig = {
 
 /**
  * Match generation rate limiter (per user)
- * Enforces free tier limit: 3 matches/month
+ * Enforces free tier limit: 2 matches/month
  *
  * This is critical for business model - prevents free tier abuse
  */
@@ -126,12 +126,12 @@ export async function checkMatchLimit(
     };
   }
 
-  // Free tier: 3 matches per month
+  // Free tier: 2 matches per month
   const key = `match:limit:${userId}:${getMonthKey()}`;
   const currentCount = await redis.get(key);
   const count = currentCount ? parseInt(currentCount, 10) : 0;
 
-  const MAX_FREE_MATCHES = 3;
+  const MAX_FREE_MATCHES = 2;
 
   if (count >= MAX_FREE_MATCHES) {
     return {

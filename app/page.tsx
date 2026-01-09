@@ -77,7 +77,7 @@ export default function HomePage() {
               </div>
 
               <p className="text-sm text-gray-500">
-                ✓ 신용카드 불필요 · ✓ 3분 만에 시작 · ✓ 매월 3회 무료 매칭
+                ✓ 신용카드 불필요 · ✓ 3분 만에 시작 · ✓ 매월 2회 무료 매칭
               </p>
             </div>
 
@@ -454,7 +454,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center">
               <CheckCircle2 className="w-5 h-5 mr-2" aria-hidden="true" />
-              매월 3회 무료 매칭
+              매월 2회 무료 매칭
             </div>
           </div>
         </div>

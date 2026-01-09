@@ -132,7 +132,7 @@ export default function WelcomePage() {
         {/* Footer Note */}
         <div className="mt-8 pt-6 border-t border-gray-200 text-center">
           <p className="text-sm text-gray-500">
-            무료 플랜으로 매월 3회 매칭을 받을 수 있습니다
+            무료 플랜으로 매월 2회 매칭을 받을 수 있습니다
           </p>
         </div>
       </div>

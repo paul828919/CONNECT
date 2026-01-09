@@ -238,7 +238,7 @@ export default function DashboardPage() {
                   ? `${subscription.billingCycle === 'MONTHLY' ? '월간' : '연간'} 결제`
                   : usage
                   ? `${usage.remaining}회 남음`
-                  : '3 매칭/월'}
+                  : '2 매칭/월'}
               </div>
             </Link>
           </div>

@@ -5,13 +5,13 @@
  * Use case: Show "missed opportunities" from 2025 to users during off-season
  *
  * Business Logic:
- * - Historical matches COUNT toward FREE tier's 3 matches/month limit
+ * - Historical matches COUNT toward FREE tier's 2 matches/month limit
  * - Saved to funding_matches table (same as active matches)
  * - 24-hour cache TTL (same as active matches)
  * - Opt-in UI (user must explicitly request)
  *
  * Rate limiting enforced:
- * - Free tier: 3 TOTAL matches/month (active + historical)
+ * - Free tier: 2 TOTAL matches/month (active + historical)
  * - Pro/Team tier: Unlimited
  *
  * Caching strategy:
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Monthly match limit reached',
-          limit: 3,
+          limit: 2,
           remaining: 0,
           resetDate: rateLimitCheck.resetDate.toISOString(),
           message: '이번 달 무료 매칭 횟수를 모두 사용하셨습니다. Pro 플랜으로 업그레이드하여 무제한 매칭을 받으세요.',
@@ -311,7 +311,7 @@ export async function POST(request: NextRequest) {
       })),
       usage: {
         plan: subscriptionPlan,
-        matchesUsed: 3 - rateLimitCheck.remaining + 1, // +1 for current request
+        matchesUsed: 2 - rateLimitCheck.remaining + 1, // +1 for current request
         matchesRemaining: rateLimitCheck.remaining - 1,
         resetDate: rateLimitCheck.resetDate.toISOString(),
       },
