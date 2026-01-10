@@ -75,6 +75,15 @@ interface ConsortiumOption {
   memberCount: number;
 }
 
+// Team member (visible professional profile)
+interface VisibleTeamMember {
+  id: string;
+  name: string | null;
+  position: string | null;
+  linkedinUrl: string | null;
+  rememberUrl: string | null;
+}
+
 export default function PartnerDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -85,6 +94,7 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
   const urlConsortiumName = searchParams.get('consortiumName');
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [compatibilityScore, setCompatibilityScore] = useState<CompatibilityScore | null>(null);
+  const [visibleTeamMembers, setVisibleTeamMembers] = useState<VisibleTeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -118,6 +128,7 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
         if (data.success) {
           setOrganization(data.organization);
           setCompatibilityScore(data.compatibilityScore);
+          setVisibleTeamMembers(data.visibleTeamMembers || []);
         } else {
           setError(data.error || '파트너 정보를 불러올 수 없습니다');
         }
@@ -966,6 +977,63 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
                   </div>
                 )}
               </dl>
+
+              {/* Team Members (users who opted-in to show their profile) */}
+              {visibleTeamMembers.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">팀 멤버</h3>
+                  <div className="space-y-3">
+                    {visibleTeamMembers.map((member) => (
+                      <div key={member.id} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-medium">
+                            {member.name?.charAt(0) || '?'}
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm font-medium text-gray-900">
+                              {member.name || '이름 미등록'}
+                            </p>
+                            {member.position && (
+                              <p className="text-xs text-gray-500">{member.position}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Professional Profile Links */}
+                        <div className="flex items-center gap-2">
+                          {member.linkedinUrl && (
+                            <a
+                              href={member.linkedinUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-2 py-1 bg-[#0A66C2] text-white text-xs font-medium rounded hover:bg-[#004182] transition-colors"
+                              title="LinkedIn 프로필 보기"
+                            >
+                              <svg className="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                              </svg>
+                              LinkedIn
+                            </a>
+                          )}
+
+                          {member.rememberUrl && (
+                            <a
+                              href={member.rememberUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-2 py-1 bg-[#FF6B35] text-white text-xs font-medium rounded hover:bg-[#E55A2B] transition-colors"
+                              title="리멤버 프로필 보기"
+                            >
+                              <span className="mr-1 font-bold">R</span>
+                              리멤버
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -137,10 +137,27 @@ export async function GET(
       };
     }
 
+    // Fetch visible team members (users who opted-in to show on partner profile)
+    const visibleTeamMembers = await db.user.findMany({
+      where: {
+        organizationId: organizationId,
+        showOnPartnerProfile: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        position: true,
+        linkedinUrl: true,
+        rememberUrl: true,
+        // Note: email is NOT selected for privacy protection
+      },
+    });
+
     return NextResponse.json({
       success: true,
       organization,
       compatibilityScore,
+      visibleTeamMembers,
     });
   } catch (error: any) {
     console.error('Failed to fetch organization profile:', error);

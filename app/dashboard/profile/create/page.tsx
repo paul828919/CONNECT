@@ -109,6 +109,19 @@ export default function CreateOrganizationProfilePage() {
   const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
   const [isCertDropdownOpen, setIsCertDropdownOpen] = useState(false);
 
+  // User profile state (for professional profile fields)
+  const [userProfileData, setUserProfileData] = useState<{
+    linkedinUrl: string;
+    rememberUrl: string;
+    position: string;
+    showOnPartnerProfile: boolean;
+  }>({
+    linkedinUrl: '',
+    rememberUrl: '',
+    position: '',
+    showOnPartnerProfile: false,
+  });
+
   const {
     register,
     handleSubmit,
@@ -167,6 +180,25 @@ export default function CreateOrganizationProfilePage() {
 
       // Update session to include new organizationId
       await update();
+
+      // Save user profile (professional profile fields) after organization creation
+      if (userProfileData.linkedinUrl || userProfileData.rememberUrl || userProfileData.position || userProfileData.showOnPartnerProfile) {
+        try {
+          const userProfileResponse = await fetch('/api/users/profile', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userProfileData),
+          });
+
+          if (!userProfileResponse.ok) {
+            console.error('User profile update failed:', await userProfileResponse.json());
+            // Non-critical error, continue to redirect
+          }
+        } catch (userProfileErr) {
+          console.error('Error saving user profile:', userProfileErr);
+          // Non-critical error, continue to redirect
+        }
+      }
 
       // Redirect to dashboard
       router.push('/dashboard');
@@ -897,6 +929,136 @@ export default function CreateOrganizationProfilePage() {
                   {errors.description.message}
                 </p>
               )}
+            </div>
+
+            {/* Personal Professional Profile Section */}
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                담당자 프로필 (선택)
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                파트너 검색 시 신뢰도 확인을 위해 표시됩니다. 학력, 경력 정보를 확인할 수 있어 컨소시엄 구성에 도움이 됩니다.
+              </p>
+
+              {/* Position/Title */}
+              <div className="mb-4">
+                <label
+                  htmlFor="position"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  직책
+                </label>
+                <input
+                  type="text"
+                  id="position"
+                  value={userProfileData.position}
+                  onChange={(e) =>
+                    setUserProfileData((prev) => ({
+                      ...prev,
+                      position: e.target.value,
+                    }))
+                  }
+                  placeholder="예: 대표, 연구책임자, CTO"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  maxLength={50}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  파트너 프로필에 표시될 직책입니다.
+                </p>
+              </div>
+
+              {/* LinkedIn URL */}
+              <div className="mb-4">
+                <label
+                  htmlFor="linkedinUrl"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  LinkedIn 프로필
+                </label>
+                <div className="mt-1 flex rounded-lg shadow-sm">
+                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                    </svg>
+                  </span>
+                  <input
+                    type="url"
+                    id="linkedinUrl"
+                    value={userProfileData.linkedinUrl}
+                    onChange={(e) =>
+                      setUserProfileData((prev) => ({
+                        ...prev,
+                        linkedinUrl: e.target.value,
+                      }))
+                    }
+                    placeholder="https://linkedin.com/in/username"
+                    className="flex-1 min-w-0 block w-full px-4 py-2 rounded-none rounded-r-lg border border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  LinkedIn 프로필 URL을 입력하면 파트너가 학력, 경력 정보를 확인할 수 있습니다.
+                </p>
+              </div>
+
+              {/* Remember URL */}
+              <div className="mb-4">
+                <label
+                  htmlFor="rememberUrl"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  리멤버 프로필
+                </label>
+                <div className="mt-1 flex rounded-lg shadow-sm">
+                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-[#FF6B35] text-sm font-bold">
+                    R
+                  </span>
+                  <input
+                    type="url"
+                    id="rememberUrl"
+                    value={userProfileData.rememberUrl}
+                    onChange={(e) =>
+                      setUserProfileData((prev) => ({
+                        ...prev,
+                        rememberUrl: e.target.value,
+                      }))
+                    }
+                    placeholder="https://rememberapp.co.kr/..."
+                    className="flex-1 min-w-0 block w-full px-4 py-2 rounded-none rounded-r-lg border border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  리멤버 프로필 URL을 입력하면 파트너가 명함 정보와 경력을 확인할 수 있습니다.
+                </p>
+              </div>
+
+              {/* Visibility Toggle */}
+              <div className="flex items-start mt-6 p-4 bg-blue-50 rounded-lg">
+                <div className="flex items-center h-5">
+                  <input
+                    id="showOnPartnerProfile"
+                    type="checkbox"
+                    checked={userProfileData.showOnPartnerProfile}
+                    onChange={(e) =>
+                      setUserProfileData((prev) => ({
+                        ...prev,
+                        showOnPartnerProfile: e.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                </div>
+                <div className="ml-3 text-sm">
+                  <label
+                    htmlFor="showOnPartnerProfile"
+                    className="font-medium text-gray-700"
+                  >
+                    파트너 검색 페이지에 내 프로필 표시
+                  </label>
+                  <p className="text-gray-500">
+                    체크 시 다른 기업이 귀사 정보를 볼 때 내 프로필(직책, LinkedIn, 리멤버)이 함께 표시됩니다.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Submit Button */}

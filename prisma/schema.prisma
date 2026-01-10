@@ -615,6 +615,13 @@ model User {
   notificationSettings   Json?
   // Toss Payments customer key (UUID, persists across subscriptions)
   tossCustomerKey        String?               @unique
+
+  // Professional profile fields for trust verification (consortium partner discovery)
+  linkedinUrl            String?               // LinkedIn profile URL
+  rememberUrl            String?               // 리멤버 (Remember) profile URL
+  position               String?               // Job title/role (e.g., "대표", "연구책임자")
+  showOnPartnerProfile   Boolean               @default(false)  // Opt-in visibility on partner search
+
   accounts               Account[]
   ai_cost_logs           ai_cost_logs[]
   ai_feedback            ai_feedback[]
