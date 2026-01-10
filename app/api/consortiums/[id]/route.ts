@@ -23,16 +23,40 @@ export async function GET(
     const userId = (session.user as any).id;
     const consortiumId = params.id;
 
-    // Get user's organization
+    // Get user's organization and subscription
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true },
+      select: {
+        organizationId: true,
+        subscriptions: {
+          select: {
+            plan: true,
+            status: true,
+          },
+        },
+      },
     });
 
     if (!user?.organizationId) {
       return NextResponse.json(
         { error: 'No organization associated with user' },
         { status: 400 }
+      );
+    }
+
+    // Check subscription - Consortium is Pro/Team only
+    const subscriptionPlan = (user.subscriptions?.status === 'ACTIVE' || user.subscriptions?.status === 'TRIAL')
+      ? (user.subscriptions.plan?.toLowerCase() || 'free')
+      : 'free';
+
+    if (subscriptionPlan === 'free') {
+      return NextResponse.json(
+        {
+          error: 'UPGRADE_REQUIRED',
+          message: '컨소시엄 기능은 Pro 이상 플랜에서 사용 가능합니다.',
+          upgradeUrl: '/pricing',
+        },
+        { status: 403 }
       );
     }
 
@@ -120,16 +144,40 @@ export async function PATCH(
     const userId = (session.user as any).id;
     const consortiumId = params.id;
 
-    // Get user's organization
+    // Get user's organization and subscription
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true },
+      select: {
+        organizationId: true,
+        subscriptions: {
+          select: {
+            plan: true,
+            status: true,
+          },
+        },
+      },
     });
 
     if (!user?.organizationId) {
       return NextResponse.json(
         { error: 'No organization associated with user' },
         { status: 400 }
+      );
+    }
+
+    // Check subscription - Consortium is Pro/Team only
+    const subscriptionPlan = (user.subscriptions?.status === 'ACTIVE' || user.subscriptions?.status === 'TRIAL')
+      ? (user.subscriptions.plan?.toLowerCase() || 'free')
+      : 'free';
+
+    if (subscriptionPlan === 'free') {
+      return NextResponse.json(
+        {
+          error: 'UPGRADE_REQUIRED',
+          message: '컨소시엄 기능은 Pro 이상 플랜에서 사용 가능합니다.',
+          upgradeUrl: '/pricing',
+        },
+        { status: 403 }
       );
     }
 
@@ -313,16 +361,40 @@ export async function DELETE(
     const userId = (session.user as any).id;
     const consortiumId = params.id;
 
-    // Get user's organization
+    // Get user's organization and subscription
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true },
+      select: {
+        organizationId: true,
+        subscriptions: {
+          select: {
+            plan: true,
+            status: true,
+          },
+        },
+      },
     });
 
     if (!user?.organizationId) {
       return NextResponse.json(
         { error: 'No organization associated with user' },
         { status: 400 }
+      );
+    }
+
+    // Check subscription - Consortium is Pro/Team only
+    const subscriptionPlan = (user.subscriptions?.status === 'ACTIVE' || user.subscriptions?.status === 'TRIAL')
+      ? (user.subscriptions.plan?.toLowerCase() || 'free')
+      : 'free';
+
+    if (subscriptionPlan === 'free') {
+      return NextResponse.json(
+        {
+          error: 'UPGRADE_REQUIRED',
+          message: '컨소시엄 기능은 Pro 이상 플랜에서 사용 가능합니다.',
+          upgradeUrl: '/pricing',
+        },
+        { status: 403 }
       );
     }
 

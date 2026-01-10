@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { UpgradePromptModal } from '@/components/upgrade-prompt-modal';
 
 interface Organization {
   id: string;
@@ -119,6 +120,11 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
 
+  // Subscription state for upgrade gating
+  const [subscriptionPlan, setSubscriptionPlan] = useState<'free' | 'pro' | 'team'>('free');
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState<'connect' | 'consortium'>('connect');
+
   useEffect(() => {
     async function fetchPartner() {
       try {
@@ -141,6 +147,54 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
 
     fetchPartner();
   }, [params.id]);
+
+  // Fetch subscription plan for upgrade gating
+  useEffect(() => {
+    async function fetchSubscription() {
+      if (!session?.user) return;
+
+      try {
+        const response = await fetch('/api/subscriptions/me');
+        if (response.ok) {
+          const data = await response.json();
+          const plan = data.subscription?.plan?.toLowerCase() || 'free';
+          const status = data.subscription?.status;
+
+          // Only consider active or trial subscriptions as valid
+          if (status === 'ACTIVE' || status === 'TRIAL') {
+            setSubscriptionPlan(plan as 'free' | 'pro' | 'team');
+          } else {
+            setSubscriptionPlan('free');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch subscription:', error);
+        setSubscriptionPlan('free');
+      }
+    }
+
+    fetchSubscription();
+  }, [session]);
+
+  // Handle connect button click - show upgrade modal for free users
+  const handleConnectClick = useCallback(() => {
+    if (subscriptionPlan === 'free') {
+      setUpgradeFeature('connect');
+      setShowUpgradeModal(true);
+    } else {
+      setShowConnectModal(true);
+    }
+  }, [subscriptionPlan]);
+
+  // Handle invite button click - show upgrade modal for free users (consortium is Pro/Team only)
+  const handleInviteClick = useCallback(() => {
+    if (subscriptionPlan === 'free') {
+      setUpgradeFeature('consortium');
+      setShowUpgradeModal(true);
+    } else {
+      handleOpenInviteModal();
+    }
+  }, [subscriptionPlan]);
 
   // Fetch user's existing consortiums when invite modal opens
   const fetchExistingConsortiums = async () => {
@@ -1114,13 +1168,13 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
           {/* Action Buttons */}
           <div className="space-y-3">
             <button
-              onClick={() => setShowConnectModal(true)}
+              onClick={handleConnectClick}
               className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 font-medium text-white transition-all hover:from-blue-700 hover:to-blue-800"
             >
               연결 요청
             </button>
             <button
-              onClick={handleOpenInviteModal}
+              onClick={handleInviteClick}
               className="w-full rounded-lg border-2 border-purple-600 bg-white px-6 py-3 font-medium text-purple-600 transition-all hover:bg-purple-50"
             >
               컨소시엄 초대
@@ -1432,6 +1486,33 @@ export default function PartnerDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
       )}
+
+      {/* Upgrade Prompt Modal for Free Users */}
+      <UpgradePromptModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        feature={upgradeFeature === 'connect' ? '파트너 연결 요청' : '컨소시엄 초대'}
+        description={
+          upgradeFeature === 'connect'
+            ? 'Pro 플랜으로 업그레이드하여 파트너에게 직접 협력 요청을 보내세요.'
+            : 'Pro 플랜으로 업그레이드하여 컨소시엄을 구성하고 파트너를 초대하세요.'
+        }
+        benefits={
+          upgradeFeature === 'connect'
+            ? [
+                '파트너에게 직접 협력 요청 발송',
+                '무제한 연결 요청',
+                '우선 응답 처리',
+                '컨소시엄 구성 및 관리',
+              ]
+            : [
+                '무제한 컨소시엄 생성',
+                '파트너 초대 및 관리',
+                '과제별 컨소시엄 구성',
+                '예산 및 역할 분배 관리',
+              ]
+        }
+      />
     </DashboardLayout>
   );
 }

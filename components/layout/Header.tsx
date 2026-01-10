@@ -8,7 +8,12 @@ import UserMenu from './UserMenu';
 import MobileNav from './MobileNav';
 import { cn } from '@/lib/utils';
 
-const navLinks = [
+interface NavLink {
+  href: string;
+  label: string;
+}
+
+const navLinks: NavLink[] = [
   { href: '/', label: '홈' },
   { href: '/dashboard', label: '대시보드' },
   { href: '/dashboard/matches', label: '매칭 결과' },

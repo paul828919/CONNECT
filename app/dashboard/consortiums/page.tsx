@@ -85,6 +85,10 @@ export default function ConsortiumsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [consortiumToDelete, setConsortiumToDelete] = useState<ConsortiumData | null>(null);
 
+  // Subscription state for Pro/Team gating
+  const [subscriptionPlan, setSubscriptionPlan] = useState<'free' | 'pro' | 'team' | null>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
+
   // Redirect if not authenticated
   useEffect(() => {
     if (status === 'loading') return;
@@ -92,6 +96,37 @@ export default function ConsortiumsPage() {
       router.push('/auth/signin');
     }
   }, [status, router]);
+
+  // Fetch subscription plan for Pro/Team gating
+  useEffect(() => {
+    async function fetchSubscription() {
+      if (status !== 'authenticated') return;
+
+      try {
+        const response = await fetch('/api/subscriptions/me');
+        if (response.ok) {
+          const data = await response.json();
+          const plan = data.subscription?.plan?.toLowerCase() || 'free';
+          const subscriptionStatus = data.subscription?.status;
+
+          if (subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL') {
+            setSubscriptionPlan(plan as 'free' | 'pro' | 'team');
+          } else {
+            setSubscriptionPlan('free');
+          }
+        } else {
+          setSubscriptionPlan('free');
+        }
+      } catch (error) {
+        console.error('Failed to fetch subscription:', error);
+        setSubscriptionPlan('free');
+      } finally {
+        setLoadingSubscription(false);
+      }
+    }
+
+    fetchSubscription();
+  }, [status]);
 
   const fetchConsortiums = useCallback(async () => {
     try {
@@ -190,24 +225,139 @@ export default function ConsortiumsPage() {
     setConsortiumToDelete(null);
   };
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading' || loadingSubscription) {
     return (
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">컨소시엄 목록을 불러오는 중...</p>
+      <DashboardLayout>
+        <div className="max-w-6xl mx-auto px-6 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">컨소시엄 목록을 불러오는 중...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Full-page upgrade prompt for free users
+  if (subscriptionPlan === 'free') {
+    return (
+      <DashboardLayout>
+        <div className="max-w-2xl mx-auto px-6 py-16 text-center">
+          {/* Lock Icon */}
+          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
+            <svg
+              className="w-10 h-10 text-purple-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </div>
+
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            컨소시엄 기능은 Pro 플랜에서 사용 가능합니다
+          </h1>
+
+          <p className="text-gray-600 mb-8 max-w-md mx-auto">
+            컨소시엄을 구성하여 파트너와 함께 정부 R&D 과제에 공동 참여하세요.
+            Pro 플랜에서 무제한 컨소시엄 생성 및 관리가 가능합니다.
+          </p>
+
+          {/* Benefits List */}
+          <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 mb-8 text-left max-w-md mx-auto">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Pro 플랜 혜택
+            </h3>
+            <ul className="space-y-3 text-sm text-gray-700">
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                무제한 컨소시엄 생성
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                파트너 초대 및 관리
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                과제별 컨소시엄 구성
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                협력 요청 직접 발송
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                무제한 매칭 및 실시간 업데이트
+              </li>
+            </ul>
+          </div>
+
+          <Link
+            href="/pricing"
+            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all"
+          >
+            Pro 플랜 시작하기
+            <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </Link>
+
+          <p className="mt-6 text-sm text-gray-500">
+            이미 Pro 플랜 회원이신가요?{' '}
+            <button
+              onClick={() => window.location.reload()}
+              className="text-purple-600 hover:text-purple-700 font-medium"
+            >
+              새로고침
+            </button>
+          </p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-6xl mx-auto px-6 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">컨소시엄 목록을 불러오는 중...</p>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <p className="text-red-800">{error}</p>
+      <DashboardLayout>
+        <div className="max-w-6xl mx-auto px-6 py-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <p className="text-red-800">{error}</p>
           <button
             onClick={fetchConsortiums}
             className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
@@ -216,6 +366,7 @@ export default function ConsortiumsPage() {
           </button>
         </div>
       </div>
+    </DashboardLayout>
     );
   }
 

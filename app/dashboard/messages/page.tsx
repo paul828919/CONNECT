@@ -12,7 +12,9 @@
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { UpgradePromptBanner } from '@/components/upgrade-prompt-modal';
 
 type ContactRequestStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
 type ContactRequestType = 'COLLABORATION' | 'CONSORTIUM_INVITE' | 'RESEARCH_PARTNER' | 'TECHNOLOGY_TRANSFER' | 'OTHER';
@@ -73,6 +75,9 @@ export default function MessagesPage() {
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [responseMessage, setResponseMessage] = useState('');
 
+  // Subscription state for upgrade guidance
+  const [subscriptionPlan, setSubscriptionPlan] = useState<'free' | 'pro' | 'team'>('free');
+
   // Redirect if not authenticated
   useEffect(() => {
     if (status === 'loading') return;
@@ -80,6 +85,33 @@ export default function MessagesPage() {
       router.push('/auth/signin');
     }
   }, [status, router]);
+
+  // Fetch subscription plan for upgrade guidance
+  useEffect(() => {
+    async function fetchSubscription() {
+      if (status !== 'authenticated') return;
+
+      try {
+        const response = await fetch('/api/subscriptions/me');
+        if (response.ok) {
+          const data = await response.json();
+          const plan = data.subscription?.plan?.toLowerCase() || 'free';
+          const subscriptionStatus = data.subscription?.status;
+
+          if (subscriptionStatus === 'ACTIVE' || subscriptionStatus === 'TRIAL') {
+            setSubscriptionPlan(plan as 'free' | 'pro' | 'team');
+          } else {
+            setSubscriptionPlan('free');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch subscription:', error);
+        setSubscriptionPlan('free');
+      }
+    }
+
+    fetchSubscription();
+  }, [status]);
 
   const fetchRequests = useCallback(async () => {
     try {
@@ -213,12 +245,21 @@ export default function MessagesPage() {
     <DashboardLayout>
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Header */}
-        <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">메시지함</h1>
-        <p className="text-gray-600">협력 요청 및 컨소시엄 초대를 관리하세요</p>
-      </div>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">메시지함</h1>
+          <p className="text-gray-600">협력 요청 및 컨소시엄 초대를 관리하세요</p>
+        </div>
 
-      {/* Tabs */}
+        {/* Upgrade Banner for Free Users */}
+        {subscriptionPlan === 'free' && (
+          <UpgradePromptBanner
+            feature="파트너 연결 기능"
+            description="Pro 플랜으로 업그레이드하여 파트너에게 직접 협력 요청을 보내세요"
+            className="mb-6"
+          />
+        )}
+
+        {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <div className="flex gap-8">
           <button
@@ -258,14 +299,45 @@ export default function MessagesPage() {
       {/* Messages List */}
       {currentRequests.length === 0 ? (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-12 text-center">
+          {/* Icon */}
+          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
           <p className="text-gray-500 text-lg mb-2">
             {activeTab === 'received' ? '받은 요청이 없습니다' : '보낸 요청이 없습니다'}
           </p>
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-400 text-sm mb-4">
             {activeTab === 'received'
               ? '다른 조직으로부터 협력 요청을 받으면 여기에 표시됩니다'
+              : subscriptionPlan === 'free'
+              ? 'Pro 플랜에서 파트너에게 협력 요청을 보낼 수 있습니다'
               : '파트너 검색에서 조직을 찾아 협력을 요청해보세요'}
           </p>
+
+          {/* CTA based on context */}
+          {activeTab === 'sent' && subscriptionPlan === 'free' ? (
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg"
+            >
+              Pro 플랜 시작하기
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+          ) : activeTab === 'sent' ? (
+            <Link
+              href="/dashboard/partners"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              파트너 찾기
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </Link>
+          ) : null}
         </div>
       ) : (
         <div className="space-y-4">
