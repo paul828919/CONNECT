@@ -68,6 +68,9 @@ export default function UserMenu() {
             <DropdownMenuItem onClick={() => router.push('/dashboard/admin/statistics')}>
               사용자 통계
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/dashboard/admin/users')}>
+              사용자 관리
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push('/dashboard/admin/ai-monitoring')}>
               AI 비용 모니터링
             </DropdownMenuItem>
