@@ -35,8 +35,8 @@ export default function CustomerSupportPage() {
               <Mail className="w-6 h-6 text-blue-600 mt-1" />
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">이메일 문의</h3>
-                <a href="mailto:support@connetplt.kr" className="text-blue-600 hover:text-blue-700">
-                  support@connetplt.kr
+                <a href="mailto:support@connectplt.kr" className="text-blue-600 hover:text-blue-700">
+                  support@connectplt.kr
                 </a>
               </div>
             </div>
