@@ -273,12 +273,12 @@ export default function PricingPage() {
       description: '조직 전체의 R&D 경쟁력을 관리하는 기관',
       secondaryDescription: '다수 부서의 통합 관리',
       pricing: {
-        monthly: 75900,  // VAT-inclusive (₩69,000 + ₩6,900 VAT)
+        monthly: 62700,  // VAT-inclusive (₩57,000 + ₩5,700 VAT)
         yearly: 990000,  // Keep for future use
       },
       features: [
         'Pro 플랜의 모든 기능',
-        '최대 5명 팀 멤버',
+        '최대 3명 팀 멤버',
         '무제한 협업 제안',
         '셀프서비스 온보딩 가이드',
         '프리미엄 이메일 지원 (12시간 내)',
@@ -604,7 +604,7 @@ export default function PricingPage() {
                   <td className="py-4 px-6 text-gray-700">팀 멤버 수</td>
                   <td className="py-4 px-6 text-center text-gray-600">1명</td>
                   <td className="py-4 px-6 text-center text-gray-600">1명</td>
-                  <td className="py-4 px-6 text-center text-gray-600">최대 5명</td>
+                  <td className="py-4 px-6 text-center text-gray-600">최대 3명</td>
                 </tr>
                 <tr className="bg-gray-50">
                   <td className="py-4 px-6 text-gray-700">지원 응답 시간</td>

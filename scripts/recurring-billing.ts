@@ -31,7 +31,7 @@ import { PaymentStatus, SubscriptionStatus } from '@prisma/client';
 // Plan prices (must match pricing page, widget, and charge API)
 const PLAN_PRICES = {
   PRO: { MONTHLY: 20900, ANNUAL: 490000 },   // MONTHLY: VAT-inclusive (₩19,000 + ₩1,900)
-  TEAM: { MONTHLY: 75900, ANNUAL: 990000 },  // MONTHLY: VAT-inclusive (₩69,000 + ₩6,900)
+  TEAM: { MONTHLY: 62700, ANNUAL: 990000 },  // MONTHLY: VAT-inclusive (₩57,000 + ₩5,700)
 };
 
 // Retry intervals in days

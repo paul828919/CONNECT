@@ -19,7 +19,7 @@ import { SubscriptionPlan } from '@prisma/client';
 const TEAM_LIMITS: Record<SubscriptionPlan, number> = {
   FREE: 1,
   PRO: 1,
-  TEAM: 5,
+  TEAM: 3,
 };
 
 export async function GET(request: NextRequest) {
