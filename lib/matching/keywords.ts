@@ -91,8 +91,12 @@ export function scoreIndustryKeywordsEnhanced(
   result.score += sectorMatchScore;
 
   // 3. Cross-industry relevance (up to 5 points)
-  const crossIndustryScore = scoreCrossIndustryRelevance(org, program, result);
-  result.score += crossIndustryScore;
+  // Skip if exact category match exists to avoid contradictory explanations
+  // (can't be both "exact match" and "different industry with high relevance")
+  if (!result.reasons.includes('EXACT_CATEGORY_MATCH')) {
+    const crossIndustryScore = scoreCrossIndustryRelevance(org, program, result);
+    result.score += crossIndustryScore;
+  }
 
   // 4. Technology keyword matching for research institutes (bonus points)
   if (org.type === 'RESEARCH_INSTITUTE' && org.keyTechnologies) {
