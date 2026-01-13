@@ -56,6 +56,21 @@ function getHistoricalProgramsCacheKey(): string {
   return `programs:historical`;
 }
 
+// Plan-based match limits per API call
+const MAX_MATCHES_BY_PLAN: Record<string, number> = {
+  free: 3,
+  pro: 10,
+  team: 15,
+};
+
+// Notification settings interface (matches dashboard settings)
+interface NotificationSettings {
+  newMatchNotifications?: boolean;
+  deadlineReminders?: boolean;
+  weeklyDigest?: boolean;
+  minimumMatchScore?: number; // 0-100, default 60
+  emailEnabled?: boolean;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -161,14 +176,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Get user's subscription plan
+    // 6. Get user's subscription plan and notification settings
     const user = await db.user.findUnique({
       where: { id: userId },
-      include: { subscriptions: true },
+      select: {
+        id: true,
+        subscriptions: true,
+        notificationSettings: true,
+      },
     });
 
     const plan = user?.subscriptions?.plan;
     const subscriptionPlan = (plan ? plan.toLowerCase() : 'free') as 'free' | 'pro' | 'team';
+
+    // Extract user's minimum match score preference (default: 60)
+    const notificationSettings = user?.notificationSettings as NotificationSettings | null;
+    const minimumMatchScore = notificationSettings?.minimumMatchScore ?? 60;
 
     // 7. Check rate limit (CRITICAL: Historical matches count toward limit!)
     const rateLimitCheck = await checkMatchLimit(userId, subscriptionPlan);
@@ -225,11 +248,22 @@ export async function POST(request: NextRequest) {
     }
 
     // 9. Generate matches using algorithm (WITH includeExpired option)
+    // Plan-based limit: Free(3), Pro(10), Team(15)
+    // Score filter: User's minimumMatchScore from notification settings
+    const maxMatches = MAX_MATCHES_BY_PLAN[subscriptionPlan] || 3;
+    console.log('[HISTORICAL MATCH] Settings:', {
+      plan: subscriptionPlan,
+      maxMatches,
+      minimumMatchScore,
+    });
     const matchResults = generateMatches(
       organization,
       programs,
-      10, // Return more historical matches (10 instead of 3)
-      { includeExpired: true } // KEY DIFFERENCE: Enable expired program matching
+      maxMatches,
+      {
+        includeExpired: true, // KEY DIFFERENCE: Enable expired program matching
+        minimumScore: minimumMatchScore, // User's preference from notification settings
+      }
     );
 
     if (matchResults.length === 0) {

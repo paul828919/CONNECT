@@ -4,8 +4,13 @@
  * Core feature: Generate funding opportunity matches for organizations
  *
  * Rate limiting enforced:
- * - Free tier: 3 matches/month
- * - Pro/Team tier: Unlimited
+ * - Free tier: 2 API calls/month (max 3 matches per call)
+ * - Pro tier: Unlimited (max 10 matches per call)
+ * - Team tier: Unlimited (max 15 matches per call)
+ *
+ * Match filtering:
+ * - Uses user's minimumMatchScore from notification settings (default: 60)
+ * - Only returns matches above the user's threshold
  *
  * Caching strategy:
  * - Match results: 24h TTL (invalidated on profile update or new programs)
@@ -46,6 +51,21 @@ import {
 } from '@/lib/cache/redis-cache';
 import { logMatchQualityBulk } from '@/lib/analytics/match-performance';
 
+// Plan-based match limits per API call
+const MAX_MATCHES_BY_PLAN: Record<string, number> = {
+  free: 3,
+  pro: 10,
+  team: 15,
+};
+
+// Notification settings interface (matches dashboard settings)
+interface NotificationSettings {
+  newMatchNotifications?: boolean;
+  deadlineReminders?: boolean;
+  weeklyDigest?: boolean;
+  minimumMatchScore?: number; // 0-100, default 60
+  emailEnabled?: boolean;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -162,15 +182,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Get user's subscription plan and role
+    // 6. Get user's subscription plan, role, and notification settings
     const user = await db.user.findUnique({
       where: { id: userId },
-      include: { subscriptions: true },
+      select: {
+        id: true,
+        subscriptions: true,
+        notificationSettings: true,
+      },
     });
 
     const plan = user?.subscriptions?.plan;
     const subscriptionPlan = (plan ? plan.toLowerCase() : 'free') as 'free' | 'pro' | 'team';
     const userRole = (session.user as any).role as 'USER' | 'ADMIN' | 'SUPER_ADMIN' | undefined;
+
+    // Extract user's minimum match score preference (default: 60)
+    const notificationSettings = user?.notificationSettings as NotificationSettings | null;
+    const minimumMatchScore = notificationSettings?.minimumMatchScore ?? 60;
 
     // 7. Check rate limit (critical for business model!)
     // Note: Admins bypass rate limits for testing/support purposes
@@ -268,6 +296,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 9. Generate matches using algorithm
+    // Plan-based limit: Free(3), Pro(10), Team(15)
+    // Score filter: User's minimumMatchScore from notification settings
+    const maxMatches = MAX_MATCHES_BY_PLAN[subscriptionPlan] || 3;
     console.log('[MATCH GENERATION] Using organization profile for org:', organizationId);
     console.log('[MATCH GENERATION] Profile data:', {
       name: organization.name,
@@ -277,7 +308,14 @@ export async function POST(request: NextRequest) {
       employeeCount: organization.employeeCount,
       profileUpdatedAt: organization.updatedAt,
     });
-    const matchResults = generateMatches(organization, programs, 3);
+    console.log('[MATCH GENERATION] Settings:', {
+      plan: subscriptionPlan,
+      maxMatches,
+      minimumMatchScore,
+    });
+    const matchResults = generateMatches(organization, programs, maxMatches, {
+      minimumScore: minimumMatchScore,
+    });
     console.log('[MATCH GENERATION] Generated', matchResults.length, 'matches');
 
     if (matchResults.length === 0) {

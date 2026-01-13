@@ -52,6 +52,7 @@ export interface MatchScore {
 
 export interface GenerateMatchesOptions {
   includeExpired?: boolean; // Allow matching against EXPIRED programs (for historical matches)
+  minimumScore?: number; // Minimum match score threshold (default: 45, user setting: 60)
 }
 
 /**
@@ -257,13 +258,14 @@ export function generateMatches(
     matches.push(matchScore);
   }
 
-  // Filter out low-quality matches (minimum threshold: 45 points)
-  // Rationale: Scores below 45 indicate poor fit, prevents "technically eligible but poorly matched"
-  const MINIMUM_MATCH_SCORE = 45;
+  // Filter out low-quality matches based on minimum score threshold
+  // Default: 45 points (absolute minimum for match quality)
+  // User setting: Typically 60 points (from notification settings)
+  const minimumScore = options?.minimumScore ?? 45;
 
   // Sort by eligibility level first (FULLY_ELIGIBLE > CONDITIONALLY_ELIGIBLE), then by score
   return matches
-    .filter((m) => m.score >= MINIMUM_MATCH_SCORE)
+    .filter((m) => m.score >= minimumScore)
     .sort((a, b) => {
       // Primary sort: Eligibility level
       if (a.eligibilityLevel !== b.eligibilityLevel) {
