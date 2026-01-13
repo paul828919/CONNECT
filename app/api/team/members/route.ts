@@ -133,7 +133,11 @@ export async function POST(request: NextRequest) {
     const isActiveSubscription = user.subscriptions?.status === 'ACTIVE' || user.subscriptions?.status === 'TRIAL';
     const plan = isActiveSubscription ? (user.subscriptions?.plan || 'FREE') : 'FREE';
 
-    if (plan !== 'TEAM') {
+    // Admin/SuperAdmin bypass - can manage team members regardless of subscription
+    const userRole = (session.user as any).role as 'USER' | 'ADMIN' | 'SUPER_ADMIN' | undefined;
+    const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+
+    if (plan !== 'TEAM' && !isAdmin) {
       return NextResponse.json(
         {
           error: 'Upgrade required',
@@ -146,7 +150,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check current member count
-    const maxMembers = TEAM_LIMITS[plan];
+    // Admins get TEAM plan limits even if on FREE plan
+    const effectivePlan = isAdmin ? 'TEAM' : plan;
+    const maxMembers = TEAM_LIMITS[effectivePlan];
     const currentMembers = user.organization.users.length;
 
     if (currentMembers >= maxMembers) {

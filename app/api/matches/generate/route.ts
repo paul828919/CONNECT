@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Get user's subscription plan
+    // 6. Get user's subscription plan and role
     const user = await db.user.findUnique({
       where: { id: userId },
       include: { subscriptions: true },
@@ -170,9 +170,11 @@ export async function POST(request: NextRequest) {
 
     const plan = user?.subscriptions?.plan;
     const subscriptionPlan = (plan ? plan.toLowerCase() : 'free') as 'free' | 'pro' | 'team';
+    const userRole = (session.user as any).role as 'USER' | 'ADMIN' | 'SUPER_ADMIN' | undefined;
 
     // 7. Check rate limit (critical for business model!)
-    const rateLimitCheck = await checkMatchLimit(userId, subscriptionPlan);
+    // Note: Admins bypass rate limits for testing/support purposes
+    const rateLimitCheck = await checkMatchLimit(userId, subscriptionPlan, userRole);
 
     if (!rateLimitCheck.allowed) {
       return NextResponse.json(

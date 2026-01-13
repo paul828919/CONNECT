@@ -104,7 +104,11 @@ export async function GET(
     const subscription = userOrg.subscriptions;
     const isActiveSubscription = subscription?.status === 'ACTIVE' || subscription?.status === 'TRIAL';
     const subscriptionPlan = isActiveSubscription ? subscription?.plan : 'FREE';
-    const hasAIAccess = subscriptionPlan === 'PRO' || subscriptionPlan === 'TEAM';
+
+    // Admin/SuperAdmin always have AI access regardless of subscription
+    const userRole = (session.user as any).role as 'USER' | 'ADMIN' | 'SUPER_ADMIN' | undefined;
+    const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+    const hasAIAccess = isAdmin || subscriptionPlan === 'PRO' || subscriptionPlan === 'TEAM';
 
     // For Free users, return basic score only without AI generation
     if (!hasAIAccess) {

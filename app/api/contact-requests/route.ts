@@ -180,8 +180,10 @@ export async function POST(request: NextRequest) {
     const subscriptionPlan = (user.subscriptions?.status === 'ACTIVE' || user.subscriptions?.status === 'TRIAL')
       ? (user.subscriptions.plan?.toLowerCase() as 'free' | 'pro' | 'team')
       : 'free';
+    const userRole = (session.user as any).role as 'USER' | 'ADMIN' | 'SUPER_ADMIN' | undefined;
 
-    const contactLimit = await checkContactLimit(user.organization.id, subscriptionPlan);
+    // Note: Admins bypass contact limits for testing/support purposes
+    const contactLimit = await checkContactLimit(user.organization.id, subscriptionPlan, userRole);
 
     if (!contactLimit.allowed) {
       if (contactLimit.upgradeRequired) {

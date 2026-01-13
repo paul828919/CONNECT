@@ -110,11 +110,22 @@ export const authRateLimiter: RateLimitConfig = {
  * Enforces free tier limit: 2 matches/month
  *
  * This is critical for business model - prevents free tier abuse
+ * Note: Admins and Super Admins bypass all limits for testing/support purposes
  */
 export async function checkMatchLimit(
   userId: string,
-  subscriptionPlan: 'free' | 'pro' | 'team'
+  subscriptionPlan: 'free' | 'pro' | 'team',
+  userRole?: 'USER' | 'ADMIN' | 'SUPER_ADMIN'
 ): Promise<{ allowed: boolean; remaining: number; resetDate: Date }> {
+  // Admin/SuperAdmin bypass - full access regardless of subscription plan
+  if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
+    return {
+      allowed: true,
+      remaining: 999999, // Effectively unlimited
+      resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+    };
+  }
+
   const redis = await getRedisClient();
 
   // Pro and Team users have unlimited matches
@@ -161,11 +172,22 @@ export async function checkMatchLimit(
  * - Free: Cannot send contact requests (view-only)
  * - Pro: 10 requests per month
  * - Team: Unlimited
+ * Note: Admins and Super Admins bypass all limits for testing/support purposes
  */
 export async function checkContactLimit(
   organizationId: string,
-  subscriptionPlan: 'free' | 'pro' | 'team'
+  subscriptionPlan: 'free' | 'pro' | 'team',
+  userRole?: 'USER' | 'ADMIN' | 'SUPER_ADMIN'
 ): Promise<{ allowed: boolean; remaining: number; resetDate: Date; upgradeRequired?: boolean }> {
+  // Admin/SuperAdmin bypass - full access regardless of subscription plan
+  if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
+    return {
+      allowed: true,
+      remaining: 999999, // Effectively unlimited
+      resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+    };
+  }
+
   // Free users cannot send contact requests at all
   if (subscriptionPlan === 'free') {
     return {
