@@ -37,6 +37,17 @@ export interface KeywordMatchResult {
 }
 
 /**
+ * Categorized keywords from organization profile
+ * Tracks source of keywords to provide accurate match explanations
+ */
+interface CategorizedKeywords {
+  sectorKeywords: string[];      // From industrySector and taxonomy
+  technologyKeywords: string[];  // From keyTechnologies
+  researchKeywords: string[];    // From researchFocusAreas
+  all: string[];                 // Combined for legacy compatibility
+}
+
+/**
  * Enhanced industry/keyword scoring with taxonomy and Korean support
  */
 export function scoreIndustryKeywordsEnhanced(
@@ -55,13 +66,13 @@ export function scoreIndustryKeywordsEnhanced(
     },
   };
 
-  // Extract organization keywords
-  const orgKeywords = extractOrganizationKeywords(org);
+  // Extract organization keywords (categorized for accurate match explanations)
+  const orgKeywordsCategorized = extractOrganizationKeywordsCategorized(org);
 
   // Extract program keywords
   const programKeywords = extractProgramKeywords(program);
 
-  if (orgKeywords.length === 0 || programKeywords.length === 0) {
+  if (orgKeywordsCategorized.all.length === 0 || programKeywords.length === 0) {
     return result;
   }
 
@@ -82,8 +93,9 @@ export function scoreIndustryKeywordsEnhanced(
     }
   }
 
-  // 1. Exact keyword matching (up to 15 points)
-  const exactMatchScore = scoreExactKeywordMatches(orgKeywords, programKeywords, result);
+  // 1. Exact keyword matching (up to 15 points) - using categorized approach
+  // This ensures EXACT_KEYWORD_MATCH is only claimed when actual keyTechnologies matched
+  const exactMatchScore = scoreExactKeywordMatchesCategorized(orgKeywordsCategorized, programKeywords, result);
   result.score += exactMatchScore;
 
   // 2. Sector-level matching (up to 10 points)
@@ -116,37 +128,60 @@ export function scoreIndustryKeywordsEnhanced(
 
 /**
  * Extract normalized keywords from organization profile
+ * Returns categorized keywords to track match source for accurate explanations
  */
-function extractOrganizationKeywords(org: Organization): string[] {
-  const keywords: Set<string> = new Set();
+function extractOrganizationKeywordsCategorized(org: Organization): CategorizedKeywords {
+  const sectorKeywords: Set<string> = new Set();
+  const technologyKeywords: Set<string> = new Set();
+  const researchKeywords: Set<string> = new Set();
 
-  // Industry sector
+  // Industry sector keywords
   if (org.industrySector) {
-    keywords.add(normalizeKoreanKeyword(org.industrySector));
+    sectorKeywords.add(normalizeKoreanKeyword(org.industrySector));
 
     // Add all related keywords from taxonomy
     const sector = findIndustrySector(org.industrySector);
     if (sector) {
-      const sectorKeywords = getAllKeywordsForSector(sector);
-      sectorKeywords.forEach(k => keywords.add(normalizeKoreanKeyword(k)));
+      const taxonomyKeywords = getAllKeywordsForSector(sector);
+      taxonomyKeywords.forEach(k => sectorKeywords.add(normalizeKoreanKeyword(k)));
     }
   }
 
   // Research focus areas (for research institutes)
   if (org.researchFocusAreas && org.researchFocusAreas.length > 0) {
     org.researchFocusAreas.forEach(area => {
-      keywords.add(normalizeKoreanKeyword(area));
+      researchKeywords.add(normalizeKoreanKeyword(area));
     });
   }
 
   // Key technologies (for research institutes)
   if (org.keyTechnologies && org.keyTechnologies.length > 0) {
     org.keyTechnologies.forEach(tech => {
-      keywords.add(normalizeKoreanKeyword(tech));
+      technologyKeywords.add(normalizeKoreanKeyword(tech));
     });
   }
 
-  return Array.from(keywords);
+  // Combine all for legacy compatibility
+  const all = new Set([
+    ...Array.from(sectorKeywords),
+    ...Array.from(technologyKeywords),
+    ...Array.from(researchKeywords),
+  ]);
+
+  return {
+    sectorKeywords: Array.from(sectorKeywords),
+    technologyKeywords: Array.from(technologyKeywords),
+    researchKeywords: Array.from(researchKeywords),
+    all: Array.from(all),
+  };
+}
+
+/**
+ * Extract normalized keywords from organization profile (legacy interface)
+ * @deprecated Use extractOrganizationKeywordsCategorized for accurate match explanations
+ */
+function extractOrganizationKeywords(org: Organization): string[] {
+  return extractOrganizationKeywordsCategorized(org).all;
 }
 
 /**
@@ -192,8 +227,99 @@ function extractProgramKeywords(program: FundingProgram): string[] {
 }
 
 /**
- * Score exact keyword matches (0-15 points)
- * Fixed in v2.1: Distinguish between exact matches and partial/substring matches
+ * Score exact keyword matches with source tracking (0-15 points)
+ * Fixed in v2.2: Track which category of keywords matched for accurate explanations
+ */
+function scoreExactKeywordMatchesCategorized(
+  orgKeywords: CategorizedKeywords,
+  programKeywords: string[],
+  result: KeywordMatchResult
+): number {
+  let technologyExactMatches = 0;
+  let technologyPartialMatches = 0;
+  let sectorExactMatches = 0;
+  let sectorPartialMatches = 0;
+  let researchExactMatches = 0;
+  let researchPartialMatches = 0;
+  let score = 0;
+
+  // Check technology keyword matches (highest priority for EXACT_KEYWORD_MATCH)
+  for (const orgKw of orgKeywords.technologyKeywords) {
+    for (const progKw of programKeywords) {
+      if (orgKw === progKw) {
+        technologyExactMatches++;
+      } else if (orgKw.length >= 3 && progKw.length >= 3) {
+        if (orgKw.includes(progKw) || progKw.includes(orgKw)) {
+          technologyPartialMatches++;
+        }
+      }
+    }
+  }
+
+  // Check research focus area matches
+  for (const orgKw of orgKeywords.researchKeywords) {
+    for (const progKw of programKeywords) {
+      if (orgKw === progKw) {
+        researchExactMatches++;
+      } else if (orgKw.length >= 3 && progKw.length >= 3) {
+        if (orgKw.includes(progKw) || progKw.includes(orgKw)) {
+          researchPartialMatches++;
+        }
+      }
+    }
+  }
+
+  // Check sector keyword matches (lowest priority - avoid claiming "기술 분야" match)
+  for (const orgKw of orgKeywords.sectorKeywords) {
+    for (const progKw of programKeywords) {
+      if (orgKw === progKw) {
+        sectorExactMatches++;
+      } else if (orgKw.length >= 3 && progKw.length >= 3) {
+        if (orgKw.includes(progKw) || progKw.includes(orgKw)) {
+          sectorPartialMatches++;
+        }
+      }
+    }
+  }
+
+  const totalMatches =
+    technologyExactMatches + technologyPartialMatches +
+    researchExactMatches + researchPartialMatches +
+    sectorExactMatches + sectorPartialMatches;
+
+  if (totalMatches > 0) {
+    // 5 points for first match, 2 points for each additional (max 15)
+    score = Math.min(15, 5 + (totalMatches - 1) * 2);
+    result.details.exactMatches = technologyExactMatches + researchExactMatches + sectorExactMatches;
+
+    // Use appropriate reason codes based on what actually matched
+    // Priority: technology > research > sector
+    if (technologyExactMatches > 0) {
+      result.reasons.push('EXACT_KEYWORD_MATCH'); // Technology keywords matched - accurate claim
+    } else if (technologyPartialMatches > 0) {
+      result.reasons.push('PARTIAL_KEYWORD_MATCH');
+    }
+
+    if (researchExactMatches > 0 && technologyExactMatches === 0) {
+      result.reasons.push('RESEARCH_KEYWORD_MATCH'); // Research focus areas matched
+    }
+
+    // Only add sector match reason if no technology/research matches
+    // This prevents misleading "기술 분야" claims when only sector matched
+    if (sectorExactMatches > 0 && technologyExactMatches === 0 && researchExactMatches === 0) {
+      // Don't add EXACT_KEYWORD_MATCH - use sector-specific codes instead
+      // The SECTOR_MATCH or EXACT_CATEGORY_MATCH reasons handle this case
+    } else if (sectorPartialMatches > 0 && technologyPartialMatches === 0 && researchPartialMatches === 0) {
+      // Sector-only partial match - don't claim technology match
+    }
+  }
+
+  return score;
+}
+
+/**
+ * Score exact keyword matches (0-15 points) - Legacy interface
+ * @deprecated Use scoreExactKeywordMatchesCategorized for accurate match explanations
  */
 function scoreExactKeywordMatches(
   orgKeywords: string[],

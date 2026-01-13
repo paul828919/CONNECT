@@ -238,12 +238,17 @@ function getReasonExplanation(
 
     // ===== Enhanced v2.0 Reason Codes =====
 
-    // Enhanced keyword matching
+    // Enhanced keyword matching (v2.2: Now accurately tracks match source)
     case 'EXACT_KEYWORD_MATCH':
-      return '귀하의 기술 분야와 프로그램 키워드가 정확히 일치합니다.';
+      // This reason code is now only added when actual keyTechnologies matched
+      return '귀사의 핵심 기술 키워드가 프로그램 요구사항과 정확히 일치합니다.';
 
     case 'PARTIAL_KEYWORD_MATCH':
-      return '귀하의 기술 분야와 프로그램 키워드가 부분적으로 연관됩니다. 세부 요강을 확인하세요.';
+      return '귀사의 기술 키워드와 프로그램 요구사항이 부분적으로 연관됩니다. 세부 요강을 확인하세요.';
+
+    case 'RESEARCH_KEYWORD_MATCH':
+      // New in v2.2: Research focus areas matched
+      return '귀 기관의 연구 분야가 프로그램 목표와 일치합니다.';
 
     // Stage 2.2: Exact category match bonus
     case 'EXACT_CATEGORY_MATCH':
