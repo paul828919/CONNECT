@@ -103,8 +103,9 @@ export async function GET(request: NextRequest) {
         funding_programs: true,
       },
       orderBy: [
-        { funding_programs: { publishedAt: 'desc' } }, // Newest announcements first
-        { funding_programs: { deadline: 'asc' } },     // Then by urgency (NULLs last)
+        { score: 'desc' },                               // 1. Highest match score first
+        { funding_programs: { deadline: 'asc' } },       // 2. Then by urgency (closest deadline first, NULLs last)
+        { funding_programs: { publishedAt: 'desc' } },   // 3. Then newest announcements
       ],
       skip,
       take: itemsPerPage,
