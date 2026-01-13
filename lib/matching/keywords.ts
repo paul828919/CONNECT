@@ -189,35 +189,45 @@ function extractProgramKeywords(program: FundingProgram): string[] {
 
 /**
  * Score exact keyword matches (0-15 points)
+ * Fixed in v2.1: Distinguish between exact matches and partial/substring matches
  */
 function scoreExactKeywordMatches(
   orgKeywords: string[],
   programKeywords: string[],
   result: KeywordMatchResult
 ): number {
-  let matches = 0;
+  let exactMatches = 0;
+  let partialMatches = 0;
   let score = 0;
 
   for (const orgKw of orgKeywords) {
     for (const progKw of programKeywords) {
-      // Exact match
+      // True exact match (identical keywords)
       if (orgKw === progKw) {
-        matches++;
+        exactMatches++;
       }
-      // Substring match (one contains the other)
+      // Substring/partial match (one contains the other, but not identical)
       else if (orgKw.length >= 3 && progKw.length >= 3) {
         if (orgKw.includes(progKw) || progKw.includes(orgKw)) {
-          matches++;
+          partialMatches++;
         }
       }
     }
   }
 
-  if (matches > 0) {
+  const totalMatches = exactMatches + partialMatches;
+
+  if (totalMatches > 0) {
     // 5 points for first match, 2 points for each additional (max 15)
-    score = Math.min(15, 5 + (matches - 1) * 2);
-    result.details.exactMatches = matches;
-    result.reasons.push('EXACT_KEYWORD_MATCH');
+    score = Math.min(15, 5 + (totalMatches - 1) * 2);
+    result.details.exactMatches = exactMatches; // Only count TRUE exact matches
+
+    // Use appropriate reason code based on match type
+    if (exactMatches > 0) {
+      result.reasons.push('EXACT_KEYWORD_MATCH');
+    } else if (partialMatches > 0) {
+      result.reasons.push('PARTIAL_KEYWORD_MATCH'); // New: More honest about partial matches
+    }
   }
 
   return score;

@@ -76,7 +76,11 @@ export const INDUSTRY_TAXONOMY = {
 
   BIO_HEALTH: {
     name: '바이오/헬스',
-    keywords: ['바이오', '헬스', '의료', '생명공학', 'BIO', 'BIO_HEALTH', 'HEALTH'],
+    keywords: [
+      '바이오', '헬스', '의료', '생명공학', 'BIO', 'BIO_HEALTH', 'HEALTH',
+      // Veterinary/Animal health keywords at sector level
+      '동물약품', '동물의약', '수의', '동물백신',
+    ],
     subSectors: {
       MEDICAL_DEVICE: {
         name: '의료기기',
@@ -84,7 +88,39 @@ export const INDUSTRY_TAXONOMY = {
       },
       PHARMA: {
         name: '의약/제약',
-        keywords: ['의약', '제약', '신약', '바이오의약', '의약품'],
+        keywords: [
+          // Core pharma
+          '의약', '제약', '신약', '바이오의약', '의약품',
+          // Drug development stages
+          '신약개발', '후보물질', '임상시험', '전임상', '비임상',
+          'Phase1', 'Phase2', 'Phase3', '임상1상', '임상2상', '임상3상',
+          // Drug types
+          '합성의약', '천연물의약', '바이오시밀러', '제네릭',
+          '항암제', '면역치료제', '세포치료제', '유전자치료제',
+          // Manufacturing & regulatory
+          'GMP', 'GLP', 'GCP', '품목허가', 'KFDA', '식약처',
+          '의약품제조', '원료의약품', 'API',
+          // Technologies
+          'DDS', '약물전달', '서방형', '표적치료', '항체의약',
+        ],
+      },
+      VET_PHARMA: {
+        name: '동물의약/수의학',
+        keywords: [
+          // Core vet pharma
+          '동물약품', '동물의약', '동물용의약품', '수의약품',
+          // Vaccines
+          '동물백신', '수의백신', '가축백신', '구제역백신', '조류인플루엔자',
+          '광견병', '돼지열병', 'AI백신', 'FMD백신',
+          // Animal health
+          '수의', '수의학', '가축질병', '동물건강', '동물진단', '동물치료',
+          // Livestock
+          '축산', '양돈', '양계', '낙농', '반려동물', '펫헬스',
+          // Manufacturing & regulatory
+          'KVGMP', '동물약품제조', '농림축산검역본부', '수의과학검역원',
+          // Technologies
+          '면역', '항체', '바이러스', '진단키트', '혈청',
+        ],
       },
       BIOTECH: {
         name: '생명공학',
@@ -93,6 +129,14 @@ export const INDUSTRY_TAXONOMY = {
       DIGITAL_HEALTH: {
         name: '디지털헬스',
         keywords: ['디지털헬스', '원격의료', 'u헬스', '모바일헬스', 'mHealth'],
+      },
+      CLINICAL_RESEARCH: {
+        name: '임상연구/CRO',
+        keywords: [
+          '임상연구', '임상시험', 'CRO', '위탁연구',
+          '임상개발', '규제과학', '약물감시', 'PV',
+          '생물통계', '데이터관리', 'EDC', '약동학', 'PK/PD',
+        ],
       },
     },
   },
