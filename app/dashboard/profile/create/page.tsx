@@ -65,6 +65,13 @@ const organizationSchema = z.object({
     .min(1, 'TRL은 1 이상이어야 합니다.')
     .max(9, 'TRL은 9 이하여야 합니다.')
     .optional(),
+  // Dual-TRL System: Target research TRL for R&D funding matching
+  targetResearchTRL: z
+    .number()
+    .min(1, '연구개발 목표 TRL은 1 이상이어야 합니다.')
+    .max(9, '연구개발 목표 TRL은 9 이하여야 합니다.')
+    .nullable()
+    .optional(),
   description: z.string().max(500, '설명은 500자 이하여야 합니다.').optional(),
   website: z
     .string()
@@ -735,39 +742,81 @@ export default function CreateOrganizationProfilePage() {
               </div>
             )}
 
-            {/* Technology Readiness Level (TRL) - Always visible (independent of R&D experience) */}
-            <div>
-              <label
-                htmlFor="technologyReadinessLevel"
-                className="block text-sm font-medium text-gray-700"
-              >
-                기술성숙도(TRL)              </label>
-              <select
-                id="technologyReadinessLevel"
-                {...register('technologyReadinessLevel', {
-                  valueAsNumber: true,
-                })}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="">선택해주세요.</option>
-                <option value="1">TRL 1 - 기초 원리 연구</option>
-                <option value="2">TRL 2 - 기술 개념 정립</option>
-                <option value="3">TRL 3 - 개념 증명</option>
-                <option value="4">TRL 4 - 실험실 환경 검증</option>
-                <option value="5">TRL 5 - 유사 환경 검증</option>
-                <option value="6">TRL 6 - 파일럿 실증</option>
-                <option value="7">TRL 7 - 실제 환경 시연</option>
-                <option value="8">TRL 8 - 시스템 완성 및 검증</option>
-                <option value="9">TRL 9 - 상용화</option>
-              </select>
-              <p className="mt-1 text-xs text-gray-500">
-                현재 보유 중인 기술의 성숙도를 선택해주세요.
-              </p>
-              {errors.technologyReadinessLevel && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.technologyReadinessLevel.message}
+            {/* Technology Readiness Level (TRL) - Dual-TRL System */}
+            <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <h4 className="text-sm font-semibold text-gray-900">기술 성숙도 (TRL) 설정</h4>
+
+              {/* Existing Technology TRL */}
+              <div>
+                <label
+                  htmlFor="technologyReadinessLevel"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  기존 보유 기술 수준
+                </label>
+                <select
+                  id="technologyReadinessLevel"
+                  {...register('technologyReadinessLevel', {
+                    valueAsNumber: true,
+                  })}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">선택해주세요</option>
+                  <option value="1">TRL 1 - 기초 원리 연구</option>
+                  <option value="2">TRL 2 - 기술 개념 정립</option>
+                  <option value="3">TRL 3 - 개념 증명</option>
+                  <option value="4">TRL 4 - 실험실 환경 검증</option>
+                  <option value="5">TRL 5 - 유사 환경 검증</option>
+                  <option value="6">TRL 6 - 파일럿 실증</option>
+                  <option value="7">TRL 7 - 실제 환경 시연</option>
+                  <option value="8">TRL 8 - 시스템 완성 및 검증</option>
+                  <option value="9">TRL 9 - 상용화</option>
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  현재 보유 중인 기술 또는 제품의 성숙도를 선택해주세요.
                 </p>
-              )}
+                {errors.technologyReadinessLevel && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.technologyReadinessLevel.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Target Research TRL - for R&D funding matching */}
+              <div>
+                <label
+                  htmlFor="targetResearchTRL"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  연구개발하려는 기술 수준
+                </label>
+                <select
+                  id="targetResearchTRL"
+                  {...register('targetResearchTRL', {
+                    valueAsNumber: true,
+                  })}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">선택해주세요</option>
+                  <option value="1">TRL 1 - 기초 원리 연구</option>
+                  <option value="2">TRL 2 - 기술 개념 정립</option>
+                  <option value="3">TRL 3 - 개념 증명</option>
+                  <option value="4">TRL 4 - 실험실 환경 검증</option>
+                  <option value="5">TRL 5 - 유사 환경 검증</option>
+                  <option value="6">TRL 6 - 파일럿 실증</option>
+                  <option value="7">TRL 7 - 실제 환경 시연</option>
+                  <option value="8">TRL 8 - 시스템 완성 및 검증</option>
+                  <option value="9">TRL 9 - 상용화</option>
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  국가 R&D 과제 공고 매칭에 사용됩니다. 신규 연구개발하고자 하는 기술의 목표 수준을 선택해주세요.
+                </p>
+                {errors.targetResearchTRL && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.targetResearchTRL.message}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Tier 1B: Research Institute and University specific fields */}

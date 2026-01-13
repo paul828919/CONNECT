@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
       researchFocusAreas, // comma-separated string from form
       keyTechnologies, // comma-separated string from form
       technologyReadinessLevel,
+      targetResearchTRL, // Dual-TRL System: for R&D funding matching
       description,
       website,
     } = body;
@@ -183,6 +184,7 @@ export async function POST(request: NextRequest) {
         employeeCount,
         rdExperience: rdExperience || false,
         technologyReadinessLevel: technologyReadinessLevel || null,
+        targetResearchTRL: targetResearchTRL || null, // Dual-TRL System
         description: description || null,
         website: website || null,
         // Tier 1A: Company eligibility fields

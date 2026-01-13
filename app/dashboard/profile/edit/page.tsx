@@ -970,7 +970,7 @@ export default function EditOrganizationProfilePage() {
                   htmlFor="targetResearchTRL"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  연구개발 희망 기술 수준
+                  연구개발하려는 기술 수준
                 </label>
                 <select
                   id="targetResearchTRL"
@@ -991,7 +991,7 @@ export default function EditOrganizationProfilePage() {
                   <option value="9">TRL 9 - 상용화</option>
                 </select>
                 <p className="mt-1 text-xs text-gray-500">
-                  정부 R&D 지원사업 매칭에 사용됩니다. 신규 연구개발하고자 하는 기술의 목표 수준을 선택해주세요.
+                  국가 R&D 과제 공고 매칭에 사용됩니다. 신규 연구개발하고자 하는 기술의 목표 수준을 선택해주세요.
                 </p>
                 {errors.targetResearchTRL && (
                   <p className="mt-1 text-sm text-red-600">
