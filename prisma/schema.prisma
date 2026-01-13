@@ -392,6 +392,10 @@ model organizations {
   revenueRange                                                   RevenueRange?
   rdExperience                                                   Boolean               @default(false)
   technologyReadinessLevel                                       Int?                  @db.SmallInt
+  // Dual-TRL System: Target research TRL for R&D funding matching
+  targetResearchTRL                                              Int?                  @db.SmallInt // Single target TRL level
+  targetResearchTRLMin                                           Int?                  @db.SmallInt // Min TRL range (optional)
+  targetResearchTRLMax                                           Int?                  @db.SmallInt // Max TRL range (optional)
   instituteType                                                  InstituteType?
   parentDepartment                                               String?
   researchFocusAreas                                             String[]

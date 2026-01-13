@@ -52,7 +52,9 @@ export function scoreTRLEnhanced(
   org: organizations,
   program: funding_programs
 ): TRLMatchResult {
-  const orgTRL = org.technologyReadinessLevel;
+  // DUAL-TRL SYSTEM (v2.6):
+  // Use targetResearchTRL for matching if available, fall back to technologyReadinessLevel
+  const orgTRL = org.targetResearchTRL || org.technologyReadinessLevel;
   const minTRL = program.minTrl;
   const maxTRL = program.maxTrl;
 

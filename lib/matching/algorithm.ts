@@ -130,11 +130,17 @@ export function generateMatches(
     // Organizations outside the TRL range are fundamentally incompatible - not just a scoring penalty
     // Example: Early-stage research program (TRL 1-3) cannot accept commercialization-ready company (TRL 7-9)
     //
+    // DUAL-TRL SYSTEM (v2.1):
+    // - Use targetResearchTRL (연구개발 희망 기술 수준) for matching if available
+    // - Fall back to technologyReadinessLevel (기존 보유 기술 수준) if targetResearchTRL not set
+    // - This allows companies with TRL 9 products to match TRL 3 programs if they want new R&D
+    //
     // RELAXATION FOR HISTORICAL MATCHES:
     // For EXPIRED programs (historical reference), expand TRL range by ±3
     // Rationale: Users want to learn from adjacent TRL programs to understand funding landscape
-    if (program.minTrl !== null && program.maxTrl !== null && organization.technologyReadinessLevel) {
-      const orgTRL = organization.technologyReadinessLevel;
+    const matchingTRL = organization.targetResearchTRL || organization.technologyReadinessLevel;
+    if (program.minTrl !== null && program.maxTrl !== null && matchingTRL) {
+      const orgTRL = matchingTRL;
 
       if (options?.includeExpired) {
         // RELAXED TRL for historical reference: ±3 range

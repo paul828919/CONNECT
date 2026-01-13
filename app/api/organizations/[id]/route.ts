@@ -43,6 +43,7 @@ export async function GET(
         employeeCount: true,
         rdExperience: true,
         technologyReadinessLevel: true,
+        targetResearchTRL: true,
         description: true,
         // Tier 1A: Company eligibility fields
         revenueRange: true,
@@ -175,6 +176,7 @@ export async function PATCH(
       rdExperience,
       rdExperienceCount, // New field for count-based R&D experience
       technologyReadinessLevel,
+      targetResearchTRL,
       description,
       // Tier 1A: Company eligibility fields
       revenueRange,
@@ -224,6 +226,8 @@ export async function PATCH(
     }
     if (technologyReadinessLevel !== undefined)
       updateData.technologyReadinessLevel = technologyReadinessLevel;
+    if (targetResearchTRL !== undefined)
+      updateData.targetResearchTRL = targetResearchTRL;
     if (description !== undefined) updateData.description = description;
 
     // Tier 1A: Company eligibility fields
@@ -415,6 +419,7 @@ export async function PATCH(
         employeeCount: true,
         rdExperience: true,
         technologyReadinessLevel: true,
+        targetResearchTRL: true,
         description: true,
         // Tier 1A: Company eligibility fields
         revenueRange: true,
