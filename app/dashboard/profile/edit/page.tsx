@@ -38,6 +38,7 @@ const userProfileSchema = z.object({
 });
 
 const organizationEditSchema = z.object({
+  type: z.enum(['COMPANY', 'RESEARCH_INSTITUTE', 'UNIVERSITY', 'PUBLIC_INSTITUTION']).optional(),
   primaryContactEmail: z
     .string()
     .email('올바른 이메일 형식을 입력해주세요.')
@@ -195,6 +196,7 @@ export default function EditOrganizationProfilePage() {
   });
 
   const rdExperienceCount = watch('rdExperienceCount');
+  const organizationType = watch('type');
 
   // Handler for certification checkbox toggle
   const handleCertificationToggle = (certValue: string) => {
@@ -226,6 +228,7 @@ export default function EditOrganizationProfilePage() {
         setOrganizationData(data.organization);
 
         // Pre-populate form
+        setValue('type', data.organization.type);
         setValue('primaryContactEmail', data.organization.primaryContactEmail || '');
         setValue('name', data.organization.name);
         setValue('website', data.organization.website || '');
@@ -381,29 +384,6 @@ export default function EditOrganizationProfilePage() {
           <p className="mt-2 text-gray-600">최신 프로필 정보를 업데이트하고 향상된 연구과제와 컨소시엄 매칭 경험해 보세요.</p>
         </div>
 
-        {/* Organization Type Badge (Read-only) */}
-        {organizationData && (
-          <div className="mb-6 flex items-center gap-2 rounded-lg bg-blue-50 p-4">
-            <div className="text-2xl">
-              {organizationData.type === 'COMPANY' && '🏢'}
-              {organizationData.type === 'RESEARCH_INSTITUTE' && '🔬'}
-              {organizationData.type === 'UNIVERSITY' && '🎓'}
-              {organizationData.type === 'PUBLIC_INSTITUTION' && '🏛️'}
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-700">조직 유형</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {organizationData.type === 'COMPANY' && '기업'}
-                {organizationData.type === 'RESEARCH_INSTITUTE' && '국가연구기관'}
-                {organizationData.type === 'UNIVERSITY' && '대학'}
-                {organizationData.type === 'PUBLIC_INSTITUTION' && '공공기관'}
-              </p>
-              <p className="text-xs text-gray-500">
-                조직 유형은 변경할 수 없습니다.
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Match Readiness Inline Prompt */}
         {organizationData && (
@@ -443,6 +423,90 @@ export default function EditOrganizationProfilePage() {
                 {error}
               </div>
             )}
+
+            {/* Organization Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                조직 유형
+              </label>
+              <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <label
+                  className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-4 transition-all ${
+                    organizationType === 'COMPANY'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value="COMPANY"
+                    {...register('type')}
+                    className="sr-only"
+                  />
+                  <div className="text-center">
+                    <div className="text-2xl">🏢</div>
+                    <div className="mt-1 font-medium text-gray-900">기업</div>
+                  </div>
+                </label>
+                <label
+                  className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-4 transition-all ${
+                    organizationType === 'RESEARCH_INSTITUTE'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value="RESEARCH_INSTITUTE"
+                    {...register('type')}
+                    className="sr-only"
+                  />
+                  <div className="text-center">
+                    <div className="text-2xl">🔬</div>
+                    <div className="mt-1 font-medium text-gray-900">국가연구기관</div>
+                  </div>
+                </label>
+                <label
+                  className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-4 transition-all ${
+                    organizationType === 'UNIVERSITY'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value="UNIVERSITY"
+                    {...register('type')}
+                    className="sr-only"
+                  />
+                  <div className="text-center">
+                    <div className="text-2xl">🎓</div>
+                    <div className="mt-1 font-medium text-gray-900">대학</div>
+                  </div>
+                </label>
+                <label
+                  className={`flex cursor-pointer items-center justify-center rounded-lg border-2 p-4 transition-all ${
+                    organizationType === 'PUBLIC_INSTITUTION'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    value="PUBLIC_INSTITUTION"
+                    {...register('type')}
+                    className="sr-only"
+                  />
+                  <div className="text-center">
+                    <div className="text-2xl">🏛️</div>
+                    <div className="mt-1 font-medium text-gray-900">공공기관</div>
+                  </div>
+                </label>
+              </div>
+              <p className="mt-2 text-xs text-gray-500">
+                이직 시 조직 유형을 변경하면 매칭 결과가 재생성됩니다.
+              </p>
+            </div>
 
             {/* Primary Contact Email */}
             <div>

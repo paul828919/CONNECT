@@ -166,6 +166,7 @@ export async function PATCH(
 
     const body = await request.json();
     const {
+      type,
       name,
       primaryContactEmail,
       website,
@@ -199,6 +200,16 @@ export async function PATCH(
 
     // Build update data (only include fields that are provided)
     const updateData: any = {};
+
+    // Organization type (with validation)
+    if (type !== undefined) {
+      const validTypes = ['COMPANY', 'RESEARCH_INSTITUTE', 'UNIVERSITY', 'PUBLIC_INSTITUTION'];
+      if (!validTypes.includes(type)) {
+        return NextResponse.json({ error: 'Invalid organization type' }, { status: 400 });
+      }
+      updateData.type = type;
+    }
+
     if (name !== undefined) updateData.name = name;
     if (primaryContactEmail !== undefined) updateData.primaryContactEmail = primaryContactEmail;
     if (website !== undefined) updateData.website = website;
