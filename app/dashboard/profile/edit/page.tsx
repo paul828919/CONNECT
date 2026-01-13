@@ -127,13 +127,14 @@ const organizationEditSchema = z.object({
 
 type OrganizationEditData = z.infer<typeof organizationEditSchema>;
 
+// Industry sectors - select based on product/service domain, not business activity
+// Note: "Manufacturing" removed - capture manufacturing capability via certifications instead
 const industrySectors = [
   { value: 'ICT', label: 'ICT (정보통신)' },
-  { value: 'BIO_HEALTH', label: '바이오/헬스' },
-  { value: 'MANUFACTURING', label: '제조업' },
+  { value: 'BIO_HEALTH', label: '바이오/헬스 (인체·동물의약, 의료기기, 백신, 생명공학 포함)' },
   { value: 'ENERGY', label: '에너지' },
   { value: 'ENVIRONMENT', label: '환경' },
-  { value: 'AGRICULTURE', label: '농업' },
+  { value: 'AGRICULTURE', label: '농업/식품' },
   { value: 'MARINE', label: '해양수산' },
   { value: 'CONSTRUCTION', label: '건설' },
   { value: 'TRANSPORTATION', label: '교통/운송' },
@@ -144,6 +145,7 @@ const industrySectors = [
 
 // Common certifications for eligibility filtering
 const commonCertifications = [
+  // Company certifications
   { value: '벤처기업', label: '벤처기업' },
   { value: 'INNO-BIZ', label: 'INNO-BIZ (기술혁신형 중소기업)' },
   { value: '연구개발전담부서', label: '연구개발전담부서' },
@@ -151,6 +153,15 @@ const commonCertifications = [
   { value: '메인비즈', label: '메인비즈 (Main-Biz)' },
   { value: '중소기업', label: '중소기업 확인서' },
   { value: '스타트업', label: '창업기업 (7년 이내)' },
+  // Manufacturing certifications (added for industry-agnostic manufacturing capability)
+  { value: 'GMP', label: 'GMP (의약품 제조품질관리기준)' },
+  { value: 'KVGMP', label: 'KVGMP (동물용의약품 제조품질관리기준)' },
+  { value: 'GLP', label: 'GLP (비임상시험관리기준)' },
+  { value: 'ISO9001', label: 'ISO 9001 (품질경영시스템)' },
+  { value: 'ISO13485', label: 'ISO 13485 (의료기기 품질경영)' },
+  { value: '의약품제조업허가', label: '의약품 제조업 허가' },
+  { value: '동물약품제조업허가', label: '동물약품 제조업 허가' },
+  { value: '의료기기제조업허가', label: '의료기기 제조업 허가' },
 ];
 
 export default function EditOrganizationProfilePage() {
@@ -619,6 +630,9 @@ export default function EditOrganizationProfilePage() {
                   </option>
                 ))}
               </select>
+              <p className="mt-1 text-xs text-gray-500">
+                💡 제품/서비스가 속한 산업을 기준으로 선택하세요. 제조 능력은 아래 인증에서 선택할 수 있습니다.
+              </p>
               {errors.industrySector && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.industrySector.message}
