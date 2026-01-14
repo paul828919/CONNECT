@@ -161,11 +161,13 @@ async function main() {
       // Process each announcement
       for (const announcement of announcements) {
         try {
-          // STEP 1: Generate content hash for deduplication
+          // STEP 1: Generate content hash for deduplication (V2: title-based, not URL-based)
+          // Use list view data (title, deadline, ministry) for early duplicate detection
           const contentHash = generateProgramHash({
             agencyId: 'NTIS',
             title: announcement.title,
-            announcementUrl: announcement.link,
+            deadline: announcement.deadline,
+            ministry: announcement.ministry,
           });
 
           // STEP 2: Check if already exists (skip duplicates)

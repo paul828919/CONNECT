@@ -225,11 +225,12 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
           // Rate limiting
           await rateLimiter.throttle();
 
-          // Generate content hash for change detection
+          // Generate content hash for change detection (V2: title-based, not URL-based)
           const contentHash = generateProgramHash({
             agencyId: agency,
             title: announcement.title,
-            announcementUrl: announcement.link,
+            deadline: announcement.deadline,
+            ministry: announcement.ministry,
           });
 
           // Check if program already exists

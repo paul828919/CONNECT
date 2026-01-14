@@ -54,14 +54,56 @@ export function generateContentHash(content: string): string {
 }
 
 /**
- * Generate program content hash from key fields
+ * Normalize Korean title for consistent hashing
+ *
+ * Removes year prefixes, trailing parentheticals, and common suffixes
+ * that vary between duplicate announcements.
+ */
+export function normalizeKoreanTitle(title: string): string {
+  return title
+    .replace(/^\d{4}년도?\s*/g, '')           // Remove year prefix: "2025년도 " → ""
+    .replace(/\([^)]*\)\s*$/g, '')             // Remove trailing parenthetical
+    .replace(/_?\(?20\d{2}\)?.*$/g, '')        // Remove year suffix patterns
+    .replace(/\s*(공고|모집|시행계획|대상과제|신규과제|신규지원)\s*$/g, '')  // Remove common suffixes
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+/**
+ * Generate program content hash from key fields (V2 - Title-based)
+ *
+ * IMPORTANT: This replaces the URL-based hash that caused duplicates.
+ * NTIS generates different URLs (roRndUid) for the same announcement,
+ * so we now use normalized title + deadline + ministry for deduplication.
+ *
+ * @param data.agencyId - Agency identifier (e.g., 'NTIS')
+ * @param data.title - Program title (will be normalized)
+ * @param data.deadline - Optional deadline date string
+ * @param data.ministry - Optional ministry name
+ * @param data.announcementUrl - DEPRECATED: Only used for backward compatibility logging
  */
 export function generateProgramHash(data: {
   agencyId: string;
   title: string;
-  announcementUrl: string;
+  deadline?: string | Date | null;
+  ministry?: string | null;
+  announcementUrl?: string;  // Kept for backward compatibility but not used in hash
 }): string {
-  const hashInput = `${data.agencyId}|${data.title}|${data.announcementUrl}`;
+  const normalizedTitle = normalizeKoreanTitle(data.title);
+
+  // Format deadline as YYYY-MM-DD or 'no-deadline'
+  let deadlineStr = 'no-deadline';
+  if (data.deadline) {
+    const d = data.deadline instanceof Date ? data.deadline : new Date(data.deadline);
+    if (!isNaN(d.getTime())) {
+      deadlineStr = d.toISOString().split('T')[0];
+    }
+  }
+
+  const ministryStr = (data.ministry || 'unknown').toLowerCase().trim();
+
+  const hashInput = `${data.agencyId}|${normalizedTitle}|${deadlineStr}|${ministryStr}`;
   return generateContentHash(hashInput);
 }
 

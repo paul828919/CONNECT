@@ -775,11 +775,12 @@ async function processJob(
       const deadline = detailData.deadline ? new Date(detailData.deadline) : null;
       const status = deadline && deadline < new Date() ? 'EXPIRED' : 'ACTIVE';
 
-      // Generate content hash for deduplication
+      // Generate content hash for deduplication (V2: title-based, not URL-based)
       const contentHash = generateProgramHash({
         agencyId: 'NTIS',
         title: detailData.title,
-        announcementUrl: job.announcementUrl,
+        deadline: detailData.deadline,
+        ministry: detailData.ministry,
       });
 
       // Check for duplicates
@@ -1024,11 +1025,12 @@ async function processJob(
     // STEP 13: Determine status (ACTIVE vs EXPIRED)
     const status = deadline && deadline < new Date() ? 'EXPIRED' : 'ACTIVE';
 
-    // STEP 10: Generate content hash for deduplication
+    // STEP 10: Generate content hash for deduplication (V2: title-based, not URL-based)
     const contentHash = generateProgramHash({
       agencyId: 'NTIS',
       title: detailData.title,
-      announcementUrl: job.announcementUrl,
+      deadline: detailData.deadline,
+      ministry: detailData.ministry,
     });
 
     // STEP 11: Check for duplicates in funding_programs

@@ -137,11 +137,12 @@ export class NTISApiScraper {
    */
   private async saveProgram(program: NTISProgram): Promise<'new' | 'updated' | 'skipped'> {
     try {
-      // Generate content hash for deduplication
+      // Generate content hash for deduplication (V2: title-based, not URL-based)
       const contentHash = generateProgramHash({
         agencyId: program.orderAgency || 'NTIS',
         title: program.titleKorean || '',
-        announcementUrl: `https://www.ntis.go.kr/project/${program.projectNumber}`,
+        deadline: program.endDate,
+        ministry: program.ministry,
       });
 
       // Check if program exists
