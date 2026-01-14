@@ -56,6 +56,66 @@ export interface GenerateMatchesOptions {
 }
 
 /**
+ * Normalize title for deduplication key generation
+ * Removes year prefixes, trailing parentheticals, and normalizes whitespace
+ */
+function normalizeForDedup(title: string): string {
+  return title
+    .replace(/^\d{4}년도?\s*/g, '')           // Remove year prefix: "2025년도 " → ""
+    .replace(/\([^)]*\)\s*$/g, '')             // Remove trailing parenthetical
+    .replace(/_?\(?20\d{2}\)?.*$/g, '')        // Remove year suffix patterns
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+/**
+ * Generate deduplication key from program
+ */
+function generateDedupKey(program: FundingProgram): string {
+  const normalized = normalizeForDedup(program.title);
+  return `${program.agencyId}|${normalized}`;
+}
+
+/**
+ * Deduplicate programs by normalized title
+ *
+ * This is a safety net that prevents duplicate matches from appearing
+ * even if duplicates exist in the database. It groups programs by
+ * (agencyId, normalizedTitle) and returns the best program from each group.
+ *
+ * Selection criteria (in order):
+ * 1. Programs with deadlines preferred over those without
+ * 2. Programs with budgets preferred over those without
+ * 3. Earlier scraped programs preferred (original source)
+ */
+function deduplicateProgramsByTitle(programs: FundingProgram[]): FundingProgram[] {
+  const groups = new Map<string, FundingProgram[]>();
+
+  for (const program of programs) {
+    const key = generateDedupKey(program);
+    if (!groups.has(key)) {
+      groups.set(key, []);
+    }
+    groups.get(key)!.push(program);
+  }
+
+  // Return best program from each group
+  return Array.from(groups.values()).map(group => {
+    return group.sort((a, b) => {
+      // Prefer programs with deadlines
+      if (a.deadline && !b.deadline) return -1;
+      if (!a.deadline && b.deadline) return 1;
+      // Prefer programs with budgets
+      if (a.budgetAmount && !b.budgetAmount) return -1;
+      if (!a.budgetAmount && b.budgetAmount) return 1;
+      // Prefer earlier scraped (original source)
+      return new Date(a.scrapedAt).getTime() - new Date(b.scrapedAt).getTime();
+    })[0];
+  });
+}
+
+/**
  * Generate match scores for an organization against funding programs
  */
 export function generateMatches(
@@ -68,9 +128,16 @@ export function generateMatches(
     return [];
   }
 
+  // ============================================================================
+  // Phase 3: Deduplicate programs before matching (safety net)
+  // ============================================================================
+  // Even after database cleanup and hash algorithm fix, this ensures
+  // users never see duplicate matches if duplicates somehow exist
+  const deduplicatedPrograms = deduplicateProgramsByTitle(programs);
+
   const matches: MatchScore[] = [];
 
-  for (const program of programs) {
+  for (const program of deduplicatedPrograms) {
     // Skip inactive or expired programs (unless explicitly including expired for historical matches)
     if (!options?.includeExpired && program.status !== ProgramStatus.ACTIVE) {
       continue;
