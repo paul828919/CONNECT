@@ -116,8 +116,9 @@ export async function GET(request: NextRequest) {
     console.log(`[ADMIN API] Fetching ${period} analytics for ${days || 'default'} days`);
     const analytics = await getUserAnalytics(period, days);
 
-    // 5. Get today's real-time stats (optional enhancement)
-    const todayStats = await getTodayStats();
+    // 5. Get today's real-time stats
+    // If excludeInternal=true, admin users are filtered out from unique user count
+    const todayStats = await getTodayStats({ excludeInternal });
 
     // 5.5 Get DAU/MAU ratio (stickiness metric)
     // If excludeInternal=true, admin users are filtered out from metrics

@@ -306,40 +306,78 @@ export function comparePeriods(
 }
 
 /**
- * Get real-time statistics (today's data from Redis)
+ * Get real-time statistics (today's data)
  *
+ * @param options.excludeInternal - If true, exclude admin users from metrics
  * @returns Today's active user count and page views
  *
- * Note: This queries Redis directly for real-time data before cron aggregation
+ * Note: uniqueUsers now queries audit_logs for distinct userId (not Redis session tokens)
+ * This ensures DAU counts actual unique users, not unique session tokens.
+ * Page views still come from Redis for real-time accuracy.
  */
-export async function getTodayStats(): Promise<{
+export async function getTodayStats(options: AnalyticsOptions = {}): Promise<{
   uniqueUsers: number;
   totalPageViews: number;
   date: string;
 }> {
   try {
-    // Import Redis client from tracking service
-    const { createClient } = await import('redis');
-    const redis = createClient({
-      url: process.env.REDIS_CACHE_URL || 'redis://localhost:6379',
+    const today = new Date();
+    const todayStart = new Date(today);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
+
+    // Get internal user IDs if we need to exclude them
+    const internalUserIds = options.excludeInternal
+      ? await getInternalUserIds()
+      : [];
+
+    // Get unique users from audit_logs (distinct userId for today)
+    // This is more accurate than Redis session token count because:
+    // - One user can have multiple session tokens (different devices, session refresh)
+    // - audit_logs tracks actual user actions with userId
+    const dauResult = await prisma.audit_logs.findMany({
+      where: {
+        createdAt: { gte: todayStart },
+        userId: {
+          not: null,
+          ...(options.excludeInternal && internalUserIds.length > 0
+            ? { notIn: internalUserIds }
+            : {}),
+        },
+      },
+      select: { userId: true },
+      distinct: ['userId'],
     });
+    const uniqueUsers = dauResult.length;
 
-    await redis.connect();
+    // Get page views from Redis (still accurate for total views)
+    let totalPageViews = 0;
+    try {
+      const { createClient } = await import('redis');
+      const redis = createClient({
+        url: process.env.REDIS_CACHE_URL || 'redis://localhost:6379',
+      });
 
-    const today = new Date().toISOString().split('T')[0];
-    const activeUsersKey = `active_users:${today}`;
-    const pageViewsKey = `page_views:${today}`;
-
-    const uniqueUsers = await redis.sCard(activeUsersKey);
-    const pageViewsStr = await redis.get(pageViewsKey);
-    const totalPageViews = pageViewsStr ? parseInt(pageViewsStr, 10) : 0;
-
-    await redis.quit();
+      await redis.connect();
+      const pageViewsKey = `page_views:${todayStr}`;
+      const pageViewsStr = await redis.get(pageViewsKey);
+      totalPageViews = pageViewsStr ? parseInt(pageViewsStr, 10) : 0;
+      await redis.quit();
+    } catch (redisError) {
+      // Redis might not be available, fall back to counting audit_logs entries
+      console.warn('[ANALYTICS] Redis unavailable for page views, counting audit_logs');
+      totalPageViews = await prisma.audit_logs.count({
+        where: {
+          createdAt: { gte: todayStart },
+          userId: { not: null },
+        },
+      });
+    }
 
     return {
       uniqueUsers,
       totalPageViews,
-      date: today,
+      date: todayStr,
     };
   } catch (error) {
     console.error('[ANALYTICS] Failed to get today stats:', error instanceof Error ? error.message : error);
@@ -456,30 +494,10 @@ export async function getDAUMAURatio(options: AnalyticsOptions = {}): Promise<DA
       ? await getInternalUserIds()
       : [];
 
-    // Get today's DAU from Redis
-    // Note: Redis DAU includes all users; if excludeInternal is true,
-    // we need to query the database for accurate filtered DAU
-    let dau: number;
-    if (options.excludeInternal && internalUserIds.length > 0) {
-      // Get today's active users from audit_logs, excluding internal
-      const todayStart = new Date(today);
-      todayStart.setHours(0, 0, 0, 0);
-      const dauResult = await prisma.audit_logs.findMany({
-        where: {
-          createdAt: { gte: todayStart },
-          userId: {
-            not: null,
-            notIn: internalUserIds,
-          },
-        },
-        select: { userId: true },
-        distinct: ['userId'],
-      });
-      dau = dauResult.length;
-    } else {
-      const todayStats = await getTodayStats();
-      dau = todayStats.uniqueUsers;
-    }
+    // Get today's DAU from audit_logs (distinct userId)
+    // getTodayStats now uses audit_logs for accurate unique user count
+    const todayStats = await getTodayStats(options);
+    const dau = todayStats.uniqueUsers;
 
     // Get MAU - Count DISTINCT users who had any activity in the last 30 days
     // Uses audit_logs table which tracks all user actions
