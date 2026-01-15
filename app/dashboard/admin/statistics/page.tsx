@@ -31,6 +31,7 @@ import {
   useAnalyticsData,
   useGrowthData,
   useSegmentationData,
+  useUtmData,
   TimePeriod,
 } from './hooks/useStatisticsData';
 
@@ -41,6 +42,7 @@ import GrowthMetrics from './components/GrowthMetrics';
 import UserSegmentation from './components/UserSegmentation';
 import ActiveUsersChart from './components/ActiveUsersChart';
 import PageViewsChart from './components/PageViewsChart';
+import UtmAnalytics from './components/UtmAnalytics';
 
 export default function AdminStatisticsDashboard() {
   // State for filters
@@ -65,6 +67,12 @@ export default function AdminStatisticsDashboard() {
     isLoading: isSegmentationLoading,
     error: segmentationError,
   } = useSegmentationData();
+
+  const {
+    data: utmData,
+    isLoading: isUtmLoading,
+    error: utmError,
+  } = useUtmData(days);
 
   return (
     <DashboardLayout>
@@ -135,6 +143,13 @@ export default function AdminStatisticsDashboard() {
                 period={period}
               />
             </div>
+
+            {/* UTM Analytics Section */}
+            <UtmAnalytics
+              data={utmData}
+              isLoading={isUtmLoading}
+              error={utmError}
+            />
 
             {/* Last Updated Timestamp */}
             <p className="text-xs text-gray-500 text-right">

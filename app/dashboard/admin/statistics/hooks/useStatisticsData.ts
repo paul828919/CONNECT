@@ -139,6 +139,74 @@ export function useSegmentationData() {
 }
 
 /**
+ * UTM Attribution Data Types
+ */
+export interface UtmSourceData {
+  source: string;
+  count: number;
+}
+
+export interface UtmCampaignData {
+  campaign: string;
+  count: number;
+}
+
+export interface UtmMediumData {
+  medium: string;
+  count: number;
+}
+
+export interface UtmRecentUser {
+  id: string;
+  email: string;
+  name: string | null;
+  source: string;
+  medium: string | null;
+  campaign: string | null;
+  createdAt: string;
+  plan: string;
+}
+
+export interface UtmResponse {
+  period: {
+    days: number;
+    startDate: string;
+    endDate: string;
+  };
+  summary: {
+    totalUsersInPeriod: number;
+    totalUsersWithUtm: number;
+    attributionRate: string;
+    convertedUsersWithUtm: number;
+    conversionRate: string;
+  };
+  bySource: UtmSourceData[];
+  byCampaign: UtmCampaignData[];
+  byMedium: UtmMediumData[];
+  recentUsers: UtmRecentUser[];
+  generatedAt: string;
+}
+
+/**
+ * Fetch UTM attribution data
+ */
+export function useUtmData(days: number = 30) {
+  return useQuery<UtmResponse>({
+    queryKey: ['admin-statistics-utm', days],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/statistics/utm?days=${days}`);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to fetch UTM data');
+      }
+      return res.json();
+    },
+    refetchInterval: 300000, // Refetch every 5 minutes
+    staleTime: 60000, // Consider data fresh for 1 minute
+  });
+}
+
+/**
  * Export CSV handler
  */
 export async function exportToCSV(period: TimePeriod, days: number): Promise<void> {
