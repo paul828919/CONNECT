@@ -373,6 +373,17 @@ export const authOptions: NextAuthOptions = {
       if (account) {
         console.log(`[AUTH_EVENT] User signed in: ${user.id} via ${account.provider}`);
       }
+      // Update lastLoginAt for analytics accuracy
+      if (user?.id) {
+        try {
+          await db.user.update({
+            where: { id: user.id },
+            data: { lastLoginAt: new Date() },
+          });
+        } catch (error) {
+          console.error('[AUTH_EVENT] Failed to update lastLoginAt:', error);
+        }
+      }
     },
   },
   secret: process.env.NEXTAUTH_SECRET,

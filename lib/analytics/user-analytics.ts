@@ -34,9 +34,13 @@ export interface DataPoint {
 
 /**
  * Summary statistics for dashboard KPIs
+ *
+ * IMPORTANT: `totalUsers` is the sum of daily unique users (total user-sessions),
+ * NOT distinct users across the period. For true distinct user counts (MAU),
+ * use the `getDAUMAURatio()` function which queries audit_logs for distinct users.
  */
 export interface SummaryStats {
-  totalUsers: number; // Total unique users in period
+  totalUsers: number; // Sum of daily unique users (user-sessions, NOT distinct users)
   totalPageViews: number; // Total page views in period
   avgDailyUsers: number; // Average daily active users
   avgPageViewsPerUser: number; // Average page views per user
@@ -418,22 +422,27 @@ export async function getDAUMAURatio(): Promise<DAUMAURatio> {
     const todayStats = await getTodayStats();
     const dau = todayStats.uniqueUsers;
 
-    // Get MAU (sum of unique users over 30 days)
-    // Note: This is an approximation using daily aggregates
-    const monthlyData = await prisma.active_user_stats.findMany({
+    // Get MAU - Count DISTINCT users who had any activity in the last 30 days
+    // Uses audit_logs table which tracks all user actions
+    // This gives true unique user count, not sum of daily counts
+    const mauResult = await prisma.audit_logs.findMany({
       where: {
-        date: {
+        createdAt: {
           gte: thirtyDaysAgo,
           lte: today,
         },
+        userId: {
+          not: null,
+        },
       },
       select: {
-        uniqueUsers: true,
+        userId: true,
       },
+      distinct: ['userId'],
     });
 
-    // Sum unique users (upper bound, as some users may repeat across days)
-    const mau = monthlyData.reduce((sum, day) => sum + day.uniqueUsers, 0);
+    // Count distinct users
+    const mau = mauResult.length;
 
     // Calculate ratio (avoid division by zero)
     const ratio = mau > 0 ? (dau / mau) * 100 : 0;
