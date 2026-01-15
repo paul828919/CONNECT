@@ -100,6 +100,22 @@ export function TossBillingWidget({
     }
   }, [session, customerKey, customerKeyLoading, fetchCustomerKey]);
 
+  // Track UPGRADE_STARTED funnel event
+  const trackUpgradeStarted = async () => {
+    try {
+      await fetch('/api/funnel/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'UPGRADE_STARTED',
+          details: `${plan} ${billingCycle} ₩${amount}`,
+        }),
+      });
+    } catch (err) {
+      console.error('Failed to track upgrade_started:', err);
+    }
+  };
+
   const handleBillingAuth = async () => {
     if (!sdkLoaded || !window.TossPayments) {
       setError('결제 모듈이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.');
@@ -125,6 +141,9 @@ export function TossBillingWidget({
       setError('결제 금액이 올바르지 않습니다.');
       return;
     }
+
+    // Track funnel event: UPGRADE_STARTED (before payment flow)
+    await trackUpgradeStarted();
 
     setIsLoading(true);
     setError(null);

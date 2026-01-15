@@ -25,13 +25,27 @@ const prisma = new PrismaClient();
  * - ACCOUNT_DELETION_INITIATED: User confirmed deletion request
  * - SUBSCRIPTION_CANCELLED: Canceled Toss Payments subscription
  * - ACCOUNT_DELETION_COMPLETED: Hard delete completed
+ *
+ * Conversion Funnel Events (for analytics):
+ * - PROFILE_COMPLETED: User finished organization profile
+ * - FIRST_MATCH_GENERATED: User generated their first match
+ * - MATCH_SAVED: User saved/favorited a match
+ * - UPGRADE_VIEWED: User visited pricing page or saw upgrade modal
+ * - UPGRADE_STARTED: User initiated payment flow
  */
 export enum AuditAction {
+  // PIPA compliance actions
   DATA_EXPORT = 'DATA_EXPORT',
   DELETION_CODE_SENT = 'DELETION_CODE_SENT',
   ACCOUNT_DELETION_INITIATED = 'ACCOUNT_DELETION_INITIATED',
   SUBSCRIPTION_CANCELLED = 'SUBSCRIPTION_CANCELLED',
   ACCOUNT_DELETION_COMPLETED = 'ACCOUNT_DELETION_COMPLETED',
+  // Conversion funnel events
+  PROFILE_COMPLETED = 'PROFILE_COMPLETED',
+  FIRST_MATCH_GENERATED = 'FIRST_MATCH_GENERATED',
+  MATCH_SAVED = 'MATCH_SAVED',
+  UPGRADE_VIEWED = 'UPGRADE_VIEWED',
+  UPGRADE_STARTED = 'UPGRADE_STARTED',
 }
 
 /**
@@ -119,6 +133,78 @@ export async function getUserAuditLogs(
   } catch (error) {
     console.error('[AUDIT] Failed to get audit logs:', error instanceof Error ? error.message : error);
     return [];
+  }
+}
+
+/**
+ * Log conversion funnel event
+ *
+ * Simplified helper for logging funnel events with appropriate resource types.
+ * These events help track user journey: signup → profile → match → save → upgrade
+ *
+ * @param userId - User ID
+ * @param action - Funnel action type
+ * @param resourceId - Optional resource ID (e.g., matchId, organizationId)
+ * @param details - Optional additional details
+ *
+ * @example
+ * await logFunnelEvent('user-123', AuditAction.PROFILE_COMPLETED, 'org-456');
+ * await logFunnelEvent('user-123', AuditAction.MATCH_SAVED, 'match-789');
+ */
+export async function logFunnelEvent(
+  userId: string,
+  action: AuditAction,
+  resourceId?: string,
+  details?: string
+): Promise<void> {
+  // Map actions to resource types
+  const resourceTypeMap: Record<string, string> = {
+    [AuditAction.PROFILE_COMPLETED]: 'ORGANIZATION',
+    [AuditAction.FIRST_MATCH_GENERATED]: 'MATCH',
+    [AuditAction.MATCH_SAVED]: 'MATCH',
+    [AuditAction.UPGRADE_VIEWED]: 'SUBSCRIPTION',
+    [AuditAction.UPGRADE_STARTED]: 'SUBSCRIPTION',
+  };
+
+  try {
+    await prisma.audit_logs.create({
+      data: {
+        userId,
+        action,
+        resourceType: resourceTypeMap[action] || 'USER',
+        resourceId: resourceId || userId,
+        purpose: details || null,
+      },
+    });
+
+    console.log(`[FUNNEL] ${action} logged for user ${userId}`);
+  } catch (error) {
+    console.error('[FUNNEL] Failed to log event:', error instanceof Error ? error.message : error);
+    // Don't throw - funnel logging failures shouldn't block user operations
+  }
+}
+
+/**
+ * Check if user has already triggered a specific funnel event
+ *
+ * Used to ensure events like FIRST_MATCH_GENERATED are only logged once.
+ *
+ * @param userId - User ID
+ * @param action - Action to check
+ * @returns true if action was already logged
+ */
+export async function hasFunnelEvent(userId: string, action: AuditAction): Promise<boolean> {
+  try {
+    const existing = await prisma.audit_logs.findFirst({
+      where: {
+        userId,
+        action,
+      },
+    });
+    return !!existing;
+  } catch (error) {
+    console.error('[FUNNEL] Failed to check event:', error instanceof Error ? error.message : error);
+    return false; // Assume not logged on error (better to log duplicate than miss)
   }
 }
 

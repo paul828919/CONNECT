@@ -23,6 +23,7 @@ if (!globalForPrisma.prisma) {
   globalForPrisma.prisma = db;
 }
 import { updateMatchEngagement } from '@/lib/analytics/match-performance';
+import { logFunnelEvent, AuditAction } from '@/lib/audit';
 
 
 export async function PATCH(
@@ -103,7 +104,17 @@ export async function PATCH(
     // 5. Update analytics engagement tracking
     await updateMatchEngagement(matchId, { saved });
 
-    // 6. Return success
+    // 6. Log funnel event: MATCH_SAVED (when user saves a match)
+    if (saved) {
+      await logFunnelEvent(
+        userId,
+        AuditAction.MATCH_SAVED,
+        matchId,
+        `Program: ${match.funding_programs.title}`
+      );
+    }
+
+    // 7. Return success
     return NextResponse.json(
       {
         success: true,

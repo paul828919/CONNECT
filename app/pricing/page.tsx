@@ -88,10 +88,23 @@ export default function PricingPage() {
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
       fetchCurrentSubscription();
+      // Log funnel event: UPGRADE_VIEWED (only for FREE users viewing pricing)
+      // We'll track this after we know their current plan
     } else if (status === 'unauthenticated') {
       setCurrentPlan(null);
     }
   }, [status, session, fetchCurrentSubscription]);
+
+  // Track UPGRADE_VIEWED for logged-in FREE users
+  useEffect(() => {
+    if (session?.user && currentPlan === 'FREE') {
+      fetch('/api/funnel/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'UPGRADE_VIEWED' }),
+      }).catch((err) => console.error('Failed to track upgrade_viewed:', err));
+    }
+  }, [session, currentPlan]);
 
   const isCurrentPlan = (planKey: Plan): boolean => {
     return currentPlan === planKey;

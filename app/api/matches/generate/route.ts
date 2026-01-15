@@ -50,6 +50,7 @@ import {
   invalidateOrgMatches,
 } from '@/lib/cache/redis-cache';
 import { logMatchQualityBulk } from '@/lib/analytics/match-performance';
+import { logFunnelEvent, hasFunnelEvent, AuditAction } from '@/lib/audit';
 
 // Plan-based match limits per API call
 const MAX_MATCHES_BY_PLAN: Record<string, number> = {
@@ -424,6 +425,17 @@ export async function POST(request: NextRequest) {
 
     // 13. Cache match results for 24 hours
     await setCache(matchCacheKey, response, CACHE_TTL.MATCH_RESULTS);
+
+    // 14. Log funnel event: FIRST_MATCH_GENERATED (only first time)
+    const hasGeneratedBefore = await hasFunnelEvent(userId, AuditAction.FIRST_MATCH_GENERATED);
+    if (!hasGeneratedBefore && createdMatches.length > 0) {
+      await logFunnelEvent(
+        userId,
+        AuditAction.FIRST_MATCH_GENERATED,
+        createdMatches[0].id,
+        `Generated ${createdMatches.length} matches, top score: ${createdMatches[0].score}`
+      );
+    }
 
     return NextResponse.json(response, { status: 200 });
 

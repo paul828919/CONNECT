@@ -20,6 +20,7 @@ import {
   invalidateOrgProfile,
   invalidateOrgMatches,
 } from '@/lib/cache/redis-cache';
+import { logFunnelEvent, AuditAction } from '@/lib/audit';
 
 
 export async function GET(request: NextRequest) {
@@ -244,6 +245,14 @@ export async function POST(request: NextRequest) {
     // 8. Invalidate caches to ensure fresh data for match generation
     await invalidateOrgProfile(organization.id);
     await invalidateOrgMatches(organization.id);
+
+    // 9. Log funnel event: PROFILE_COMPLETED
+    await logFunnelEvent(
+      userId,
+      AuditAction.PROFILE_COMPLETED,
+      organization.id,
+      `Profile score: ${profileScore}`
+    );
 
     return NextResponse.json(
       {
