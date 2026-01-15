@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { Suspense } from 'react'
 import './globals.css'
 import SessionProvider from './providers/SessionProvider'
 import QueryClientProvider from './providers/QueryClientProvider'
 import { FeedbackWidget } from '@/components/feedback-widget'
 import { Toaster } from '@/components/ui/toaster'
 import StructuredData from './components/StructuredData'
+import { UtmCapture } from '@/components/utm-capture'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -92,6 +94,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <SessionProvider>
           <QueryClientProvider>
+            {/* UTM Capture - silently captures UTM params from URL for attribution */}
+            <Suspense fallback={null}>
+              <UtmCapture />
+            </Suspense>
             <div className="min-h-screen bg-background">
               {children}
             </div>

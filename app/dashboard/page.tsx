@@ -104,6 +104,16 @@ export default function DashboardPage() {
     }
   }, [session]);
 
+  // Capture UTM attribution data (runs once on first dashboard visit)
+  const captureUtm = useCallback(async () => {
+    try {
+      await fetch('/api/auth/capture-utm', { method: 'POST' });
+    } catch (err) {
+      // Silently fail - UTM capture is non-critical
+      console.error('Error capturing UTM:', err);
+    }
+  }, []);
+
   useEffect(() => {
     if (status === 'loading') return;
 
@@ -126,7 +136,8 @@ export default function DashboardPage() {
     fetchProgramStats();
     fetchProfileCompletion();
     fetchOrgName();
-  }, [session, status, router, fetchMatchStats, fetchSubscription, fetchProgramStats, fetchProfileCompletion, fetchOrgName]);
+    captureUtm(); // Capture UTM attribution data (idempotent - only saves once)
+  }, [session, status, router, fetchMatchStats, fetchSubscription, fetchProgramStats, fetchProfileCompletion, fetchOrgName, captureUtm]);
 
   const handleGenerateMatches = async () => {
     try {

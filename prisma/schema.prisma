@@ -626,6 +626,13 @@ model User {
   position               String?               // Job title/role (e.g., "대표", "연구책임자")
   showOnPartnerProfile   Boolean               @default(false)  // Opt-in visibility on partner search
 
+  // UTM tracking for attribution analytics (cold email campaigns, ads, etc.)
+  utmSource              String?               // e.g., "linkedin", "google", "cold_email"
+  utmMedium              String?               // e.g., "email", "social", "cpc"
+  utmCampaign            String?               // e.g., "jan2026_cold_email_batch1"
+  utmTerm                String?               // Optional: keyword for paid search
+  utmContent             String?               // Optional: differentiate ads/links
+
   accounts               Account[]
   ai_cost_logs           ai_cost_logs[]
   ai_feedback            ai_feedback[]
@@ -645,6 +652,8 @@ model User {
 
   @@index([email])
   @@index([organizationId])
+  @@index([utmSource])     // For UTM attribution queries
+  @@index([utmCampaign])   // For campaign performance analysis
   @@map("users")
 }
 
