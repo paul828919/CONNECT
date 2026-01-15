@@ -10,6 +10,7 @@ import { HistoricalMatchesPrompt } from '@/components/HistoricalMatchesPrompt';
 import { EligibilityBadge, type EligibilityLevel } from '@/components/matches/EligibilityBadge';
 import { EligibilityConfidenceAlert, type ConfidenceLevel } from '@/components/matches/EligibilityConfidenceAlert';
 import { InvestmentPrompt } from '@/components/profile/InvestmentPrompt';
+import { UpgradePromptModal, UpgradePromptBanner } from '@/components/upgrade-prompt-modal';
 
 interface Match {
   id: string;
@@ -35,6 +36,7 @@ interface Match {
     recommendations?: string[];
   };
   isExpired?: boolean; // Flag for historical matches
+  saved?: boolean; // Whether user has bookmarked this match
   createdAt: string;
   // Phase 4: Eligibility information
   eligibilityLevel?: EligibilityLevel;
@@ -88,6 +90,10 @@ export default function MatchesPage() {
   const [requiredInvestmentAmount, setRequiredInvestmentAmount] = useState<number | undefined>();
   // Stage 2.1: Force regeneration state
   const [isRegenerating, setIsRegenerating] = useState(false);
+  // Subscription and upgrade modal state
+  const [userPlan, setUserPlan] = useState<string>('FREE');
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [savingMatchId, setSavingMatchId] = useState<string | null>(null);
   // Pagination state (for both active and historical matches)
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -273,6 +279,51 @@ export default function MatchesPage() {
     }
   }, [session, fetchMatches]);
 
+  // Fetch user's subscription plan
+  const fetchSubscription = useCallback(async () => {
+    try {
+      const res = await fetch('/api/subscriptions/me');
+      if (res.ok) {
+        const data = await res.json();
+        setUserPlan(data.subscription?.plan || 'FREE');
+      }
+    } catch (err) {
+      console.error('Error fetching subscription:', err);
+    }
+  }, []);
+
+  // Handle saving/bookmarking a match
+  const handleSaveMatch = useCallback(async (matchId: string, currentSaved: boolean) => {
+    setSavingMatchId(matchId);
+    try {
+      const res = await fetch(`/api/matches/${matchId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ saved: !currentSaved }),
+      });
+
+      if (res.ok) {
+        // Update local state
+        setMatches(prev => prev.map(m =>
+          m.id === matchId ? { ...m, saved: !currentSaved } : m
+        ));
+
+        // Show upgrade modal for FREE users on first save
+        if (!currentSaved && userPlan === 'FREE') {
+          // Check if this is user's first saved match
+          const savedCount = matches.filter(m => m.saved).length;
+          if (savedCount === 0) {
+            setShowUpgradeModal(true);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error saving match:', err);
+    } finally {
+      setSavingMatchId(null);
+    }
+  }, [matches, userPlan]);
+
   useEffect(() => {
     if (status === 'loading') return;
 
@@ -282,7 +333,8 @@ export default function MatchesPage() {
     }
 
     fetchMatches();
-  }, [session, status, router, fetchMatches]);
+    fetchSubscription();
+  }, [session, status, router, fetchMatches, fetchSubscription]);
 
   // Refetch historical matches when historical page changes
   useEffect(() => {
@@ -436,6 +488,15 @@ export default function MatchesPage() {
             )}
           </div>
         </div>
+
+        {/* Missing Benefits Banner for FREE users */}
+        {userPlan === 'FREE' && matches.length > 0 && (
+          <UpgradePromptBanner
+            feature="무제한 매칭 & AI 분석"
+            description="Pro 플랜으로 업그레이드하면 무제한 매칭 생성과 AI 상세 분석을 이용할 수 있습니다. 지금 업그레이드하고 더 많은 기회를 발견하세요!"
+            className="mb-6"
+          />
+        )}
 
         {error && (
           <div className={`mb-6 rounded-xl border p-6 ${upgradeUrl ? 'bg-gradient-to-br from-orange-50 to-red-50 border-orange-200' : 'bg-red-50 border-red-200'}`}>
@@ -722,8 +783,26 @@ export default function MatchesPage() {
                     </svg>
                   </button>
                 )}
-                <button className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                  북마크
+                <button
+                  onClick={() => handleSaveMatch(match.id, !!match.saved)}
+                  disabled={savingMatchId === match.id}
+                  className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
+                    match.saved
+                      ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  } ${savingMatchId === match.id ? 'opacity-50 cursor-wait' : ''}`}
+                >
+                  {savingMatchId === match.id ? (
+                    <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  ) : (
+                    <svg className={`h-4 w-4 mr-2 ${match.saved ? 'fill-yellow-500' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                  )}
+                  {match.saved ? '저장됨' : '북마크'}
                 </button>
               </div>
 
@@ -1013,8 +1092,40 @@ export default function MatchesPage() {
                         </svg>
                       </button>
                     )}
-                    <button className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                      북마크
+                    <button
+                      onClick={() => {
+                        // Historical match bookmark - update historicalMatches state
+                        setSavingMatchId(match.id);
+                        fetch(`/api/matches/${match.id}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ saved: !match.saved }),
+                        }).then(res => {
+                          if (res.ok) {
+                            setHistoricalMatches(prev => prev.map(m =>
+                              m.id === match.id ? { ...m, saved: !m.saved } : m
+                            ));
+                          }
+                        }).finally(() => setSavingMatchId(null));
+                      }}
+                      disabled={savingMatchId === match.id}
+                      className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
+                        match.saved
+                          ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      } ${savingMatchId === match.id ? 'opacity-50 cursor-wait' : ''}`}
+                    >
+                      {savingMatchId === match.id ? (
+                        <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                      ) : (
+                        <svg className={`h-4 w-4 mr-2 ${match.saved ? 'fill-yellow-500' : 'fill-none'}`} stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                      )}
+                      {match.saved ? '저장됨' : '북마크'}
                     </button>
                   </div>
 
@@ -1119,6 +1230,22 @@ export default function MatchesPage() {
             </div>
           </div>
         )}
+
+        {/* Upgrade Modal - shown when FREE user saves first match */}
+        <UpgradePromptModal
+          open={showUpgradeModal}
+          onOpenChange={setShowUpgradeModal}
+          feature="매칭 저장하기"
+          description="매칭을 저장하셨습니다! Pro 플랜으로 업그레이드하면 무제한 매칭과 AI 상세 분석을 이용할 수 있습니다."
+          benefits={[
+            '무제한 매칭 생성',
+            'AI 기반 상세 매칭 분석',
+            '실시간 새 과제 알림',
+            '협업 파트너 연결 (월 10회)',
+          ]}
+          ctaText="Pro 플랜 시작하기"
+          cancelText="나중에 할게요"
+        />
     </DashboardLayout>
   );
 }
