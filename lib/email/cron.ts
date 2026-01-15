@@ -12,7 +12,7 @@
 
 import cron from 'node-cron';
 import { db } from '@/lib/db';
-import { sendDeadlineReminder, sendWeeklyDigestToAll } from './notifications';
+import { sendDeadlineReminder, sendWeeklyDigestToAll, processReEngagementEmails } from './notifications';
 import { processRecurringBillings } from '@/scripts/recurring-billing';
 
 
@@ -164,6 +164,43 @@ export function startRecurringBillingCron() {
 }
 
 /**
+ * Send re-engagement emails to inactive users
+ * Runs daily at 22:00 UTC (07:00 KST next day)
+ *
+ * Targets three cohorts:
+ * - Day 1: Users who signed up yesterday
+ * - Day 3: Users who signed up 3 days ago
+ * - Day 7: Users who signed up 7 days ago
+ *
+ * "Inactive" = hasn't logged in since signup day
+ */
+export function startReEngagementCron() {
+  cron.schedule(
+    '0 22 * * *', // Daily at 22:00 UTC (= 07:00 KST next day)
+    async () => {
+      console.log('📨 Running re-engagement email cron...');
+
+      try {
+        const result = await processReEngagementEmails();
+        console.log(
+          `✓ Re-engagement emails sent:`,
+          `Day 1: ${result.day1.sent} sent, ${result.day1.failed} failed |`,
+          `Day 3: ${result.day3.sent} sent, ${result.day3.failed} failed |`,
+          `Day 7: ${result.day7.sent} sent, ${result.day7.failed} failed`
+        );
+      } catch (error) {
+        console.error('Re-engagement cron failed:', error);
+      }
+    },
+    {
+      timezone: 'UTC',
+    }
+  );
+
+  console.log('✓ Re-engagement cron started (daily at 22:00 UTC / 07:00 KST)');
+}
+
+/**
  * Start all cron jobs (email notifications + billing)
  */
 export function startEmailCronJobs() {
@@ -174,6 +211,7 @@ export function startEmailCronJobs() {
   startDeadlineReminderCron();
   startWeeklyDigestCron();
   startRecurringBillingCron();
+  startReEngagementCron();
 
   console.log('');
   console.log('✅ All cron jobs started successfully');

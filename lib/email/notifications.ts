@@ -12,6 +12,11 @@ import {
   DeadlineReminderEmailData,
 } from './templates/deadline-reminder';
 import { weeklyDigestEmailTemplate, WeeklyDigestEmailData } from './templates/weekly-digest';
+import {
+  reEngagementEmailTemplate,
+  getReEngagementSubject,
+  ReEngagementEmailData,
+} from './templates/re-engagement';
 
 
 /**
@@ -428,5 +433,227 @@ export async function sendWeeklyDigestToAll(): Promise<{
   } catch (error: any) {
     console.error('Failed to send weekly digest to all users:', error);
     return { total: 0, sent: 0, failed: 0 };
+  }
+}
+
+/**
+ * Send re-engagement email to inactive user
+ *
+ * @param userId - User ID
+ * @param day - Day in the sequence (1, 3, or 7)
+ */
+export async function sendReEngagementEmail(
+  userId: string,
+  day: 1 | 3 | 7
+): Promise<boolean> {
+  try {
+    // 1. Get user settings
+    const settings = await getUserNotificationSettings(userId);
+
+    if (!settings.emailEnabled) {
+      console.log(`User ${userId} has disabled email notifications`);
+      return false;
+    }
+
+    // 2. Fetch user data
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      include: {
+        organization: {
+          select: {
+            id: true,
+            name: true,
+            primaryContactEmail: true,
+          },
+        },
+      },
+    });
+
+    if (!user || !user.email) {
+      return false;
+    }
+
+    // Use organization's work email if available, fallback to OAuth email
+    const recipientEmail = user.organization?.primaryContactEmail || user.email;
+
+    // 3. Calculate profile completion (simplified)
+    let profileCompletion = 30; // Base for having account
+    if (user.organization) {
+      profileCompletion += 30; // Has organization
+      const org = await db.organizations.findUnique({
+        where: { id: user.organization.id },
+        select: {
+          industrySector: true,
+          technologyReadinessLevel: true,
+          type: true,
+          revenueRange: true,
+        },
+      });
+      if (org?.industrySector) profileCompletion += 15;
+      if (org?.technologyReadinessLevel) profileCompletion += 10;
+      if (org?.type) profileCompletion += 10;
+      if (org?.revenueRange) profileCompletion += 5;
+    }
+    profileCompletion = Math.min(profileCompletion, 100);
+
+    // 4. Get active programs count
+    const activePrograms = await db.funding_programs.count({
+      where: {
+        status: 'ACTIVE',
+        deadline: { gte: new Date() },
+      },
+    });
+
+    // 5. Check if user has any matches
+    const hasMatches = user.organization
+      ? (await db.funding_matches.count({
+          where: { organizationId: user.organization.id },
+        })) > 0
+      : false;
+
+    // 6. Prepare email data
+    const emailData: ReEngagementEmailData = {
+      userName: user.name || '사용자',
+      organizationName: user.organization?.name || null,
+      daysSinceLastActivity: day,
+      profileCompletion,
+      activePrograms,
+      hasMatches,
+    };
+
+    // 7. Send email
+    const html = reEngagementEmailTemplate(emailData, day);
+    const subject = getReEngagementSubject(emailData, day);
+
+    const success = await sendEmail({
+      to: recipientEmail,
+      subject,
+      html,
+    });
+
+    if (success) {
+      console.log(`[Re-engagement] Sent Day ${day} email to user ${userId}`);
+    }
+
+    return success;
+  } catch (error: any) {
+    console.error('Failed to send re-engagement email:', error);
+    return false;
+  }
+}
+
+/**
+ * Find and send re-engagement emails to all inactive users
+ * Called daily by cron job
+ */
+export async function processReEngagementEmails(): Promise<{
+  day1: { sent: number; failed: number };
+  day3: { sent: number; failed: number };
+  day7: { sent: number; failed: number };
+}> {
+  const result = {
+    day1: { sent: 0, failed: 0 },
+    day3: { sent: 0, failed: 0 },
+    day7: { sent: 0, failed: 0 },
+  };
+
+  try {
+    const now = new Date();
+
+    // Calculate date boundaries for each cohort
+    const day1Start = new Date(now);
+    day1Start.setDate(day1Start.getDate() - 1);
+    day1Start.setHours(0, 0, 0, 0);
+
+    const day1End = new Date(day1Start);
+    day1End.setHours(23, 59, 59, 999);
+
+    const day3Start = new Date(now);
+    day3Start.setDate(day3Start.getDate() - 3);
+    day3Start.setHours(0, 0, 0, 0);
+
+    const day3End = new Date(day3Start);
+    day3End.setHours(23, 59, 59, 999);
+
+    const day7Start = new Date(now);
+    day7Start.setDate(day7Start.getDate() - 7);
+    day7Start.setHours(0, 0, 0, 0);
+
+    const day7End = new Date(day7Start);
+    day7End.setHours(23, 59, 59, 999);
+
+    // Find inactive users for each cohort
+    // "Inactive" = created account but hasn't logged in since creation day
+    // OR has logged in but never generated a match
+
+    // Day 1: Users who signed up yesterday and haven't returned
+    const day1Users = await db.user.findMany({
+      where: {
+        createdAt: { gte: day1Start, lte: day1End },
+        OR: [
+          { lastLoginAt: null },
+          { lastLoginAt: { lte: day1End } },
+        ],
+        email: { not: null },
+      },
+      select: { id: true },
+    });
+
+    // Day 3: Users who signed up 3 days ago and still haven't engaged
+    const day3Users = await db.user.findMany({
+      where: {
+        createdAt: { gte: day3Start, lte: day3End },
+        OR: [
+          { lastLoginAt: null },
+          { lastLoginAt: { lte: day3End } },
+        ],
+        email: { not: null },
+      },
+      select: { id: true },
+    });
+
+    // Day 7: Users who signed up 7 days ago and still haven't engaged
+    const day7Users = await db.user.findMany({
+      where: {
+        createdAt: { gte: day7Start, lte: day7End },
+        OR: [
+          { lastLoginAt: null },
+          { lastLoginAt: { lte: day7End } },
+        ],
+        email: { not: null },
+      },
+      select: { id: true },
+    });
+
+    console.log(`[Re-engagement] Found: Day 1: ${day1Users.length}, Day 3: ${day3Users.length}, Day 7: ${day7Users.length}`);
+
+    // Send Day 1 emails
+    for (const user of day1Users) {
+      const success = await sendReEngagementEmail(user.id, 1);
+      if (success) result.day1.sent++;
+      else result.day1.failed++;
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Rate limit
+    }
+
+    // Send Day 3 emails
+    for (const user of day3Users) {
+      const success = await sendReEngagementEmail(user.id, 3);
+      if (success) result.day3.sent++;
+      else result.day3.failed++;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    // Send Day 7 emails
+    for (const user of day7Users) {
+      const success = await sendReEngagementEmail(user.id, 7);
+      if (success) result.day7.sent++;
+      else result.day7.failed++;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    return result;
+  } catch (error: any) {
+    console.error('Failed to process re-engagement emails:', error);
+    return result;
   }
 }
