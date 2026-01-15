@@ -400,6 +400,38 @@ export interface DAUMAURatio {
 }
 
 /**
+ * Get list of internal (admin) user IDs to exclude from analytics
+ *
+ * Internal users are those with ADMIN or SUPER_ADMIN roles.
+ * Use this to filter out internal traffic from metrics.
+ */
+export async function getInternalUserIds(): Promise<string[]> {
+  try {
+    const internalUsers = await prisma.user.findMany({
+      where: {
+        role: {
+          in: ['ADMIN', 'SUPER_ADMIN'],
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+    return internalUsers.map(u => u.id);
+  } catch (error) {
+    console.error('[ANALYTICS] Failed to get internal user IDs:', error instanceof Error ? error.message : error);
+    return [];
+  }
+}
+
+/**
+ * Options for analytics queries
+ */
+export interface AnalyticsOptions {
+  excludeInternal?: boolean; // Exclude admin users from metrics
+}
+
+/**
  * Calculate DAU/MAU (Stickiness) Ratio
  *
  * Industry standard engagement metric:
@@ -407,20 +439,47 @@ export interface DAUMAURatio {
  * - 20-25%: Good engagement
  * - 25%+: Excellent engagement (daily habit-forming products)
  *
+ * @param options.excludeInternal - If true, exclude admin users from metrics
  * @returns DAU, MAU, ratio, and benchmark comparison
  *
  * @example
- * const ratio = await getDAUMAURatio();
+ * const ratio = await getDAUMAURatio({ excludeInternal: true });
  * console.log(`Stickiness: ${ratio.ratio}% (${ratio.benchmark})`);
  */
-export async function getDAUMAURatio(): Promise<DAUMAURatio> {
+export async function getDAUMAURatio(options: AnalyticsOptions = {}): Promise<DAUMAURatio> {
   try {
     const today = new Date();
     const thirtyDaysAgo = subDays(today, 30);
 
+    // Get internal user IDs if we need to exclude them
+    const internalUserIds = options.excludeInternal
+      ? await getInternalUserIds()
+      : [];
+
     // Get today's DAU from Redis
-    const todayStats = await getTodayStats();
-    const dau = todayStats.uniqueUsers;
+    // Note: Redis DAU includes all users; if excludeInternal is true,
+    // we need to query the database for accurate filtered DAU
+    let dau: number;
+    if (options.excludeInternal && internalUserIds.length > 0) {
+      // Get today's active users from audit_logs, excluding internal
+      const todayStart = new Date(today);
+      todayStart.setHours(0, 0, 0, 0);
+      const dauResult = await prisma.audit_logs.findMany({
+        where: {
+          createdAt: { gte: todayStart },
+          userId: {
+            not: null,
+            notIn: internalUserIds,
+          },
+        },
+        select: { userId: true },
+        distinct: ['userId'],
+      });
+      dau = dauResult.length;
+    } else {
+      const todayStats = await getTodayStats();
+      dau = todayStats.uniqueUsers;
+    }
 
     // Get MAU - Count DISTINCT users who had any activity in the last 30 days
     // Uses audit_logs table which tracks all user actions
@@ -433,6 +492,9 @@ export async function getDAUMAURatio(): Promise<DAUMAURatio> {
         },
         userId: {
           not: null,
+          ...(options.excludeInternal && internalUserIds.length > 0
+            ? { notIn: internalUserIds }
+            : {}),
         },
       },
       select: {

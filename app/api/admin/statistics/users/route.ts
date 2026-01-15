@@ -10,6 +10,7 @@
  * - period: 'daily' | 'weekly' | 'monthly' (default: 'daily')
  * - days: Number of days to look back (default: 30 for daily, 84 for weekly, 360 for monthly)
  * - format: 'json' | 'csv' (default: 'json')
+ * - excludeInternal: 'true' | 'false' (default: 'false') - Filter out admin users from metrics
  *
  * Examples:
  * - GET /api/admin/statistics/users?period=daily&days=30
@@ -81,6 +82,7 @@ export async function GET(request: NextRequest) {
     const period = (searchParams.get('period') || 'daily') as TimePeriod;
     const daysParam = searchParams.get('days');
     const format = searchParams.get('format') || 'json';
+    const excludeInternal = searchParams.get('excludeInternal') === 'true';
 
     // Validate period
     if (!['daily', 'weekly', 'monthly'].includes(period)) {
@@ -118,7 +120,8 @@ export async function GET(request: NextRequest) {
     const todayStats = await getTodayStats();
 
     // 5.5 Get DAU/MAU ratio (stickiness metric)
-    const dauMauRatio = await getDAUMAURatio();
+    // If excludeInternal=true, admin users are filtered out from metrics
+    const dauMauRatio = await getDAUMAURatio({ excludeInternal });
 
     // 6. Return CSV export if requested
     if (format === 'csv') {
@@ -145,6 +148,7 @@ export async function GET(request: NextRequest) {
         },
         engagement: {
           description: 'DAU/MAU ratio (stickiness metric)',
+          excludeInternal, // True if admin users are filtered out
           ...dauMauRatio,
         },
       },
