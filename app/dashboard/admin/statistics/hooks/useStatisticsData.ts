@@ -30,28 +30,54 @@ export interface SummaryStats {
   trend: 'up' | 'down' | 'stable';
 }
 
+/**
+ * Visitor Statistics (방문자 지표) - Session-based from Redis
+ * Counts all authenticated visits (may include same user multiple times across sessions)
+ */
+export interface VisitorStats {
+  description: string;
+  todayVisitors: number;      // Today's unique session count from Redis
+  avgDailyVisitors: number;   // Average daily visitors from active_user_stats
+  totalPageViews: number;     // Today's page views from Redis
+  peakVisitors: number;       // Peak daily visitors in period
+  peakDate: string;           // Date of peak visitors
+  date: string;               // Current date
+}
+
+/**
+ * Realtime/Engagement Statistics (참여자 지표) - Action-based from audit_logs
+ * Counts users who took meaningful actions (match generation, profile completion, etc.)
+ */
 export interface RealtimeStats {
   description: string;
-  uniqueUsers: number;
-  totalPageViews: number;
+  engagedUsers: number;       // Today's distinct users from audit_logs (renamed from uniqueUsers)
+  totalPageViews: number;     // Page views from audit_logs
   date: string;
 }
 
+/**
+ * DAU/MAU Engagement Ratio (참여 고착도)
+ */
 export interface EngagementStats {
   description: string;
+  excludeInternal?: boolean;  // Whether admin users are filtered out
   dau: number;
   mau: number;
   ratio: number;
   benchmark: string;
 }
 
+/**
+ * Complete Analytics Response with separated visitor/engagement metrics
+ */
 export interface AnalyticsResponse {
   period: TimePeriod;
   startDate: string;
   endDate: string;
   dataPoints: DataPoint[];
   summary: SummaryStats;
-  realtime: RealtimeStats;
+  visitors: VisitorStats;     // NEW: Session-based visitor metrics (방문자 지표)
+  realtime: RealtimeStats;    // Action-based engagement metrics (참여자 지표)
   engagement: EngagementStats;
   generatedAt: string;
 }

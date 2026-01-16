@@ -109,9 +109,10 @@ export default function AdminStatisticsDashboard() {
         {/* Main Content */}
         {analyticsData && (
           <div className="space-y-6 mt-6">
-            {/* KPI Cards */}
+            {/* KPI Cards - Separated Visitor/Engagement Metrics */}
             <KPICards
               summary={analyticsData.summary}
+              visitors={analyticsData.visitors}
               engagement={analyticsData.engagement}
               realtime={analyticsData.realtime}
               startDate={analyticsData.startDate}

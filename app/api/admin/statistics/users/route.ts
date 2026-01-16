@@ -49,6 +49,7 @@ import { authOptions } from '@/lib/auth.config';
 import {
   getUserAnalytics,
   getTodayStats,
+  getTodayVisitors,
   exportToCSV,
   getDAUMAURatio,
   type TimePeriod,
@@ -116,11 +117,15 @@ export async function GET(request: NextRequest) {
     console.log(`[ADMIN API] Fetching ${period} analytics for ${days || 'default'} days`);
     const analytics = await getUserAnalytics(period, days);
 
-    // 5. Get today's real-time stats
+    // 5. Get today's real-time stats (Engagement - from audit_logs)
     // If excludeInternal=true, admin users are filtered out from unique user count
     const todayStats = await getTodayStats({ excludeInternal });
 
-    // 5.5 Get DAU/MAU ratio (stickiness metric)
+    // 5.5 Get today's visitor stats (Visitors - from Redis sessions)
+    // This represents all authenticated visits, regardless of actions taken
+    const visitorStats = await getTodayVisitors();
+
+    // 5.6 Get DAU/MAU ratio (stickiness metric)
     // If excludeInternal=true, admin users are filtered out from metrics
     const dauMauRatio = await getDAUMAURatio({ excludeInternal });
 
@@ -139,16 +144,32 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 7. Return JSON response
+    // 7. Return JSON response with separated visitor/engagement metrics
     return NextResponse.json(
       {
         ...analytics,
-        realtime: {
-          description: "Today's real-time data (not yet aggregated)",
-          ...todayStats,
+        // VISITOR METRICS (방문자 지표) - From Redis sessions
+        // Counts all authenticated visits, may include duplicate users across sessions
+        visitors: {
+          description: '오늘 로그인 방문자 수 (세션 기반)',
+          todayVisitors: visitorStats.uniqueSessions,
+          avgDailyVisitors: analytics.summary.avgDailyUsers, // From active_user_stats (historical)
+          totalPageViews: visitorStats.totalPageViews,
+          peakVisitors: analytics.summary.peakUsers,
+          peakDate: analytics.summary.peakDate,
+          date: visitorStats.date,
         },
+        // ENGAGEMENT METRICS (참여자 지표) - From audit_logs
+        // Counts users who took meaningful actions (match generation, profile completion, etc.)
+        realtime: {
+          description: '오늘 활성 참여자 수 (실제 행동 기반)',
+          engagedUsers: todayStats.uniqueUsers,
+          totalPageViews: todayStats.totalPageViews,
+          date: todayStats.date,
+        },
+        // DAU/MAU RATIO (참여 고착도) - From audit_logs distinct userId
         engagement: {
-          description: 'DAU/MAU ratio (stickiness metric)',
+          description: 'DAU/MAU 비율 (참여 기반 고착도)',
           excludeInternal, // True if admin users are filtered out
           ...dauMauRatio,
         },

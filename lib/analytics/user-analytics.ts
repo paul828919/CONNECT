@@ -390,6 +390,68 @@ export async function getTodayStats(options: AnalyticsOptions = {}): Promise<{
 }
 
 /**
+ * Visitor Statistics Interface (Session-based)
+ */
+export interface VisitorStats {
+  uniqueSessions: number;   // Unique session tokens (may include duplicates for same user)
+  totalPageViews: number;   // Total page views
+  date: string;             // ISO date string
+}
+
+/**
+ * Get today's visitor count from Redis (session-based)
+ *
+ * This counts unique session tokens, which represents:
+ * - All authenticated page views from any session
+ * - May be higher than unique users (one user can have multiple sessions)
+ *
+ * Use case: "오늘 방문자" - Raw visit count for visitor metrics
+ *
+ * Note: This is different from getTodayStats() which queries audit_logs
+ * for engaged users (those who took meaningful actions).
+ *
+ * @returns Visitor statistics from Redis
+ */
+export async function getTodayVisitors(): Promise<VisitorStats> {
+  try {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const activeUsersKey = `active_users:${todayStr}`;
+    const pageViewsKey = `page_views:${todayStr}`;
+
+    const { createClient } = await import('redis');
+    const redis = createClient({
+      url: process.env.REDIS_CACHE_URL || 'redis://localhost:6379',
+    });
+
+    await redis.connect();
+
+    // Get unique session count from Redis Set
+    // sCard returns the number of members in the Set
+    const uniqueSessions = await redis.sCard(activeUsersKey);
+
+    // Get page views counter
+    const pageViewsStr = await redis.get(pageViewsKey);
+    const totalPageViews = pageViewsStr ? parseInt(pageViewsStr, 10) : 0;
+
+    await redis.quit();
+
+    return {
+      uniqueSessions,
+      totalPageViews,
+      date: todayStr,
+    };
+  } catch (error) {
+    console.error('[ANALYTICS] Failed to get today visitors from Redis:', error instanceof Error ? error.message : error);
+    return {
+      uniqueSessions: 0,
+      totalPageViews: 0,
+      date: new Date().toISOString().split('T')[0],
+    };
+  }
+}
+
+/**
  * Export data to CSV format for Excel
  *
  * @param analytics - Analytics data to export

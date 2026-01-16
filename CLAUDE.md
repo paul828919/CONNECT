@@ -17,7 +17,28 @@ This file provides guidelines for using Claude Code (claude.ai/code) when workin
 - Prevents production failures taking over 12 minutes to discover
 - Detects issues locally within 2-5 minutes that would take hours to debug in production
 - Industry Standard: Local → CI → Staging → Production (Never skip the local stage)
-### 2. Security: SSH Keys Only
+### 2. Code Generation and Commit Rules
+**NEVER include the following phrases in code or commit messages:**
+
+❌ **Prohibited in code/codebase:**
+```
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+❌ **Prohibited in commit messages:**
+```
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Commit message format:**
+```
+<type>(<scope>): <short description>
+
+<detailed description if needed>
+```
+**Types:** feat, fix, refactor, docs, style, test, chore
+
+### 3. Security: SSH Keys Only
 **Never use passwords in commands.**
 ```bash
 # ✅ Correct method - Always use SSH key authentication
@@ -25,7 +46,7 @@ ssh -i ~/.ssh/id_ed25519_connect user@59.21.170.6
 # ❌ Incorrect Method - Never use password authentication
 sshpass -p ‘password’ ssh user@59.21.170.6
 ```
-### 3. 🏗️ CI/CD Architecture (Production-Grade Entrypoint Pattern)
+### 4. 🏗️ CI/CD Architecture (Production-Grade Entrypoint Pattern)
 **Status:** ✅ Production-ready (100% successful deployments since October 15, 2025)
 **Architecture Pattern:** Industry-standard entrypoint
 **Changes (October 15, 2025):**
