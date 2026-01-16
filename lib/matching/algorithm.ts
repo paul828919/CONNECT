@@ -632,40 +632,56 @@ export function scoreSemanticSubDomainMatch(
 
   // Check for hard filter violations
   for (const field of hardFilterFields) {
-    const programValue = programSubDomain[field];
-    const orgValue = orgSubDomain[field];
+    const programValue = programSubDomain[field] as string | undefined;
+    const orgValue = orgSubDomain[field] as string | string[] | undefined;
 
     // Only apply hard filter if BOTH have the field defined
-    if (programValue && orgValue && programValue !== orgValue) {
-      // Determine mismatch reason based on field
-      let reason: SemanticMismatchReason = 'PARTIAL_MATCH';
-      let explanation: string | undefined;
+    if (programValue && orgValue) {
+      // v3.1: Handle array values for targetMarket (multi-select)
+      // If orgValue is array, check if programValue is IN the array
+      const isMatch = Array.isArray(orgValue)
+        ? orgValue.includes(programValue)
+        : programValue === orgValue;
 
-      if (field === 'targetOrganism') {
-        reason = 'ORGANISM_MISMATCH';
-        explanation = `이 과제는 ${getOrganismLabel(programValue)} 분야 프로그램이며, 귀사는 ${getOrganismLabel(orgValue)} 분야 기업입니다.`;
-      } else if (field === 'targetMarket') {
-        reason = 'MARKET_MISMATCH';
-        explanation = `이 과제는 ${getMarketLabel(programValue)} 시장 대상이며, 귀사는 ${getMarketLabel(orgValue)} 시장 기업입니다.`;
-      } else if (field === 'energySource') {
-        reason = 'ENERGY_SOURCE_MISMATCH';
-        explanation = `이 과제는 ${getEnergyLabel(programValue)} 분야이며, 귀사는 ${getEnergyLabel(orgValue)} 분야 기업입니다.`;
-      } else if (field === 'targetSector') {
-        reason = 'SECTOR_MISMATCH';
-        explanation = `이 과제는 ${getSectorLabel(programValue)} 분야이며, 귀사는 ${getSectorLabel(orgValue)} 분야 기업입니다.`;
-      } else if (field === 'targetDomain') {
-        reason = 'DOMAIN_MISMATCH';
-        explanation = `이 과제는 ${getDomainLabel(programValue)} 분야이며, 귀사는 ${getDomainLabel(orgValue)} 분야 기업입니다.`;
+      if (!isMatch) {
+        // Determine mismatch reason based on field
+        let reason: SemanticMismatchReason = 'PARTIAL_MATCH';
+        let explanation: string | undefined;
+
+        // Generate label for org value (handle array case)
+        const getOrgValueLabel = (val: string | string[], labelFn: (v: string) => string): string => {
+          if (Array.isArray(val)) {
+            return val.map(v => labelFn(v)).join(', ');
+          }
+          return labelFn(val);
+        };
+
+        if (field === 'targetOrganism') {
+          reason = 'ORGANISM_MISMATCH';
+          explanation = `이 과제는 ${getOrganismLabel(programValue)} 분야 프로그램이며, 귀사는 ${getOrgValueLabel(orgValue, getOrganismLabel)} 분야 기업입니다.`;
+        } else if (field === 'targetMarket') {
+          reason = 'MARKET_MISMATCH';
+          explanation = `이 과제는 ${getMarketLabel(programValue)} 시장 대상이며, 귀사는 ${getOrgValueLabel(orgValue, getMarketLabel)} 시장 기업입니다.`;
+        } else if (field === 'energySource') {
+          reason = 'ENERGY_SOURCE_MISMATCH';
+          explanation = `이 과제는 ${getEnergyLabel(programValue)} 분야이며, 귀사는 ${getOrgValueLabel(orgValue, getEnergyLabel)} 분야 기업입니다.`;
+        } else if (field === 'targetSector') {
+          reason = 'SECTOR_MISMATCH';
+          explanation = `이 과제는 ${getSectorLabel(programValue)} 분야이며, 귀사는 ${getOrgValueLabel(orgValue, getSectorLabel)} 분야 기업입니다.`;
+        } else if (field === 'targetDomain') {
+          reason = 'DOMAIN_MISMATCH';
+          explanation = `이 과제는 ${getDomainLabel(programValue)} 분야이며, 귀사는 ${getOrgValueLabel(orgValue, getDomainLabel)} 분야 기업입니다.`;
+        }
+
+        return {
+          score: 0,
+          reason,
+          isHardFilter: true,
+          explanation,
+          matchingFields: [],
+          mismatchedFields: [field],
+        };
       }
-
-      return {
-        score: 0,
-        reason,
-        isHardFilter: true,
-        explanation,
-        matchingFields: [],
-        mismatchedFields: [field],
-      };
     }
   }
 
@@ -676,11 +692,16 @@ export function scoreSemanticSubDomainMatch(
   const mismatchedFields: string[] = [];
 
   for (const field of allFields) {
-    const programValue = programSubDomain[field];
-    const orgValue = orgSubDomain[field];
+    const programValue = programSubDomain[field] as string | undefined;
+    const orgValue = orgSubDomain[field] as string | string[] | undefined;
 
     if (programValue && orgValue) {
-      if (programValue === orgValue) {
+      // v3.1: Handle array values for multi-select fields
+      const isMatch = Array.isArray(orgValue)
+        ? orgValue.includes(programValue)
+        : programValue === orgValue;
+
+      if (isMatch) {
         matchingFields.push(field);
       } else {
         mismatchedFields.push(field);
