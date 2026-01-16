@@ -320,6 +320,39 @@ model funding_programs {
   manualReviewCompletedAt   DateTime?
   manualReviewCompletedBy   String?
   eligibilityLastUpdated    DateTime?
+
+  // ═══════════════════════════════════════════════════════════════
+  // Semantic Sub-Domain Enrichment (Platform-Wide Matching Enhancement)
+  // ═══════════════════════════════════════════════════════════════
+  // Primary target industry - MORE SPECIFIC than category
+  // Examples: "동물의약품", "인체의약품", "B2B SaaS", "전기차배터리", "양돈축산"
+  primaryTargetIndustry     String?
+
+  // Secondary related industries
+  secondaryTargetIndustries String[]              @default([])
+
+  // Semantic sub-domain classification (industry-specific)
+  // Stored as JSON to support different structures per industry
+  // BIO_HEALTH: { targetOrganism: "ANIMAL", applicationArea: "VETERINARY_PHARMA" }
+  // ICT: { targetMarket: "ENTERPRISE", applicationArea: "B2B_SAAS" }
+  // ENERGY: { energySource: "BATTERY", applicationArea: "ELECTRIC_VEHICLE" }
+  semanticSubDomain         Json?
+
+  // Specific technology domains (precise, not generic)
+  // Examples: ["동물백신", "GMP제조"] instead of just ["바이오"]
+  technologyDomainsSpecific String[]              @default([])
+
+  // Description of ideal applicant company (Korean)
+  targetCompanyProfile      String?
+
+  // Program intent classification
+  programIntent             ProgramIntent?
+
+  // Enrichment metadata
+  semanticConfidence        Float?                @default(0)
+  semanticEnrichedAt        DateTime?
+  semanticEnrichmentModel   String?
+
   consortium_projects       consortium_projects[]
   funding_matches           funding_matches[]
   scraping_job              scraping_jobs?
@@ -333,6 +366,8 @@ model funding_programs {
   @@index([targetType])
   @@index([eligibilityConfidence])
   @@index([manualReviewRequired])
+  @@index([primaryTargetIndustry])
+  @@index([programIntent])
 }
 
 model match_notifications {
@@ -434,6 +469,27 @@ model organizations {
   hasResearchInstitute                                           Boolean               @default(false)
   verificationDocumentsUploaded                                  Boolean               @default(false)
   verificationNotes                                              String?
+
+  // ═══════════════════════════════════════════════════════════════
+  // Semantic Sub-Domain Profile (Platform-Wide Matching Enhancement)
+  // ═══════════════════════════════════════════════════════════════
+  // Primary business domain - MORE SPECIFIC than industrySector
+  // Examples: "동물의약품 제조", "B2B SaaS", "전기차 배터리", "양돈 축산"
+  primaryBusinessDomain                                          String?
+
+  // Semantic sub-domain classification (matches program schema)
+  // BIO_HEALTH: { targetOrganism: "ANIMAL", applicationArea: "VETERINARY_PHARMA" }
+  // ICT: { targetMarket: "ENTERPRISE", applicationArea: "B2B_SAAS" }
+  // ENERGY: { energySource: "BATTERY", applicationArea: "ELECTRIC_VEHICLE" }
+  semanticSubDomain                                              Json?
+
+  // Specific technology domains (precise, not generic)
+  // Examples: ["동물백신", "GMP제조"] instead of just ["바이오"]
+  technologyDomainsSpecific                                      String[]              @default([])
+
+  // Company profile description (auto-generated or user-provided)
+  companyProfileDescription                                      String?
+
   ai_cost_logs                                                   ai_cost_logs[]
   consortium_members                                             consortium_members[]
   consortium_projects                                            consortium_projects[]
@@ -448,6 +504,7 @@ model organizations {
   @@index([profileCompleted])
   @@index([status])
   @@index([type])
+  @@index([primaryBusinessDomain])
 }
 
 model payments {
@@ -858,6 +915,14 @@ enum ProgramStatus {
   ACTIVE
   EXPIRED
   ARCHIVED
+}
+
+enum ProgramIntent {
+  BASIC_RESEARCH
+  APPLIED_RESEARCH
+  COMMERCIALIZATION
+  INFRASTRUCTURE
+  POLICY_SUPPORT
 }
 
 enum RevenueRange {
