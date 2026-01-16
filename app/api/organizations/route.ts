@@ -92,6 +92,8 @@ export async function POST(request: NextRequest) {
       targetResearchTRL, // Dual-TRL System: for R&D funding matching
       description,
       website,
+      // v3.0: Semantic sub-domain for industry-specific matching
+      semanticSubDomain,
     } = body;
 
     // Automatically derive hasResearchInstitute from certifications array
@@ -218,6 +220,8 @@ export async function POST(request: NextRequest) {
               .map((tech: string) => tech.trim())
               .filter((tech: string) => tech.length > 0)
           : [],
+        // v3.0: Semantic sub-domain for industry-specific matching
+        semanticSubDomain: semanticSubDomain || undefined,
         profileCompleted: true,
         profileScore,
         status: 'ACTIVE',

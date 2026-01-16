@@ -66,6 +66,8 @@ export async function GET(
         expectedTRLLevel: true,
         targetOrgScale: true,
         targetOrgRevenue: true,
+        // v3.0: Semantic sub-domain for industry-specific matching
+        semanticSubDomain: true,
         profileCompleted: true,
         profileScore: true,
         status: true,
@@ -198,6 +200,8 @@ export async function PATCH(
       expectedTRLLevel,
       targetOrgScale,
       targetOrgRevenue,
+      // v3.0: Semantic sub-domain for industry-specific matching
+      semanticSubDomain,
     } = body;
 
     // Build update data (only include fields that are provided)
@@ -295,6 +299,11 @@ export async function PATCH(
     if (targetOrgScale !== undefined) updateData.targetOrgScale = targetOrgScale;
     if (targetOrgRevenue !== undefined)
       updateData.targetOrgRevenue = targetOrgRevenue;
+
+    // v3.0: Semantic sub-domain for industry-specific matching
+    if (semanticSubDomain !== undefined) {
+      updateData.semanticSubDomain = semanticSubDomain;
+    }
 
     // Recalculate profile score (enhanced with Tier 1A + 1B)
     let profileScore = 50; // Base score
@@ -442,6 +451,8 @@ export async function PATCH(
         expectedTRLLevel: true,
         targetOrgScale: true,
         targetOrgRevenue: true,
+        // v3.0: Semantic sub-domain for industry-specific matching
+        semanticSubDomain: true,
         profileCompleted: true,
         profileScore: true,
         updatedAt: true,

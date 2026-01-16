@@ -143,6 +143,147 @@ const industrySectors = [
   { value: 'OTHER', label: '기타' },
 ];
 
+// Semantic sub-domain options for industry-specific matching (v3.0)
+const semanticSubDomainOptions: Record<string, {
+  primaryField: { key: string; label: string; options: { value: string; label: string }[] };
+  secondaryField?: { key: string; label: string; options: { value: string; label: string }[] };
+}> = {
+  BIO_HEALTH: {
+    primaryField: {
+      key: 'targetOrganism',
+      label: '대상 생물',
+      options: [
+        { value: 'HUMAN', label: '인체' },
+        { value: 'ANIMAL', label: '동물' },
+        { value: 'PLANT', label: '식물' },
+        { value: 'MICROBIAL', label: '미생물' },
+        { value: 'MARINE', label: '해양생물' },
+      ],
+    },
+    secondaryField: {
+      key: 'applicationArea',
+      label: '적용 분야',
+      options: [
+        { value: 'PHARMA', label: '의약품' },
+        { value: 'MEDICAL_DEVICE', label: '의료기기' },
+        { value: 'DIAGNOSTICS', label: '진단' },
+        { value: 'DIGITAL_HEALTH', label: '디지털 헬스케어' },
+        { value: 'VETERINARY_PHARMA', label: '동물의약품' },
+        { value: 'VETERINARY_DEVICE', label: '동물의료기기' },
+        { value: 'BIO_MATERIAL', label: '바이오소재' },
+        { value: 'COSMETICS', label: '화장품/바이오코스메틱' },
+        { value: 'FOOD_HEALTH', label: '건강기능식품' },
+      ],
+    },
+  },
+  ICT: {
+    primaryField: {
+      key: 'targetMarket',
+      label: '타겟 시장',
+      options: [
+        { value: 'CONSUMER', label: '일반 소비자 (B2C)' },
+        { value: 'ENTERPRISE', label: '기업 (B2B)' },
+        { value: 'GOVERNMENT', label: '공공기관 (B2G)' },
+        { value: 'INDUSTRIAL', label: '산업용' },
+      ],
+    },
+    secondaryField: {
+      key: 'applicationArea',
+      label: '적용 분야',
+      options: [
+        { value: 'SOFTWARE', label: '소프트웨어' },
+        { value: 'HARDWARE', label: '하드웨어' },
+        { value: 'PLATFORM', label: '플랫폼' },
+        { value: 'INFRASTRUCTURE', label: '인프라' },
+        { value: 'SECURITY', label: '보안' },
+        { value: 'AI_ML', label: 'AI/머신러닝' },
+        { value: 'DATA_ANALYTICS', label: '데이터 분석' },
+        { value: 'CLOUD', label: '클라우드' },
+        { value: 'IOT', label: 'IoT' },
+        { value: 'NETWORK', label: '네트워크/통신' },
+        { value: 'GAMING', label: '게임' },
+        { value: 'METAVERSE', label: '메타버스/XR' },
+      ],
+    },
+  },
+  ENERGY: {
+    primaryField: {
+      key: 'energySource',
+      label: '에너지원',
+      options: [
+        { value: 'SOLAR', label: '태양광' },
+        { value: 'WIND', label: '풍력' },
+        { value: 'NUCLEAR', label: '원자력' },
+        { value: 'HYDROGEN', label: '수소' },
+        { value: 'BATTERY', label: '배터리/이차전지' },
+        { value: 'GRID', label: '전력망' },
+        { value: 'FOSSIL', label: '화석연료' },
+        { value: 'GEOTHERMAL', label: '지열' },
+        { value: 'HYDRO', label: '수력' },
+      ],
+    },
+    secondaryField: {
+      key: 'applicationArea',
+      label: '적용 분야',
+      options: [
+        { value: 'GENERATION', label: '발전' },
+        { value: 'STORAGE', label: '저장' },
+        { value: 'DISTRIBUTION', label: '배전' },
+        { value: 'EFFICIENCY', label: '효율' },
+        { value: 'ELECTRIC_VEHICLE', label: '전기차' },
+      ],
+    },
+  },
+  AGRICULTURE: {
+    primaryField: {
+      key: 'targetSector',
+      label: '대상 분야',
+      options: [
+        { value: 'CROPS', label: '작물' },
+        { value: 'LIVESTOCK', label: '축산' },
+        { value: 'AQUACULTURE', label: '양식/수산' },
+        { value: 'FORESTRY', label: '임업' },
+        { value: 'FOOD_PROCESSING', label: '식품가공' },
+      ],
+    },
+    secondaryField: {
+      key: 'applicationArea',
+      label: '적용 분야',
+      options: [
+        { value: 'CULTIVATION', label: '재배' },
+        { value: 'BREEDING', label: '육종' },
+        { value: 'PROCESSING', label: '가공' },
+        { value: 'DISTRIBUTION', label: '유통' },
+        { value: 'SMART_FARM', label: '스마트팜' },
+      ],
+    },
+  },
+  DEFENSE: {
+    primaryField: {
+      key: 'targetDomain',
+      label: '작전 영역',
+      options: [
+        { value: 'LAND', label: '지상' },
+        { value: 'NAVAL', label: '해상' },
+        { value: 'AEROSPACE', label: '항공우주' },
+        { value: 'CYBER', label: '사이버' },
+        { value: 'SPACE', label: '우주' },
+      ],
+    },
+    secondaryField: {
+      key: 'applicationArea',
+      label: '적용 분야',
+      options: [
+        { value: 'WEAPONS', label: '무기체계' },
+        { value: 'SYSTEMS', label: '체계/시스템' },
+        { value: 'LOGISTICS', label: '군수' },
+        { value: 'C4ISR', label: '지휘통제통신' },
+        { value: 'PROTECTION', label: '방호' },
+      ],
+    },
+  },
+};
+
 // Common certifications for eligibility filtering
 const commonCertifications = [
   // Company certifications
@@ -175,6 +316,8 @@ export default function EditOrganizationProfilePage() {
   const [showConsortiumPreferences, setShowConsortiumPreferences] = useState(false);
   const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
   const [isCertDropdownOpen, setIsCertDropdownOpen] = useState(false);
+  // Semantic sub-domain state (v3.0 - industry-specific matching)
+  const [semanticSubDomain, setSemanticSubDomain] = useState<Record<string, string>>({});
 
   // User profile state (for professional profile fields)
   const [userProfileData, setUserProfileData] = useState<{
@@ -215,6 +358,24 @@ export default function EditOrganizationProfilePage() {
 
   const rdExperienceCount = watch('rdExperienceCount');
   const organizationType = watch('type');
+  const industrySector = watch('industrySector');
+
+  // Get semantic sub-domain options for the selected industry
+  const currentSemanticOptions = industrySector ? semanticSubDomainOptions[industrySector] : null;
+
+  // Handler for semantic sub-domain field changes
+  const handleSemanticSubDomainChange = (key: string, value: string) => {
+    setSemanticSubDomain((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  // Clear semantic sub-domain when industry changes
+  const handleIndustrySectorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setValue('industrySector', e.target.value);
+    setSemanticSubDomain({}); // Reset semantic data when industry changes
+  };
 
   // Handler for certification checkbox toggle
   const handleCertificationToggle = (certValue: string) => {
@@ -298,6 +459,11 @@ export default function EditOrganizationProfilePage() {
           setValue('certifications', data.organization.certifications);
         }
 
+        // Set semantic sub-domain (v3.0 - industry-specific matching)
+        if (data.organization.semanticSubDomain) {
+          setSemanticSubDomain(data.organization.semanticSubDomain);
+        }
+
         // Auto-expand consortium preferences if any field has data
         if (
           data.organization.desiredConsortiumFields?.length > 0 ||
@@ -347,11 +513,19 @@ export default function EditOrganizationProfilePage() {
     try {
       const organizationId = (session?.user as any)?.organizationId;
 
+      // Only include semanticSubDomain if it has at least one field populated
+      const hasSemanticData = Object.keys(semanticSubDomain).length > 0 &&
+        Object.values(semanticSubDomain).some((v) => v && v.length > 0);
+
       // Update organization profile
       const orgResponse = await fetch(`/api/organizations/${organizationId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          // Semantic sub-domain for v3.0 matching algorithm
+          semanticSubDomain: hasSemanticData ? semanticSubDomain : null,
+        }),
       });
 
       const orgResult = await orgResponse.json();
@@ -620,7 +794,8 @@ export default function EditOrganizationProfilePage() {
               </label>
               <select
                 id="industrySector"
-                {...register('industrySector')}
+                value={industrySector || ''}
+                onChange={handleIndustrySectorChange}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
               >
                 <option value="">선택해주세요.</option>
@@ -639,6 +814,81 @@ export default function EditOrganizationProfilePage() {
                 </p>
               )}
             </div>
+
+            {/* Semantic Sub-Domain (v3.0 - Industry-specific matching) */}
+            {currentSemanticOptions && (
+              <div className="space-y-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">🎯</span>
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-900">세부 분야 설정 (선택)</h4>
+                    <p className="text-xs text-gray-600">
+                      세부 분야를 선택하면 더 정확한 연구과제 매칭을 받을 수 있습니다.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Primary Field (Hard filter field - e.g., targetOrganism for BIO_HEALTH) */}
+                <div>
+                  <label
+                    htmlFor={`semantic-${currentSemanticOptions.primaryField.key}`}
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    {currentSemanticOptions.primaryField.label}
+                    <span className="ml-1 text-xs font-normal text-blue-600">(매칭 핵심 기준)</span>
+                  </label>
+                  <select
+                    id={`semantic-${currentSemanticOptions.primaryField.key}`}
+                    value={semanticSubDomain[currentSemanticOptions.primaryField.key] || ''}
+                    onChange={(e) =>
+                      handleSemanticSubDomainChange(currentSemanticOptions.primaryField.key, e.target.value)
+                    }
+                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  >
+                    <option value="">선택해주세요</option>
+                    {currentSemanticOptions.primaryField.options.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {industrySector === 'BIO_HEALTH' && '예: 동물의약품 회사라면 "동물" 선택 → 인체 대상 프로그램이 매칭에서 제외됩니다.'}
+                    {industrySector === 'ICT' && '예: B2B 소프트웨어 회사라면 "기업 (B2B)" 선택 → 소비자 대상 프로그램이 매칭에서 제외됩니다.'}
+                    {industrySector === 'ENERGY' && '예: 배터리 회사라면 "배터리/이차전지" 선택 → 원자력 프로그램이 매칭에서 제외됩니다.'}
+                    {industrySector === 'AGRICULTURE' && '예: 축산 회사라면 "축산" 선택 → 작물 재배 프로그램이 매칭에서 제외됩니다.'}
+                    {industrySector === 'DEFENSE' && '예: 항공우주 회사라면 "항공우주" 선택 → 해상 무기 프로그램이 매칭에서 제외됩니다.'}
+                  </p>
+                </div>
+
+                {/* Secondary Field (Soft scoring field - applicationArea) */}
+                {currentSemanticOptions.secondaryField && (
+                  <div>
+                    <label
+                      htmlFor={`semantic-${currentSemanticOptions.secondaryField.key}`}
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      {currentSemanticOptions.secondaryField.label}
+                    </label>
+                    <select
+                      id={`semantic-${currentSemanticOptions.secondaryField.key}`}
+                      value={semanticSubDomain[currentSemanticOptions.secondaryField.key] || ''}
+                      onChange={(e) =>
+                        handleSemanticSubDomainChange(currentSemanticOptions.secondaryField!.key, e.target.value)
+                      }
+                      className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      <option value="">선택해주세요</option>
+                      {currentSemanticOptions.secondaryField.options.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Employee Count */}
             <div>
