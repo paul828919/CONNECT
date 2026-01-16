@@ -317,7 +317,8 @@ export default function EditOrganizationProfilePage() {
   const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
   const [isCertDropdownOpen, setIsCertDropdownOpen] = useState(false);
   // Semantic sub-domain state (v3.0 - industry-specific matching)
-  const [semanticSubDomain, setSemanticSubDomain] = useState<Record<string, string>>({});
+  // v3.1: Now supports string[] for multi-select fields like targetMarket
+  const [semanticSubDomain, setSemanticSubDomain] = useState<Record<string, string | string[]>>({});
 
   // User profile state (for professional profile fields)
   const [userProfileData, setUserProfileData] = useState<{
@@ -363,12 +364,26 @@ export default function EditOrganizationProfilePage() {
   // Get semantic sub-domain options for the selected industry
   const currentSemanticOptions = industrySector ? semanticSubDomainOptions[industrySector] : null;
 
-  // Handler for semantic sub-domain field changes
+  // Handler for semantic sub-domain field changes (single-select)
   const handleSemanticSubDomainChange = (key: string, value: string) => {
     setSemanticSubDomain((prev) => ({
       ...prev,
       [key]: value,
     }));
+  };
+
+  // v3.1: Handler for multi-select semantic sub-domain fields (like targetMarket for ICT)
+  const handleSemanticMultiSelectChange = (key: string, value: string, checked: boolean) => {
+    setSemanticSubDomain((prev) => {
+      const currentValues = Array.isArray(prev[key]) ? prev[key] as string[] : [];
+      const newValues = checked
+        ? [...currentValues, value]
+        : currentValues.filter((v) => v !== value);
+      return {
+        ...prev,
+        [key]: newValues,
+      };
+    });
   };
 
   // Clear semantic sub-domain when industry changes
@@ -829,6 +844,7 @@ export default function EditOrganizationProfilePage() {
                 </div>
 
                 {/* Primary Field (Hard filter field - e.g., targetOrganism for BIO_HEALTH) */}
+                {/* v3.1: ICT targetMarket uses multi-select checkboxes, others use single-select */}
                 <div>
                   <label
                     htmlFor={`semantic-${currentSemanticOptions.primaryField.key}`}
@@ -836,25 +852,58 @@ export default function EditOrganizationProfilePage() {
                   >
                     {currentSemanticOptions.primaryField.label}
                     <span className="ml-1 text-xs font-normal text-blue-600">(매칭 핵심 기준)</span>
+                    {currentSemanticOptions.primaryField.key === 'targetMarket' && (
+                      <span className="ml-1 text-xs font-normal text-gray-500">(복수 선택 가능)</span>
+                    )}
                   </label>
-                  <select
-                    id={`semantic-${currentSemanticOptions.primaryField.key}`}
-                    value={semanticSubDomain[currentSemanticOptions.primaryField.key] || ''}
-                    onChange={(e) =>
-                      handleSemanticSubDomainChange(currentSemanticOptions.primaryField.key, e.target.value)
-                    }
-                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
-                  >
-                    <option value="">선택해주세요</option>
-                    {currentSemanticOptions.primaryField.options.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="mt-1 text-xs text-gray-500">
+
+                  {/* Multi-select checkbox group for ICT targetMarket */}
+                  {currentSemanticOptions.primaryField.key === 'targetMarket' ? (
+                    <div className="mt-2 space-y-2">
+                      {currentSemanticOptions.primaryField.options.map((option) => {
+                        // Handle both array (v3.1+) and string (legacy) formats
+                        const rawValue = semanticSubDomain.targetMarket;
+                        const currentValues = Array.isArray(rawValue)
+                          ? rawValue as string[]
+                          : typeof rawValue === 'string' && rawValue
+                            ? [rawValue]
+                            : [];
+                        const isChecked = currentValues.includes(option.value);
+                        return (
+                          <label key={option.value} className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => handleSemanticMultiSelectChange('targetMarket', option.value, e.target.checked)}
+                              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-700">{option.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    /* Single-select dropdown for other fields (BIO_HEALTH, ENERGY, etc.) */
+                    <select
+                      id={`semantic-${currentSemanticOptions.primaryField.key}`}
+                      value={(semanticSubDomain[currentSemanticOptions.primaryField.key] as string) || ''}
+                      onChange={(e) =>
+                        handleSemanticSubDomainChange(currentSemanticOptions.primaryField.key, e.target.value)
+                      }
+                      className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      <option value="">선택해주세요</option>
+                      {currentSemanticOptions.primaryField.options.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+                  <p className="mt-2 text-xs text-gray-500">
                     {industrySector === 'BIO_HEALTH' && '예: 동물의약품 회사라면 "동물" 선택 → 인체 대상 프로그램이 매칭에서 제외됩니다.'}
-                    {industrySector === 'ICT' && '예: B2B 소프트웨어 회사라면 "기업 (B2B)" 선택 → 소비자 대상 프로그램이 매칭에서 제외됩니다.'}
+                    {industrySector === 'ICT' && '예: B2B와 소비자 시장 모두 서비스한다면 둘 다 선택하세요. 선택한 시장 대상 프로그램만 매칭됩니다.'}
                     {industrySector === 'ENERGY' && '예: 배터리 회사라면 "배터리/이차전지" 선택 → 원자력 프로그램이 매칭에서 제외됩니다.'}
                     {industrySector === 'AGRICULTURE' && '예: 축산 회사라면 "축산" 선택 → 작물 재배 프로그램이 매칭에서 제외됩니다.'}
                     {industrySector === 'DEFENSE' && '예: 항공우주 회사라면 "항공우주" 선택 → 해상 무기 프로그램이 매칭에서 제외됩니다.'}
