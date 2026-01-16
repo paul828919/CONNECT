@@ -1,5 +1,5 @@
 /**
- * Funding Match Generation Algorithm (Enhanced v3.0)
+ * Funding Match Generation Algorithm (Enhanced v3.1)
  *
  * Rule-based matching system with advanced Korean language support
  * and semantic sub-domain matching for precise industry alignment.
@@ -11,6 +11,11 @@
  * - Organization type match: 15 points (reduced from 20)
  * - R&D experience match: 10 points (reduced from 15)
  * - Deadline proximity: 15 points
+ * - Non-enriched penalty: -15 points (NEW in v3.1 - for programs lacking semantic data)
+ *
+ * Enhancements in v3.1:
+ * - Non-enriched program penalty (-15 points when org has semantic data but program doesn't)
+ * - Addresses gap where 52/85 programs bypass semantic filters due to enrichment failures
  *
  * Enhancements in v3.0:
  * - Semantic sub-domain matching (BIO_HEALTH: human vs animal, ICT: consumer vs enterprise, etc.)
@@ -50,6 +55,7 @@ export interface MatchScore {
     typeScore: number;        // Organization type match (0-15, reduced from 20)
     rdScore: number;          // R&D experience (0-10, reduced from 15)
     deadlineScore: number;    // Deadline proximity (0-15)
+    nonEnrichedPenalty?: number; // v3.1: Penalty for programs lacking semantic data (0 or -15)
   };
   reasons: string[]; // Keys for explanation generator
   semanticMatchInfo?: {       // NEW in v3.0: Semantic matching details
@@ -471,12 +477,32 @@ export function calculateMatchScore(
   // 6. Deadline proximity (15 points, unchanged)
   const deadlineScore = scoreDeadline(program, reasons);
 
-  const totalScore = semanticScore + industryScore + trlScore + typeScore + rdScore + deadlineScore;
+  // ============================================================================
+  // v3.1: Non-Enriched Program Penalty
+  // ============================================================================
+  // When organization HAS semantic data but program LACKS it, apply a penalty.
+  // This ensures programs that couldn't be semantically validated rank lower
+  // than those that have been validated as compatible.
+  //
+  // Rationale:
+  // - 52 of 85 active programs lack semantic enrichment (validation failures)
+  // - These programs bypass the semantic hard filter (targetMarket compatibility)
+  // - Without penalty, they can outscore validated matches via keyword matches
+  // - 15-point penalty drops them from ~70 → ~55 (below typical minimumScore=60)
+  const orgSemanticData = organization.semanticSubDomain as Record<string, string> | null;
+  const programSemanticData = program.semanticSubDomain as Record<string, string> | null;
+  const nonEnrichedPenalty = (orgSemanticData && !programSemanticData) ? 15 : 0;
+
+  if (nonEnrichedPenalty > 0) {
+    reasons.push('NON_ENRICHED_PENALTY');
+  }
+
+  const totalScore = semanticScore + industryScore + trlScore + typeScore + rdScore + deadlineScore - nonEnrichedPenalty;
 
   return {
     programId: program.id,
     program,
-    score: Math.round(totalScore),
+    score: Math.round(Math.max(0, totalScore)), // Ensure non-negative
     breakdown: {
       semanticScore,
       industryScore,
@@ -484,6 +510,7 @@ export function calculateMatchScore(
       typeScore,
       rdScore,
       deadlineScore,
+      nonEnrichedPenalty: nonEnrichedPenalty > 0 ? -nonEnrichedPenalty : undefined,
     },
     reasons,
   };
