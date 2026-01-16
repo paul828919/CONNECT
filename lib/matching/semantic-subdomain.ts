@@ -243,7 +243,9 @@ export type SemanticMismatchReason =
   | 'DOMAIN_MISMATCH'                        // DEFENSE: land vs naval vs aerospace
   | 'NO_SEMANTIC_DATA'                       // Missing sub-domain data
   | 'SEMANTIC_MATCH'                         // Sub-domains align
-  | 'PARTIAL_MATCH';                         // Some fields match
+  | 'PARTIAL_MATCH'                          // Some fields match
+  | 'INFERRED_MARKET_MISMATCH'               // v3.1: Keyword inference suggests incompatible market
+  | 'INFERRED_MARKET_MATCH';                 // v3.1: Keyword inference suggests compatible market
 
 // ═══════════════════════════════════════════════════════════════
 // Scoring Result Interface
@@ -316,3 +318,126 @@ export const DEFENSE_DOMAIN_LABELS: Record<DefenseTargetDomain, string> = {
   CYBER: '사이버',
   SPACE: '우주',
 };
+
+// ═══════════════════════════════════════════════════════════════
+// v3.1: Keyword-Based Market Inference for ICT Programs
+// ═══════════════════════════════════════════════════════════════
+// When a program lacks semantic enrichment data, we can infer its
+// target market from Korean keywords in the title, description, and keywords.
+// This provides a fallback for the 52 programs that failed LLM enrichment.
+
+/**
+ * Korean keyword patterns for each ICT target market
+ * These are commonly used terms in Korean government R&D announcements
+ */
+export const ICT_MARKET_KEYWORDS: Record<IctTargetMarket, string[]> = {
+  CONSUMER: [
+    '소비자', 'B2C', '앱', '모바일', '게임', '콘텐츠',
+    '메타버스', 'XR', 'AR', 'VR', '엔터테인먼트', '미디어',
+    '일반인', '개인', '라이프스타일', '헬스케어 앱',
+  ],
+  ENTERPRISE: [
+    '기업', 'B2B', '클라우드', 'SaaS', '플랫폼', '솔루션',
+    'ERP', 'CRM', '업무', '경영', '생산성', '협업',
+    '기업용', '산업 솔루션', '비즈니스', '엔터프라이즈',
+  ],
+  GOVERNMENT: [
+    '공공', '정부', '행정', 'SI', '전자정부', '스마트시티',
+    '공공기관', '지자체', '지방자치', '국가', '공공서비스',
+    '행정서비스', '공공 플랫폼', '정부통합',
+  ],
+  INDUSTRIAL: [
+    '산업용', '제조', '공장', '스마트팩토리', '자동화',
+    'IIoT', '산업 IoT', '설비', '공정', '생산라인',
+    'MES', 'SCADA', '산업제어',
+  ],
+};
+
+/**
+ * Infer ICT target market from program text content
+ *
+ * @param keywords Array of program keywords
+ * @param title Program title
+ * @param description Program description (nullable)
+ * @returns Inferred target market or null if cannot infer with confidence
+ */
+export function inferIctTargetMarketFromKeywords(
+  keywords: string[],
+  title: string,
+  description: string | null
+): IctTargetMarket | null {
+  // Combine all text for searching
+  const combinedText = [
+    title,
+    description || '',
+    ...keywords,
+  ].join(' ').toLowerCase();
+
+  // Count matches for each market
+  const marketCounts: Record<IctTargetMarket, number> = {
+    CONSUMER: 0,
+    ENTERPRISE: 0,
+    GOVERNMENT: 0,
+    INDUSTRIAL: 0,
+  };
+
+  for (const [market, marketKeywords] of Object.entries(ICT_MARKET_KEYWORDS)) {
+    for (const keyword of marketKeywords) {
+      if (combinedText.includes(keyword.toLowerCase())) {
+        marketCounts[market as IctTargetMarket]++;
+      }
+    }
+  }
+
+  // Find market with most matches (require at least 2 matches for confidence)
+  const entries = Object.entries(marketCounts) as [IctTargetMarket, number][];
+  const sorted = entries.sort((a, b) => b[1] - a[1]);
+  const [topMarket, topCount] = sorted[0];
+  const [secondMarket, secondCount] = sorted[1] || ['', 0];
+
+  // Require at least 2 matches and clear winner (at least 1 more than second place)
+  if (topCount >= 2 && topCount > secondCount) {
+    return topMarket;
+  }
+
+  return null;
+}
+
+/**
+ * Check if inferred market is compatible with organization's target market
+ *
+ * @param orgMarket Organization's configured target market
+ * @param inferredMarket Inferred market from keywords
+ * @returns true if compatible, false if mismatched
+ */
+export function isInferredMarketCompatible(
+  orgMarket: IctTargetMarket | IctTargetMarket[],
+  inferredMarket: IctTargetMarket
+): boolean {
+  // Handle array case (multi-select)
+  if (Array.isArray(orgMarket)) {
+    return orgMarket.includes(inferredMarket);
+  }
+  // Handle single value case
+  return orgMarket === inferredMarket;
+}
+
+/**
+ * Get Korean label for inferred market explanation
+ */
+export function getInferredMarketExplanation(
+  orgMarket: IctTargetMarket | IctTargetMarket[],
+  inferredMarket: IctTargetMarket,
+  isCompatible: boolean
+): string {
+  const orgMarketLabel = Array.isArray(orgMarket)
+    ? orgMarket.map(m => ICT_TARGET_MARKET_LABELS[m]).join(', ')
+    : ICT_TARGET_MARKET_LABELS[orgMarket];
+  const inferredMarketLabel = ICT_TARGET_MARKET_LABELS[inferredMarket];
+
+  if (isCompatible) {
+    return `키워드 분석 결과, 이 과제는 ${inferredMarketLabel} 시장 대상으로 추정되며 귀사의 타겟 시장(${orgMarketLabel})과 일치합니다.`;
+  } else {
+    return `키워드 분석 결과, 이 과제는 ${inferredMarketLabel} 시장 대상으로 추정되며 귀사의 타겟 시장(${orgMarketLabel})과 다릅니다.`;
+  }
+}
