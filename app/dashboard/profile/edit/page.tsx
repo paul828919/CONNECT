@@ -821,7 +821,7 @@ export default function EditOrganizationProfilePage() {
                 <div className="flex items-start gap-2">
                   <span className="text-lg">🎯</span>
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900">세부 분야 설정 (선택)</h4>
+                    <h4 className="text-sm font-semibold text-gray-900">세부 분야 설정</h4>
                     <p className="text-xs text-gray-600">
                       세부 분야를 선택하면 더 정확한 연구과제 매칭을 받을 수 있습니다.
                     </p>
