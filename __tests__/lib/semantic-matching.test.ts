@@ -723,4 +723,187 @@ describe('scoreSemanticSubDomainMatch', () => {
       expect(result.explanation).toContain('일치');
     });
   });
+
+  // ═══════════════════════════════════════════════════════════════
+  // v3.1: Multi-Select Target Market Support
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('v3.1: multi-select target market', () => {
+    it('should MATCH when program market is IN org array', () => {
+      // Org selects multiple markets
+      const org = createMockOrganization(
+        { targetMarket: ['CONSUMER', 'ENTERPRISE'] as any, applicationArea: 'SOFTWARE' },
+        'ICT'
+      );
+      // Program targets CONSUMER (which is in org's array)
+      const program = createMockProgram(
+        { targetMarket: 'CONSUMER', applicationArea: 'SOFTWARE' },
+        'ICT'
+      );
+
+      const result = scoreSemanticSubDomainMatch(org, program);
+
+      expect(result.isHardFilter).toBe(false);
+      expect(result.matchingFields).toContain('targetMarket');
+      expect(result.score).toBeGreaterThan(0);
+    });
+
+    it('should MATCH when program market matches second item in org array', () => {
+      const org = createMockOrganization(
+        { targetMarket: ['CONSUMER', 'ENTERPRISE'] as any, applicationArea: 'PLATFORM' },
+        'ICT'
+      );
+      const program = createMockProgram(
+        { targetMarket: 'ENTERPRISE', applicationArea: 'PLATFORM' },
+        'ICT'
+      );
+
+      const result = scoreSemanticSubDomainMatch(org, program);
+
+      expect(result.isHardFilter).toBe(false);
+      expect(result.matchingFields).toContain('targetMarket');
+    });
+
+    it('should trigger MARKET_MISMATCH when program market is NOT IN org array', () => {
+      const org = createMockOrganization(
+        { targetMarket: ['CONSUMER', 'ENTERPRISE'] as any, applicationArea: 'SOFTWARE' },
+        'ICT'
+      );
+      // Program targets GOVERNMENT (not in org's array)
+      const program = createMockProgram(
+        { targetMarket: 'GOVERNMENT', applicationArea: 'PLATFORM' },
+        'ICT'
+      );
+
+      const result = scoreSemanticSubDomainMatch(org, program);
+
+      expect(result.isHardFilter).toBe(true);
+      expect(result.reason).toBe('MARKET_MISMATCH');
+    });
+
+    it('should generate correct Korean explanation for multi-select mismatch', () => {
+      const org = createMockOrganization(
+        { targetMarket: ['CONSUMER', 'ENTERPRISE'] as any, applicationArea: 'SOFTWARE' },
+        'ICT'
+      );
+      const program = createMockProgram(
+        { targetMarket: 'INDUSTRIAL', applicationArea: 'IOT' },
+        'ICT'
+      );
+
+      const result = scoreSemanticSubDomainMatch(org, program);
+
+      // Explanation should list both org markets
+      expect(result.explanation).toContain('일반 소비자');
+      expect(result.explanation).toContain('기업');
+      expect(result.explanation).toContain('산업용');
+    });
+
+    it('should handle single-value backward compatibility', () => {
+      // Org has single value (legacy format)
+      const org = createMockOrganization(
+        { targetMarket: 'ENTERPRISE', applicationArea: 'CLOUD' },
+        'ICT'
+      );
+      const program = createMockProgram(
+        { targetMarket: 'ENTERPRISE', applicationArea: 'SOFTWARE' },
+        'ICT'
+      );
+
+      const result = scoreSemanticSubDomainMatch(org, program);
+
+      expect(result.isHardFilter).toBe(false);
+      expect(result.matchingFields).toContain('targetMarket');
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // v3.1: Keyword Inference for Non-Enriched Programs
+  // ═══════════════════════════════════════════════════════════════
+
+  describe('v3.1: keyword inference for ICT programs', () => {
+    it('should return INFERRED_MARKET_MATCH when keywords suggest compatible market', () => {
+      // Org has semantic data with ENTERPRISE target
+      const org = createMockOrganization(
+        { targetMarket: 'ENTERPRISE', applicationArea: 'SOFTWARE' },
+        'ICT'
+      );
+      // Program has no semantic data but has enterprise-related keywords
+      const program = createMockProgram(null, 'ICT');
+      program.title = '클라우드 기반 B2B SaaS 플랫폼 개발 지원';
+      program.keywords = ['클라우드', 'SaaS', '기업용', '솔루션'];
+
+      const result = scoreSemanticSubDomainMatch(org, program);
+
+      expect(result.reason).toBe('INFERRED_MARKET_MATCH');
+      expect(result.score).toBe(10); // Reduced score for inferred match
+      expect(result.isHardFilter).toBe(false);
+      expect(result.explanation).toContain('키워드 분석');
+    });
+
+    it('should return INFERRED_MARKET_MISMATCH when keywords suggest incompatible market', () => {
+      // Org targets CONSUMER market
+      const org = createMockOrganization(
+        { targetMarket: 'CONSUMER', applicationArea: 'GAMING' },
+        'ICT'
+      );
+      // Program keywords suggest GOVERNMENT market
+      const program = createMockProgram(null, 'ICT');
+      program.title = '공공기관 전자정부 시스템 고도화';
+      program.keywords = ['공공', '정부', '행정', '전자정부'];
+
+      const result = scoreSemanticSubDomainMatch(org, program);
+
+      expect(result.reason).toBe('INFERRED_MARKET_MISMATCH');
+      expect(result.score).toBe(0);
+      expect(result.isHardFilter).toBe(false); // Soft filter, not hard block
+      expect(result.explanation).toContain('키워드 분석');
+    });
+
+    it('should return NO_SEMANTIC_DATA when cannot infer market with confidence', () => {
+      const org = createMockOrganization(
+        { targetMarket: 'ENTERPRISE', applicationArea: 'SOFTWARE' },
+        'ICT'
+      );
+      // Program with generic keywords (no clear market signal)
+      const program = createMockProgram(null, 'ICT');
+      program.title = 'ICT 기술 개발 지원';
+      program.keywords = ['기술', '개발']; // Only 0-1 matches per market
+
+      const result = scoreSemanticSubDomainMatch(org, program);
+
+      expect(result.reason).toBe('NO_SEMANTIC_DATA');
+      expect(result.score).toBe(0);
+    });
+
+    it('should not attempt inference for non-ICT programs', () => {
+      const org = createMockOrganization(
+        { targetOrganism: 'HUMAN', applicationArea: 'PHARMA' },
+        'BIO_HEALTH'
+      );
+      const program = createMockProgram(null, 'BIO_HEALTH');
+      program.keywords = ['의약품', '바이오'];
+
+      const result = scoreSemanticSubDomainMatch(org, program);
+
+      // Should not return inferred result for BIO_HEALTH
+      expect(result.reason).toBe('NO_SEMANTIC_DATA');
+    });
+
+    it('should match inferred market against multi-select org array', () => {
+      const org = createMockOrganization(
+        { targetMarket: ['CONSUMER', 'ENTERPRISE'] as any, applicationArea: 'PLATFORM' },
+        'ICT'
+      );
+      // Program keywords suggest ENTERPRISE (in org's array)
+      const program = createMockProgram(null, 'ICT');
+      program.title = 'B2B 클라우드 솔루션 개발';
+      program.keywords = ['기업', 'B2B', '클라우드', '솔루션'];
+
+      const result = scoreSemanticSubDomainMatch(org, program);
+
+      expect(result.reason).toBe('INFERRED_MARKET_MATCH');
+      expect(result.isHardFilter).toBe(false);
+    });
+  });
 });
