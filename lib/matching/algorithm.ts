@@ -1,14 +1,21 @@
 /**
- * Funding Match Generation Algorithm (Enhanced v2.0)
+ * Funding Match Generation Algorithm (Enhanced v3.0)
  *
- * Rule-based matching system with advanced Korean language support.
+ * Rule-based matching system with advanced Korean language support
+ * and semantic sub-domain matching for precise industry alignment.
  *
  * Scoring breakdown (0-100):
- * - Industry/keyword alignment: 30 points (enhanced with taxonomy)
- * - TRL compatibility: 20 points (graduated scoring)
- * - Organization type match: 20 points
- * - R&D experience match: 15 points
+ * - Semantic sub-domain match: 25 points (NEW in v3.0 - industry-specific hard filters)
+ * - Industry/keyword alignment: 20 points (reduced from 30)
+ * - TRL compatibility: 15 points (reduced from 20)
+ * - Organization type match: 15 points (reduced from 20)
+ * - R&D experience match: 10 points (reduced from 15)
  * - Deadline proximity: 15 points
+ *
+ * Enhancements in v3.0:
+ * - Semantic sub-domain matching (BIO_HEALTH: human vs animal, ICT: consumer vs enterprise, etc.)
+ * - Industry-specific hard filters (ORGANISM_MISMATCH, MARKET_MISMATCH, etc.)
+ * - Graceful fallback when semantic data unavailable (uses v2.0 scoring)
  *
  * Enhancements in v2.0:
  * - Korean keyword normalization and synonym matching
@@ -22,6 +29,11 @@ import { scoreIndustryKeywordsEnhanced } from './keywords';
 import { scoreTRLEnhanced } from './trl';
 import { checkEligibility, EligibilityLevel } from './eligibility';
 import { findIndustrySector, INDUSTRY_RELEVANCE } from './taxonomy';
+import {
+  HARD_FILTER_FIELDS,
+  type SemanticMatchResult,
+  type SemanticMismatchReason,
+} from './semantic-subdomain';
 
 // Type aliases for cleaner code
 type Organization = organizations;
@@ -32,13 +44,21 @@ export interface MatchScore {
   program: FundingProgram;
   score: number;
   breakdown: {
-    industryScore: number;
-    trlScore: number;
-    typeScore: number;
-    rdScore: number;
-    deadlineScore: number;
+    semanticScore: number;    // NEW in v3.0: Semantic sub-domain alignment (0-25)
+    industryScore: number;    // Industry/keyword alignment (0-20, reduced from 30)
+    trlScore: number;         // TRL compatibility (0-15, reduced from 20)
+    typeScore: number;        // Organization type match (0-15, reduced from 20)
+    rdScore: number;          // R&D experience (0-10, reduced from 15)
+    deadlineScore: number;    // Deadline proximity (0-15)
   };
   reasons: string[]; // Keys for explanation generator
+  semanticMatchInfo?: {       // NEW in v3.0: Semantic matching details
+    reason: SemanticMismatchReason;
+    isHardFilter: boolean;
+    explanation?: string;     // Korean explanation for user
+    matchingFields: string[];
+    mismatchedFields: string[];
+  };
   eligibilityLevel?: EligibilityLevel; // Phase 2: Three-tier eligibility
   eligibilityDetails?: {
     hardRequirementsMet: boolean;
@@ -301,6 +321,25 @@ export function generateMatches(
     }
 
     // ============================================================================
+    // Semantic Sub-Domain Hard Filter (NEW in v3.0)
+    // ============================================================================
+    // This filter checks for semantic sub-domain mismatches that make matching
+    // fundamentally incompatible, regardless of other factors.
+    //
+    // Examples of hard-filtered mismatches:
+    // - BIO_HEALTH: Animal medicine company → Human medicine program (ORGANISM_MISMATCH)
+    // - ICT: Enterprise B2B company → Consumer app program (MARKET_MISMATCH)
+    // - ENERGY: Battery company → Nuclear program (ENERGY_SOURCE_MISMATCH)
+    //
+    // NOTE: Only applies when BOTH org and program have semantic data.
+    // Programs without semantic data fallback to v2.0 industry matching.
+    const semanticResult = scoreSemanticSubDomainMatch(organization, program);
+    if (semanticResult.isHardFilter) {
+      // Skip this program - semantic sub-domain fundamentally incompatible
+      continue;
+    }
+
+    // ============================================================================
     // Enhanced Eligibility Checking (Phase 2)
     // ============================================================================
     // Check comprehensive eligibility (certifications, investment, revenue, employees, operating years)
@@ -315,7 +354,7 @@ export function generateMatches(
     // NOTE: FULLY_ELIGIBLE and CONDITIONALLY_ELIGIBLE programs proceed to scoring
     // They can be distinguished later in the UI with badges/indicators
 
-    const matchScore = calculateMatchScore(organization, program);
+    const matchScore = calculateMatchScore(organization, program, semanticResult);
 
     // Attach eligibility information to match result (Phase 2)
     matchScore.eligibilityLevel = eligibilityResult.level;
@@ -327,6 +366,17 @@ export function generateMatches(
       needsManualReview: eligibilityResult.needsManualReview,
       manualReviewReason: eligibilityResult.manualReviewReason,
     };
+
+    // Attach semantic matching details (NEW in v3.0)
+    if (semanticResult.reason !== 'NO_SEMANTIC_DATA') {
+      matchScore.semanticMatchInfo = {
+        reason: semanticResult.reason,
+        isHardFilter: semanticResult.isHardFilter,
+        explanation: semanticResult.explanation,
+        matchingFields: semanticResult.matchingFields,
+        mismatchedFields: semanticResult.mismatchedFields,
+      };
+    }
 
     matches.push(matchScore);
   }
@@ -355,10 +405,12 @@ export function generateMatches(
 
 /**
  * Calculate match score between organization and program
+ * Updated in v3.0 to include semantic sub-domain scoring
  */
 export function calculateMatchScore(
   organization: Organization,
-  program: FundingProgram
+  program: FundingProgram,
+  precomputedSemanticResult?: SemanticMatchResult
 ): MatchScore {
   if (!organization || !program) {
     return {
@@ -366,6 +418,7 @@ export function calculateMatchScore(
       program: program,
       score: 0,
       breakdown: {
+        semanticScore: 0,
         industryScore: 0,
         trlScore: 0,
         typeScore: 0,
@@ -378,32 +431,54 @@ export function calculateMatchScore(
 
   const reasons: string[] = [];
 
-  // 1. Industry/Keyword alignment (30 points) - ENHANCED
+  // 1. Semantic Sub-Domain Match (25 points) - NEW in v3.0
+  // Uses precomputed result from hard filter check, or computes fresh if not provided
+  const semanticResult = precomputedSemanticResult || scoreSemanticSubDomainMatch(organization, program);
+  const semanticScore = semanticResult.score;
+  if (semanticResult.reason !== 'NO_SEMANTIC_DATA') {
+    reasons.push(semanticResult.reason);
+  }
+
+  // 2. Industry/Keyword alignment (20 points, reduced from 30) - ENHANCED
+  // When semantic matching is active, industry scoring provides supplementary context
   const industryResult = scoreIndustryKeywordsEnhanced(organization, program);
-  const industryScore = industryResult.score;
+  // Scale industry score: if semantic data exists, cap at 20; otherwise allow full 30 for backward compat
+  const hasSemanticData = semanticResult.reason !== 'NO_SEMANTIC_DATA';
+  const industryScore = hasSemanticData
+    ? Math.min(20, Math.round(industryResult.score * (20 / 30)))
+    : industryResult.score;
   reasons.push(...industryResult.reasons);
 
-  // 2. TRL compatibility (20 points) - ENHANCED
+  // 3. TRL compatibility (15 points, reduced from 20) - ENHANCED
   const trlResult = scoreTRLEnhanced(organization, program);
-  const trlScore = trlResult.score;
+  const trlScore = hasSemanticData
+    ? Math.min(15, Math.round(trlResult.score * (15 / 20)))
+    : trlResult.score;
   reasons.push(trlResult.reason);
 
-  // 3. Organization type match (20 points)
-  const typeScore = scoreOrganizationType(organization, program, reasons);
+  // 4. Organization type match (15 points, reduced from 20)
+  const rawTypeScore = scoreOrganizationType(organization, program, reasons);
+  const typeScore = hasSemanticData
+    ? Math.min(15, Math.round(rawTypeScore * (15 / 20)))
+    : rawTypeScore;
 
-  // 4. R&D experience (15 points)
-  const rdScore = scoreRDExperience(organization, program, reasons);
+  // 5. R&D experience (10 points, reduced from 15)
+  const rawRdScore = scoreRDExperience(organization, program, reasons);
+  const rdScore = hasSemanticData
+    ? Math.min(10, Math.round(rawRdScore * (10 / 15)))
+    : rawRdScore;
 
-  // 5. Deadline proximity (15 points)
+  // 6. Deadline proximity (15 points, unchanged)
   const deadlineScore = scoreDeadline(program, reasons);
 
-  const totalScore = industryScore + trlScore + typeScore + rdScore + deadlineScore;
+  const totalScore = semanticScore + industryScore + trlScore + typeScore + rdScore + deadlineScore;
 
   return {
     programId: program.id,
     program,
     score: Math.round(totalScore),
     breakdown: {
+      semanticScore,
       industryScore,
       trlScore,
       typeScore,
@@ -412,6 +487,190 @@ export function calculateMatchScore(
     },
     reasons,
   };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Semantic Sub-Domain Matching (NEW in v3.0)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Score semantic sub-domain alignment between organization and program
+ *
+ * This function implements industry-specific matching logic:
+ * - BIO_HEALTH: Checks targetOrganism (HUMAN vs ANIMAL vs PLANT)
+ * - ICT: Checks targetMarket (CONSUMER vs ENTERPRISE vs GOVERNMENT)
+ * - ENERGY: Checks energySource (SOLAR vs BATTERY vs NUCLEAR)
+ * - AGRICULTURE: Checks targetSector (CROPS vs LIVESTOCK)
+ * - DEFENSE: Checks targetDomain (LAND vs NAVAL vs AEROSPACE)
+ *
+ * Returns hard filter = true if fundamentally incompatible (should block match)
+ *
+ * @param org Organization with optional semanticSubDomain
+ * @param program FundingProgram with optional semanticSubDomain
+ * @returns SemanticMatchResult with score, reason, and hard filter flag
+ */
+export function scoreSemanticSubDomainMatch(
+  org: Organization,
+  program: FundingProgram
+): SemanticMatchResult {
+  // Check if semantic data exists for both
+  const programSubDomain = program.semanticSubDomain as Record<string, string> | null;
+  const orgSubDomain = org.semanticSubDomain as Record<string, string> | null;
+
+  if (!programSubDomain || !orgSubDomain) {
+    // No semantic data available - fallback to v2.0 scoring
+    return {
+      score: 0,
+      reason: 'NO_SEMANTIC_DATA',
+      isHardFilter: false,
+      explanation: undefined,
+      matchingFields: [],
+      mismatchedFields: [],
+    };
+  }
+
+  const category = program.category?.toUpperCase() || '';
+  const hardFilterFields = HARD_FILTER_FIELDS[category] || [];
+
+  // Check for hard filter violations
+  for (const field of hardFilterFields) {
+    const programValue = programSubDomain[field];
+    const orgValue = orgSubDomain[field];
+
+    // Only apply hard filter if BOTH have the field defined
+    if (programValue && orgValue && programValue !== orgValue) {
+      // Determine mismatch reason based on field
+      let reason: SemanticMismatchReason = 'PARTIAL_MATCH';
+      let explanation: string | undefined;
+
+      if (field === 'targetOrganism') {
+        reason = 'ORGANISM_MISMATCH';
+        explanation = `이 과제는 ${getOrganismLabel(programValue)} 분야 프로그램이며, 귀사는 ${getOrganismLabel(orgValue)} 분야 기업입니다.`;
+      } else if (field === 'targetMarket') {
+        reason = 'MARKET_MISMATCH';
+        explanation = `이 과제는 ${getMarketLabel(programValue)} 시장 대상이며, 귀사는 ${getMarketLabel(orgValue)} 시장 기업입니다.`;
+      } else if (field === 'energySource') {
+        reason = 'ENERGY_SOURCE_MISMATCH';
+        explanation = `이 과제는 ${getEnergyLabel(programValue)} 분야이며, 귀사는 ${getEnergyLabel(orgValue)} 분야 기업입니다.`;
+      } else if (field === 'targetSector') {
+        reason = 'SECTOR_MISMATCH';
+        explanation = `이 과제는 ${getSectorLabel(programValue)} 분야이며, 귀사는 ${getSectorLabel(orgValue)} 분야 기업입니다.`;
+      } else if (field === 'targetDomain') {
+        reason = 'DOMAIN_MISMATCH';
+        explanation = `이 과제는 ${getDomainLabel(programValue)} 분야이며, 귀사는 ${getDomainLabel(orgValue)} 분야 기업입니다.`;
+      }
+
+      return {
+        score: 0,
+        reason,
+        isHardFilter: true,
+        explanation,
+        matchingFields: [],
+        mismatchedFields: [field],
+      };
+    }
+  }
+
+  // No hard filter triggered - calculate match score
+  const allFieldsSet = new Set([...Object.keys(programSubDomain), ...Object.keys(orgSubDomain)]);
+  const allFields = Array.from(allFieldsSet);
+  const matchingFields: string[] = [];
+  const mismatchedFields: string[] = [];
+
+  for (const field of allFields) {
+    const programValue = programSubDomain[field];
+    const orgValue = orgSubDomain[field];
+
+    if (programValue && orgValue) {
+      if (programValue === orgValue) {
+        matchingFields.push(field);
+      } else {
+        mismatchedFields.push(field);
+      }
+    }
+  }
+
+  // Calculate score based on matching fields (max 25 points)
+  // Each matching field: 12 points (up to 2 fields typically)
+  // Partial match bonus: +1 point per matching field
+  const baseScore = Math.min(25, matchingFields.length * 12 + matchingFields.length);
+
+  // Penalty for mismatched non-hard-filter fields (soft mismatch)
+  const softPenalty = mismatchedFields.filter(f => !hardFilterFields.includes(f)).length * 3;
+  const finalScore = Math.max(0, baseScore - softPenalty);
+
+  const reason: SemanticMismatchReason = matchingFields.length > 0 ? 'SEMANTIC_MATCH' : 'PARTIAL_MATCH';
+
+  // Generate explanation for matching
+  let explanation: string | undefined;
+  if (matchingFields.length > 0) {
+    explanation = `귀사의 사업 분야와 과제의 대상 분야가 일치합니다.`;
+  }
+
+  return {
+    score: finalScore,
+    reason,
+    isHardFilter: false,
+    explanation,
+    matchingFields,
+    mismatchedFields,
+  };
+}
+
+// Helper functions for Korean labels
+function getOrganismLabel(value: string): string {
+  const labels: Record<string, string> = {
+    HUMAN: '인체',
+    ANIMAL: '동물',
+    PLANT: '식물',
+    MICROBIAL: '미생물',
+    MARINE: '해양생물',
+  };
+  return labels[value] || value;
+}
+
+function getMarketLabel(value: string): string {
+  const labels: Record<string, string> = {
+    CONSUMER: '일반 소비자',
+    ENTERPRISE: '기업(B2B)',
+    GOVERNMENT: '공공기관',
+    INDUSTRIAL: '산업용',
+  };
+  return labels[value] || value;
+}
+
+function getEnergyLabel(value: string): string {
+  const labels: Record<string, string> = {
+    SOLAR: '태양광',
+    WIND: '풍력',
+    NUCLEAR: '원자력',
+    HYDROGEN: '수소',
+    BATTERY: '배터리/이차전지',
+    GRID: '전력망',
+  };
+  return labels[value] || value;
+}
+
+function getSectorLabel(value: string): string {
+  const labels: Record<string, string> = {
+    CROPS: '작물',
+    LIVESTOCK: '축산',
+    AQUACULTURE: '양식/수산',
+    FORESTRY: '임업',
+    FOOD_PROCESSING: '식품가공',
+  };
+  return labels[value] || value;
+}
+
+function getDomainLabel(value: string): string {
+  const labels: Record<string, string> = {
+    LAND: '지상',
+    NAVAL: '해상',
+    AEROSPACE: '항공우주',
+    CYBER: '사이버',
+    SPACE: '우주',
+  };
+  return labels[value] || value;
 }
 
 /**
