@@ -38,6 +38,10 @@ import {
   HARD_FILTER_FIELDS,
   type SemanticMatchResult,
   type SemanticMismatchReason,
+  type IctTargetMarket,
+  inferIctTargetMarketFromKeywords,
+  isInferredMarketCompatible,
+  getInferredMarketExplanation,
 } from './semantic-subdomain';
 
 // Type aliases for cleaner code
@@ -489,9 +493,13 @@ export function calculateMatchScore(
   // - These programs bypass the semantic hard filter (targetMarket compatibility)
   // - Without penalty, they can outscore validated matches via keyword matches
   // - 15-point penalty drops them from ~70 → ~55 (below typical minimumScore=60)
+  //
+  // EXCEPTION: Skip penalty when keyword inference was successful
+  // (INFERRED_MARKET_MATCH or INFERRED_MARKET_MISMATCH already handle scoring)
   const orgSemanticData = organization.semanticSubDomain as Record<string, string> | null;
   const programSemanticData = program.semanticSubDomain as Record<string, string> | null;
-  const nonEnrichedPenalty = (orgSemanticData && !programSemanticData) ? 15 : 0;
+  const hasInferredResult = semanticResult.reason === 'INFERRED_MARKET_MATCH' || semanticResult.reason === 'INFERRED_MARKET_MISMATCH';
+  const nonEnrichedPenalty = (orgSemanticData && !programSemanticData && !hasInferredResult) ? 15 : 0;
 
   if (nonEnrichedPenalty > 0) {
     reasons.push('NON_ENRICHED_PENALTY');
@@ -543,6 +551,69 @@ export function scoreSemanticSubDomainMatch(
   // Check if semantic data exists for both
   const programSubDomain = program.semanticSubDomain as Record<string, string> | null;
   const orgSubDomain = org.semanticSubDomain as Record<string, string> | null;
+
+  // ============================================================================
+  // v3.1: Keyword Inference Fallback for ICT Programs
+  // ============================================================================
+  // When program lacks semantic data but org has it, try keyword inference
+  // for ICT programs. This addresses the 52 programs that failed LLM enrichment.
+  if (!programSubDomain && orgSubDomain) {
+    const orgCategory = org.industrySector?.toUpperCase() || '';
+    const programCategory = program.category?.toUpperCase() || '';
+
+    // Only attempt inference for ICT programs where org has targetMarket
+    const isIctOrg = ['ICT', 'IT', 'SOFTWARE'].includes(orgCategory);
+    const isIctProgram = ['ICT', 'IT', 'SOFTWARE'].includes(programCategory);
+    const orgTargetMarket = orgSubDomain.targetMarket as IctTargetMarket | IctTargetMarket[] | undefined;
+
+    if (isIctOrg && isIctProgram && orgTargetMarket) {
+      // Try to infer market from program keywords/title/description
+      const inferredMarket = inferIctTargetMarketFromKeywords(
+        program.keywords || [],
+        program.title,
+        program.description
+      );
+
+      if (inferredMarket) {
+        const isCompatible = isInferredMarketCompatible(orgTargetMarket, inferredMarket);
+        const explanation = getInferredMarketExplanation(orgTargetMarket, inferredMarket, isCompatible);
+
+        if (isCompatible) {
+          // Inferred match - give reduced score (10 instead of 25)
+          return {
+            score: 10,
+            reason: 'INFERRED_MARKET_MATCH',
+            isHardFilter: false,
+            explanation,
+            matchingFields: ['targetMarket (inferred)'],
+            mismatchedFields: [],
+          };
+        } else {
+          // Inferred mismatch - soft filter (0 score but NOT hard block)
+          // We don't hard-block because inference has lower confidence than LLM
+          return {
+            score: 0,
+            reason: 'INFERRED_MARKET_MISMATCH',
+            isHardFilter: false, // Soft filter - still shows in results but low score
+            explanation,
+            matchingFields: [],
+            mismatchedFields: ['targetMarket (inferred)'],
+          };
+        }
+      }
+    }
+
+    // Cannot infer - return standard no-data result
+    // Note: NON_ENRICHED_PENALTY (-15) is applied separately in calculateMatchScore
+    return {
+      score: 0,
+      reason: 'NO_SEMANTIC_DATA',
+      isHardFilter: false,
+      explanation: undefined,
+      matchingFields: [],
+      mismatchedFields: [],
+    };
+  }
 
   if (!programSubDomain || !orgSubDomain) {
     // No semantic data available - fallback to v2.0 scoring
