@@ -334,7 +334,7 @@ export function generateMatches(
     // This provides 100% coverage (vs 39% with LLM) at zero cost.
     const keywordClassification = classifyProgram(
       program.title,
-      program.programName || null,
+      null,  // programName not in schema
       program.ministry || null
     );
 
@@ -431,7 +431,7 @@ export function calculateMatchScore(
   // Uses precomputed classification or computes fresh if not provided
   const classification = precomputedClassification || classifyProgram(
     program.title,
-    program.programName || null,
+    null,  // programName not in schema
     program.ministry || null
   );
   const keywordScore = scoreKeywordIndustryMatch(organization, classification, reasons);
