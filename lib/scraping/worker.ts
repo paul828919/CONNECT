@@ -35,7 +35,8 @@ import { initializeCacheScheduler } from '../cache/init';
 import { classifyAnnouncement } from './classification';
 import { startProcessWorkerScheduler } from './process-worker-scheduler';
 import { startEmailCronJobs } from '../email/cron';
-import { enrichProgramSemantics, isSemanticDataUsable } from '../ai/services/semantic-enrichment';
+// NOTE: LLM semantic enrichment removed in v4.0 - replaced by keyword-based classification
+// See lib/matching/keyword-classifier.ts for the new deterministic approach
 
 
 // Job data interface
@@ -123,71 +124,10 @@ function extractEligibilityFields(eligibilityCriteria: any) {
   return fields;
 }
 
-/**
- * Enrich a program with semantic sub-domain information (async)
- *
- * Calls the LLM-powered semantic enrichment service to extract:
- * - primaryTargetIndustry: Specific industry (e.g., "동물의약품", "B2B SaaS")
- * - semanticSubDomain: Industry-specific classification (e.g., {targetOrganism: "ANIMAL"})
- * - technologyDomainsSpecific: Precise technology keywords
- * - targetCompanyProfile: Korean description of ideal applicant
- * - programIntent: Research stage classification
- *
- * This runs asynchronously after program creation to avoid blocking the scraping pipeline.
- * Cost: ~₩27/program (LLM inference)
- *
- * @param programId - The ID of the newly created program
- * @param programData - Program data needed for enrichment
- */
-async function enrichProgramWithSemantics(
-  programId: string,
-  programData: {
-    title: string;
-    description: string | null;
-    ministry: string | null;
-    announcingAgency: string | null;
-    category: string | null;
-    keywords: string[];
-  }
-): Promise<void> {
-  try {
-    console.log(`[SEMANTIC] Starting enrichment for program: ${programData.title.substring(0, 50)}...`);
-
-    const result = await enrichProgramSemantics({
-      title: programData.title,
-      description: programData.description,
-      ministry: programData.ministry,
-      announcingAgency: programData.announcingAgency,
-      category: programData.category,
-      keywords: programData.keywords,
-    });
-
-    // Only update if we got usable semantic data
-    if (isSemanticDataUsable(result)) {
-      await db.funding_programs.update({
-        where: { id: programId },
-        data: {
-          primaryTargetIndustry: result.primaryTargetIndustry || null,
-          secondaryTargetIndustries: result.secondaryTargetIndustries,
-          semanticSubDomain: result.semanticSubDomain as any,
-          technologyDomainsSpecific: result.technologyDomainsSpecific,
-          targetCompanyProfile: result.targetCompanyProfile || null,
-          programIntent: result.programIntent,
-          semanticConfidence: result.confidence,
-          semanticEnrichedAt: new Date(),
-          semanticEnrichmentModel: 'claude-sonnet-4-5-20250929',
-        },
-      });
-
-      console.log(`[SEMANTIC] Enriched program ${programId} (confidence: ${result.confidence})`);
-    } else {
-      console.log(`[SEMANTIC] Low confidence (${result.confidence}) for program ${programId}, skipping update`);
-    }
-  } catch (error) {
-    // Log error but don't fail - semantic enrichment is enhancement, not critical
-    console.error(`[SEMANTIC] Failed to enrich program ${programId}:`, error);
-  }
-}
+// NOTE: enrichProgramWithSemantics function removed in v4.0
+// LLM semantic enrichment had 61% failure rate with ~₩27/program cost
+// Replaced by deterministic keyword classification in lib/matching/keyword-classifier.ts
+// which provides 100% coverage at ₩0 cost and <10ms processing time
 
 /**
  * Main scraping worker
@@ -402,18 +342,9 @@ export const scrapingWorker = new Worker<ScrapingJobData, ScrapingResult>(
 
             programsNew++;
 
-            // Trigger semantic enrichment (async, don't wait)
-            // This adds semantic sub-domain data for enhanced matching
-            enrichProgramWithSemantics(newProgram.id, {
-              title: announcement.title,
-              description: details.description,
-              ministry: details.ministry,
-              announcingAgency: details.announcingAgency,
-              category: details.category,
-              keywords: details.keywords || [],
-            }).catch((err) =>
-              console.error(`Semantic enrichment failed for program ${newProgram.id}:`, err)
-            );
+            // NOTE: LLM semantic enrichment removed in v4.0
+            // Programs are now classified using deterministic keyword rules
+            // at match-time via lib/matching/keyword-classifier.ts
 
             // Trigger match calculation (async, don't wait)
             calculateMatchesForProgram(newProgram.id).catch((err) =>
