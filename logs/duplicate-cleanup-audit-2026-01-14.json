@@ -1,0 +1,3722 @@
+[
+  {
+    "timestamp": "2026-01-14T06:59:48.065Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "cb68c749-47e9-4a30-8f3e-c87a14f2acd1",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.066Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "ef7834e0-779e-43da-97dd-429b62209291",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.067Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "0864564c-0b83-433f-b711-9ed9f0c18db8",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.067Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "5b942148-c502-4c08-a7d8-15726300a763",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.068Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "5be60a87-a951-418f-b74a-99f66bf0973f",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.068Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "aa6ec327-fd55-4652-949b-783fc234aeee",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.069Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "5fd83509-84fd-4a07-9564-11fe75aef516",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.069Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "1397da4d-bcfe-4643-beff-0051585ef106",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.070Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "7dc3c8be-d079-438e-af87-4c1eb7588f34",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.070Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "d395186a-8b3f-422f-bded-8fa90350c9a0",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.071Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "5d13c85d-ddb3-4f96-93e6-05e8b99d1323",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.071Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "01416ce2-2264-492e-b769-ca07c6f9a6bf",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.072Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "c21f81f9-2fe5-4669-a2c8-9aa78882d96d",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.072Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "4796157c-2369-4e12-b62a-4d2ef24a0e0e",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.073Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "bdd1ec4f-4778-47a3-97c0-913de44b9486",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.073Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "05052fac-783f-448d-8445-d6da9e841a70",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.073Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 1,
+      "deletedProgramId": "4dbb1b03-cf52-459f-885f-fba5c8bac3d9",
+      "targetKeepProgramId": "bbe22839-e0fa-4fa7-99ef-d7d632e15144",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.077Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 2,
+      "deletedProgramId": "b23f3bd4-b8c1-4421-a91e-cf0943f13596",
+      "targetKeepProgramId": "75d5af49-9600-42b5-ad1c-5fa99b0d81f5",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.077Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 2,
+      "deletedProgramId": "31048af7-3064-4295-b4cd-6a9b461a7294",
+      "targetKeepProgramId": "75d5af49-9600-42b5-ad1c-5fa99b0d81f5",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.078Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 2,
+      "deletedProgramId": "366c5342-a8da-4ca6-a993-331ed317ebea",
+      "targetKeepProgramId": "75d5af49-9600-42b5-ad1c-5fa99b0d81f5",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.078Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 2,
+      "deletedProgramId": "a63ee64e-274f-4bf0-a145-fd13e2575577",
+      "targetKeepProgramId": "75d5af49-9600-42b5-ad1c-5fa99b0d81f5",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.079Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 2,
+      "deletedProgramId": "ba8b05c1-2814-450f-a8cf-fd744a75d3ab",
+      "targetKeepProgramId": "75d5af49-9600-42b5-ad1c-5fa99b0d81f5",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.081Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 3,
+      "deletedProgramId": "6f080dfd-ce7a-4cc8-b3b5-d59f22d1b80f",
+      "targetKeepProgramId": "242b6d45-0d17-441b-9552-bf24d83c36b9",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.082Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 3,
+      "deletedProgramId": "bbaa67a3-45b8-4d47-ab32-38dd533fcd82",
+      "targetKeepProgramId": "242b6d45-0d17-441b-9552-bf24d83c36b9",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.082Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 3,
+      "deletedProgramId": "fdba8973-c88e-4864-901b-a96fc16f8d20",
+      "targetKeepProgramId": "242b6d45-0d17-441b-9552-bf24d83c36b9",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.084Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 4,
+      "deletedProgramId": "0e2958b8-6e03-43d9-ae88-1c2cf1165646",
+      "targetKeepProgramId": "3711a51c-1a4a-462b-8a38-75775aff641c",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.085Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 5,
+      "deletedProgramId": "22f1df17-1ca7-4070-8bf0-490c2949855d",
+      "targetKeepProgramId": "db1b5873-4b59-4356-aef4-23a7de023dde",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.087Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 7,
+      "deletedProgramId": "27dff2f8-a0d8-4286-a8d7-f5cad2e0aedd",
+      "targetKeepProgramId": "d2ce2fe7-5b5a-4875-a939-021ae2224f9f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.093Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 10,
+      "deletedProgramId": "7b18f156-90a3-45d0-90cd-8737dd7ba2e0",
+      "targetKeepProgramId": "84030565-e557-4244-9561-6f86b2da92a3",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.094Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 10,
+      "deletedProgramId": "8d4e04c7-0377-4d4d-9f7a-0999bb9a98f7",
+      "targetKeepProgramId": "84030565-e557-4244-9561-6f86b2da92a3",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.094Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 10,
+      "deletedProgramId": "43c68d46-a193-4894-8d50-74138aeb2fc0",
+      "targetKeepProgramId": "84030565-e557-4244-9561-6f86b2da92a3",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.095Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 10,
+      "deletedProgramId": "923a57ce-eb91-45e9-ba00-e6d1afedff5c",
+      "targetKeepProgramId": "84030565-e557-4244-9561-6f86b2da92a3",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.095Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 10,
+      "deletedProgramId": "bda07e54-06da-4086-97fd-c75cddb46a53",
+      "targetKeepProgramId": "84030565-e557-4244-9561-6f86b2da92a3",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.096Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 10,
+      "deletedProgramId": "45a7b977-1c31-4031-91d7-af78741e486e",
+      "targetKeepProgramId": "84030565-e557-4244-9561-6f86b2da92a3",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.096Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 10,
+      "deletedProgramId": "528640fd-5f1e-4140-8fb1-2c95d1653297",
+      "targetKeepProgramId": "84030565-e557-4244-9561-6f86b2da92a3",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.097Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 10,
+      "deletedProgramId": "28ae84b9-844e-4e52-8740-1d23c3604f01",
+      "targetKeepProgramId": "84030565-e557-4244-9561-6f86b2da92a3",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.097Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 10,
+      "deletedProgramId": "ed11d9cc-a31f-4cb4-a707-7f6f91647686",
+      "targetKeepProgramId": "84030565-e557-4244-9561-6f86b2da92a3",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.097Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 10,
+      "deletedProgramId": "4d8f8aa2-e52a-4e6c-ad7e-f56ab84f9b74",
+      "targetKeepProgramId": "84030565-e557-4244-9561-6f86b2da92a3",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.098Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 10,
+      "deletedProgramId": "7b77a653-565f-4895-8719-59807aa26c92",
+      "targetKeepProgramId": "84030565-e557-4244-9561-6f86b2da92a3",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.103Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 11,
+      "deletedProgramId": "f62aa75c-3ba5-4a6a-a74b-73df3f5466fe",
+      "targetKeepProgramId": "eccddba0-0474-4c86-b84d-b819dcc426a8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.104Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 11,
+      "deletedProgramId": "a40c2377-1afb-4a8a-9208-5352a50e7dcd",
+      "targetKeepProgramId": "eccddba0-0474-4c86-b84d-b819dcc426a8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.104Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 11,
+      "deletedProgramId": "08095ef8-3c43-429c-bc76-735ff8d4800e",
+      "targetKeepProgramId": "eccddba0-0474-4c86-b84d-b819dcc426a8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.105Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 11,
+      "deletedProgramId": "870a7d0a-0258-41f8-a135-feab017bafe1",
+      "targetKeepProgramId": "eccddba0-0474-4c86-b84d-b819dcc426a8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.105Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 11,
+      "deletedProgramId": "97c3448f-7796-4020-ac45-43e59a244a5c",
+      "targetKeepProgramId": "eccddba0-0474-4c86-b84d-b819dcc426a8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.106Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 11,
+      "deletedProgramId": "31f44448-42d8-4f96-901f-f465cc707441",
+      "targetKeepProgramId": "eccddba0-0474-4c86-b84d-b819dcc426a8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.106Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 11,
+      "deletedProgramId": "6a9690c6-4f27-4f5d-adc0-9c715894dd7e",
+      "targetKeepProgramId": "eccddba0-0474-4c86-b84d-b819dcc426a8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.107Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 11,
+      "deletedProgramId": "dc173fb7-cbd7-405c-a6fe-5adef9f01a0c",
+      "targetKeepProgramId": "eccddba0-0474-4c86-b84d-b819dcc426a8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.107Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 11,
+      "deletedProgramId": "13bb3b27-5b69-4106-9a5d-9544beeacb4d",
+      "targetKeepProgramId": "eccddba0-0474-4c86-b84d-b819dcc426a8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.107Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 11,
+      "deletedProgramId": "f89a91b6-c40a-4263-8247-843691be73d2",
+      "targetKeepProgramId": "eccddba0-0474-4c86-b84d-b819dcc426a8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.108Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 11,
+      "deletedProgramId": "4fad9b07-b52e-435a-8eaf-1ab366f7df6f",
+      "targetKeepProgramId": "eccddba0-0474-4c86-b84d-b819dcc426a8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.113Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 12,
+      "deletedProgramId": "b2b9aa35-4c89-471b-9db1-17d5f63c91f5",
+      "targetKeepProgramId": "876c87f6-544a-4b9c-b077-4ea13f47cb29",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.114Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 12,
+      "deletedProgramId": "a59f34a8-2e2e-49f3-9e17-c874e02bf15c",
+      "targetKeepProgramId": "876c87f6-544a-4b9c-b077-4ea13f47cb29",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.114Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 12,
+      "deletedProgramId": "9d1ec00f-fac3-4ec8-932d-86e272b1b5fb",
+      "targetKeepProgramId": "876c87f6-544a-4b9c-b077-4ea13f47cb29",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.115Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 12,
+      "deletedProgramId": "63c15210-1f98-48d7-b608-5af3a553601e",
+      "targetKeepProgramId": "876c87f6-544a-4b9c-b077-4ea13f47cb29",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.115Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 12,
+      "deletedProgramId": "9f659359-61d2-47b8-a495-1177a6bae15b",
+      "targetKeepProgramId": "876c87f6-544a-4b9c-b077-4ea13f47cb29",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.115Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 12,
+      "deletedProgramId": "d0095305-0406-41df-9b85-27630fdf2b73",
+      "targetKeepProgramId": "876c87f6-544a-4b9c-b077-4ea13f47cb29",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.116Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 12,
+      "deletedProgramId": "60b1700e-0ac6-4940-92cc-63dd997a8833",
+      "targetKeepProgramId": "876c87f6-544a-4b9c-b077-4ea13f47cb29",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.116Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 12,
+      "deletedProgramId": "1f3e87ba-16da-41cc-bd06-a68fb126fa19",
+      "targetKeepProgramId": "876c87f6-544a-4b9c-b077-4ea13f47cb29",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.117Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 12,
+      "deletedProgramId": "d4cb34a7-2bce-46b2-943e-3115da1e0397",
+      "targetKeepProgramId": "876c87f6-544a-4b9c-b077-4ea13f47cb29",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.121Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 15,
+      "deletedProgramId": "18fdeb37-46dd-48a0-bdfd-78a4b2fd69fe",
+      "targetKeepProgramId": "890e1bf4-30db-42be-8cee-998af30078cc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.122Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 15,
+      "deletedProgramId": "95654f13-7cfc-402f-b238-4af1fdfd1983",
+      "targetKeepProgramId": "890e1bf4-30db-42be-8cee-998af30078cc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.122Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 15,
+      "deletedProgramId": "589d3b1a-bf1a-4009-97cc-55aa3bc60a87",
+      "targetKeepProgramId": "890e1bf4-30db-42be-8cee-998af30078cc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.123Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 15,
+      "deletedProgramId": "21d2d183-e4a7-4497-b485-1454f1579811",
+      "targetKeepProgramId": "890e1bf4-30db-42be-8cee-998af30078cc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.123Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 15,
+      "deletedProgramId": "a8f3f8de-e4cb-480f-ab29-12e20bb17d22",
+      "targetKeepProgramId": "890e1bf4-30db-42be-8cee-998af30078cc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.123Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 15,
+      "deletedProgramId": "e5d67b95-27d6-4a40-a9df-778968f908ec",
+      "targetKeepProgramId": "890e1bf4-30db-42be-8cee-998af30078cc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.124Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 15,
+      "deletedProgramId": "9a805bbd-d3b2-4fe7-8b5c-adeb14273390",
+      "targetKeepProgramId": "890e1bf4-30db-42be-8cee-998af30078cc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.124Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 15,
+      "deletedProgramId": "bacca7ec-6f9d-4a93-848a-5632e401fa52",
+      "targetKeepProgramId": "890e1bf4-30db-42be-8cee-998af30078cc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.128Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 16,
+      "deletedProgramId": "b65cb108-0624-4555-9ee5-4f2fa41dc97d",
+      "targetKeepProgramId": "32324806-5195-47db-9aad-134fb7910b5b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.128Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 16,
+      "deletedProgramId": "cad16b68-a453-46d9-babd-8962251964cf",
+      "targetKeepProgramId": "32324806-5195-47db-9aad-134fb7910b5b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.129Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 16,
+      "deletedProgramId": "1468a1ce-f225-4cd0-9358-6411358bfb04",
+      "targetKeepProgramId": "32324806-5195-47db-9aad-134fb7910b5b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.129Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 16,
+      "deletedProgramId": "149d819a-3c03-4218-b3bb-10dfb7fde42c",
+      "targetKeepProgramId": "32324806-5195-47db-9aad-134fb7910b5b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.130Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 16,
+      "deletedProgramId": "a1c7f980-4d0a-4fdc-b46a-3881a0b83dcd",
+      "targetKeepProgramId": "32324806-5195-47db-9aad-134fb7910b5b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.130Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 16,
+      "deletedProgramId": "7bb0647b-9259-40dd-8a8c-d5d32a3b9f89",
+      "targetKeepProgramId": "32324806-5195-47db-9aad-134fb7910b5b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.131Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 16,
+      "deletedProgramId": "96175abc-49e0-401a-bf31-3c5ffef0b133",
+      "targetKeepProgramId": "32324806-5195-47db-9aad-134fb7910b5b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.134Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 17,
+      "deletedProgramId": "6a1131e5-48de-47bb-9e87-ded1d2b0a9be",
+      "targetKeepProgramId": "a40416ef-aa6f-4edb-af66-794c4d68665e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.135Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 17,
+      "deletedProgramId": "a51f38e7-9988-4964-b4fc-fb10f1120e98",
+      "targetKeepProgramId": "a40416ef-aa6f-4edb-af66-794c4d68665e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.135Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 17,
+      "deletedProgramId": "7b58397c-8853-44c0-928d-12e266d2c1c7",
+      "targetKeepProgramId": "a40416ef-aa6f-4edb-af66-794c4d68665e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.136Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 17,
+      "deletedProgramId": "ff1c8322-bac9-4c6f-93a4-0c2595eb9820",
+      "targetKeepProgramId": "a40416ef-aa6f-4edb-af66-794c4d68665e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.136Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 17,
+      "deletedProgramId": "5a32549c-e11a-4dfd-8d36-f5f765b433b2",
+      "targetKeepProgramId": "a40416ef-aa6f-4edb-af66-794c4d68665e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.137Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 17,
+      "deletedProgramId": "16d69e1e-9d3f-421d-a5ca-0bbdabebd8e6",
+      "targetKeepProgramId": "a40416ef-aa6f-4edb-af66-794c4d68665e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.137Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 17,
+      "deletedProgramId": "737d84ed-5700-4eb6-ab5e-cd4c5726be98",
+      "targetKeepProgramId": "a40416ef-aa6f-4edb-af66-794c4d68665e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.140Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 19,
+      "deletedProgramId": "7fec74e5-1992-454b-b5d1-18fcf3e3e4b5",
+      "targetKeepProgramId": "5b663216-49ae-415a-9fb9-7084b45d25ef",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.141Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 19,
+      "deletedProgramId": "8a738f3c-bad2-424d-92da-68b8d96e3d6f",
+      "targetKeepProgramId": "5b663216-49ae-415a-9fb9-7084b45d25ef",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.141Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 19,
+      "deletedProgramId": "3e7979a4-0818-4708-b119-e4126ed15c23",
+      "targetKeepProgramId": "5b663216-49ae-415a-9fb9-7084b45d25ef",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.142Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 19,
+      "deletedProgramId": "3c4d44bb-5fcc-4bac-81f3-a5ab74334dc5",
+      "targetKeepProgramId": "5b663216-49ae-415a-9fb9-7084b45d25ef",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.142Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 19,
+      "deletedProgramId": "e05d1386-2d41-4aa5-a920-2e8566a6a3a5",
+      "targetKeepProgramId": "5b663216-49ae-415a-9fb9-7084b45d25ef",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.143Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 19,
+      "deletedProgramId": "3ce6a221-bb63-4a0e-a735-1ac8b8093ad2",
+      "targetKeepProgramId": "5b663216-49ae-415a-9fb9-7084b45d25ef",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.146Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 21,
+      "deletedProgramId": "5bd9cfaa-1865-4a34-836c-454c633865e2",
+      "targetKeepProgramId": "ea8bafbd-bb0e-4b68-ba06-6ec7e823a86e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.146Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 21,
+      "deletedProgramId": "b4445daa-d22c-4897-bb58-c8ceab9f422d",
+      "targetKeepProgramId": "ea8bafbd-bb0e-4b68-ba06-6ec7e823a86e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.146Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 21,
+      "deletedProgramId": "4c506393-9ddc-4b9d-af50-436f7ab91c25",
+      "targetKeepProgramId": "ea8bafbd-bb0e-4b68-ba06-6ec7e823a86e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.147Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 21,
+      "deletedProgramId": "7e45dd18-5d13-4f57-a190-b0da4e1d548c",
+      "targetKeepProgramId": "ea8bafbd-bb0e-4b68-ba06-6ec7e823a86e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.147Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 21,
+      "deletedProgramId": "6fb301b1-4cc0-4ad6-8aa6-20933fb84988",
+      "targetKeepProgramId": "ea8bafbd-bb0e-4b68-ba06-6ec7e823a86e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.150Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 24,
+      "deletedProgramId": "8b6cc74c-6b09-418a-bad1-9144ee69abe9",
+      "targetKeepProgramId": "5ba85355-d51c-4d3b-b80b-f51395dc1ebe",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.151Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 24,
+      "deletedProgramId": "3f4f39d6-6af2-44c6-be84-8aa855f9bc19",
+      "targetKeepProgramId": "5ba85355-d51c-4d3b-b80b-f51395dc1ebe",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.151Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 24,
+      "deletedProgramId": "39b1d489-02a9-42aa-ad6f-f8e156b5ebaf",
+      "targetKeepProgramId": "5ba85355-d51c-4d3b-b80b-f51395dc1ebe",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.151Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 24,
+      "deletedProgramId": "0ff578b7-5a16-4368-a920-24d9086c5034",
+      "targetKeepProgramId": "5ba85355-d51c-4d3b-b80b-f51395dc1ebe",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.152Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 24,
+      "deletedProgramId": "6c50ff80-169c-4ae6-b9d9-7bab72167684",
+      "targetKeepProgramId": "5ba85355-d51c-4d3b-b80b-f51395dc1ebe",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.155Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 26,
+      "deletedProgramId": "18dd1dca-dd27-408a-96d0-f5f2ce64efe5",
+      "targetKeepProgramId": "c1dbe8c4-19a9-4087-a64e-cf20ed3dc422",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.156Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 26,
+      "deletedProgramId": "9ceb273d-beb1-4e45-8b08-00018cd1d0e2",
+      "targetKeepProgramId": "c1dbe8c4-19a9-4087-a64e-cf20ed3dc422",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.156Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 26,
+      "deletedProgramId": "09ddd26d-4c4b-47c5-b10a-f154d2cfc38a",
+      "targetKeepProgramId": "c1dbe8c4-19a9-4087-a64e-cf20ed3dc422",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.157Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 26,
+      "deletedProgramId": "20d9e1fe-acf1-428c-bb87-357fbf3e3de1",
+      "targetKeepProgramId": "c1dbe8c4-19a9-4087-a64e-cf20ed3dc422",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.159Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 27,
+      "deletedProgramId": "3de6e869-cb1b-47ce-8577-b56bf52f7db9",
+      "targetKeepProgramId": "0788721d-8fd3-41ab-9524-a99b080d4b56",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.159Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 27,
+      "deletedProgramId": "a1f6b260-3896-4a8e-9a39-9c5cf9f3eda7",
+      "targetKeepProgramId": "0788721d-8fd3-41ab-9524-a99b080d4b56",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.160Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 27,
+      "deletedProgramId": "b0558baa-f838-4d4e-9d98-3f2a0d360fad",
+      "targetKeepProgramId": "0788721d-8fd3-41ab-9524-a99b080d4b56",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.160Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 27,
+      "deletedProgramId": "58b75a92-ce88-41ae-9bac-86875ff5cc39",
+      "targetKeepProgramId": "0788721d-8fd3-41ab-9524-a99b080d4b56",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.163Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 28,
+      "deletedProgramId": "1ae660f5-3dbf-4672-858a-47241b54342d",
+      "targetKeepProgramId": "2bf76441-5b69-474d-b908-14b85b61e34e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.163Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 28,
+      "deletedProgramId": "bcc6e1d6-25c1-4667-ace9-bb344b382356",
+      "targetKeepProgramId": "2bf76441-5b69-474d-b908-14b85b61e34e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.164Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 28,
+      "deletedProgramId": "a97259ca-5a5a-4a74-97ba-b72c3021ab50",
+      "targetKeepProgramId": "2bf76441-5b69-474d-b908-14b85b61e34e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.167Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 29,
+      "deletedProgramId": "cd077e75-a60f-4809-962b-e37e74462012",
+      "targetKeepProgramId": "66964224-9ad8-46f0-be29-694720b751bd",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.167Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 29,
+      "deletedProgramId": "30a8bead-26ae-4981-a377-d203419639cf",
+      "targetKeepProgramId": "66964224-9ad8-46f0-be29-694720b751bd",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.168Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 29,
+      "deletedProgramId": "5c5add92-d616-4393-9b9f-0636a71e99db",
+      "targetKeepProgramId": "66964224-9ad8-46f0-be29-694720b751bd",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.168Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 29,
+      "deletedProgramId": "368743dd-4582-4205-ab61-e4200218d3c8",
+      "targetKeepProgramId": "66964224-9ad8-46f0-be29-694720b751bd",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.170Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 30,
+      "deletedProgramId": "c0bf076d-7beb-4d58-a6e9-be730a371e9f",
+      "targetKeepProgramId": "d5e42194-70ad-4f71-91d1-bfdb5d23f8d4",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.171Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 30,
+      "deletedProgramId": "c7d94857-bab0-44f1-be47-ebabb2a423b0",
+      "targetKeepProgramId": "d5e42194-70ad-4f71-91d1-bfdb5d23f8d4",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.171Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 30,
+      "deletedProgramId": "5bff95bf-adee-4d90-9df6-04ab01a0952e",
+      "targetKeepProgramId": "d5e42194-70ad-4f71-91d1-bfdb5d23f8d4",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.172Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 30,
+      "deletedProgramId": "941f7961-16fe-4d96-b6c7-742f96dac07f",
+      "targetKeepProgramId": "d5e42194-70ad-4f71-91d1-bfdb5d23f8d4",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.174Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 31,
+      "deletedProgramId": "ac99531d-c220-4600-93f8-7633e9f24c7d",
+      "targetKeepProgramId": "8e97b9b3-d674-4da7-b1a8-b77448cb3402",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.175Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 31,
+      "deletedProgramId": "9097b8cf-942e-47c9-be76-0bce94634c44",
+      "targetKeepProgramId": "8e97b9b3-d674-4da7-b1a8-b77448cb3402",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.175Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 31,
+      "deletedProgramId": "dd3bf3a6-d2a9-4d6b-9360-0a7087a4fa58",
+      "targetKeepProgramId": "8e97b9b3-d674-4da7-b1a8-b77448cb3402",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.176Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 31,
+      "deletedProgramId": "ed823815-bdee-49c6-9854-eeb9aa611d33",
+      "targetKeepProgramId": "8e97b9b3-d674-4da7-b1a8-b77448cb3402",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.179Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 32,
+      "deletedProgramId": "bc222fb1-0c65-4e23-ab68-935c65504f38",
+      "targetKeepProgramId": "ad2ecd17-e482-4089-9a57-2e695d555ccc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.179Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 32,
+      "deletedProgramId": "25356b06-b4c2-4094-aee8-473ba88b1a4f",
+      "targetKeepProgramId": "ad2ecd17-e482-4089-9a57-2e695d555ccc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.180Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 32,
+      "deletedProgramId": "a6ba66de-f0fb-44d2-be82-317f7d3668b3",
+      "targetKeepProgramId": "ad2ecd17-e482-4089-9a57-2e695d555ccc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.180Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 32,
+      "deletedProgramId": "04283517-48bc-4bbd-9d92-229cf7b51e19",
+      "targetKeepProgramId": "ad2ecd17-e482-4089-9a57-2e695d555ccc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.183Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 33,
+      "deletedProgramId": "1616515e-f4d3-4473-b9e0-86f652740b3f",
+      "targetKeepProgramId": "6eee595d-615a-4f9c-be95-68c305de9841",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.183Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 33,
+      "deletedProgramId": "18e033f4-d26d-4b4f-80e2-2d87c50f06dd",
+      "targetKeepProgramId": "6eee595d-615a-4f9c-be95-68c305de9841",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.184Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 33,
+      "deletedProgramId": "4c8c1dfa-41fd-4a46-866e-d902f15467bc",
+      "targetKeepProgramId": "6eee595d-615a-4f9c-be95-68c305de9841",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.184Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 33,
+      "deletedProgramId": "bd5da87b-fb3a-4576-abf8-05b83191d967",
+      "targetKeepProgramId": "6eee595d-615a-4f9c-be95-68c305de9841",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.187Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 34,
+      "deletedProgramId": "81e78d8d-c7fd-406d-b17f-4d4063018354",
+      "targetKeepProgramId": "89a371a3-fff4-468e-a7c5-3682307a11ea",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.188Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 34,
+      "deletedProgramId": "792b0f5c-6c1b-4591-8b18-c838f956a4de",
+      "targetKeepProgramId": "89a371a3-fff4-468e-a7c5-3682307a11ea",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.188Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 34,
+      "deletedProgramId": "3bc03447-5f4a-40ab-9423-3e69545cd37d",
+      "targetKeepProgramId": "89a371a3-fff4-468e-a7c5-3682307a11ea",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.191Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 35,
+      "deletedProgramId": "b8458edb-52ce-4b27-b358-b6bf555d8644",
+      "targetKeepProgramId": "774979b5-0ba7-413e-b330-33e8ced46900",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.191Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 35,
+      "deletedProgramId": "488a824f-627f-4138-9f3c-0161a99f9ef6",
+      "targetKeepProgramId": "774979b5-0ba7-413e-b330-33e8ced46900",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.192Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 35,
+      "deletedProgramId": "5b24a5e6-4b6e-40a0-a9c3-bdeb68d5ac87",
+      "targetKeepProgramId": "774979b5-0ba7-413e-b330-33e8ced46900",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.194Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 36,
+      "deletedProgramId": "837beb8e-157e-4624-9a3d-1047aae0c3a1",
+      "targetKeepProgramId": "341f0f94-9f0f-412c-ab32-8397df16b49f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.194Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 36,
+      "deletedProgramId": "566dd8f0-7a42-4037-af3f-bb2029625718",
+      "targetKeepProgramId": "341f0f94-9f0f-412c-ab32-8397df16b49f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.195Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 36,
+      "deletedProgramId": "7db183dc-df5b-4fb8-9e5c-db73ddd71e7b",
+      "targetKeepProgramId": "341f0f94-9f0f-412c-ab32-8397df16b49f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.197Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 37,
+      "deletedProgramId": "87367c0e-7e8b-49be-9964-5604a5bc0460",
+      "targetKeepProgramId": "9d6c09af-cf50-46fe-9fb3-10a8d1cdbc3c",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.199Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 38,
+      "deletedProgramId": "4745ed9f-67a9-48fa-82b8-d8e65cedcdc6",
+      "targetKeepProgramId": "d5e6501a-e8da-42c1-8fc1-5b1c16733cab",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.199Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 38,
+      "deletedProgramId": "6f4dd7cf-8fe4-4c29-9ebf-e048201250a6",
+      "targetKeepProgramId": "d5e6501a-e8da-42c1-8fc1-5b1c16733cab",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.200Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 38,
+      "deletedProgramId": "5b2b5cab-dcc1-4c7e-9102-cadb9229ed6c",
+      "targetKeepProgramId": "d5e6501a-e8da-42c1-8fc1-5b1c16733cab",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.202Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 39,
+      "deletedProgramId": "5b51f391-fb9a-4070-a92b-1915d21228ed",
+      "targetKeepProgramId": "08be8477-8ec0-42b7-8dae-b77da59f638b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.203Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 39,
+      "deletedProgramId": "35a84f18-a8d3-495b-ac75-d4891f4e164c",
+      "targetKeepProgramId": "08be8477-8ec0-42b7-8dae-b77da59f638b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.205Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 41,
+      "deletedProgramId": "0a3b02ae-e304-4912-96b8-3071804c1eb1",
+      "targetKeepProgramId": "963d7bef-8146-404e-a04b-a367c50c016a",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.206Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 41,
+      "deletedProgramId": "e8f5e82b-0708-4ed0-b396-0b81f0e8f4e0",
+      "targetKeepProgramId": "963d7bef-8146-404e-a04b-a367c50c016a",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.206Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 41,
+      "deletedProgramId": "90bae12c-e3c0-4d4d-8d18-f385e6b4f188",
+      "targetKeepProgramId": "963d7bef-8146-404e-a04b-a367c50c016a",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.210Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 42,
+      "deletedProgramId": "2fc1d7a7-3e79-486b-9856-a96114956763",
+      "targetKeepProgramId": "a2f91b40-b26f-436a-ba72-c37aaeb6f369",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.211Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 42,
+      "deletedProgramId": "63c4f810-a592-42be-b1ee-3e4b789afe3b",
+      "targetKeepProgramId": "a2f91b40-b26f-436a-ba72-c37aaeb6f369",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.211Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 42,
+      "deletedProgramId": "eb8aef5c-125d-41be-86ca-e1779bfce199",
+      "targetKeepProgramId": "a2f91b40-b26f-436a-ba72-c37aaeb6f369",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.214Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 43,
+      "deletedProgramId": "42c6cfa4-c75b-4c96-ace1-63b54667c6f3",
+      "targetKeepProgramId": "a36ac52c-4031-4a6c-b97e-21b95c5dc632",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.214Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 43,
+      "deletedProgramId": "5ffbb61b-0762-41c4-b000-fc473a558c6b",
+      "targetKeepProgramId": "a36ac52c-4031-4a6c-b97e-21b95c5dc632",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.215Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 43,
+      "deletedProgramId": "39faaa68-3839-4d44-92bd-9d52c8d22cb1",
+      "targetKeepProgramId": "a36ac52c-4031-4a6c-b97e-21b95c5dc632",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.217Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 44,
+      "deletedProgramId": "65ab9338-fa68-4fbb-a75c-0c6ee66e9257",
+      "targetKeepProgramId": "b6bbdfa3-b68b-4cc8-b2c2-259b734131fa",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.217Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 44,
+      "deletedProgramId": "d2ae892b-4ff7-4006-b8d3-cc3285aac1ae",
+      "targetKeepProgramId": "b6bbdfa3-b68b-4cc8-b2c2-259b734131fa",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.220Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 45,
+      "deletedProgramId": "97c04931-29bf-458d-b0de-32c62c394944",
+      "targetKeepProgramId": "9abd5695-7d54-42a8-a622-46ae04ec95b0",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.220Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 45,
+      "deletedProgramId": "4d8fceda-c995-48de-9d9e-9c55ebf3446e",
+      "targetKeepProgramId": "9abd5695-7d54-42a8-a622-46ae04ec95b0",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.220Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 45,
+      "deletedProgramId": "ea78126b-164c-4211-958d-58b71be4ff54",
+      "targetKeepProgramId": "9abd5695-7d54-42a8-a622-46ae04ec95b0",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.223Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 46,
+      "deletedProgramId": "278bf115-b554-404b-a97f-a17d4425107f",
+      "targetKeepProgramId": "4d163a5a-b9de-43b5-9c04-7b77a50c5561",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.223Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 46,
+      "deletedProgramId": "0f0c491c-2720-4280-b030-77b372760e75",
+      "targetKeepProgramId": "4d163a5a-b9de-43b5-9c04-7b77a50c5561",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.223Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 46,
+      "deletedProgramId": "c803f716-419c-447a-917f-6f6cadf9ff12",
+      "targetKeepProgramId": "4d163a5a-b9de-43b5-9c04-7b77a50c5561",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.226Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 48,
+      "deletedProgramId": "751d6029-f1d2-4dee-9e82-8a5d12998b1c",
+      "targetKeepProgramId": "ee74c3d0-bd17-40a5-bfa1-754cb311218f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.226Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 48,
+      "deletedProgramId": "39af9670-0af7-4c4c-99f9-e40993b924b1",
+      "targetKeepProgramId": "ee74c3d0-bd17-40a5-bfa1-754cb311218f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.226Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 48,
+      "deletedProgramId": "2cbe8d55-b344-4b3f-82c1-2eefca43beb7",
+      "targetKeepProgramId": "ee74c3d0-bd17-40a5-bfa1-754cb311218f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.229Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 50,
+      "deletedProgramId": "a8a0ee93-a4dc-40f4-9442-37eb0fd25d2a",
+      "targetKeepProgramId": "2c8b58d7-591a-4bae-aa9d-b2a8544083fe",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.229Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 50,
+      "deletedProgramId": "3a6ff547-c36e-465a-a446-65daf8e6f8fe",
+      "targetKeepProgramId": "2c8b58d7-591a-4bae-aa9d-b2a8544083fe",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.232Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 51,
+      "deletedProgramId": "0dd03b4f-d6ff-4e72-8a19-ae2c3fc9cfdd",
+      "targetKeepProgramId": "404d78c9-7b46-4a37-b3fc-11827e4c0aa2",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.232Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 51,
+      "deletedProgramId": "14de8454-5739-4edb-97e7-abbbe1fd16ff",
+      "targetKeepProgramId": "404d78c9-7b46-4a37-b3fc-11827e4c0aa2",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.232Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 51,
+      "deletedProgramId": "fb85ec91-4c3f-404e-a50b-4017e8b10af1",
+      "targetKeepProgramId": "404d78c9-7b46-4a37-b3fc-11827e4c0aa2",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.235Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 52,
+      "deletedProgramId": "5d5e1b9f-e3cf-4c58-9dc5-5c84fc92324c",
+      "targetKeepProgramId": "ca71fa40-c935-40a4-8728-a5c793171056",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.236Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 56,
+      "deletedProgramId": "c362610c-e0c5-433e-91ed-8c5f69d2902e",
+      "targetKeepProgramId": "ecd9b8ed-4957-4c02-b73b-ae1d7d919329",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.238Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 57,
+      "deletedProgramId": "80d14cec-b8ec-4ec1-93fa-a65d21c59996",
+      "targetKeepProgramId": "4a06882a-819a-41c7-a6d7-c5e843ca6ecf",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.238Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 57,
+      "deletedProgramId": "c3b3c647-9d9e-4530-b5f8-58f407c4e27d",
+      "targetKeepProgramId": "4a06882a-819a-41c7-a6d7-c5e843ca6ecf",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.240Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 58,
+      "deletedProgramId": "dd51f07f-16a4-47fc-8703-042820106111",
+      "targetKeepProgramId": "7c4920d2-946b-47cd-b790-03ff40b1ff01",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.240Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 58,
+      "deletedProgramId": "dd14f49c-07f0-4445-913e-d0142244c16c",
+      "targetKeepProgramId": "7c4920d2-946b-47cd-b790-03ff40b1ff01",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.242Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 59,
+      "deletedProgramId": "7e060367-973f-4394-b2a2-67c2c7d0600f",
+      "targetKeepProgramId": "c13ae0eb-7a3e-4738-b8c4-947dcec76adf",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.243Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 59,
+      "deletedProgramId": "5a634897-1694-4505-96fa-225497fda855",
+      "targetKeepProgramId": "c13ae0eb-7a3e-4738-b8c4-947dcec76adf",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.244Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 60,
+      "deletedProgramId": "1aeaf195-2def-4c96-9f48-08b151cfdde9",
+      "targetKeepProgramId": "dbaead27-cb88-4116-bd97-fc4e2b58e940",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.245Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 60,
+      "deletedProgramId": "84b433ec-6925-4ba3-b76f-64c8487c31b5",
+      "targetKeepProgramId": "dbaead27-cb88-4116-bd97-fc4e2b58e940",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.247Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 61,
+      "deletedProgramId": "e7c7bb98-720d-487a-b248-d9525a4cf393",
+      "targetKeepProgramId": "e917421d-0f27-42cc-9390-6de5c4300ad5",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.247Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 61,
+      "deletedProgramId": "8359a650-b0d2-4151-8f5f-f139170c00a0",
+      "targetKeepProgramId": "e917421d-0f27-42cc-9390-6de5c4300ad5",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.249Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 62,
+      "deletedProgramId": "5fa8e96c-f5f1-4726-be5f-5cc8baf3cb93",
+      "targetKeepProgramId": "46b8c11c-0e1d-4d89-888a-48d9fd0af938",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.250Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 63,
+      "deletedProgramId": "e112cad8-3b95-4503-bded-90464f6490ff",
+      "targetKeepProgramId": "b7c3ca11-a9cd-4fb2-b750-19519a13f7db",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.252Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 64,
+      "deletedProgramId": "13e016ed-6e00-4cb6-bb26-9dcc69adcaa0",
+      "targetKeepProgramId": "4dc6531b-7d53-45d9-8121-0eb4b309484f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.252Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 64,
+      "deletedProgramId": "6ff6e72b-8c8d-4127-87ca-d24cff56da33",
+      "targetKeepProgramId": "4dc6531b-7d53-45d9-8121-0eb4b309484f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.254Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 65,
+      "deletedProgramId": "af93639b-5c9b-4760-ae70-dbb7942948b0",
+      "targetKeepProgramId": "df4ade81-ca0a-4336-a617-4dc67f70d063",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.256Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 66,
+      "deletedProgramId": "de515e1a-2309-47cb-8f99-567a8e089853",
+      "targetKeepProgramId": "d754cd7f-3f10-4a3c-927f-c9bef4747bc2",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.256Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 66,
+      "deletedProgramId": "7569328c-3e4b-4c8e-a306-adabf8b58b3e",
+      "targetKeepProgramId": "d754cd7f-3f10-4a3c-927f-c9bef4747bc2",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.258Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 67,
+      "deletedProgramId": "e546cd7f-b9a7-41f4-a975-70ddc7408f69",
+      "targetKeepProgramId": "1b52919f-fc74-4316-827b-ac9fda60f305",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.259Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 67,
+      "deletedProgramId": "eb36548d-d4f7-4ce9-9a84-24d73cac05c6",
+      "targetKeepProgramId": "1b52919f-fc74-4316-827b-ac9fda60f305",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.260Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 68,
+      "deletedProgramId": "5fd5050b-2acd-42ec-ab71-ebe324cc6635",
+      "targetKeepProgramId": "29fa611c-442d-4053-bd0c-e80233696e12",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.262Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 69,
+      "deletedProgramId": "8cc47ac8-4a4d-49ca-a0c3-6b00feca85d1",
+      "targetKeepProgramId": "5a0784d2-4ef0-47ef-839f-9f54a5ed376e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.262Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 69,
+      "deletedProgramId": "479545a2-0a01-45eb-aef9-a6ee1f221bc1",
+      "targetKeepProgramId": "5a0784d2-4ef0-47ef-839f-9f54a5ed376e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.264Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 70,
+      "deletedProgramId": "264b3f26-d176-4049-8096-546282b86ff9",
+      "targetKeepProgramId": "6cede139-61cc-4176-826b-5269e4fad654",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.265Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 70,
+      "deletedProgramId": "28812b4d-df01-4248-b001-c44822c9d719",
+      "targetKeepProgramId": "6cede139-61cc-4176-826b-5269e4fad654",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.266Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 71,
+      "deletedProgramId": "181f14df-7466-48f3-98a7-4c253bff58de",
+      "targetKeepProgramId": "1d64083a-c2e4-46c4-a05f-f9c43399e4ec",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.267Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 71,
+      "deletedProgramId": "7445cdca-9f19-4711-87f6-7621d9a9f9a7",
+      "targetKeepProgramId": "1d64083a-c2e4-46c4-a05f-f9c43399e4ec",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.268Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 72,
+      "deletedProgramId": "a4b04a4e-3eb6-4d8e-80ea-5a45047555e1",
+      "targetKeepProgramId": "f53b5525-f2f1-40dc-ae1a-add2af47b6a9",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.270Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 73,
+      "deletedProgramId": "ba1bf7df-08a8-4ed4-b8e6-34369111da4f",
+      "targetKeepProgramId": "e637e6f6-0036-4f71-8386-7161525d40a6",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.272Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 74,
+      "deletedProgramId": "0321fd7e-46f1-4e5f-b499-a5f4d409fbad",
+      "targetKeepProgramId": "ba36c5c5-27ab-43ed-abf9-a691c7b8d019",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.272Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 74,
+      "deletedProgramId": "c9e1feed-c0e2-4059-81f4-aab85d614b7d",
+      "targetKeepProgramId": "ba36c5c5-27ab-43ed-abf9-a691c7b8d019",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.274Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 76,
+      "deletedProgramId": "54e85b3f-3dbb-4b4a-b2e7-e115169642b4",
+      "targetKeepProgramId": "834d562c-3662-4215-9ec4-58a44ed8e58e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.274Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 76,
+      "deletedProgramId": "538f2d69-138a-4a95-9ae6-b36923954c53",
+      "targetKeepProgramId": "834d562c-3662-4215-9ec4-58a44ed8e58e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.276Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 77,
+      "deletedProgramId": "3c0ada0f-0e2e-4ab8-86c0-442dee18e339",
+      "targetKeepProgramId": "dc90583e-4925-41d0-ab8d-934d679de026",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.276Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 77,
+      "deletedProgramId": "341be87b-4e08-4687-a82c-aca7cdb27c99",
+      "targetKeepProgramId": "dc90583e-4925-41d0-ab8d-934d679de026",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.278Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 78,
+      "deletedProgramId": "226c271e-102e-4166-b2ee-5f5d61760608",
+      "targetKeepProgramId": "20946ffe-7fc3-49d8-898e-86fa2e80ae78",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.278Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 78,
+      "deletedProgramId": "978de7aa-1341-4a70-80df-78b0ba66b3ac",
+      "targetKeepProgramId": "20946ffe-7fc3-49d8-898e-86fa2e80ae78",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.280Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 79,
+      "deletedProgramId": "ef839296-e009-44ff-a2fe-5b15fdbb1b5a",
+      "targetKeepProgramId": "2c25ef6d-36f2-41c2-9244-f6d305a2d544",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.280Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 79,
+      "deletedProgramId": "b2ca1104-2ab4-47fa-9617-ac80f711dfd4",
+      "targetKeepProgramId": "2c25ef6d-36f2-41c2-9244-f6d305a2d544",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.282Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 80,
+      "deletedProgramId": "0ea31884-3cd4-4649-89cb-44119f5de9ed",
+      "targetKeepProgramId": "2cd1c27b-2dc5-4cb0-9061-baf15a66350b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.284Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 81,
+      "deletedProgramId": "dba4883d-8225-4a1d-82fc-2691fd3ccaa5",
+      "targetKeepProgramId": "5143576a-c2e3-45e5-a7a3-7088513ce024",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.286Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 82,
+      "deletedProgramId": "aa3bb3bc-c02a-4bc9-a736-7531d3ccaa01",
+      "targetKeepProgramId": "2f5f0115-07df-49c2-b88d-7d0d5009e4f8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.287Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 83,
+      "deletedProgramId": "065e778e-4e52-4e1c-a78e-88076b6a1bee",
+      "targetKeepProgramId": "146bca13-eebc-46b7-99db-17dfd02b9f3f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.289Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 84,
+      "deletedProgramId": "15938dd6-8cfc-4bb0-93f3-999d8c975f50",
+      "targetKeepProgramId": "f53048db-09e7-48a3-9278-18754fb56b7b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.291Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 85,
+      "deletedProgramId": "cefcf6bf-191a-4922-b45e-1292d6d99309",
+      "targetKeepProgramId": "05f6c43b-ce8e-4032-8630-83a34aec822a",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.291Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 85,
+      "deletedProgramId": "9b4c523f-a009-4c18-9273-2a7ba1f0cec4",
+      "targetKeepProgramId": "05f6c43b-ce8e-4032-8630-83a34aec822a",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.293Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 86,
+      "deletedProgramId": "344becb6-73c0-4cec-b29a-4ea4969beb99",
+      "targetKeepProgramId": "49b0c98e-cd29-4c76-88f6-260cbc41eae2",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.294Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 86,
+      "deletedProgramId": "cc39b169-50f5-487c-a169-8e1df5e689e8",
+      "targetKeepProgramId": "49b0c98e-cd29-4c76-88f6-260cbc41eae2",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.296Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 87,
+      "deletedProgramId": "11f08be3-d2c4-4842-9bcf-de558fed2533",
+      "targetKeepProgramId": "24f2ebf0-de1d-43a3-a8e1-cd81899636bd",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.296Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 87,
+      "deletedProgramId": "3dfe0d42-3994-4969-b69b-35ac37011149",
+      "targetKeepProgramId": "24f2ebf0-de1d-43a3-a8e1-cd81899636bd",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.297Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 88,
+      "deletedProgramId": "0c38dd2b-4f11-4612-a97f-32e0bec41543",
+      "targetKeepProgramId": "5be5b48b-64b0-4830-abf0-78ce7f0512a3",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.299Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 89,
+      "deletedProgramId": "49806139-8a12-48a4-b8eb-800a48fc5d60",
+      "targetKeepProgramId": "a7fc53ab-0152-455d-9a92-c5026e5f6f27",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.300Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 90,
+      "deletedProgramId": "efb22acd-6f5a-4ac0-ac4a-c90b8e25b550",
+      "targetKeepProgramId": "45ad3c86-4e9e-4c7c-9572-3d681b78184e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.302Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 91,
+      "deletedProgramId": "10676934-cc99-43f2-a9cc-a4c806932781",
+      "targetKeepProgramId": "c3515162-c802-4671-8ea5-af86ca1183ff",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.303Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 92,
+      "deletedProgramId": "57bc19c0-00af-4338-801f-8109930741a4",
+      "targetKeepProgramId": "a05704a3-b73e-4aec-9bbf-feef030da506",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.304Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 98,
+      "deletedProgramId": "365833d1-baa9-4dcf-880e-183230bf64a9",
+      "targetKeepProgramId": "a46e38e0-8fe4-4839-b394-a64db63c96fc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.305Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 99,
+      "deletedProgramId": "43e36336-8e93-40b0-9d49-4d127f45cbe4",
+      "targetKeepProgramId": "d54be9cf-5126-49f3-98b0-edc4b856e27a",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.307Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 100,
+      "deletedProgramId": "03a327b9-1de3-4e7b-b2df-d86a34c9d739",
+      "targetKeepProgramId": "a2ef8b5b-0032-4f4a-b9f9-d9a8509a132b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.308Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 101,
+      "deletedProgramId": "7ba7d747-d4f3-4dc5-bdf1-badf07f2718e",
+      "targetKeepProgramId": "68d66f63-879a-4072-b352-32408c5d7d0c",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.310Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 102,
+      "deletedProgramId": "5a8ca0fb-a104-4cbf-bf8d-7ed5da78375a",
+      "targetKeepProgramId": "f49e4b52-1208-4b23-aba8-2f9cafb32223",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.311Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 104,
+      "deletedProgramId": "065a4793-6cc2-4e6f-9a63-af3723a097e2",
+      "targetKeepProgramId": "1ac13b83-f918-4132-8ef0-8f7247f15c05",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.312Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 105,
+      "deletedProgramId": "eef272e5-8ad1-4c90-abb4-210a89042c8b",
+      "targetKeepProgramId": "9821bc4c-054d-429f-9384-62df9f126d36",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.313Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 106,
+      "deletedProgramId": "6e6d9a1b-8abe-47c8-a8f1-47f2053612bc",
+      "targetKeepProgramId": "e98e4a04-2260-4e9a-b2da-f989aadcb10c",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.315Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 107,
+      "deletedProgramId": "b8303631-ed6f-4105-a079-adc414e6b259",
+      "targetKeepProgramId": "8c7f3dcc-ce5e-4ef8-890c-5bfdb1a515d6",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.316Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 108,
+      "deletedProgramId": "20ef774f-3be1-4747-ae9c-1fa48e3aca47",
+      "targetKeepProgramId": "a2102984-43d6-41df-8523-cbaa3f7f5914",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.317Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 110,
+      "deletedProgramId": "f5006623-cd3b-4511-aeeb-b2cc85b7d679",
+      "targetKeepProgramId": "199e622b-ebe2-46e2-bc9a-f92713f1900b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.319Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 114,
+      "deletedProgramId": "4fd5feff-207a-4e21-bc7f-a41611736a84",
+      "targetKeepProgramId": "0af23f5c-12d0-4bb3-a9fc-5c1db17ab08e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.320Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 116,
+      "deletedProgramId": "6dcdd54b-a278-4978-a868-3f9d716c9d2c",
+      "targetKeepProgramId": "129a6046-2808-4ec0-9064-a4fc17a5b93d",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.321Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 117,
+      "deletedProgramId": "b50a1ac5-1bf1-4222-922b-e660a4026d1c",
+      "targetKeepProgramId": "7da5ecfa-5915-49ac-abfc-448c597597f9",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.323Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 119,
+      "deletedProgramId": "cc7dd6dc-db0d-4fcf-833d-cb58d570d85b",
+      "targetKeepProgramId": "1aea9a38-c140-4128-a617-a1a112ef21cc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.324Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 125,
+      "deletedProgramId": "2112823e-eec6-4fc7-9c3b-b9944b208469",
+      "targetKeepProgramId": "82575ef3-3d0f-46c4-8189-42863a3755dd",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.325Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 128,
+      "deletedProgramId": "26c64b10-59e1-4b3c-83d3-0908a9352552",
+      "targetKeepProgramId": "9860401d-8b37-4612-bdf3-26f90d6c4636",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.327Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 129,
+      "deletedProgramId": "f6d50673-6438-4ffb-aad1-e7751cb16134",
+      "targetKeepProgramId": "8cdcca93-f652-43ce-9626-60badaf4cb22",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.328Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 133,
+      "deletedProgramId": "1c34f0a7-c9af-4deb-a45d-ee99313135e2",
+      "targetKeepProgramId": "45fca873-d826-4bdc-ae53-28035ad61938",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.329Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 134,
+      "deletedProgramId": "03aaaa51-e0d9-4e8b-a514-53fe770427f2",
+      "targetKeepProgramId": "342febc8-e80e-4785-b7fb-a878fadece2d",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.330Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 137,
+      "deletedProgramId": "fac46148-0c14-49ef-862e-b373efb0e764",
+      "targetKeepProgramId": "db1714fc-901c-4a00-b668-3fbfb36beb87",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.332Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 138,
+      "deletedProgramId": "52123288-bf44-4b5b-b83d-0a9b9a0f2fac",
+      "targetKeepProgramId": "4bd9809e-573e-4d3f-a688-716367269824",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.333Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 141,
+      "deletedProgramId": "fb050cd2-ebb2-493e-b1f2-109e25b63389",
+      "targetKeepProgramId": "e0140c18-fba6-4f6c-93cd-0d1abda9ad5f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.334Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 142,
+      "deletedProgramId": "544008bf-4b3b-41de-b3ea-10bc69ffe7d7",
+      "targetKeepProgramId": "5818102f-8d3e-4adf-bb0b-6365b2b12088",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.336Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 143,
+      "deletedProgramId": "9298deea-a899-4df3-be2a-71aa05dc4f5d",
+      "targetKeepProgramId": "2453590d-4ab4-441f-8301-85acb64366cb",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.337Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 146,
+      "deletedProgramId": "e6d206a3-03c1-4800-b628-b001498477e6",
+      "targetKeepProgramId": "e05de865-c0ff-4563-9096-5e829b16d5de",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.338Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 147,
+      "deletedProgramId": "2a586ad8-4808-4660-a469-e00c3801b9fc",
+      "targetKeepProgramId": "a703d976-9cbc-47bf-8c27-cb08a82a69a8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.339Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 148,
+      "deletedProgramId": "dc9253f3-9b2c-44ce-a52b-7cfc7267d0ba",
+      "targetKeepProgramId": "4cc68271-9cda-445b-8cb8-12e1997f482d",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.340Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 149,
+      "deletedProgramId": "7e4940da-3491-4a61-9299-37197c3aac3b",
+      "targetKeepProgramId": "b71fe035-ef5a-47fa-bad9-8cabdabaf594",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.342Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 150,
+      "deletedProgramId": "5fe670e9-22a6-4433-9a18-0bc23633f6dd",
+      "targetKeepProgramId": "27576d8f-b17b-4305-9f20-88866a75f299",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.343Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 152,
+      "deletedProgramId": "25f931a9-61b5-40db-8880-df1d4407e2e4",
+      "targetKeepProgramId": "11ef91f5-1e0a-4558-99d1-cf480d89b270",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.344Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 153,
+      "deletedProgramId": "cc9f14e1-dee6-4197-acbe-895372df29e0",
+      "targetKeepProgramId": "1a270bd2-ac07-4a7b-83d9-2b5928a0d79f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.346Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 155,
+      "deletedProgramId": "5d068049-7de8-4242-8d40-0ea59dea3ed3",
+      "targetKeepProgramId": "e995f206-a852-49c7-848b-340c5019478d",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.347Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 157,
+      "deletedProgramId": "bdc638d6-a204-46ac-8a1f-0addf8a6f4d2",
+      "targetKeepProgramId": "afb86989-3e4d-4759-b988-e76888a1740d",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.348Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 161,
+      "deletedProgramId": "9cf30c84-071c-4abe-a558-c336a7f8935c",
+      "targetKeepProgramId": "fb186eaa-e5b5-4ed6-99ad-4c578b60e33f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.350Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 162,
+      "deletedProgramId": "a8732e2c-5f88-411c-942d-fc454821fb25",
+      "targetKeepProgramId": "c03c5169-8ac3-474a-8e08-6c66a27e2056",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.351Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 164,
+      "deletedProgramId": "e3abaacb-472b-4e43-831e-2c326a2cf947",
+      "targetKeepProgramId": "c7411a59-661c-4955-a868-082d4b2f2716",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.352Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 167,
+      "deletedProgramId": "9f9aa86d-82cc-4568-8a3f-deaecd98119c",
+      "targetKeepProgramId": "3342035f-9d78-4dda-93cb-c4ac6ea4604f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.353Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 170,
+      "deletedProgramId": "3ff05aac-a5a9-4ce0-a8cc-0790dc195571",
+      "targetKeepProgramId": "cb3519ac-2e7c-4962-9f09-6f54830d1e0e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.354Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 173,
+      "deletedProgramId": "002346e0-a313-4a8e-9112-4d1048128970",
+      "targetKeepProgramId": "b7dbb14c-8740-47b1-ada3-1e9439522526",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.356Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 174,
+      "deletedProgramId": "aca19c77-4428-4442-bdca-af48a4b3f89b",
+      "targetKeepProgramId": "e88c9303-3a8f-4a13-a865-2aa006b5ff67",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.357Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 175,
+      "deletedProgramId": "aa11b468-9d3c-4fcf-b4ae-464ab5e0aa1c",
+      "targetKeepProgramId": "fff5ca34-3593-4d5f-8123-e200d9ef9e45",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.358Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 178,
+      "deletedProgramId": "9184d051-a9a3-42fc-a22e-6329e7ab3e72",
+      "targetKeepProgramId": "2af230f1-af72-480d-b25e-008cc6add334",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.360Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 180,
+      "deletedProgramId": "543ab68f-bf73-4739-8d93-3de7b809ce7f",
+      "targetKeepProgramId": "18870703-5a03-4371-9132-6d86c6f4935d",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.361Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 181,
+      "deletedProgramId": "74831ffc-879d-4de6-84db-d4f22e176456",
+      "targetKeepProgramId": "dfd9d4d2-522b-406d-9bf4-ba9d1e350342",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.364Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 182,
+      "deletedProgramId": "11578a90-efcf-4875-be4f-a75e54572d1d",
+      "targetKeepProgramId": "aaec856b-2925-4758-8c35-5daf4f9d97c3",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.365Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 185,
+      "deletedProgramId": "18cb1145-3591-4c17-a18c-c848760ac718",
+      "targetKeepProgramId": "d005bf78-0eec-41af-8b58-e606f53655dd",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.367Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 187,
+      "deletedProgramId": "bc351c11-2a61-4017-a843-6f25cdb21340",
+      "targetKeepProgramId": "ea96f489-b4f7-41ee-aafa-50b0647dda9c",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.368Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 188,
+      "deletedProgramId": "9e6df514-dbb0-4b3d-8c61-70d413821e46",
+      "targetKeepProgramId": "098d1433-11c3-47ad-8e82-f96a5d36744e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.369Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 189,
+      "deletedProgramId": "0391895a-a514-4a18-8ba9-2f103226faea",
+      "targetKeepProgramId": "2d6c00fa-989b-425a-842a-1a9684dd47ec",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.371Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 190,
+      "deletedProgramId": "48086ef6-9067-4f94-8fae-89b5d327198e",
+      "targetKeepProgramId": "8966da62-e23a-4743-8422-02813111d423",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.372Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 191,
+      "deletedProgramId": "01fd9488-b5d0-42bb-a047-5f738d77ab15",
+      "targetKeepProgramId": "6b9a3ba6-eec3-474e-910c-ecb935cb6114",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.373Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 192,
+      "deletedProgramId": "1c7479d1-feb1-458a-91a7-66b167de98b2",
+      "targetKeepProgramId": "4d298b3e-4934-4e8b-88b7-4d9dcd97cef5",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.375Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 194,
+      "deletedProgramId": "51db3716-f4e6-4930-87a7-749efa1b1aa5",
+      "targetKeepProgramId": "bceeaaaa-62d7-43da-afbf-8c654b27c4bf",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.376Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 196,
+      "deletedProgramId": "faca21e8-f646-41c9-abb2-7825b3928602",
+      "targetKeepProgramId": "ca09c492-cc41-4180-a11e-2945a1bb7955",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.377Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 197,
+      "deletedProgramId": "7fe7d6ed-759d-42fa-b0c3-b29948a71882",
+      "targetKeepProgramId": "d68a8da7-80a6-4239-b5ab-a4d20c2f6dbc",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.378Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 198,
+      "deletedProgramId": "342ca9ba-5628-458f-b39f-aa85554c58a5",
+      "targetKeepProgramId": "d6edb5fb-6c55-45a5-8a84-5a408d769210",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.380Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 199,
+      "deletedProgramId": "f6334abb-2022-4f82-825c-64d910b0ab31",
+      "targetKeepProgramId": "757f22ef-477b-4b9d-a0f2-6f05d94afd9c",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.381Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 200,
+      "deletedProgramId": "f34d63f9-7e05-4e67-aa9c-cc0fc02f9923",
+      "targetKeepProgramId": "ee052507-ca46-4a5c-8b3b-ddc24451e02c",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.382Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 201,
+      "deletedProgramId": "c89d5fea-a89a-4fc5-8c93-aeaee59e1911",
+      "targetKeepProgramId": "a928b517-1989-4770-aab7-438ddfeedefd",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.383Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 203,
+      "deletedProgramId": "2c1ec81c-2995-421b-99c5-774673bbd6ff",
+      "targetKeepProgramId": "a35846ec-e664-4d0e-b788-e5bdb340711f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.385Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 209,
+      "deletedProgramId": "e2db4885-df32-4bee-b386-c1f69cba3f13",
+      "targetKeepProgramId": "365b2708-160d-40e9-8ef9-9cde8c8c9d9e",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.386Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 210,
+      "deletedProgramId": "df863372-095b-497f-9c98-367bccb24a44",
+      "targetKeepProgramId": "ad4e3a18-bf38-4dee-9bfa-3bfef5819b35",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.387Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 213,
+      "deletedProgramId": "f44f4313-ea6f-4bf2-ba5e-4f0358fa35c6",
+      "targetKeepProgramId": "ab1547fc-cbd0-4ab1-9257-8a6315307e44",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.388Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 214,
+      "deletedProgramId": "074bcc92-7294-4b30-b18a-74b41dbe7ace",
+      "targetKeepProgramId": "02c754c1-325d-4164-8203-7cefb55c3b7c",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.390Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 216,
+      "deletedProgramId": "9b5ebd50-ab51-4675-ad3b-10b980a5b981",
+      "targetKeepProgramId": "c52fcf96-b157-4e47-aa1b-f29d3a4bdb83",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.391Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 220,
+      "deletedProgramId": "26074929-87ea-4ddc-a595-4ae8a5c1c6d8",
+      "targetKeepProgramId": "494e4394-1e20-4a91-b43c-3c5be3de57a8",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.392Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 223,
+      "deletedProgramId": "bebded02-f42c-4633-b5c8-addb06d90982",
+      "targetKeepProgramId": "02129546-2786-44c7-910d-8afc112c897f",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.393Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 224,
+      "deletedProgramId": "08eb84ca-6413-4405-9ee7-c4c7310ed88e",
+      "targetKeepProgramId": "7cd77ec4-62b5-4a27-b94a-3219055fbec7",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.395Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 226,
+      "deletedProgramId": "fb9df84f-7238-4228-8f0a-379a462a2013",
+      "targetKeepProgramId": "742e0af1-d8ab-4967-838f-3c8c72115368",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.396Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 227,
+      "deletedProgramId": "b8685649-9993-4b55-b0bf-e3f2c19a0a53",
+      "targetKeepProgramId": "9f76eee9-bf34-4b64-aec7-06621a752f7d",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.397Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 228,
+      "deletedProgramId": "de1d6135-ab71-475c-89f3-d52acd6d994f",
+      "targetKeepProgramId": "63a07483-e58a-4512-8ad1-f1d32c813adf",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.398Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 230,
+      "deletedProgramId": "33652ccb-1d8a-4e16-ac4f-5d7bc279b733",
+      "targetKeepProgramId": "c4f58189-9cc5-4664-aad9-be5e8dd965e0",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.400Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 234,
+      "deletedProgramId": "da094d47-483d-44bc-9a99-712ed2e7d537",
+      "targetKeepProgramId": "d85d1047-e526-4b13-aa43-09eb373e424d",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.401Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 235,
+      "deletedProgramId": "37e1cd43-66c3-4dd0-ad7e-27deeef16f54",
+      "targetKeepProgramId": "e9a91f83-97b8-4637-b42e-03a04108897b",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.402Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 237,
+      "deletedProgramId": "3d864489-9bba-4afb-abdd-65453e309abc",
+      "targetKeepProgramId": "d5cd5425-39f9-46c4-965f-1e9990bb694d",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.404Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 238,
+      "deletedProgramId": "71635de0-8521-47ec-bfbe-c144c02f70e5",
+      "targetKeepProgramId": "89e17cfc-760c-492b-a94a-182375d7b82a",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.405Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 239,
+      "deletedProgramId": "e055bbd1-55a5-4f89-a214-287ebb1d443a",
+      "targetKeepProgramId": "492aa834-f6d4-4de7-a570-06232924e106",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.406Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 240,
+      "deletedProgramId": "72c08e7e-8c55-4491-bd47-3eaba582b3ed",
+      "targetKeepProgramId": "79a6f1fd-10d1-45f4-a304-a509816d9d48",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.408Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 241,
+      "deletedProgramId": "81411aaa-a685-4f9f-aa85-a68a69f7f4f0",
+      "targetKeepProgramId": "d551ced7-76d0-4a84-8e6e-25e8ae2b22cf",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.409Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 243,
+      "deletedProgramId": "15c8bd79-2e77-4e57-9f71-687e561b4724",
+      "targetKeepProgramId": "3ba25aeb-a9b0-44fc-8820-5ab4d1348494",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.410Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 245,
+      "deletedProgramId": "d355cc17-26ab-4306-b602-a433887cdd1e",
+      "targetKeepProgramId": "6853a33d-84e1-4306-9965-42da6dad20df",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.412Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 246,
+      "deletedProgramId": "6f539180-e385-400a-9c3c-8b8e40a8d487",
+      "targetKeepProgramId": "876fc837-8fa9-4674-9e3d-bb8de315b2bf",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.413Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 247,
+      "deletedProgramId": "5c489bbc-4143-4759-bc1b-56d41359f990",
+      "targetKeepProgramId": "c50d7f3e-47f2-4dba-a9b3-b6a0c5a455a1",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.414Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 253,
+      "deletedProgramId": "d40aa567-b2ae-4d69-b47b-c05961a028cd",
+      "targetKeepProgramId": "0cae03c2-c3a3-40eb-89b3-a1310b01c3b9",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  },
+  {
+    "timestamp": "2026-01-14T06:59:48.416Z",
+    "action": "DELETE_PROGRAM",
+    "details": {
+      "groupNumber": 255,
+      "deletedProgramId": "e6bd4ba8-65e4-4afc-8b55-0eeccacc4ce2",
+      "targetKeepProgramId": "77891c51-f173-463e-b3d0-87f839f12676",
+      "matchesMigrated": 0,
+      "matchesMerged": 0,
+      "dryRun": true
+    }
+  }
+]

@@ -1,0 +1,24 @@
+2025-11-21 23:38:06 KST [41]: [3-1] user=,db=,app=,client= LOG:  starting PostgreSQL 15.14 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 14.2.0) 14.2.0, 64-bit
+2025-11-21 23:38:06 KST [41]: [4-1] user=,db=,app=,client= LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2025-11-21 23:38:06 KST [45]: [1-1] user=,db=,app=,client= LOG:  database system was shut down at 2025-11-21 23:38:05 KST
+2025-11-21 23:38:06 KST [41]: [5-1] user=,db=,app=,client= LOG:  database system is ready to accept connections
+2025-11-21 23:38:06 KST [41]: [6-1] user=,db=,app=,client= LOG:  received fast shutdown request
+2025-11-21 23:38:06 KST [41]: [7-1] user=,db=,app=,client= LOG:  aborting any active transactions
+2025-11-21 23:38:06 KST [41]: [8-1] user=,db=,app=,client= LOG:  background worker "logical replication launcher" (PID 49) exited with exit code 1
+2025-11-21 23:38:06 KST [43]: [1-1] user=,db=,app=,client= LOG:  shutting down
+2025-11-21 23:38:06 KST [43]: [2-1] user=,db=,app=,client= LOG:  checkpoint starting: shutdown immediate
+2025-11-21 23:38:06 KST [43]: [3-1] user=,db=,app=,client= LOG:  checkpoint complete: wrote 934 buffers (0.1%); 0 WAL file(s) added, 0 removed, 1 recycled; write=0.022 s, sync=0.018 s, total=0.056 s; sync files=301, longest=0.003 s, average=0.001 s; distance=11225 kB, estimate=11225 kB
+2025-11-21 23:38:06 KST [41]: [9-1] user=,db=,app=,client= LOG:  database system is shut down
+2025-11-21 23:38:06 KST [1]: [3-1] user=,db=,app=,client= LOG:  starting PostgreSQL 15.14 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 14.2.0) 14.2.0, 64-bit
+2025-11-21 23:38:06 KST [1]: [4-1] user=,db=,app=,client= LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2025-11-21 23:38:06 KST [1]: [5-1] user=,db=,app=,client= LOG:  listening on IPv6 address "::", port 5432
+2025-11-21 23:38:06 KST [1]: [6-1] user=,db=,app=,client= LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2025-11-21 23:38:06 KST [63]: [1-1] user=,db=,app=,client= LOG:  database system was shut down at 2025-11-21 23:38:06 KST
+2025-11-21 23:38:06 KST [1]: [7-1] user=,db=,app=,client= LOG:  database system is ready to accept connections
+2025-11-21 23:39:32 KST [1]: [8-1] user=,db=,app=,client= LOG:  received fast shutdown request
+2025-11-21 23:39:32 KST [1]: [9-1] user=,db=,app=,client= LOG:  aborting any active transactions
+2025-11-21 23:39:32 KST [1]: [10-1] user=,db=,app=,client= LOG:  background worker "logical replication launcher" (PID 67) exited with exit code 1
+2025-11-21 23:39:32 KST [61]: [1-1] user=,db=,app=,client= LOG:  shutting down
+2025-11-21 23:39:32 KST [61]: [2-1] user=,db=,app=,client= LOG:  checkpoint starting: shutdown immediate
+2025-11-21 23:39:32 KST [61]: [3-1] user=,db=,app=,client= LOG:  checkpoint complete: wrote 260 buffers (0.0%); 0 WAL file(s) added, 0 removed, 1 recycled; write=0.021 s, sync=0.011 s, total=0.037 s; sync files=285, longest=0.002 s, average=0.001 s; distance=16384 kB, estimate=16384 kB
+2025-11-21 23:39:32 KST [1]: [11-1] user=,db=,app=,client= LOG:  database system is shut down

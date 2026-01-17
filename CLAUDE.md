@@ -8,7 +8,7 @@ This file provides guidelines for using Claude Code (claude.ai/code) when workin
 - **Avoid the mistake of “assuming rather than verifying”**: Especially for infrastructure-related matters like authentication or caching, always explore the actual architecture of the existing codebase before creating imports.
 - **Preventing schema field name mismatches**: When modifying or updating Prisma schemas, avoid assuming field naming conventions. Always verify field names against the actual Prisma schema (schema.prisma) and examine patterns in similar existing routes.
 - **Deploy to the production environment**: When a single task—such as a detailed task or a single item on your to-do list—is completed, commit and push it.
-- **Time**: Production deployment takes approximately 12 minutes. Local verification takes 2-5 minutes. Always verify first.
+- **Time**: Production deployment takes approximately 30 minutes. Local verification takes 2-5 minutes. Always verify first.
 **Never use browser automation tools (Playwright) when inspecting GitHub Actions pages.**
 - **Rule**: I(user) will personally visit the pagehttps://github.com/paul828919/CONNECT/actions를 to check and share the latest run results. 
 - **Docker Requirement**: If Docker is not running locally during development or modification, **notify the user to start Docker**. Never skip local verification solely because Docker is not running.
