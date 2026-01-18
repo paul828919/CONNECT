@@ -18,7 +18,7 @@ export default function HomePage() {
             <div className="space-y-8">
               <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                 <Zap className="w-4 h-4 mr-2" aria-hidden="true" />
-                NTIS 통합 · AI 매칭
+                NTIS,IRIS 통합 · AI 매칭
               </div>
 
               <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
@@ -32,9 +32,9 @@ export default function HomePage() {
               </h1>
 
               <p className="text-xl text-gray-600 leading-relaxed">
-                NTIS의 전체 국가 R&D사업의 연구과제 공고를 커넥트가 분석하여
+                NTIS,IRIS의 국가R&D사업의 연구과제 공고를 커넥트가 분석하여
                 <br />
-                당신에게 딱 맞는 연구과제의 기회를 매칭해드립니다.
+                당신에게 딱 맞는 연구과제를 매칭해드립니다.
               </p>
 
               {/* Stats - NTIS Integration */}
@@ -44,8 +44,8 @@ export default function HomePage() {
                   <div className="text-sm text-gray-600">연간 총 R&D 과제 </div>
                 </div>
                 <div className="relative">
-                  <div className="text-3xl font-bold text-blue-600">NTIS 통합</div>
-                  <div className="text-sm text-gray-600">국가 연구과제 전문기관</div>
+                  <div className="text-3xl font-bold text-blue-600">NTIS,IRIS</div>
+                  <div className="text-sm text-gray-600">연구과제 전문기관</div>
                 </div>
                 <div className="relative">
                   <div className="text-3xl font-bold text-blue-600">&lt;3분</div>
@@ -54,7 +54,7 @@ export default function HomePage() {
               </div>
 
               <p className="text-xs text-gray-500 italic">
-                * NTIS 데이터 기준이며 실제 활성 공고 수는 시기에 따라 변동됩니다.
+                * NTIS,IRIS 데이터 기준이며 실제 활성 공고 수는 시기에 따라 변동됩니다.
               </p>
 
               {/* Primary CTA */}
@@ -133,10 +133,10 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <p className="text-sm text-gray-500 mb-2">데이터 출처</p>
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-              NTIS 국가 R&D 사업
+              NTIS,IRIS 국가 R&D 사업
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              NTIS(국가과학기술지식정보서비스)의 전체 국가 R&D 사업을 분석합니다.
+              NTIS(국가과학기술지식정보서비스), IRIS(범부처통합연구지원시스템)의 국가 R&D 과제를 분석합니다.
             </p>
           </div>
 
@@ -185,7 +185,7 @@ export default function HomePage() {
 
           {/* Disclaimer */}
           <p className="text-center text-xs text-gray-400">
-            * NTIS(국가과학기술지식정보서비스)의 공개 데이터를 기반으로 분석합니다.
+            * NTIS(국가과학기술지식정보서비스), IRIS(범부처통합연구지원시스템)의 공개 데이터를 기반으로 분석합니다.
           </p>
         </div>
       </section>
