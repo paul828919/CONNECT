@@ -434,7 +434,7 @@ export default function MatchesPage() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">매칭 결과</h1>
               <p className="mt-2 text-gray-600">
-                귀하의 조직 프로필과 적합한 지원 프로그램을 찾았습니다.
+                귀하의 조직 프로필에 적합한 연구과제 공고를 찾았습니다.
               </p>
             </div>
             {matches.length > 0 && (
