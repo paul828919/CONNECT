@@ -650,10 +650,12 @@ export default function PricingPage() {
                     <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
                     <span><strong>월간 플랜:</strong> 7일 이내 전액 환불 (1회 한정 정책)</span>
                   </p>
+                  {/* Annual plan refund text - commented out until Toss Payments annual billing is implemented
                   <p className="flex items-start">
                     <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
                     <span><strong>연간 플랜:</strong> 7일 이내 전액 환불 (법정 청약철회권)</span>
                   </p>
+                  */}
                   <p className="flex items-start">
                     <span className="text-green-600 mr-2 flex-shrink-0">✓</span>
                     <span><strong>서비스 이슈:</strong> 기간 무관 전액 환불 (장애, 빌링 오류 등)</span>
