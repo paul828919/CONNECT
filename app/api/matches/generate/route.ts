@@ -148,6 +148,7 @@ export async function POST(request: NextRequest) {
           users: {
             where: { id: userId },
           },
+          locations: true, // Required for 중소벤처기업부 regional matching
         },
       });
 
