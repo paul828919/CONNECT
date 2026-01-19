@@ -9,6 +9,17 @@ This file provides guidelines for using Claude Code (claude.ai/code) when workin
 - **Preventing schema field name mismatches**: When modifying or updating Prisma schemas, avoid assuming field naming conventions. Always verify field names against the actual Prisma schema (schema.prisma) and examine patterns in similar existing routes.
 - **Deploy to the production environment**: When a single task—such as a detailed task or a single item on your to-do list—is completed, commit and push it.
 - **Time**: Production deployment takes approximately 30 minutes. Local verification takes 2-5 minutes. Always verify first.
+
+### 1.1. Work Plan Execution Rules
+**Step-by-step commit workflow:**
+- **Rule**: When creating and executing a work plan with multiple steps, **only commit** (not push) after completing each step before proceeding to the next step.
+- **Rationale**: This approach allows for atomic commits per step while batching pushes, reducing CI/CD trigger frequency and enabling easier rollback if issues arise in later steps.
+- **Workflow**:
+  1. Complete Step 1 → Local verification → `git commit`
+  2. Complete Step 2 → Local verification → `git commit`
+  3. ... (repeat for each step)
+  4. All steps complete → Final verification → `git push` (triggers CI/CD)
+- **Exception**: If a step involves critical infrastructure changes that need immediate production deployment, ask the user whether to push immediately after that specific commit.
 **Never use browser automation tools (Playwright) when inspecting GitHub Actions pages.**
 - **Rule**: I(user) will personally visit the pagehttps://github.com/paul828919/CONNECT/actions를 to check and share the latest run results. 
 - **Docker Requirement**: If Docker is not running locally during development or modification, **notify the user to start Docker**. Never skip local verification solely because Docker is not running.
