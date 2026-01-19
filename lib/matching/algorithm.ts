@@ -85,6 +85,11 @@ function getOrganizationRegions(organization: OrganizationWithLocations): Korean
  * Programs with these keywords in title require company presence in specific regions
  */
 const SME_REGIONAL_KEYWORD_MAP: Record<string, KoreanRegion[]> = {
+  // Metropolitan (수도권)
+  '서울': ['SEOUL'],
+  '인천': ['INCHEON'],
+  '경기': ['GYEONGGI'],
+  // Non-metropolitan (비수도권)
   '부산': ['BUSAN'],
   '울산': ['ULSAN'],
   '경남': ['GYEONGNAM'],

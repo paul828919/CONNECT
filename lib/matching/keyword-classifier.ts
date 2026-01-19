@@ -392,6 +392,32 @@ export const INDUSTRY_CROSS_RELEVANCE: Record<string, Record<string, number>> = 
   // Aerospace related
   'AEROSPACE': { 'DEFENSE': 0.4, 'MANUFACTURING': 0.5, 'ICT': 0.4 },
   'DEFENSE': { 'AEROSPACE': 0.4, 'MANUFACTURING': 0.4, 'ICT': 0.3 },
+
+  // ============================================================================
+  // GENERAL Cross-Industry Programs (중소벤처기업부 cross-industry, 교육부, etc.)
+  // ============================================================================
+  // GENERAL programs are designed to be industry-agnostic, targeting companies
+  // based on size, stage, or location rather than specific industries.
+  // Give moderate relevance (0.55) to all industries so cross-industry programs
+  // can compete fairly with industry-specific programs in scoring.
+  // Without this, GENERAL programs default to 0.2 relevance and can never win.
+  'GENERAL': {
+    'ICT': 0.55,
+    'BIO_HEALTH': 0.55,
+    'MANUFACTURING': 0.55,
+    'ENERGY': 0.55,
+    'ENVIRONMENT': 0.55,
+    'CONSTRUCTION': 0.55,
+    'TRANSPORTATION': 0.55,
+    'AEROSPACE': 0.55,
+    'DEFENSE': 0.55,
+    'AGRICULTURE': 0.55,
+    'FORESTRY': 0.55,
+    'VETERINARY': 0.55,
+    'MARINE_FISHERIES': 0.55,
+    'MARINE_SECURITY': 0.55,
+    'CULTURAL': 0.55,
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════

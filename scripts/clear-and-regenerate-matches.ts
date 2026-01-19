@@ -19,15 +19,21 @@ async function main() {
   console.log('CLEAR AND REGENERATE MATCHES');
   console.log('========================================\n');
 
-  // Find Innowave organization
+  // Find Innowave organization with locations for regional matching
   const innowave = await db.organizations.findFirst({
     where: { name: '이노웨이브' },
+    include: {
+      locations: true,  // Include locations for 중소벤처기업부 regional filtering
+    },
   });
 
   if (!innowave) {
     console.log('❌ Innowave organization not found');
     return;
   }
+
+  // Organization already includes locations from the include statement
+  const innowaveWithLocations = innowave;
 
   console.log('📋 INNOWAVE ORGANIZATION');
   console.log('========================');
@@ -37,6 +43,8 @@ async function main() {
   console.log(`Business Structure: ${innowave.businessStructure}`);
   console.log(`Industry: ${innowave.industrySector}`);
   console.log(`TRL: ${innowave.technologyReadinessLevel}`);
+  console.log(`Company Scale: ${innowave.companyScaleType}`);
+  console.log(`Locations: ${innowaveWithLocations.locations?.map(l => `${l.locationType}:${l.region}`).join(', ') || 'None'}`);
 
   // Step 1: Clear existing matches from database
   console.log('\n🗑️  STEP 1: Clearing existing matches from database...');
@@ -65,9 +73,12 @@ async function main() {
   console.log('  ✓ Consolidated announcement filter (checks deadline, applicationStart, budgetAmount all NULL)');
   console.log('  ✓ TRL hard requirement filter (organization TRL outside program TRL range)');
   console.log('  ✓ Hospital/medical institution filter (physician-scientist keywords in title)');
+  console.log('  ✓ 중소벤처기업부 Scale + Region filter (company scale and location-based)');
+  console.log('  ✓ GENERAL cross-industry relevance boost (0.55 for cross-industry programs)');
   console.log('');
 
-  const matchResults = generateMatches(innowave, programs, 3);
+  // Use innowaveWithLocations which includes the locations array for regional matching
+  const matchResults = generateMatches(innowaveWithLocations, programs, 20);  // Increased limit to see more matches
   console.log(`✅ Generated ${matchResults.length} matches\n`);
 
   if (matchResults.length === 0) {
@@ -104,8 +115,9 @@ async function main() {
   console.log('📊 RESULTS');
   console.log('==========\n');
   createdMatches.forEach((match, index) => {
-    console.log(`${index + 1}. ${match.funding_programs.title}`);
+    console.log(`${index + 1}. ${match.funding_programs.title.substring(0, 60)}...`);
     console.log(`   Score: ${match.score}`);
+    console.log(`   Ministry: ${match.funding_programs.ministry || 'N/A'}`);
     console.log(`   Category: ${match.funding_programs.category || 'N/A'}`);
     console.log(`   Deadline: ${match.funding_programs.deadline || 'N/A'}`);
     console.log('');
@@ -129,6 +141,20 @@ async function main() {
     m.funding_programs.title.includes('의사과학자')
   );
   console.log(`Physician-scientist programs filtered: ${physicianProgram ? '❌ FAILED' : '✅ PASSED'}`);
+
+  // v4.1: Verify SME cross-industry programs are now matching
+  const smePrograms = createdMatches.filter((m) =>
+    m.funding_programs.ministry === '중소벤처기업부'
+  );
+  console.log(`\n📊 중소벤처기업부 (SME) MATCHES: ${smePrograms.length}`);
+  if (smePrograms.length > 0) {
+    console.log('   ✅ SME cross-industry programs now matching!');
+    smePrograms.forEach((m, i) => {
+      console.log(`   ${i + 1}. [Score: ${m.score}] ${m.funding_programs.title.substring(0, 50)}...`);
+    });
+  } else {
+    console.log('   ⚠️ No SME programs matched - check scale/region filters');
+  }
 
   console.log('\n✅ Match regeneration complete!');
   console.log('\n📌 NEXT STEP: Refresh localhost:3000/dashboard/matches to see updated results');
