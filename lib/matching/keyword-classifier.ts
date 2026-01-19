@@ -77,7 +77,10 @@ export const MINISTRY_INDUSTRY_MAP: Record<string, IndustryCategory[]> = {
   '산업통상자원부': ['MANUFACTURING', 'ENERGY'],  // 소재, 부품, 에너지
   '산업통상부': ['MANUFACTURING', 'ENERGY'],      // Alias
   '국토교통부': ['CONSTRUCTION', 'TRANSPORTATION'],  // 40 programs
-  '중소벤처기업부': ['GENERAL'],        // Cross-industry startup support
+  // '중소벤처기업부': ['GENERAL'],     // COMMENTED v4.0: Use keyword-first + scale-based classification
+  //                                    // Rationale: ~80% of SME programs are cross-industry (창업성장기술개발, TIPS)
+  //                                    // Industry-specific programs (~15-20%) detected by keywords below
+  //                                    // See: lib/matching/algorithm.ts for scale + region filtering
   '교육부': ['GENERAL'],                // R&D talent development
 
   // === Government/Defense Ministries ===
@@ -336,6 +339,19 @@ export const KEYWORD_INDUSTRY_MAP: Record<string, IndustryCategory> = {
   '플라스틱': 'MANUFACTURING',
   '나노': 'MANUFACTURING',
   '스마트공장': 'MANUFACTURING',
+
+  // === SME-SPECIFIC INDUSTRY DETECTION (중소벤처기업부) ===
+  // These keywords identify the ~15-20% of 중소벤처기업부 programs
+  // that ARE industry-specific (vs ~80% cross-industry programs)
+  '중소제조': 'MANUFACTURING',    // 중소제조 산재예방 기술개발
+  '제조산재': 'MANUFACTURING',    // 디지털기반 중소제조 산재예방
+  '산재예방': 'MANUFACTURING',    // Industrial accident prevention (manufacturing focus)
+  '제조기업': 'MANUFACTURING',    // Manufacturing company specific programs
+  '제조혁신': 'MANUFACTURING',    // 스타트 제조혁신 기술개발사업
+  '소부장': 'MANUFACTURING',      // 소재부품장비 - 시장대응형(소부장)
+  'K-뷰티': 'CULTURAL',           // 시장대응형(K-뷰티)
+  '뷰티': 'CULTURAL',             // K-뷰티 cosmetics/beauty programs
+  '탄소감축': 'ENVIRONMENT',      // 탄소감축 기술개발
 };
 
 // ═══════════════════════════════════════════════════════════════

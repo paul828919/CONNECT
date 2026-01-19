@@ -94,6 +94,9 @@ export async function POST(request: NextRequest) {
       website,
       // v3.0: Semantic sub-domain for industry-specific matching
       semanticSubDomain,
+      // v4.1: Company scale and locations for 중소벤처기업부 matching
+      companyScaleType,
+      locations, // Array of { locationType: string, region: string }
     } = body;
 
     // Automatically derive hasResearchInstitute from certifications array
@@ -222,6 +225,17 @@ export async function POST(request: NextRequest) {
           : [],
         // v3.0: Semantic sub-domain for industry-specific matching
         semanticSubDomain: semanticSubDomain || undefined,
+        // v4.1: Company scale for 중소벤처기업부 program matching
+        companyScaleType: companyScaleType || null,
+        // v4.1: Company locations for regional R&D program matching
+        locations: locations && locations.length > 0
+          ? {
+              create: locations.map((loc: { locationType: string; region: string }) => ({
+                locationType: loc.locationType,
+                region: loc.region,
+              })),
+            }
+          : undefined,
         profileCompleted: true,
         profileScore,
         status: 'ACTIVE',

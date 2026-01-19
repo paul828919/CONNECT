@@ -490,6 +490,12 @@ model organizations {
   // Company profile description (auto-generated or user-provided)
   companyProfileDescription                                      String?
 
+  // ═══════════════════════════════════════════════════════════════
+  // Company Scale & Location (중소벤처기업부 Matching Enhancement)
+  // ═══════════════════════════════════════════════════════════════
+  // Company scale classification for 중소벤처기업부 program matching
+  companyScaleType                                               CompanyScaleType?
+
   ai_cost_logs                                                   ai_cost_logs[]
   consortium_members                                             consortium_members[]
   consortium_projects                                            consortium_projects[]
@@ -499,12 +505,36 @@ model organizations {
   users                                                          User[]
   refundRequests                                                 RefundRequest[]
   teamInviteLinks                                                team_invite_links[]
+  locations                                                      CompanyLocation[]   // 소재지 정보 (본사, 연구소, 공장)
 
   @@index([businessNumberHash])
   @@index([profileCompleted])
   @@index([status])
   @@index([type])
   @@index([primaryBusinessDomain])
+}
+
+// ============================================================================
+// Company Location (기업 소재지 정보)
+// Stores multiple locations per organization for regional R&D matching
+// 수도권 (Metropolitan): SEOUL, GYEONGGI, INCHEON
+// 비수도권 (Non-Metropolitan): 나머지 14개 시도
+// ============================================================================
+model CompanyLocation {
+  id              String        @id @default(cuid())
+  organizationId  String
+  organization    organizations @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  locationType    LocationType  // 본사, 연구소, 공장
+  region          KoreanRegion  // 광역시도
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([organizationId, locationType])
+  @@index([organizationId])
+  @@index([region])
+  @@map("company_locations")
 }
 
 model payments {
@@ -760,6 +790,54 @@ model team_invite_links {
   @@index([code])
   @@index([organizationId])
   @@index([isActive, expiresAt])
+}
+
+// ============================================================================
+// Company Scale Classification (기업 규모별 분류)
+// Based on Korean regulatory frameworks:
+// - 중소기업기본법 (SME Basic Act)
+// - 중소기업창업지원법 (Startup Support Act)
+// - 중견기업 성장촉진 및 경쟁력 강화에 관한 특별법 (Mid-sized Enterprise Act)
+// - 공정거래법 (Fair Trade Act for Large Enterprises)
+// ============================================================================
+enum CompanyScaleType {
+  STARTUP           // 스타트업 (창업기업) - 업력 7년 이내
+  SME               // 중소기업 - 중소기업기본법 해당
+  MID_SIZED         // 중견기업 - 중견기업 특별법 해당
+  LARGE_ENTERPRISE  // 대기업 - 공정거래법 해당
+}
+
+// ============================================================================
+// Korean Administrative Regions (광역지방자치단체)
+// Used for regional R&D program matching (수도권 vs 비수도권)
+// ============================================================================
+enum KoreanRegion {
+  SEOUL             // 서울특별시
+  GYEONGGI          // 경기도
+  INCHEON           // 인천광역시
+  BUSAN             // 부산광역시
+  DAEGU             // 대구광역시
+  GWANGJU           // 광주광역시
+  DAEJEON           // 대전광역시
+  ULSAN             // 울산광역시
+  SEJONG            // 세종특별자치시
+  GANGWON           // 강원특별자치도
+  CHUNGBUK          // 충청북도
+  CHUNGNAM          // 충청남도
+  JEONBUK           // 전북특별자치도
+  JEONNAM           // 전라남도
+  GYEONGBUK         // 경상북도
+  GYEONGNAM         // 경상남도
+  JEJU              // 제주특별자치도
+}
+
+// ============================================================================
+// Company Location Type (소재지 유형)
+// ============================================================================
+enum LocationType {
+  HEADQUARTERS      // 본사
+  RESEARCH_CENTER   // 연구소 (기업부설연구소)
+  FACTORY           // 공장 (제조시설)
 }
 
 enum AIFeedbackRating {

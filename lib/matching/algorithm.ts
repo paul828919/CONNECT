@@ -31,7 +31,7 @@
  * - Technology keyword matching for research institutes
  */
 
-import { organizations, funding_programs, ProgramStatus, EmployeeCountRange } from '@prisma/client';
+import { organizations, funding_programs, ProgramStatus, EmployeeCountRange, CompanyLocation, CompanyScaleType, KoreanRegion } from '@prisma/client';
 import { scoreIndustryKeywordsEnhanced } from './keywords';
 import { scoreTRLEnhanced } from './trl';
 import { checkEligibility, EligibilityLevel } from './eligibility';
@@ -46,6 +46,60 @@ import {
 // Type aliases for cleaner code
 type Organization = organizations;
 type FundingProgram = funding_programs;
+
+// Extended organization type with locations for regional matching
+export type OrganizationWithLocations = Organization & {
+  locations?: CompanyLocation[];
+};
+
+// ============================================================================
+// 중소벤처기업부 Regional Matching Helpers
+// ============================================================================
+// 수도권 (Metropolitan Area): Seoul, Gyeonggi, Incheon
+// 비수도권 (Non-Metropolitan): 14 other regions
+const METROPOLITAN_REGIONS: KoreanRegion[] = ['SEOUL', 'GYEONGGI', 'INCHEON'];
+
+/**
+ * Check if organization has at least one location in non-metropolitan area
+ * Used for 지역혁신선도기업육성(R&D) and similar regional programs
+ */
+function hasNonMetropolitanLocation(organization: OrganizationWithLocations): boolean {
+  if (!organization.locations || organization.locations.length === 0) {
+    return false; // No location data - cannot verify eligibility
+  }
+  return organization.locations.some(
+    loc => !METROPOLITAN_REGIONS.includes(loc.region)
+  );
+}
+
+/**
+ * Get all regions where organization has locations
+ */
+function getOrganizationRegions(organization: OrganizationWithLocations): KoreanRegion[] {
+  if (!organization.locations) return [];
+  return organization.locations.map(loc => loc.region);
+}
+
+/**
+ * Regional keyword mapping for 중소벤처기업부 regional programs
+ * Programs with these keywords in title require company presence in specific regions
+ */
+const SME_REGIONAL_KEYWORD_MAP: Record<string, KoreanRegion[]> = {
+  '부산': ['BUSAN'],
+  '울산': ['ULSAN'],
+  '경남': ['GYEONGNAM'],
+  '대구': ['DAEGU'],
+  '경북': ['GYEONGBUK'],
+  '광주': ['GWANGJU'],
+  '전남': ['JEONNAM'],
+  '전북': ['JEONBUK'],
+  '대전': ['DAEJEON'],
+  '충남': ['CHUNGNAM'],
+  '충북': ['CHUNGBUK'],
+  '세종': ['SEJONG'],
+  '강원': ['GANGWON'],
+  '제주': ['JEJU'],
+};
 
 export interface MatchScore {
   programId: string;
@@ -144,9 +198,14 @@ function deduplicateProgramsByTitle(programs: FundingProgram[]): FundingProgram[
 
 /**
  * Generate match scores for an organization against funding programs
+ *
+ * @param organization - Organization with optional locations for regional matching
+ * @param programs - Active funding programs to match against
+ * @param limit - Maximum number of matches to return (default: 3)
+ * @param options - Additional options (includeExpired, minimumScore)
  */
 export function generateMatches(
-  organization: Organization,
+  organization: OrganizationWithLocations,
   programs: FundingProgram[],
   limit: number = 3,
   options?: GenerateMatchesOptions
@@ -282,6 +341,92 @@ export function generateMatches(
     }
 
     // ============================================================================
+    // 중소벤처기업부 Scale + Region Filter (v4.1 - Size & Location-Based Matching)
+    // ============================================================================
+    // ~80% of SME programs are cross-industry (창업성장기술개발, TIPS, 중소기업기술혁신개발)
+    // ~15-20% are industry-specific (중소제조 산재예방, K-뷰티, 소부장)
+    // Primary eligibility filter is company SIZE/AGE, not industry
+    //
+    // Strategy:
+    // 1. Run keyword classification early to detect industry-specific programs
+    // 2. Industry-specific programs → use normal industry filter
+    // 3. Cross-industry programs → bypass industry filter, check scale + region
+    //
+    // @see: 25-26년도_공고목록_중소기업벤처부.csv (182+ programs analyzed)
+    let bypassIndustryFilterForSME = false;
+
+    if (program.ministry === '중소벤처기업부') {
+      // Run keyword classification early for SME ministry programs
+      const smeClassification = classifyProgram(
+        program.title,
+        null,
+        program.ministry
+      );
+
+      // Check if industry-specific program (classifier detected non-GENERAL via keywords)
+      // Industry-specific examples: 중소제조, K-뷰티, 소부장, 탄소감축
+      if (smeClassification.industry !== 'GENERAL' && smeClassification.matchedKeywords.length > 0) {
+        // Industry-specific SME program - let normal industry filter handle it
+        // These programs have specific industry requirements
+      } else {
+        // Cross-industry SME program (창업성장기술개발, TIPS, 디딤돌, etc.)
+        // Bypass industry filter but apply scale + region checks
+
+        const orgScale = organization.companyScaleType;
+        const orgRegions = getOrganizationRegions(organization);
+
+        // ========== SCALE FILTER ==========
+        // All 중소벤처기업부 programs exclude large enterprises (대기업)
+        if (orgScale === 'LARGE_ENTERPRISE') {
+          continue; // Large enterprises not eligible for SME programs
+        }
+
+        // 창업성장기술개발/TIPS/디딤돌 require STARTUP or early-stage SME
+        // These programs target 창업기업 (업력 7년 이내)
+        if (program.title.includes('창업성장') ||
+            program.title.includes('TIPS') ||
+            program.title.includes('팁스') ||
+            program.title.includes('디딤돌')) {
+          if (orgScale === 'MID_SIZED') {
+            continue; // Mid-sized enterprises not eligible for startup programs
+          }
+        }
+
+        // ========== REGION FILTER ==========
+        // Check for 비수도권 (non-metropolitan) requirement
+        // 지역혁신선도기업육성(R&D) - Only 비수도권 14개 시도
+        if (program.title.includes('지역혁신선도') || program.title.includes('지역혁신')) {
+          if (!hasNonMetropolitanLocation(organization)) {
+            continue; // Metropolitan companies not eligible for regional innovation programs
+          }
+        }
+
+        // Check for regional variants (부산/울산/경남, 대구/경북, etc.)
+        // These programs require company presence in specific regions
+        let regionCheckPassed = true;
+        for (const [regionKeyword, allowedRegions] of Object.entries(SME_REGIONAL_KEYWORD_MAP)) {
+          if (program.title.includes(regionKeyword)) {
+            // Program has region-specific requirement
+            const hasMatchingRegion = orgRegions.some(r => allowedRegions.includes(r));
+            if (!hasMatchingRegion && orgRegions.length > 0) {
+              // Organization has location data but not in required region
+              regionCheckPassed = false;
+            }
+            break; // Only check first matching region keyword
+          }
+        }
+
+        if (!regionCheckPassed) {
+          continue; // Organization not in required region
+        }
+
+        // Cross-industry SME program passed all checks
+        // Mark to bypass the industry category compatibility filter below
+        bypassIndustryFilterForSME = true;
+      }
+    }
+
+    // ============================================================================
     // Industry Category Compatibility Filter (HARD REQUIREMENT)
     // ============================================================================
     // Organizations should only match programs in compatible industry categories
@@ -299,7 +444,11 @@ export function generateMatches(
     // RELAXATION FOR HISTORICAL MATCHES:
     // For EXPIRED programs (historical reference), BYPASS industry filter entirely
     // Rationale: Users want to learn from cross-industry examples regardless of relevance
-    if (organization.industrySector && program.category) {
+    //
+    // BYPASS FOR CROSS-INDUSTRY SME PROGRAMS (v4.1):
+    // 중소벤처기업부 cross-industry programs already passed scale + region checks above
+    // These programs are designed for all industries - filtering by industry would exclude eligible companies
+    if (!bypassIndustryFilterForSME && organization.industrySector && program.category) {
       const orgSector = findIndustrySector(organization.industrySector);
       const programSector = findIndustrySector(program.category);
 

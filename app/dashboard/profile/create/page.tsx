@@ -40,6 +40,12 @@ const organizationSchema = z.object({
     .optional(),
   businessStructure: z.enum(['CORPORATION', 'SOLE_PROPRIETOR', 'GOVERNMENT_AGENCY']).optional(),
   businessEstablishedDate: z.string().optional(), // ISO date string, will be converted to Date in API
+  // Company Scale Type (기업 규모 분류) - for 중소벤처기업부 program matching
+  companyScaleType: z.enum(['STARTUP', 'SME', 'MID_SIZED', 'LARGE_ENTERPRISE']).optional(),
+  // Location fields (소재지 정보) - for regional R&D program matching
+  headquartersRegion: z.string().optional(), // Required for regional matching
+  researchCenterRegion: z.string().optional(), // Optional
+  factoryRegion: z.string().optional(), // Optional
   rdExperienceCount: z.string().optional(), // National R&D project experience count
   // Tier 1B: Algorithm enhancement fields
   collaborationCount: z
@@ -260,6 +266,35 @@ const commonCertifications = [
   { value: '의료기기제조업허가', label: '의료기기 제조업 허가' },
 ];
 
+// Korean administrative regions for location selectors
+const koreanRegions = [
+  { value: 'SEOUL', label: '서울특별시' },
+  { value: 'GYEONGGI', label: '경기도' },
+  { value: 'INCHEON', label: '인천광역시' },
+  { value: 'BUSAN', label: '부산광역시' },
+  { value: 'DAEGU', label: '대구광역시' },
+  { value: 'GWANGJU', label: '광주광역시' },
+  { value: 'DAEJEON', label: '대전광역시' },
+  { value: 'ULSAN', label: '울산광역시' },
+  { value: 'SEJONG', label: '세종특별자치시' },
+  { value: 'GANGWON', label: '강원특별자치도' },
+  { value: 'CHUNGBUK', label: '충청북도' },
+  { value: 'CHUNGNAM', label: '충청남도' },
+  { value: 'JEONBUK', label: '전북특별자치도' },
+  { value: 'JEONNAM', label: '전라남도' },
+  { value: 'GYEONGBUK', label: '경상북도' },
+  { value: 'GYEONGNAM', label: '경상남도' },
+  { value: 'JEJU', label: '제주특별자치도' },
+];
+
+// Company scale type options for SME program matching
+const companyScaleTypes = [
+  { value: 'STARTUP', label: '스타트업 (창업기업)', description: '업력 7년 이내' },
+  { value: 'SME', label: '중소기업', description: '중소기업기본법 해당' },
+  { value: 'MID_SIZED', label: '중견기업', description: '중견기업 특별법 해당' },
+  { value: 'LARGE_ENTERPRISE', label: '대기업', description: '공정거래법 해당' },
+];
+
 export default function CreateOrganizationProfilePage() {
   const router = useRouter();
   const { update } = useSession();
@@ -340,6 +375,18 @@ export default function CreateOrganizationProfilePage() {
       const hasSemanticData = Object.keys(semanticSubDomain).length > 0 &&
         Object.values(semanticSubDomain).some((v) => v && v.length > 0);
 
+      // Prepare locations array from individual region fields
+      const locations: { locationType: string; region: string }[] = [];
+      if (data.headquartersRegion) {
+        locations.push({ locationType: 'HEADQUARTERS', region: data.headquartersRegion });
+      }
+      if (data.researchCenterRegion) {
+        locations.push({ locationType: 'RESEARCH_CENTER', region: data.researchCenterRegion });
+      }
+      if (data.factoryRegion) {
+        locations.push({ locationType: 'FACTORY', region: data.factoryRegion });
+      }
+
       const payload = {
         ...data,
         primaryContactEmail: data.primaryContactEmail,
@@ -349,6 +396,10 @@ export default function CreateOrganizationProfilePage() {
           : undefined,
         // Semantic sub-domain for v3.0 matching algorithm
         semanticSubDomain: hasSemanticData ? semanticSubDomain : undefined,
+        // Company scale type for 중소벤처기업부 program matching (v4.1)
+        companyScaleType: data.companyScaleType || undefined,
+        // Locations for regional R&D program matching (v4.1)
+        locations: locations.length > 0 ? locations : undefined,
       };
 
       const response = await fetch('/api/organizations', {
@@ -631,6 +682,125 @@ export default function CreateOrganizationProfilePage() {
                 </p>
               )}
             </div>
+
+            {/* Company Scale Type - for COMPANY type (중소벤처기업부 matching) */}
+            {organizationType === 'COMPANY' && (
+              <div>
+                <label
+                  htmlFor="companyScaleType"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  기업 규모 분류
+                </label>
+                <select
+                  id="companyScaleType"
+                  {...register('companyScaleType')}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="">선택해주세요</option>
+                  {companyScaleTypes.map((scale) => (
+                    <option key={scale.value} value={scale.value}>
+                      {scale.label} - {scale.description}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  💡 중소기업현황정보시스템(SMINFO)에서 &apos;중소기업 확인서&apos;를 발급받아 확인 가능합니다. 중소벤처기업부 R&D 사업 매칭에 사용됩니다.
+                </p>
+                {errors.companyScaleType && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.companyScaleType.message}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Company Locations - for COMPANY type (regional R&D matching) */}
+            {organizationType === 'COMPANY' && (
+              <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">📍</span>
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-900">소재지 정보</h4>
+                    <p className="text-xs text-gray-600">
+                      지역별 R&D 지원사업 매칭을 위해 소재지 정보를 입력해주세요. 지역 특화 사업 (부산/울산/경남, 비수도권 전용 등) 매칭에 활용됩니다.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Headquarters Location (본사) */}
+                <div>
+                  <label
+                    htmlFor="headquartersRegion"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    본사 소재지
+                  </label>
+                  <select
+                    id="headquartersRegion"
+                    {...register('headquartersRegion')}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  >
+                    <option value="">선택해주세요</option>
+                    {koreanRegions.map((region) => (
+                      <option key={region.value} value={region.value}>
+                        {region.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Research Center Location (연구소) - Optional */}
+                <div>
+                  <label
+                    htmlFor="researchCenterRegion"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    연구소 소재지 (선택)
+                  </label>
+                  <select
+                    id="researchCenterRegion"
+                    {...register('researchCenterRegion')}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  >
+                    <option value="">선택 안함</option>
+                    {koreanRegions.map((region) => (
+                      <option key={region.value} value={region.value}>
+                        {region.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    기업부설연구소가 있는 경우에만 입력
+                  </p>
+                </div>
+
+                {/* Factory Location (공장) - Optional */}
+                <div>
+                  <label
+                    htmlFor="factoryRegion"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    공장 소재지 (선택)
+                  </label>
+                  <select
+                    id="factoryRegion"
+                    {...register('factoryRegion')}
+                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  >
+                    <option value="">선택 안함</option>
+                    {koreanRegions.map((region) => (
+                      <option key={region.value} value={region.value}>
+                        {region.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    제조시설이 있는 경우에만 입력
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Industry Sector */}
             <div>

@@ -68,6 +68,15 @@ export async function GET(
         targetOrgRevenue: true,
         // v3.0: Semantic sub-domain for industry-specific matching
         semanticSubDomain: true,
+        // v4.1: Company scale and locations for 중소벤처기업부 matching
+        companyScaleType: true,
+        locations: {
+          select: {
+            id: true,
+            locationType: true,
+            region: true,
+          },
+        },
         profileCompleted: true,
         profileScore: true,
         status: true,
@@ -202,6 +211,9 @@ export async function PATCH(
       targetOrgRevenue,
       // v3.0: Semantic sub-domain for industry-specific matching
       semanticSubDomain,
+      // v4.1: Company scale and locations for 중소벤처기업부 matching
+      companyScaleType,
+      locations, // Array of { locationType: string, region: string }
     } = body;
 
     // Build update data (only include fields that are provided)
@@ -304,6 +316,15 @@ export async function PATCH(
     if (semanticSubDomain !== undefined) {
       updateData.semanticSubDomain = semanticSubDomain;
     }
+
+    // v4.1: Company scale for 중소벤처기업부 program matching
+    if (companyScaleType !== undefined) {
+      updateData.companyScaleType = companyScaleType;
+    }
+
+    // v4.1: Handle locations (delete existing, create new)
+    // Note: Locations are handled separately after the main update
+    const shouldUpdateLocations = locations !== undefined;
 
     // Recalculate profile score (enhanced with Tier 1A + 1B)
     let profileScore = 50; // Base score
@@ -453,11 +474,39 @@ export async function PATCH(
         targetOrgRevenue: true,
         // v3.0: Semantic sub-domain for industry-specific matching
         semanticSubDomain: true,
+        // v4.1: Company scale and locations
+        companyScaleType: true,
+        locations: {
+          select: {
+            id: true,
+            locationType: true,
+            region: true,
+          },
+        },
         profileCompleted: true,
         profileScore: true,
         updatedAt: true,
       },
     });
+
+    // v4.1: Update locations if provided (delete existing, create new)
+    if (shouldUpdateLocations) {
+      // Delete all existing locations
+      await db.companyLocation.deleteMany({
+        where: { organizationId },
+      });
+
+      // Create new locations if provided
+      if (locations && locations.length > 0) {
+        await db.companyLocation.createMany({
+          data: locations.map((loc: { locationType: string; region: string }) => ({
+            organizationId,
+            locationType: loc.locationType as any,
+            region: loc.region as any,
+          })),
+        });
+      }
+    }
 
     // Invalidate caches (profile changes affect match results)
     console.log('[PROFILE UPDATE] Invalidating caches for org:', organizationId);
