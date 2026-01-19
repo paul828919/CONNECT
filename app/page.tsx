@@ -1,11 +1,21 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Building2, GraduationCap, Microscope, CheckCircle2, TrendingUp, Users, Award, Shield, Zap, Ship } from 'lucide-react';
 import Header from '@/components/layout/Header';
 
 export default function HomePage() {
+  const [stats, setStats] = useState<{ totalPrograms: number; totalAgencies: number } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/public/stats')
+      .then(res => res.json())
+      .then(data => setStats(data))
+      .catch(console.error);
+  }, []);
+
   return (
     <div className="min-h-screen">
       {/* Unified Navigation Header */}
@@ -178,7 +188,9 @@ export default function HomePage() {
               <div className="text-xs text-gray-600 mt-1">총 사업</div>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">70+</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {stats ? `${stats.totalPrograms}+` : '...'}
+              </div>
               <div className="text-xs text-gray-600 mt-1">활성 공고</div>
             </div>
           </div>
