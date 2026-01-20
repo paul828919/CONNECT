@@ -506,6 +506,12 @@ model organizations {
   refundRequests                                                 RefundRequest[]
   teamInviteLinks                                                team_invite_links[]
   locations                                                      CompanyLocation[]   // 소재지 정보 (본사, 연구소, 공장)
+  sme_program_matches                                            sme_program_matches[] // SME24 매칭 결과
+
+  // ===== SME24 Certification Verification Fields =====
+  // API-verified certifications from 중소벤처24 (이노비즈, 벤처, 메인비즈)
+  certificationVerifiedAt    DateTime?    // Last verification timestamp
+  certificationVerifyResult  Json?        // { innoBiz, venture, mainBiz } verification results
 
   @@index([businessNumberHash])
   @@index([profileCompleted])
@@ -1142,6 +1148,16 @@ enum RefundStatus {
   REJECTED
 }
 
+// ============================================================================
+// SME Program Status (중소벤처24 지원사업 상태)
+// For tracking the lifecycle of SME support programs from the SME24 API
+// ============================================================================
+enum SMEProgramStatus {
+  ACTIVE     // 접수 중 (Currently accepting applications)
+  EXPIRED    // 마감 (Application deadline passed)
+  ARCHIVED   // 보관 (Manually archived or hidden)
+}
+
 model RefundRequest {
   id                   String                @id @default(cuid())
   userId               String
@@ -1191,4 +1207,164 @@ model RefundRequest {
   @@index([organizationId])
   @@index([status])
   @@index([reasonCategory])
+}
+
+// ============================================================================
+// SME Support Programs (중소벤처24 지원사업)
+// ============================================================================
+// Separate table for SME24 API programs - distinct from R&D funding_programs.
+// SME programs have 40+ unique eligibility fields (scale, revenue, certs, age)
+// that don't exist in R&D programs, warranting schema separation.
+//
+// API Source: 중소벤처24 민간공고목록정보 API
+// Documentation: https://www.smes.go.kr/fnct/apiReqst/extPblancInfo
+// ============================================================================
+model sme_programs {
+  id                    String           @id @default(uuid())
+
+  // ===== SME24 API Core Fields =====
+  pblancSeq             Int              @unique  // 공고SEQ (Primary identifier from API)
+  title                 String           // pblancNm (공고명)
+  detailBsnsNm          String?          // 세부사업명
+  description           String?          @db.Text  // policyCnts (사업개요, HTML stripped)
+  supportScale          String?          @db.Text  // sportMg (지원규모)
+  supportContents       String?          @db.Text  // sportCnts (지원내용)
+  supportTarget         String?          @db.Text  // sportTrget (지원대상)
+  applicationMethod     String?          @db.Text  // reqstRcept (신청방법)
+
+  // ===== Organization & Contact =====
+  supportInstitution    String?          // sportInsttNm (지원기관명)
+  supportInstitutionCd  String?          // sportInsttCd (지원기관코드)
+  contactInfo           String?          @db.Text  // refrnc (문의처)
+  contactUrl            String?          // refrncUrl (문의처 홈페이지)
+  contactDept           String?          // refrncDept (문의처 부서)
+  contactTel            String?          // refrncTel (문의처 전화번호)
+  linkedInstitution     String?          // cntcInsttNm (연계기관명)
+  linkedInstitutionCd   String?          // cntcInsttCd (연계기관코드)
+
+  // ===== URLs & Attachments =====
+  detailUrl             String?          // pblancDtlUrl (상세정보경로)
+  applicationUrl        String?          // reqstLinkInfo (온라인 신청 URL)
+  attachmentUrls        String[]         // pblancAttach (첨부파일URL, pipe-separated → array)
+  attachmentNames       String[]         // pblancAttachNm (첨부파일명)
+  announcementFileUrl   String?          // pblancFileUrl (공고문 URL)
+  announcementFileName  String?          // pblancFileNm (공고문 파일명)
+
+  // ===== Dates =====
+  applicationStart      DateTime?        // pblancBgnDt (신청시작일)
+  applicationEnd        DateTime?        // pblancEndDt (신청마감일)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  apiCreatedAt          DateTime?        // creatDt (API 공고등록일)
+  apiUpdatedAt          DateTime?        // updDt (API 수정일시)
+
+  // ===== Program Classification =====
+  bizType               String?          // 사업유형 (금융, 기술, 인력 등)
+  bizTypeCd             String?          // 사업유형코드 (PC10, PC20, etc.)
+  sportType             String?          // 지원유형 (창업, 기술개발, 정책자금 등)
+  sportTypeCd           String?          // 지원유형코드 (RT01, RT02, etc.)
+  lifeCycle             String[]         // 생애주기구분 (창업, 성장, 폐업·재기)
+  lifeCycleCd           String[]         // 생애주기구분코드 (LC01, LC02, LC03)
+
+  // ===== Target Eligibility Criteria =====
+  targetRegions         String[]         // areaNm (지역명) - pipe-separated → array
+  targetRegionCodes     String[]         // areaCd (지역코드) - pipe-separated → array
+  targetCompanyScale    String[]         // cmpScale (기업규모) - 중소기업, 소상공인, 창업기업 등
+  targetCompanyScaleCd  String[]         // cmpScaleCd (기업규모코드) - CC10, CC30, etc.
+  targetSalesRange      String[]         // salsAmt (매출액) - 5억미만, 5억~10억 등
+  targetSalesRangeCd    String[]         // salsAmtCd (매출액코드) - SI01, SI02, etc.
+  minSalesAmount        BigInt?          // minSalsAmt (최소 매출액)
+  maxSalesAmount        BigInt?          // maxSalsAmt (최대 매출액)
+  targetEmployeeRange   String[]         // emplyCnt (종업원수) - 1~5명미만 등
+  targetEmployeeRangeCd String[]         // emplyCntCd (종업원수코드) - EI01, EI02, etc.
+  minEmployeeCount      Int?             // minEmplyCnt (최소 종업원수)
+  maxEmployeeCount      Int?             // mixEmplyCnt (최대 종업원수) - Note: API typo "mix"
+  targetBusinessAge     String[]         // ablbiz (업력) - 3년미만, 3~5년 등
+  targetBusinessAgeCd   String[]         // ablbizCd (업력코드) - OI01, OI02, etc.
+  minBusinessAge        Int?             // minAblbiz (최소 업력, 년)
+  maxBusinessAge        Int?             // maxAblbiz (최대 업력, 년)
+  targetCeoAge          Int?             // rpsntAge (대표자 연령)
+  minCeoAge             Int?             // minRpsntAge (최소 대표자 연령)
+  maxCeoAge             Int?             // maxRpsntAge (최대 대표자 연령)
+  targetIndustry        String?          // induty (업종)
+
+  // ===== Required Certifications =====
+  requiredCerts         String[]         // needCrtfn (필요인증) - 이노비즈, 벤처기업 등
+  requiredCertsCd       String[]         // needCrtfnCd (필요인증코드) - EC06, EC07, EC08 etc.
+
+  // ===== Financial Details =====
+  minSupportAmount      BigInt?          // minSportAmt (최소 지원금액)
+  maxSupportAmount      BigInt?          // maxSportAmt (최대 지원금액)
+  minInterestRate       Decimal?         @db.Decimal(5, 2)  // minInrst (최소 금리)
+  maxInterestRate       Decimal?         @db.Decimal(5, 2)  // maxInrst (최대 금리)
+
+  // ===== Special Flags =====
+  isRestart             Boolean          @default(false)  // refntnYn (재창업여부)
+  isPreStartup          Boolean          @default(false)  // fntnYn (예비창업여부)
+  isFemaleOwner         Boolean          @default(false)  // fmleRpsntYn (여성대표여부)
+
+  // ===== Internal Tracking =====
+  status                SMEProgramStatus @default(ACTIVE)
+  contentHash           String?          @unique  // For deduplication
+  syncedAt              DateTime?        // Last sync timestamp
+
+  // ===== Relations =====
+  matches               sme_program_matches[]
+
+  @@index([status, applicationEnd])
+  @@index([bizTypeCd])
+  @@index([sportTypeCd])
+  @@index([targetCompanyScaleCd])
+  @@index([targetRegionCodes])
+  @@index([applicationEnd])
+  @@index([syncedAt])
+  @@map("sme_programs")
+}
+
+// ============================================================================
+// SME Program Match Results (중소벤처24 매칭 결과)
+// ============================================================================
+// Stores match results between organizations and SME support programs.
+// Uses separate eligibility logic from R&D matching (scale, revenue, certs).
+//
+// Eligibility Levels:
+// - FULLY_ELIGIBLE: All criteria met, can apply immediately
+// - CONDITIONALLY_ELIGIBLE: Most criteria met, minor issues (e.g., cert expiring)
+// - INELIGIBLE: Hard requirement failed (filtered out, not stored)
+// ============================================================================
+model sme_program_matches {
+  id                  String        @id @default(uuid())
+  organizationId      String
+  programId           String
+  score               Int           @db.SmallInt  // 0-100 total score
+  explanation         Json          // { summary, reasons, warnings, recommendations }
+
+  // Eligibility details
+  eligibilityLevel    String        // FULLY_ELIGIBLE, CONDITIONALLY_ELIGIBLE
+  failedCriteria      String[]      // List of failed eligibility checks
+  metCriteria         String[]      // List of met eligibility checks
+
+  // Score breakdown (100 points total)
+  scoreBreakdown      Json?         // { companyScale, revenueRange, employeeCount, businessAge, region, certifications }
+
+  // User actions
+  viewed              Boolean       @default(false)
+  saved               Boolean       @default(false)
+  viewedAt            DateTime?
+  savedAt             DateTime?
+  notificationSent    Boolean       @default(false)
+  notifiedAt          DateTime?
+  createdAt           DateTime      @default(now())
+
+  // Relations
+  organization        organizations @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  program             sme_programs  @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, programId])
+  @@index([organizationId, score])
+  @@index([programId])
+  @@index([saved])
+  @@index([viewed])
+  @@index([createdAt])
+  @@map("sme_program_matches")
 }
