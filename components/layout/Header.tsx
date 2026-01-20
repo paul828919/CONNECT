@@ -18,6 +18,7 @@ const navLinks: NavLink[] = [
   { href: '/dashboard', label: '대시보드' },
   { href: '/dashboard/matches', label: '매칭 결과' },
   { href: '/dashboard/sme', label: 'SME 지원사업' },
+  { href: '/dashboard/sme-programs', label: 'SME 매칭 결과' },
   { href: '/dashboard/partners', label: '파트너 검색' },
   { href: '/dashboard/consortiums', label: '컨소시엄' },
   { href: '/dashboard/messages', label: '메시지' },

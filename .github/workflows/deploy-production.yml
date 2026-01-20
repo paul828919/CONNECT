@@ -457,9 +457,17 @@ jobs:
           # ============================================
           HANCOM_DOCS_ID=${{ secrets.HANCOM_DOCS_ID }}
           HANCOM_DOCS_PW=${{ secrets.HANCOM_DOCS_PW }}
+
+          # ============================================
+          # SME24 API (중소벤처24)
+          # ============================================
+          SME24_ANNOUNCEMENT_API_KEY=${{ secrets.SME24_ANNOUNCEMENT_API_KEY }}
+          SME24_INNOBIZ_API_KEY=${{ secrets.SME24_INNOBIZ_API_KEY }}
+          SME24_VENTURE_API_KEY=${{ secrets.SME24_VENTURE_API_KEY }}
+          SME24_MAINBIZ_API_KEY=${{ secrets.SME24_MAINBIZ_API_KEY }}
           EOF
 
-          echo "✓ .env.production generated from GitHub Secrets (149 lines)"
+          echo "✓ .env.production generated from GitHub Secrets (157 lines)"
 
       - name: Transfer .env.production to production server
         run: |

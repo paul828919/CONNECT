@@ -37,7 +37,7 @@ export const sme24Config: SME24Config = {
   innoBizApiKey: process.env.SME24_INNOBIZ_API_KEY || '',
   ventureApiKey: process.env.SME24_VENTURE_API_KEY || '',
   mainBizApiKey: process.env.SME24_MAINBIZ_API_KEY || '',
-  certificateBaseUrl: 'https://www.smes.go.kr/venturein/pbntc/searchPbntc.do',
+  certificateBaseUrl: 'https://www.smes.go.kr/api/certificates',  // Official API v3 endpoint
 
   // Common settings
   timeout: 30000, // 30 seconds

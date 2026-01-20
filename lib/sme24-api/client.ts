@@ -113,7 +113,7 @@ export class SME24Client {
 
     try {
       const queryParams = new URLSearchParams({
-        apiKey: sme24Config.announcementApiKey,
+        token: sme24Config.announcementApiKey,  // Official API uses 'token' not 'apiKey'
         pageNo: String(params.pageNo || 1),
         numOfRows: String(params.numOfRows || 100),
         ...(params.strDt && { strDt: params.strDt }),
@@ -215,6 +215,8 @@ export class SME24Client {
 
   /**
    * Verify InnoBiz certification (이노비즈확인서 - y105)
+   * Official API v3: GET /api/certificates/{certCode}?bizno={bizno}
+   * Auth: Authorization: Bearer {token}
    *
    * @param bizno Business registration number (10 digits, no dashes)
    * @returns Certificate verification result
@@ -224,12 +226,14 @@ export class SME24Client {
 
     try {
       const cleanBizno = bizno.replace(/-/g, '');
-      const url = `${sme24Config.certificateBaseUrl}`;
+      const certCode = CERTIFICATE_ENDPOINTS.INNOBIZ.code;
+      const url = `${sme24Config.certificateBaseUrl}/${certCode}`;
 
-      const response = await this.httpClient.post<InnoBizCertificateResponse>(url, {
-        apiKey: sme24Config.innoBizApiKey,
-        serviceCode: CERTIFICATE_ENDPOINTS.INNOBIZ.code,
-        bizno: cleanBizno,
+      const response = await this.httpClient.get<InnoBizCertificateResponse>(url, {
+        params: { bizno: cleanBizno },
+        headers: {
+          'Authorization': `Bearer ${sme24Config.innoBizApiKey}`,
+        },
       });
 
       const data = response.data;
@@ -272,6 +276,8 @@ export class SME24Client {
 
   /**
    * Verify Venture Business certification (벤처기업확인서 - y106)
+   * Official API v3: GET /api/certificates/{certCode}?bizno={bizno}
+   * Auth: Authorization: Bearer {token}
    *
    * @param bizno Business registration number (10 digits, no dashes)
    * @returns Certificate verification result
@@ -281,12 +287,14 @@ export class SME24Client {
 
     try {
       const cleanBizno = bizno.replace(/-/g, '');
-      const url = `${sme24Config.certificateBaseUrl}`;
+      const certCode = CERTIFICATE_ENDPOINTS.VENTURE.code;
+      const url = `${sme24Config.certificateBaseUrl}/${certCode}`;
 
-      const response = await this.httpClient.post<VentureCertificateResponse>(url, {
-        apiKey: sme24Config.ventureApiKey,
-        serviceCode: CERTIFICATE_ENDPOINTS.VENTURE.code,
-        bizno: cleanBizno,
+      const response = await this.httpClient.get<VentureCertificateResponse>(url, {
+        params: { bizno: cleanBizno },
+        headers: {
+          'Authorization': `Bearer ${sme24Config.ventureApiKey}`,
+        },
       });
 
       const data = response.data;
@@ -329,6 +337,8 @@ export class SME24Client {
 
   /**
    * Verify MainBiz certification (메인비즈확인서 - y104)
+   * Official API v3: GET /api/certificates/{certCode}?bizno={bizno}
+   * Auth: Authorization: Bearer {token}
    *
    * @param bizno Business registration number (10 digits, no dashes)
    * @returns Certificate verification result
@@ -338,12 +348,14 @@ export class SME24Client {
 
     try {
       const cleanBizno = bizno.replace(/-/g, '');
-      const url = `${sme24Config.certificateBaseUrl}`;
+      const certCode = CERTIFICATE_ENDPOINTS.MAINBIZ.code;
+      const url = `${sme24Config.certificateBaseUrl}/${certCode}`;
 
-      const response = await this.httpClient.post<MainBizCertificateResponse>(url, {
-        apiKey: sme24Config.mainBizApiKey,
-        serviceCode: CERTIFICATE_ENDPOINTS.MAINBIZ.code,
-        bizno: cleanBizno,
+      const response = await this.httpClient.get<MainBizCertificateResponse>(url, {
+        params: { bizno: cleanBizno },
+        headers: {
+          'Authorization': `Bearer ${sme24Config.mainBizApiKey}`,
+        },
       });
 
       const data = response.data;
