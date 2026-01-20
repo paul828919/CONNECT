@@ -295,7 +295,7 @@ export default function SMEDashboardPage() {
             </button>
 
             <p className="text-sm text-gray-500">
-              중소벤처24 API 기반 (정책자금, 기술개발, 창업지원 등)
+              중소벤처24 기반 (정책자금, 기술개발, 창업지원 등)
             </p>
           </div>
         </div>
