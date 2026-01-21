@@ -182,7 +182,7 @@ export class SME24Client {
    */
   async fetchAllAnnouncements(
     params: SME24SearchParams = {},
-    _maxPages: number = 10 // eslint-disable-line @typescript-eslint/no-unused-vars
+    _maxPages: number = 10
   ): Promise<SME24ApiResponse<SME24AnnouncementItem[]>> {
     // SME24 API returns all records in one call - no pagination needed
     console.log('[SME24] fetchAllAnnouncements: API returns all records, no pagination');
