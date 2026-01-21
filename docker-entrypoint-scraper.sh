@@ -61,6 +61,6 @@ if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
   exit 1
 fi
 
-# Start scraper worker
-echo "✅ All services ready. Starting scraper worker..."
-exec npx tsx lib/scraping/worker.ts
+# Start scraper service (index.ts imports worker.ts AND starts SME24 sync cron)
+echo "✅ All services ready. Starting scraper service..."
+exec npx tsx lib/scraping/index.ts
