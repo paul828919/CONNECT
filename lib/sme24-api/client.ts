@@ -103,6 +103,19 @@ export class SME24Client {
   /**
    * Fetch SME support program announcements
    *
+   * Official SME24 API Response Format (per PDF guide page 4):
+   * {
+   *   "resultCd": "0",           // "0" = success (NOT "00")
+   *   "data": [...],             // Array of announcements (NOT nested in response.body.items.item)
+   *   "resultMsg": "정상적으로 조회되었습니다."
+   * }
+   *
+   * Supported query params (per PDF guide page 2):
+   * - token (required)
+   * - strDt / endDt (optional date range, YYYYMMDD)
+   * - html (optional, strip HTML tags)
+   * Note: pageNo/numOfRows are NOT supported - API returns all matching records
+   *
    * @param params Search parameters
    * @returns List of announcement items
    */
@@ -112,45 +125,43 @@ export class SME24Client {
     await this.rateLimiter.acquire();
 
     try {
+      // Build query params - only include supported parameters
       const queryParams = new URLSearchParams({
-        token: sme24Config.announcementApiKey,  // Official API uses 'token' not 'apiKey'
-        pageNo: String(params.pageNo || 1),
-        numOfRows: String(params.numOfRows || 100),
+        token: sme24Config.announcementApiKey,
         ...(params.strDt && { strDt: params.strDt }),
         ...(params.endDt && { endDt: params.endDt }),
-        ...(params.bizTypeCd && { bizTypeCd: params.bizTypeCd }),
-        ...(params.sportTypeCd && { sportTypeCd: params.sportTypeCd }),
-        ...(params.areaCd && { areaCd: params.areaCd }),
       });
 
       const url = `${sme24Config.announcementBaseUrl}?${queryParams.toString()}`;
+      console.log(`[SME24] Fetching: ${sme24Config.announcementBaseUrl}?token=***&strDt=${params.strDt || 'N/A'}&endDt=${params.endDt || 'N/A'}`);
+
       const response = await this.httpClient.get<SME24AnnouncementListResponse>(url);
 
-      // Handle API response structure
-      const body = response.data?.response?.body;
-      const header = response.data?.response?.header;
+      // Handle actual SME24 API response format (flat structure)
+      const apiResponse = response.data;
 
-      if (header?.resultCode !== '00') {
+      // Debug: Log response structure for troubleshooting
+      console.log(`[SME24] Response resultCd: ${apiResponse?.resultCd}, resultMsg: ${apiResponse?.resultMsg}`);
+      console.log(`[SME24] Response data count: ${Array.isArray(apiResponse?.data) ? apiResponse.data.length : 'N/A'}`);
+
+      // Check for API error (resultCd !== "0")
+      if (apiResponse?.resultCd !== '0') {
         return {
           success: false,
-          error: header?.resultMsg || 'Unknown API error',
-          statusCode: parseInt(header?.resultCode || '99'),
+          error: apiResponse?.resultMsg || 'Unknown API error',
+          statusCode: parseInt(apiResponse?.resultCd || '99'),
         };
       }
 
-      // Handle single item vs array in XML→JSON conversion
-      let items: SME24AnnouncementItem[] = [];
-      if (body?.items?.item) {
-        items = Array.isArray(body.items.item)
-          ? body.items.item
-          : [body.items.item];
-      }
+      // Extract items from flat data array
+      const items: SME24AnnouncementItem[] = Array.isArray(apiResponse?.data)
+        ? apiResponse.data
+        : [];
 
       return {
         success: true,
         data: items,
-        totalCount: body?.totalCount || 0,
-        pageNo: body?.pageNo || 1,
+        totalCount: items.length, // API returns all items, no pagination
       };
     } catch (error) {
       return this.handleError(error);
@@ -158,55 +169,23 @@ export class SME24Client {
   }
 
   /**
-   * Fetch all announcements with pagination
+   * Fetch all announcements
+   *
+   * Note: The SME24 API does NOT support pagination - it returns all matching
+   * records in a single response. This method is kept for API compatibility
+   * but simply delegates to fetchAnnouncements().
    *
    * @param params Base search parameters
-   * @param maxPages Maximum pages to fetch (default: 10)
-   * @returns All announcement items across pages
+   * @param _maxPages Deprecated - API returns all records, no pagination
+   * @returns All announcement items
    */
   async fetchAllAnnouncements(
     params: SME24SearchParams = {},
-    maxPages: number = 10
+    _maxPages: number = 10 // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<SME24ApiResponse<SME24AnnouncementItem[]>> {
-    const allItems: SME24AnnouncementItem[] = [];
-    let currentPage = 1;
-    let hasMore = true;
-
-    while (hasMore && currentPage <= maxPages) {
-      const result = await this.fetchAnnouncements({
-        ...params,
-        pageNo: currentPage,
-        numOfRows: 100,
-      });
-
-      if (!result.success || !result.data) {
-        // If first page fails, return error
-        if (currentPage === 1) {
-          return result;
-        }
-        // Otherwise, return what we have
-        break;
-      }
-
-      allItems.push(...result.data);
-
-      // Check if there are more pages
-      const totalCount = result.totalCount || 0;
-      const fetchedCount = currentPage * 100;
-      hasMore = fetchedCount < totalCount;
-      currentPage++;
-
-      // Small delay between paginated requests
-      if (hasMore) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-    }
-
-    return {
-      success: true,
-      data: allItems,
-      totalCount: allItems.length,
-    };
+    // SME24 API returns all records in one call - no pagination needed
+    console.log('[SME24] fetchAllAnnouncements: API returns all records, no pagination');
+    return this.fetchAnnouncements(params);
   }
 
   // ============================================================================

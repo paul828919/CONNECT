@@ -11,22 +11,20 @@
 
 /**
  * Raw API response for announcement list
+ *
+ * Actual SME24 API response format (per official PDF guide, page 4):
+ * {
+ *   "resultCd": "0",
+ *   "data": [{ announcement items }],
+ *   "resultMsg": "정상적으로 조회되었습니다."
+ * }
+ *
+ * Note: This is a FLAT structure, NOT wrapped in response.header/body like data.go.kr
  */
 export interface SME24AnnouncementListResponse {
-  response: {
-    header: {
-      resultCode: string;
-      resultMsg: string;
-    };
-    body: {
-      items: {
-        item: SME24AnnouncementItem[];
-      };
-      numOfRows: number;
-      pageNo: number;
-      totalCount: number;
-    };
-  };
+  resultCd: string;              // "0" = success, other values = error
+  resultMsg: string;             // Human-readable message
+  data: SME24AnnouncementItem[]; // Array of announcements (flat, not nested)
 }
 
 /**
@@ -213,15 +211,20 @@ export interface OrganizationCertificationResult {
 
 /**
  * Search parameters for announcement API
+ *
+ * Note: Only token, strDt, and endDt are officially supported (per PDF guide page 2).
+ * - pageNo/numOfRows are NOT supported - API returns all matching records
+ * - bizTypeCd/sportTypeCd/areaCd are NOT documented as supported params
  */
 export interface SME24SearchParams {
-  pageNo?: number;                // 페이지 번호 (default: 1)
-  numOfRows?: number;             // 한 페이지 결과 수 (default: 100, max: 1000)
-  strDt?: string;                 // 검색시작일 (YYYYMMDD)
-  endDt?: string;                 // 검색종료일 (YYYYMMDD)
-  bizTypeCd?: string;             // 사업유형코드
-  sportTypeCd?: string;           // 지원유형코드
-  areaCd?: string;                // 지역코드
+  strDt?: string;                 // 검색시작일 (YYYYMMDD) - optional
+  endDt?: string;                 // 검색종료일 (YYYYMMDD) - optional
+  // Legacy fields kept for backward compatibility but not sent to API
+  pageNo?: number;                // DEPRECATED: Not supported by API
+  numOfRows?: number;             // DEPRECATED: Not supported by API
+  bizTypeCd?: string;             // DEPRECATED: Not documented as supported
+  sportTypeCd?: string;           // DEPRECATED: Not documented as supported
+  areaCd?: string;                // DEPRECATED: Not documented as supported
 }
 
 /**

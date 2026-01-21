@@ -7,6 +7,7 @@
 
 import scrapingWorker from './worker'; // Schedulers initialized automatically on import
 import { startEmailCronJobs } from '../email/cron';
+import { startSME24SyncCron } from '../sme24-api/cron';
 
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log('🤖 Connect Platform - Scraping Service');
@@ -27,12 +28,21 @@ try {
   console.warn('   (This is non-critical - scraping will continue)');
 }
 
-// 2. Worker is already started via import
+// 3. Start SME24 sync cron job (graceful failure if API key not configured)
+try {
+  startSME24SyncCron();
+  console.log('✓ SME24 program sync enabled');
+} catch (error: any) {
+  console.warn('⚠️  SME24 sync disabled:', error.message);
+  console.warn('   (This is non-critical - can trigger sync manually via admin API)');
+}
+
+// 4. Worker is already started via import
 console.log('✓ Scraping worker started (max concurrency: 2)');
 console.log('✓ Monitoring Redis queue:', process.env.REDIS_QUEUE_HOST || 'localhost:6380');
 console.log('');
 
-// 3. Graceful shutdown
+// 5. Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('📴 SIGTERM received, shutting down gracefully...');
   await scrapingWorker.close();
@@ -45,7 +55,7 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-// 4. Health check endpoint (optional, for Docker healthcheck)
+// 6. Health check endpoint (optional, for Docker healthcheck)
 if (process.env.ENABLE_HEALTH_SERVER === 'true') {
   const http = require('http');
 
