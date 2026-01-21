@@ -93,6 +93,12 @@ services:
       # Cron Job Authentication
       CRON_SECRET_TOKEN: ${CRON_SECRET_TOKEN}
 
+      # SME24 API (중소벤처24) - Required for SME program matching
+      SME24_ANNOUNCEMENT_API_KEY: ${SME24_ANNOUNCEMENT_API_KEY}
+      SME24_INNOBIZ_API_KEY: ${SME24_INNOBIZ_API_KEY}
+      SME24_VENTURE_API_KEY: ${SME24_VENTURE_API_KEY}
+      SME24_MAINBIZ_API_KEY: ${SME24_MAINBIZ_API_KEY}
+
       # Monitoring
       SENTRY_DSN: ${SENTRY_DSN}
 
@@ -194,6 +200,12 @@ services:
 
       # Cron Job Authentication
       CRON_SECRET_TOKEN: ${CRON_SECRET_TOKEN}
+
+      # SME24 API (중소벤처24) - Required for SME program matching
+      SME24_ANNOUNCEMENT_API_KEY: ${SME24_ANNOUNCEMENT_API_KEY}
+      SME24_INNOBIZ_API_KEY: ${SME24_INNOBIZ_API_KEY}
+      SME24_VENTURE_API_KEY: ${SME24_VENTURE_API_KEY}
+      SME24_MAINBIZ_API_KEY: ${SME24_MAINBIZ_API_KEY}
 
       SENTRY_DSN: ${SENTRY_DSN}
       NODE_OPTIONS: "--max-old-space-size=8192"
@@ -444,6 +456,12 @@ services:
       # Anthropic Claude AI (for categorization)
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5-20250929}
+
+      # SME24 API (중소벤처24) - Required for SME program sync
+      SME24_ANNOUNCEMENT_API_KEY: ${SME24_ANNOUNCEMENT_API_KEY}
+      SME24_INNOBIZ_API_KEY: ${SME24_INNOBIZ_API_KEY}
+      SME24_VENTURE_API_KEY: ${SME24_VENTURE_API_KEY}
+      SME24_MAINBIZ_API_KEY: ${SME24_MAINBIZ_API_KEY}
 
       # Hancom Docs (HWP to PDF Converter)
       HANCOM_DOCS_URL: https://www.hancomdocs.com/ko/
