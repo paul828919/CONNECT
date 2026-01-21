@@ -126,13 +126,14 @@ export class SME24Client {
 
     try {
       // Build query params - only include supported parameters
-      const queryParams = new URLSearchParams({
-        token: sme24Config.announcementApiKey,
-        ...(params.strDt && { strDt: params.strDt }),
-        ...(params.endDt && { endDt: params.endDt }),
-      });
+      // Note: The token may already be URL-encoded in .env, so we build the URL manually
+      // to avoid double-encoding (URLSearchParams would encode % as %25)
+      const queryParts: string[] = [];
+      queryParts.push(`token=${sme24Config.announcementApiKey}`);
+      if (params.strDt) queryParts.push(`strDt=${params.strDt}`);
+      if (params.endDt) queryParts.push(`endDt=${params.endDt}`);
 
-      const url = `${sme24Config.announcementBaseUrl}?${queryParams.toString()}`;
+      const url = `${sme24Config.announcementBaseUrl}?${queryParts.join('&')}`;
       console.log(`[SME24] Fetching: ${sme24Config.announcementBaseUrl}?token=***&strDt=${params.strDt || 'N/A'}&endDt=${params.endDt || 'N/A'}`);
 
       const response = await this.httpClient.get<SME24AnnouncementListResponse>(url);
