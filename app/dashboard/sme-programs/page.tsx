@@ -60,6 +60,8 @@ export default function SMEProgramsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savedFilter, setSavedFilter] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const currentPage = parseInt(searchParams.get('page') || '1');
 
@@ -130,6 +132,39 @@ export default function SMEProgramsPage() {
           m.id === matchId ? { ...m, saved: currentSaved } : m
         )
       );
+    }
+  };
+
+  const handleGenerateMatches = async () => {
+    try {
+      setGenerating(true);
+      setError(null);
+      setSuccess(null);
+
+      const res = await fetch('/api/sme-programs/generate', {
+        method: 'POST',
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || '매칭 생성에 실패했습니다.');
+        return;
+      }
+
+      setSuccess(data.data?.message || '새로운 매칭이 생성되었습니다.');
+
+      // Reset to page 1 and refresh matches
+      router.push('/dashboard/sme-programs?page=1');
+      await fetchMatches(1, savedFilter);
+
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccess(null), 5000);
+    } catch (err) {
+      console.error('Error generating SME matches:', err);
+      setError('매칭 생성 중 오류가 발생했습니다.');
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -221,17 +256,39 @@ export default function SMEProgramsPage() {
               </svg>
               저장됨만
             </button>
-            <Link
-              href="/dashboard/sme"
-              className="inline-flex items-center px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors"
+            <button
+              onClick={handleGenerateMatches}
+              disabled={generating}
+              className="inline-flex items-center px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              새 매칭 생성
-            </Link>
+              {generating ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  매칭 생성 중...
+                </>
+              ) : (
+                <>
+                  <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  새 매칭 생성
+                </>
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Success Message */}
+        {success && (
+          <div className="rounded-xl bg-green-50 border border-green-200 p-4">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <p className="text-sm text-green-700">{success}</p>
+            </div>
+          </div>
+        )}
 
         {/* Error */}
         {error && (
