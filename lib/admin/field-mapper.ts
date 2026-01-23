@@ -13,6 +13,53 @@
 import { OrganizationType } from '@prisma/client';
 
 /**
+ * Null value indicators in Korean extraction outputs
+ * These should be treated as null/undefined rather than stored as strings
+ */
+const NULL_INDICATORS = [
+  '명시되지 않음',
+  '해당없음',
+  '해당 없음',
+  '미정',
+  '미공개',
+  '추후 공지',
+  '추후공지',
+  '별도 공지',
+  '별도공지',
+  'N/A',
+  'n/a',
+  '-',
+  '없음',
+  '미상',
+  '공고문 미기재',
+  '미기재',
+];
+
+/**
+ * Check if a value represents a null/undefined indicator
+ * @param value - The string value to check
+ * @returns true if the value should be treated as null
+ */
+export function isNullValue(value: string | null | undefined): boolean {
+  if (!value) return true;
+  const trimmed = value.trim();
+  if (!trimmed) return true;
+  return NULL_INDICATORS.some(
+    (indicator) => trimmed === indicator || trimmed.toLowerCase() === indicator.toLowerCase()
+  );
+}
+
+/**
+ * Return null if value is a null indicator, otherwise return the value
+ * @param value - The string value to normalize
+ * @returns The original value or null if it's a null indicator
+ */
+export function normalizeNullValue(value: string | null | undefined): string | null {
+  if (isNullValue(value)) return null;
+  return value!.trim();
+}
+
+/**
  * Database-ready enrichment data structure
  */
 export interface EnrichmentData {
@@ -79,10 +126,10 @@ export function mapToEnrichmentData(
     result.deadline = parseKoreanDate(flatData.application_close_at);
   }
   if (flatData.deadline_time_rule) {
-    result.deadlineTimeRule = flatData.deadline_time_rule;
+    result.deadlineTimeRule = normalizeNullValue(flatData.deadline_time_rule);
   }
   if (flatData.submission_system) {
-    result.submissionSystem = flatData.submission_system;
+    result.submissionSystem = normalizeNullValue(flatData.submission_system);
   }
   if (flatData.contact) {
     result.contactInfo = parseContactInfo(flatData.contact);
@@ -93,17 +140,18 @@ export function mapToEnrichmentData(
     result.budgetAmount = parseBudgetAmount(flatData.budget_total);
   }
   if (flatData.budget_per_project) {
-    result.budgetPerProject = flatData.budget_per_project;
+    const normalizedBudgetPerProject = normalizeNullValue(flatData.budget_per_project);
+    result.budgetPerProject = normalizedBudgetPerProject;
     // Also try to extract numeric value for budgetAmount if not set
-    if (!result.budgetAmount) {
-      result.budgetAmount = parseBudgetAmount(flatData.budget_per_project);
+    if (!result.budgetAmount && normalizedBudgetPerProject) {
+      result.budgetAmount = parseBudgetAmount(normalizedBudgetPerProject);
     }
   }
   if (flatData.funding_rate) {
-    result.fundingRate = flatData.funding_rate;
+    result.fundingRate = normalizeNullValue(flatData.funding_rate);
   }
   if (flatData.project_duration) {
-    result.fundingPeriod = flatData.project_duration;
+    result.fundingPeriod = normalizeNullValue(flatData.project_duration);
   }
   if (flatData.num_awards) {
     result.numAwards = parseNumAwards(flatData.num_awards);
@@ -162,9 +210,11 @@ export function mapToEnrichmentData(
 /**
  * Parse Korean date formats into Date object
  * Handles: "2026-02-09 09:00", "2026년 2월 9일", "2/9", etc.
+ * Returns null for null indicators like "명시되지 않음"
  */
 export function parseKoreanDate(dateStr: string): Date | null {
   if (!dateStr) return null;
+  if (isNullValue(dateStr)) return null;
 
   const cleaned = dateStr.trim();
 
@@ -203,9 +253,11 @@ export function parseKoreanDate(dateStr: string): Date | null {
 /**
  * Parse budget amount from Korean format
  * Handles: "260백만원", "7억원", "260백만원/년 × 2년", "총 52억원"
+ * Returns null for null indicators like "명시되지 않음"
  */
 export function parseBudgetAmount(budgetStr: string): bigint | null {
   if (!budgetStr) return null;
+  if (isNullValue(budgetStr)) return null;
 
   const cleaned = budgetStr.trim();
 
@@ -244,9 +296,11 @@ export function parseBudgetAmount(budgetStr: string): bigint | null {
 /**
  * Parse number of awards from text
  * Handles: "12개 과제", "5개", "약 10개"
+ * Returns null for null indicators like "명시되지 않음"
  */
 export function parseNumAwards(numStr: string): number | null {
   if (!numStr) return null;
+  if (isNullValue(numStr)) return null;
 
   const match = numStr.match(/(\d+)/);
   if (match) {
@@ -259,9 +313,11 @@ export function parseNumAwards(numStr: string): number | null {
 /**
  * Parse organization types from Korean text
  * Maps Korean terms to OrganizationType enum
+ * Returns empty array for null indicators like "명시되지 않음"
  */
 export function parseOrganizationTypes(typesStr: string): OrganizationType[] {
   if (!typesStr) return [];
+  if (isNullValue(typesStr)) return [];
 
   const types: OrganizationType[] = [];
   const lower = typesStr.toLowerCase();
@@ -297,21 +353,25 @@ export function parseOrganizationTypes(typesStr: string): OrganizationType[] {
 
 /**
  * Parse array field from comma/semicolon separated string
+ * Returns empty array for null indicators like "명시되지 않음"
  */
 export function parseArrayField(str: string): string[] {
   if (!str) return [];
+  if (isNullValue(str)) return [];
 
   return str
     .split(/[,;，；]/)
     .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+    .filter((s) => s.length > 0 && !isNullValue(s)); // Also filter out null indicators within arrays
 }
 
 /**
  * Parse boolean from Korean text
+ * Returns false for null indicators like "명시되지 않음"
  */
 export function parseBoolean(str: string): boolean {
   if (!str) return false;
+  if (isNullValue(str)) return false;
 
   const lower = str.toLowerCase().trim();
   const trueValues = ['예', '필수', 'yes', 'true', 'y', '1', '필수', '있음'];
@@ -320,9 +380,11 @@ export function parseBoolean(str: string): boolean {
 
 /**
  * Parse contact info from text
+ * Returns undefined for null indicators like "명시되지 않음"
  */
 export function parseContactInfo(contactStr: string): EnrichmentData['contactInfo'] {
   if (!contactStr) return undefined;
+  if (isNullValue(contactStr)) return undefined;
 
   const result: EnrichmentData['contactInfo'] = {};
 

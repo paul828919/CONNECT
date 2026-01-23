@@ -443,3 +443,99 @@ export function validateRequiredFields(result: ParsedResult): string[] {
 
   return errors;
 }
+
+/**
+ * Extract JSON schema from markdown if present
+ * Claude sometimes generates a JSON block at the end of the markdown
+ * This can be used as a fallback or validation source
+ *
+ * @param markdown - The raw markdown content
+ * @returns Parsed JSON object or null if not found/invalid
+ */
+export function extractJsonSchema(markdown: string): Record<string, unknown> | null {
+  // Look for JSON code block (```json ... ```)
+  const jsonMatch = markdown.match(/```json\s*\n([\s\S]*?)\n\s*```/);
+  if (!jsonMatch) return null;
+
+  try {
+    const parsed = JSON.parse(jsonMatch[1]);
+    return parsed as Record<string, unknown>;
+  } catch {
+    console.warn('Failed to parse JSON schema from markdown');
+    return null;
+  }
+}
+
+/**
+ * Merge JSON schema data into parsed result
+ * Useful when table parsing misses some fields but JSON has them
+ *
+ * @param result - The parsed result from table/key-value parsing
+ * @param jsonSchema - The extracted JSON schema
+ * @returns Enhanced parsed result with JSON data merged
+ */
+export function mergeJsonSchemaIntoResult(
+  result: ParsedResult,
+  jsonSchema: Record<string, unknown>
+): ParsedResult {
+  // Field mappings from JSON schema keys to section IDs
+  const sectionMappings: Record<string, string> = {
+    application_open_at: 'A',
+    application_close_at: 'A',
+    deadline_time_rule: 'A',
+    submission_system: 'A',
+    contact: 'A',
+    budget_total: 'B',
+    budget_per_project: 'B',
+    funding_rate: 'B',
+    project_duration: 'B',
+    num_awards: 'B',
+    applicant_org_types: 'C',
+    lead_role_allowed: 'C',
+    co_role_allowed: 'C',
+    consortium_required: 'C',
+    required_registrations: 'C',
+    required_certifications: 'C',
+    exclusion_rules: 'C',
+    tech_keywords: 'D',
+    domain_tags: 'D',
+    program_type: 'D',
+  };
+
+  // For each field in the JSON schema
+  for (const [key, value] of Object.entries(jsonSchema)) {
+    if (value === null || value === undefined) continue;
+
+    const sectionId = sectionMappings[key];
+    if (!sectionId) continue;
+
+    // Find or create the section
+    let section = result.sections.find((s) => s.id === sectionId);
+    if (!section) {
+      section = { id: sectionId, name: '', fields: [] };
+      result.sections.push(section);
+    }
+
+    // Check if field already exists
+    const existingField = section.fields.find((f) => f.name === key);
+    if (existingField && existingField.value) continue; // Don't overwrite existing values
+
+    // Convert value to string
+    let stringValue: string;
+    if (Array.isArray(value)) {
+      stringValue = value.join(', ');
+    } else if (typeof value === 'object') {
+      stringValue = JSON.stringify(value);
+    } else {
+      stringValue = String(value);
+    }
+
+    if (existingField) {
+      existingField.value = stringValue;
+    } else {
+      section.fields.push({ name: key, value: stringValue });
+    }
+  }
+
+  return result;
+}
