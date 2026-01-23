@@ -117,6 +117,9 @@ export default function EnrichmentFormPage() {
   // Navigation state
   const [nextProgramId, setNextProgramId] = useState<string | null>(null);
 
+  // Drag-and-drop state
+  const [isDragOver, setIsDragOver] = useState(false);
+
   // Auth check
   useEffect(() => {
     if (status === 'loading') return;
@@ -277,6 +280,48 @@ export default function EnrichmentFormPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData, nextProgramId]);
 
+  // Drag-and-drop handlers for markdown files
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = e.dataTransfer.files;
+    if (files.length === 0) return;
+
+    const file = files[0];
+
+    // Check if file is a markdown or text file
+    const validTypes = ['text/markdown', 'text/plain', 'text/x-markdown', ''];
+    const validExtensions = ['.md', '.markdown', '.txt'];
+    const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+
+    if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+      setValidationErrors(['마크다운 파일(.md, .markdown) 또는 텍스트 파일(.txt)만 지원합니다.']);
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      setMarkdownInput(text);
+      setValidationErrors([]);
+    } catch (err) {
+      setValidationErrors(['파일을 읽는 중 오류가 발생했습니다.']);
+    }
+  };
+
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -380,19 +425,65 @@ export default function EnrichmentFormPage() {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-bold mb-4">Claude 추출 결과 붙여넣기</h2>
           <p className="text-sm text-gray-600 mb-4">
-            Claude Web에서 추출한 마크다운 테이블을 아래에 붙여넣고 &quot;파싱&quot; 버튼을 클릭하세요.
+            Claude에서 추출한 마크다운 파일 또는 테이블을 아래에 붙여넣거나 파일을 드래그하세요.
+            <br />
+            <span className="text-gray-500">
+              테이블 형식, 키-값 형식 (예: <code className="bg-gray-100 px-1 rounded">- **application_open_at**: 2026-02-09</code>),
+              또는 일반 마크다운 형식을 지원합니다.
+            </span>
           </p>
-          <textarea
-            value={markdownInput}
-            onChange={(e) => setMarkdownInput(e.target.value)}
-            className="w-full h-48 p-4 border border-gray-300 rounded-lg font-mono text-sm focus:border-blue-500 focus:ring-blue-500"
-            placeholder="(A) 신청/운영 메타
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`relative transition-all duration-200 ${
+              isDragOver ? 'ring-2 ring-blue-500 ring-offset-2' : ''
+            }`}
+          >
+            {isDragOver && (
+              <div className="absolute inset-0 bg-blue-50 bg-opacity-90 rounded-lg flex items-center justify-center z-10 pointer-events-none">
+                <div className="text-center">
+                  <svg
+                    className="w-12 h-12 text-blue-500 mx-auto mb-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
+                  </svg>
+                  <p className="text-blue-600 font-medium">마크다운 파일을 여기에 놓으세요</p>
+                  <p className="text-blue-500 text-sm">.md, .markdown, .txt</p>
+                </div>
+              </div>
+            )}
+            <textarea
+              value={markdownInput}
+              onChange={(e) => setMarkdownInput(e.target.value)}
+              className={`w-full h-48 p-4 border rounded-lg font-mono text-sm focus:border-blue-500 focus:ring-blue-500 ${
+                isDragOver ? 'border-blue-500' : 'border-gray-300'
+              }`}
+              placeholder="# 프로그램 분석 결과
+
+(A) 신청/운영 메타
 | 필드 | 값 |
 |------|-----|
 | application_open_at | 2026-02-09 09:00 |
 | application_close_at | 2026-02-25 18:00 |
-..."
-          />
+
+또는
+
+## (A) 신청/운영 메타
+- **application_open_at**: 2026-02-09 09:00
+- **application_close_at**: 2026-02-25 18:00
+
+💡 마크다운 파일(.md)을 드래그 앤 드롭할 수도 있습니다."
+            />
+          </div>
           <div className="flex items-center gap-4 mt-4">
             <button
               onClick={handleParseMarkdown}
