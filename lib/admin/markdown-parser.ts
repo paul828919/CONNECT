@@ -77,6 +77,11 @@ export function parseClaudeMarkdown(markdown: string): ParsedResult {
   let inTable = false;
   let headerRowPassed = false;
 
+  // State for tracking code blocks and multi-line array parsing
+  let inCodeBlock = false;
+  let collectingArrayField: string | null = null;
+  let arrayValues: string[] = [];
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
 
@@ -91,8 +96,70 @@ export function parseClaudeMarkdown(markdown: string): ParsedResult {
       continue;
     }
 
-    // Skip markdown code fences and comments
-    if (line.startsWith('```') || line.startsWith('<!--')) {
+    // Track code block state and skip comments
+    if (line.startsWith('```')) {
+      inCodeBlock = !inCodeBlock;
+      continue;
+    }
+    if (line.startsWith('<!--')) {
+      continue;
+    }
+
+    // Handle multi-line array collection (for tech_keywords, domain_tags inside code blocks)
+    if (collectingArrayField) {
+      // Check if this line ends the array
+      if (line === ']' || line.endsWith(']')) {
+        // End of array - save collected values
+        if (currentSection) {
+          currentSection.fields.push({
+            name: collectingArrayField,
+            value: arrayValues.join(', '),
+          });
+        }
+        collectingArrayField = null;
+        arrayValues = [];
+        continue;
+      }
+      // Extract quoted string values from lines like "keyword",
+      const quotedMatch = line.match(/["']([^"']+)["']/);
+      if (quotedMatch) {
+        arrayValues.push(quotedMatch[1]);
+      }
+      continue;
+    }
+
+    // Detect start of array fields (tech_keywords/domain_tags) - handles "field: [" format
+    const arrayStartMatch = line.match(/^(tech_keywords|domain_tags)\s*[:：]\s*\[$/);
+    if (arrayStartMatch && currentSection) {
+      collectingArrayField = arrayStartMatch[1];
+      arrayValues = [];
+      continue;
+    }
+
+    // Handle inline arrays like: tech_keywords: ["a", "b", "c"] or tech_keywords: []
+    const inlineArrayMatch = line.match(/^(tech_keywords|domain_tags)\s*[:：]\s*\[(.*)\]$/);
+    if (inlineArrayMatch && currentSection) {
+      const fieldName = inlineArrayMatch[1];
+      const arrayContent = inlineArrayMatch[2].trim();
+      // Handle empty arrays
+      if (!arrayContent) {
+        currentSection.fields.push({
+          name: fieldName,
+          value: '',
+        });
+        continue;
+      }
+      // Extract all quoted strings from the inline array
+      const values: string[] = [];
+      const quotedRegex = /["']([^"']+)["']/g;
+      let match;
+      while ((match = quotedRegex.exec(arrayContent)) !== null) {
+        values.push(match[1]);
+      }
+      currentSection.fields.push({
+        name: fieldName,
+        value: values.join(', '),
+      });
       continue;
     }
 
