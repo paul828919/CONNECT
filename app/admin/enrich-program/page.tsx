@@ -38,6 +38,7 @@ interface EnrichmentQueueProgram {
   budgetAmount: number | null;
   scrapedAt: string;
   daysUntilDeadline: number | null;
+  source: 'NTIS' | 'SME24';
 }
 
 interface QueueStats {
@@ -57,7 +58,7 @@ export default function EnrichmentQueuePage() {
 
   // Filters
   const [confidenceFilter, setConfidenceFilter] = useState<string>('ALL');
-  const [agencyFilter, setAgencyFilter] = useState<string>('ALL');
+  const [sourceFilter, setSourceFilter] = useState<string>('NTIS'); // NTIS or SME24
   const [sortBy, setSortBy] = useState<string>('deadline'); // deadline, scraped, confidence
 
   // Auth check
@@ -81,7 +82,7 @@ export default function EnrichmentQueuePage() {
     try {
       const params = new URLSearchParams();
       if (confidenceFilter !== 'ALL') params.append('confidence', confidenceFilter);
-      if (agencyFilter !== 'ALL') params.append('agency', agencyFilter);
+      params.append('source', sourceFilter);
       params.append('sortBy', sortBy);
 
       const response = await fetch(`/api/admin/enrich-program?${params.toString()}`);
@@ -98,7 +99,7 @@ export default function EnrichmentQueuePage() {
     } finally {
       setLoading(false);
     }
-  }, [confidenceFilter, agencyFilter, sortBy]);
+  }, [confidenceFilter, sourceFilter, sortBy]);
 
   useEffect(() => {
     if (status !== 'authenticated') return;
@@ -241,22 +242,18 @@ export default function EnrichmentQueuePage() {
               </select>
             </div>
 
-            {/* Agency Filter */}
+            {/* Source Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                출처 기관
+                데이터 출처
               </label>
               <select
-                value={agencyFilter}
-                onChange={(e) => setAgencyFilter(e.target.value)}
+                value={sourceFilter}
+                onChange={(e) => setSourceFilter(e.target.value)}
                 className="block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
               >
-                <option value="ALL">모든 기관</option>
-                <option value="NTIS">NTIS</option>
-                <option value="KEIT">KEIT</option>
-                <option value="IITP">IITP</option>
-                <option value="TIPA">TIPA</option>
-                <option value="KIMST">KIMST</option>
+                <option value="NTIS">연구과제 공고_ntis</option>
+                <option value="SME24">중소벤처스타트업 지원사업 공고_smes</option>
               </select>
             </div>
 
@@ -343,7 +340,7 @@ export default function EnrichmentQueuePage() {
                     {/* Action Buttons */}
                     <div className="flex flex-col gap-2">
                       <Link
-                        href={`/admin/enrich-program/${program.id}`}
+                        href={`/admin/enrich-program/${program.id}?source=${program.source || sourceFilter}`}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors text-center"
                       >
                         보강하기

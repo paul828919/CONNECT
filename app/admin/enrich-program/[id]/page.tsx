@@ -17,7 +17,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import {
@@ -101,7 +101,9 @@ export default function EnrichmentFormPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const programId = params.id as string;
+  const source = searchParams.get('source') || 'NTIS'; // Read source from URL
 
   const [program, setProgram] = useState<ProgramDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -139,7 +141,7 @@ export default function EnrichmentFormPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/admin/enrich-program/${programId}`);
+      const response = await fetch(`/api/admin/enrich-program/${programId}?source=${source}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -158,7 +160,7 @@ export default function EnrichmentFormPage() {
     } finally {
       setLoading(false);
     }
-  }, [programId]);
+  }, [programId, source]);
 
   useEffect(() => {
     if (status !== 'authenticated') return;
@@ -236,7 +238,7 @@ export default function EnrichmentFormPage() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/admin/enrich-program/${programId}`, {
+      const response = await fetch(`/api/admin/enrich-program/${programId}?source=${source}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -253,7 +255,8 @@ export default function EnrichmentFormPage() {
       }
 
       if (goToNext && nextProgramId) {
-        router.push(`/admin/enrich-program/${nextProgramId}`);
+        // Preserve source when navigating to next program
+        router.push(`/admin/enrich-program/${nextProgramId}?source=${source}`);
       } else if (goToNext) {
         router.push('/admin/enrich-program');
       } else {
@@ -363,6 +366,16 @@ export default function EnrichmentFormPage() {
               >
                 ← 목록
               </Link>
+              {/* Source badge */}
+              <span
+                className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                  source === 'SME24'
+                    ? 'bg-purple-100 text-purple-800'
+                    : 'bg-blue-100 text-blue-800'
+                }`}
+              >
+                {source === 'SME24' ? 'SME24' : 'NTIS'}
+              </span>
               <span
                 className={`px-2 py-0.5 rounded text-xs font-semibold ${
                   program?.eligibilityConfidence === 'LOW'

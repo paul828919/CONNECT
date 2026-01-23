@@ -1308,6 +1308,14 @@ model sme_programs {
   contentHash           String?          @unique  // For deduplication
   syncedAt              DateTime?        // Last sync timestamp
 
+  // ===== Enrichment Fields (mirrors funding_programs for admin workflow) =====
+  eligibilityConfidence     ConfidenceLevel       @default(LOW)
+  manualReviewRequired      Boolean               @default(false)
+  manualReviewNotes         String?
+  manualReviewCompletedAt   DateTime?
+  manualReviewCompletedBy   String?
+  eligibilityLastUpdated    DateTime?
+
   // ===== Relations =====
   matches               sme_program_matches[]
 
