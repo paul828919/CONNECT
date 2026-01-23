@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const confidenceFilter = searchParams.get('confidence');
     const sourceFilter = searchParams.get('source') || 'NTIS'; // Default to NTIS
+    const statusFilter = searchParams.get('status'); // OPEN, CLOSED, or null for ALL
     const sortBy = searchParams.get('sortBy') || 'deadline';
 
     // Calculate date thresholds
@@ -38,10 +39,10 @@ export async function GET(request: NextRequest) {
 
     if (sourceFilter === 'SME24') {
       // Query sme_programs table
-      return await handleSME24Query(confidenceFilter, sortBy, now, sevenDaysFromNow);
+      return await handleSME24Query(confidenceFilter, statusFilter, sortBy, now, sevenDaysFromNow);
     } else {
       // Query funding_programs table (NTIS - default)
-      return await handleNTISQuery(confidenceFilter, sortBy, now, sevenDaysFromNow);
+      return await handleNTISQuery(confidenceFilter, statusFilter, sortBy, now, sevenDaysFromNow);
     }
   } catch (error: any) {
     console.error('Error fetching enrichment queue:', error);
@@ -57,6 +58,7 @@ export async function GET(request: NextRequest) {
  */
 async function handleNTISQuery(
   confidenceFilter: string | null,
+  statusFilter: string | null,
   sortBy: string,
   now: Date,
   sevenDaysFromNow: Date
@@ -71,6 +73,18 @@ async function handleNTISQuery(
 
   if (confidenceFilter && confidenceFilter !== 'ALL') {
     where.eligibilityConfidence = confidenceFilter;
+  }
+
+  // Add status filter based on deadline
+  if (statusFilter === 'OPEN') {
+    // Currently open: deadline is in the future or null
+    where.OR = [
+      { deadline: { gte: now } },
+      { deadline: null },
+    ];
+  } else if (statusFilter === 'CLOSED') {
+    // Closed: deadline has passed
+    where.deadline = { lt: now };
   }
 
   // Build orderBy clause
@@ -160,6 +174,7 @@ async function handleNTISQuery(
  */
 async function handleSME24Query(
   confidenceFilter: string | null,
+  statusFilter: string | null,
   sortBy: string,
   now: Date,
   sevenDaysFromNow: Date
@@ -174,6 +189,18 @@ async function handleSME24Query(
 
   if (confidenceFilter && confidenceFilter !== 'ALL') {
     where.eligibilityConfidence = confidenceFilter;
+  }
+
+  // Add status filter based on applicationEnd
+  if (statusFilter === 'OPEN') {
+    // Currently open: applicationEnd is in the future or null
+    where.OR = [
+      { applicationEnd: { gte: now } },
+      { applicationEnd: null },
+    ];
+  } else if (statusFilter === 'CLOSED') {
+    // Closed: applicationEnd has passed
+    where.applicationEnd = { lt: now };
   }
 
   // Build orderBy clause

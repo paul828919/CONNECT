@@ -59,6 +59,7 @@ export default function EnrichmentQueuePage() {
   // Filters
   const [confidenceFilter, setConfidenceFilter] = useState<string>('ALL');
   const [sourceFilter, setSourceFilter] = useState<string>('NTIS'); // NTIS or SME24
+  const [statusFilter, setStatusFilter] = useState<string>('ALL'); // ALL, OPEN, CLOSED
   const [sortBy, setSortBy] = useState<string>('deadline'); // deadline, scraped, confidence
 
   // Auth check
@@ -83,6 +84,7 @@ export default function EnrichmentQueuePage() {
       const params = new URLSearchParams();
       if (confidenceFilter !== 'ALL') params.append('confidence', confidenceFilter);
       params.append('source', sourceFilter);
+      if (statusFilter !== 'ALL') params.append('status', statusFilter);
       params.append('sortBy', sortBy);
 
       const response = await fetch(`/api/admin/enrich-program?${params.toString()}`);
@@ -99,7 +101,7 @@ export default function EnrichmentQueuePage() {
     } finally {
       setLoading(false);
     }
-  }, [confidenceFilter, sourceFilter, sortBy]);
+  }, [confidenceFilter, sourceFilter, statusFilter, sortBy]);
 
   useEffect(() => {
     if (status !== 'authenticated') return;
@@ -205,19 +207,19 @@ export default function EnrichmentQueuePage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
             <div className="text-sm text-gray-600">보강 필요</div>
             <div className="text-3xl font-bold text-gray-900 mt-1">{stats.total}</div>
           </div>
-          <div className="bg-white rounded-lg border border-red-200 p-4">
+          <div className="bg-white rounded-lg border border-red-200 p-4 text-center">
             <div className="text-sm text-red-700">낮은 신뢰도</div>
             <div className="text-3xl font-bold text-red-600 mt-1">{stats.low}</div>
           </div>
-          <div className="bg-white rounded-lg border border-yellow-200 p-4">
+          <div className="bg-white rounded-lg border border-yellow-200 p-4 text-center">
             <div className="text-sm text-yellow-700">중간 신뢰도</div>
             <div className="text-3xl font-bold text-yellow-600 mt-1">{stats.medium}</div>
           </div>
-          <div className="bg-white rounded-lg border border-orange-200 p-4">
+          <div className="bg-white rounded-lg border border-orange-200 p-4 text-center">
             <div className="text-sm text-orange-700">마감 임박 (7일 이내)</div>
             <div className="text-3xl font-bold text-orange-600 mt-1">{stats.urgent}</div>
           </div>
@@ -225,7 +227,7 @@ export default function EnrichmentQueuePage() {
 
         {/* Filters */}
         <div className="p-6 bg-white rounded-lg border border-gray-200">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Confidence Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -254,6 +256,22 @@ export default function EnrichmentQueuePage() {
               >
                 <option value="NTIS">연구과제 공고_ntis</option>
                 <option value="SME24">중소벤처스타트업 지원사업 공고_smes</option>
+              </select>
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                접수 상태
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+              >
+                <option value="ALL">전체</option>
+                <option value="OPEN">접수 중</option>
+                <option value="CLOSED">마감됨</option>
               </select>
             </div>
 
