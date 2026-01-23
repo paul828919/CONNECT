@@ -1,16 +1,37 @@
 /**
- * Markdown Table Parser for Claude Web Extraction Output
+ * Markdown Parser for Claude Web Extraction Output
  *
- * Purpose: Parse Claude Web's markdown table output into structured data
+ * Purpose: Parse Claude Web's markdown output into structured data
  *
- * Input format example:
+ * Supports multiple input formats:
+ *
+ * 1. Table format:
  * ```
  * (A) 신청/운영 메타
  * | 필드 | 값 |
  * |------|-----|
  * | application_open_at | 2026-02-09 09:00 |
  * | application_close_at | 2026-02-25 18:00 |
+ * ```
  *
+ * 2. Key-value format (with or without bold):
+ * ```
+ * ## (A) 신청/운영 메타
+ * - **application_open_at**: 2026-02-09 09:00
+ * - **application_close_at**: 2026-02-25 18:00
+ * ```
+ *
+ * 3. Mixed markdown file format:
+ * ```
+ * # 프로그램 분석 결과
+ *
+ * ## (A) 신청/운영 메타
+ * application_open_at: 2026-02-09 09:00
+ * application_close_at: 2026-02-25 18:00
+ * ```
+ *
+ * 4. Multi-track table format:
+ * ```
  * (B) 돈/기간
  * | 필드 | ①내역사업1 | ②내역사업2 |
  * |------|----------|----------|
@@ -41,6 +62,7 @@ export interface ParsedResult {
 
 /**
  * Parse Claude Web markdown output into structured data
+ * Supports multiple formats: tables, key-value pairs, bullet lists
  */
 export function parseClaudeMarkdown(markdown: string): ParsedResult {
   const warnings: string[] = [];
@@ -60,11 +82,22 @@ export function parseClaudeMarkdown(markdown: string): ParsedResult {
 
     // Skip empty lines
     if (!line) {
+      // End of table block on empty line (reset table state)
+      if (inTable) {
+        inTable = false;
+        headerRowPassed = false;
+        tableHeaders = [];
+      }
+      continue;
+    }
+
+    // Skip markdown code fences and comments
+    if (line.startsWith('```') || line.startsWith('<!--')) {
       continue;
     }
 
     // Detect section headers like "(A) 신청/운영 메타" or "## (A) 신청/운영 메타"
-    const sectionMatch = line.match(/^(?:#{1,3}\s*)?\(([A-D])\)\s*(.+)$/);
+    const sectionMatch = line.match(/^(?:#{1,4}\s*)?\(([A-D])\)\s*(.+)$/);
     if (sectionMatch) {
       // Save previous section if exists
       if (currentSection) {
@@ -134,6 +167,18 @@ export function parseClaudeMarkdown(markdown: string): ParsedResult {
           });
         }
       }
+      continue;
+    }
+
+    // Parse non-table formats when we have a current section and not in a table
+    if (currentSection && !inTable) {
+      const kvPair = parseKeyValueLine(line);
+      if (kvPair) {
+        currentSection.fields.push({
+          name: kvPair.key,
+          value: kvPair.value,
+        });
+      }
     }
   }
 
@@ -159,12 +204,78 @@ export function parseClaudeMarkdown(markdown: string): ParsedResult {
 }
 
 /**
+ * Parse a key-value line in various markdown formats
+ * Supports:
+ * - "- **key**: value"
+ * - "- key: value"
+ * - "**key**: value"
+ * - "key: value"
+ * - "* **key**: value"
+ */
+function parseKeyValueLine(line: string): { key: string; value: string } | null {
+  // Pattern 1: Bullet list with bold key "- **key**: value" or "* **key**: value"
+  const bulletBoldMatch = line.match(/^[-*]\s*\*\*([^*:]+)\*\*\s*[:：]\s*(.+)$/);
+  if (bulletBoldMatch) {
+    return {
+      key: bulletBoldMatch[1].trim(),
+      value: stripMarkdownFormatting(bulletBoldMatch[2].trim()),
+    };
+  }
+
+  // Pattern 2: Bullet list without bold "- key: value"
+  const bulletMatch = line.match(/^[-*]\s*([a-z_]+)\s*[:：]\s*(.+)$/);
+  if (bulletMatch) {
+    return {
+      key: bulletMatch[1].trim(),
+      value: stripMarkdownFormatting(bulletMatch[2].trim()),
+    };
+  }
+
+  // Pattern 3: Bold key without bullet "**key**: value"
+  const boldMatch = line.match(/^\*\*([^*:]+)\*\*\s*[:：]\s*(.+)$/);
+  if (boldMatch) {
+    return {
+      key: boldMatch[1].trim(),
+      value: stripMarkdownFormatting(boldMatch[2].trim()),
+    };
+  }
+
+  // Pattern 4: Simple key: value format (only for snake_case or known field names)
+  const simpleMatch = line.match(/^([a-z_]+)\s*[:：]\s*(.+)$/);
+  if (simpleMatch) {
+    return {
+      key: simpleMatch[1].trim(),
+      value: stripMarkdownFormatting(simpleMatch[2].trim()),
+    };
+  }
+
+  return null;
+}
+
+/**
  * Parse a markdown table row into cells
  */
 function parseTableRow(row: string): string[] {
   // Remove leading and trailing pipes, then split
   const cleaned = row.replace(/^\|/, '').replace(/\|$/, '');
-  return cleaned.split('|').map((cell) => cell.trim());
+  return cleaned.split('|').map((cell) => stripMarkdownFormatting(cell.trim()));
+}
+
+/**
+ * Strip markdown formatting characters from a string
+ * Removes: **bold**, *italic*, `code`, and combinations
+ */
+function stripMarkdownFormatting(text: string): string {
+  return text
+    // Remove bold (**text** or __text__)
+    .replace(/^\*\*(.+?)\*\*$/, '$1')
+    .replace(/^__(.+?)__$/, '$1')
+    // Remove italic (*text* or _text_) - but not inside words
+    .replace(/^\*([^*]+)\*$/, '$1')
+    .replace(/^_([^_]+)_$/, '$1')
+    // Remove inline code (`text`)
+    .replace(/^`(.+?)`$/, '$1')
+    .trim();
 }
 
 /**
