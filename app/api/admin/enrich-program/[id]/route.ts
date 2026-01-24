@@ -3,6 +3,7 @@
  *
  * GET: Fetch single program details for enrichment form
  * POST: Save enriched program data
+ * DELETE: Remove invalid/broken program from database (hard delete)
  *
  * Supports two data sources via `source` query parameter:
  * - NTIS: R&D research programs from funding_programs table
@@ -481,6 +482,102 @@ async function handleSME24Post(
     success: true,
     program: updatedProgram,
     message: `프로그램 "${updatedProgram.title}"이(가) 성공적으로 보강되었습니다.`,
+    source: 'SME24',
+  });
+}
+
+/**
+ * DELETE handler - Remove invalid/broken program from database
+ *
+ * Used during manual review to clean up programs with:
+ * - Missing original announcement URLs
+ * - Missing/broken attachments
+ * - Invalid or duplicate entries
+ *
+ * This performs a HARD DELETE - data can be re-scraped if needed.
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const source = searchParams.get('source') || 'NTIS';
+
+    // Auth check
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    if (source === 'SME24') {
+      return await handleSME24Delete(id);
+    } else {
+      return await handleNTISDelete(id);
+    }
+  } catch (error: any) {
+    console.error('Error deleting program:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete program', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Handle DELETE for NTIS (R&D) programs from funding_programs table
+ */
+async function handleNTISDelete(id: string) {
+  // Verify program exists
+  const program = await db.funding_programs.findUnique({
+    where: { id },
+    select: { id: true, title: true },
+  });
+
+  if (!program) {
+    return NextResponse.json({ error: 'Program not found' }, { status: 404 });
+  }
+
+  // Delete program (cascade will handle funding_matches and eligibility_verification)
+  await db.funding_programs.delete({
+    where: { id },
+  });
+
+  return NextResponse.json({
+    success: true,
+    message: `프로그램 "${program.title}"이(가) 삭제되었습니다.`,
+    deletedId: id,
+    source: 'NTIS',
+  });
+}
+
+/**
+ * Handle DELETE for SME24 programs from sme_programs table
+ */
+async function handleSME24Delete(id: string) {
+  // Verify program exists
+  const program = await db.sme_programs.findUnique({
+    where: { id },
+    select: { id: true, title: true },
+  });
+
+  if (!program) {
+    return NextResponse.json({ error: 'Program not found' }, { status: 404 });
+  }
+
+  // Delete program
+  await db.sme_programs.delete({
+    where: { id },
+  });
+
+  return NextResponse.json({
+    success: true,
+    message: `프로그램 "${program.title}"이(가) 삭제되었습니다.`,
+    deletedId: id,
     source: 'SME24',
   });
 }

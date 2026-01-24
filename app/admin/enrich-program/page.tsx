@@ -25,6 +25,17 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/lib/hooks/use-toast';
 
 interface EnrichmentQueueProgram {
   id: string;
@@ -61,6 +72,11 @@ export default function EnrichmentQueuePage() {
   const [sourceFilter, setSourceFilter] = useState<string>('NTIS'); // NTIS or SME24
   const [statusFilter, setStatusFilter] = useState<string>('ALL'); // ALL, OPEN, CLOSED
   const [sortBy, setSortBy] = useState<string>('deadline'); // deadline, scraped, confidence
+
+  // Delete confirmation state
+  const { toast } = useToast();
+  const [programToDelete, setProgramToDelete] = useState<EnrichmentQueueProgram | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Auth check
   useEffect(() => {
@@ -133,6 +149,53 @@ export default function EnrichmentQueuePage() {
     if (daysUntil <= 3) return { text: `D-${daysUntil}`, class: 'bg-red-100 text-red-800' };
     if (daysUntil <= 7) return { text: `D-${daysUntil}`, class: 'bg-orange-100 text-orange-800' };
     return null;
+  };
+
+  // Delete program handler
+  const handleDeleteProgram = async () => {
+    if (!programToDelete) return;
+
+    setDeleting(true);
+    try {
+      const source = programToDelete.source || sourceFilter;
+      const response = await fetch(
+        `/api/admin/enrich-program/${programToDelete.id}?source=${source}`,
+        { method: 'DELETE' }
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete program');
+      }
+
+      // Optimistic UI update - remove from local state
+      setPrograms((prev) => prev.filter((p) => p.id !== programToDelete.id));
+
+      // Update stats
+      setStats((prev) => ({
+        ...prev,
+        total: Math.max(0, prev.total - 1),
+        low: programToDelete.eligibilityConfidence === 'LOW' ? Math.max(0, prev.low - 1) : prev.low,
+        medium: programToDelete.eligibilityConfidence === 'MEDIUM' ? Math.max(0, prev.medium - 1) : prev.medium,
+        urgent: programToDelete.daysUntilDeadline !== null && programToDelete.daysUntilDeadline >= 0 && programToDelete.daysUntilDeadline <= 7
+          ? Math.max(0, prev.urgent - 1)
+          : prev.urgent,
+      }));
+
+      toast({
+        title: '삭제 완료',
+        description: data.message,
+      });
+    } catch (err: any) {
+      toast({
+        title: '삭제 실패',
+        description: err.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
+      setProgramToDelete(null);
+    }
   };
 
   if (status === 'loading' || loading) {
@@ -384,6 +447,12 @@ export default function EnrichmentQueuePage() {
                           />
                         </svg>
                       </a>
+                      <button
+                        onClick={() => setProgramToDelete(program)}
+                        className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium transition-colors text-center border border-red-200"
+                      >
+                        삭제
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -391,6 +460,36 @@ export default function EnrichmentQueuePage() {
             })
           )}
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!programToDelete} onOpenChange={(open) => !open && setProgramToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>프로그램 삭제 확인</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2">
+                <span className="block">
+                  다음 프로그램을 삭제하시겠습니까?
+                </span>
+                <span className="block font-medium text-gray-900">
+                  &quot;{programToDelete?.title}&quot;
+                </span>
+                <span className="block text-red-600">
+                  이 작업은 되돌릴 수 없습니다. 관련된 매칭 결과도 함께 삭제됩니다.
+                </span>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>취소</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteProgram}
+                disabled={deleting}
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              >
+                {deleting ? '삭제 중...' : '삭제'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
