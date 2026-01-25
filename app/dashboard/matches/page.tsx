@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { MatchExplanation } from '@/components/match-explanation';
@@ -11,6 +11,7 @@ import { EligibilityBadge, type EligibilityLevel } from '@/components/matches/El
 import { EligibilityConfidenceAlert, type ConfidenceLevel } from '@/components/matches/EligibilityConfidenceAlert';
 import { InvestmentPrompt } from '@/components/profile/InvestmentPrompt';
 import { UpgradePromptModal, UpgradePromptBanner } from '@/components/upgrade-prompt-modal';
+import { useMatchTracking } from '@/hooks/useMatchTracking';
 
 interface Match {
   id: string;
@@ -102,6 +103,28 @@ export default function MatchesPage() {
   const [historicalTotalPages, setHistoricalTotalPages] = useState(1);
   const [historicalTotalMatches, setHistoricalTotalMatches] = useState(0);
   const itemsPerPage = 10;
+
+  // Phase 6: Initialize personalization event tracking
+  const orgId = (session?.user as any)?.organizationId;
+  const userId = session?.user?.id;
+  const { createCardRef, logClick, logSave, logUnsave, isTracking } = useMatchTracking({
+    organizationId: orgId,
+    userId,
+    listSize: matches.length,
+    enabled: true,
+  });
+  // Store refs for match cards
+  const matchCardRefs = useRef<Map<string, (el: HTMLElement | null) => void>>(new Map());
+
+  // Clear stale refs when matches change (e.g., pagination)
+  useEffect(() => {
+    const currentMatchIds = new Set(matches.map(m => m.id));
+    matchCardRefs.current.forEach((_, matchId) => {
+      if (!currentMatchIds.has(matchId)) {
+        matchCardRefs.current.delete(matchId);
+      }
+    });
+  }, [matches]);
 
   const fetchMatches = useCallback(async () => {
     try {
@@ -292,8 +315,8 @@ export default function MatchesPage() {
     }
   }, []);
 
-  // Handle saving/bookmarking a match
-  const handleSaveMatch = useCallback(async (matchId: string, currentSaved: boolean) => {
+  // Handle saving/bookmarking a match (with personalization tracking)
+  const handleSaveMatch = useCallback(async (matchId: string, currentSaved: boolean, position: number, matchScore: number, programId: string) => {
     setSavingMatchId(matchId);
     try {
       const res = await fetch(`/api/matches/${matchId}`, {
@@ -303,6 +326,13 @@ export default function MatchesPage() {
       });
 
       if (res.ok) {
+        // Phase 6: Track save/unsave event for personalization
+        if (!currentSaved) {
+          logSave({ programId, position, matchScore, source: 'match_list' });
+        } else {
+          logUnsave({ programId, position, matchScore, source: 'match_list' });
+        }
+
         // Update local state
         setMatches(prev => prev.map(m =>
           m.id === matchId ? { ...m, saved: !currentSaved } : m
@@ -322,7 +352,7 @@ export default function MatchesPage() {
     } finally {
       setSavingMatchId(null);
     }
-  }, [matches, userPlan]);
+  }, [matches, userPlan, logSave, logUnsave]);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -594,10 +624,24 @@ export default function MatchesPage() {
 
         {/* Current Match Cards */}
         <div className="space-y-6">
-          {matches.map((match) => (
+          {matches.map((match, index) => {
+            // Phase 6: Create or get ref callback for this match card
+            if (!matchCardRefs.current.has(match.id)) {
+              matchCardRefs.current.set(match.id, createCardRef({
+                programId: match.program.id,
+                matchId: match.id,
+                position: index,
+                matchScore: match.score,
+                source: 'match_list',
+              }));
+            }
+            const cardRef = matchCardRefs.current.get(match.id);
+
+            return (
             <div
               key={match.id}
               id={`match-${match.id}`}
+              ref={cardRef}
               className="rounded-lg bg-white border border-gray-200 p-6 hover:shadow-lg transition-shadow"
             >
               {/* Match Header */}
@@ -742,6 +786,13 @@ export default function MatchesPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => {
+                      // Phase 6: Track click event for personalization
+                      logClick({
+                        programId: match.program.id,
+                        position: index,
+                        matchScore: match.score,
+                        source: 'match_list',
+                      });
                       window.location.hash = `match-${match.id}`;
                     }}
                     className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -784,7 +835,7 @@ export default function MatchesPage() {
                   </button>
                 )}
                 <button
-                  onClick={() => handleSaveMatch(match.id, !!match.saved)}
+                  onClick={() => handleSaveMatch(match.id, !!match.saved, index, match.score, match.program.id)}
                   disabled={savingMatchId === match.id}
                   className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
                     match.saved
@@ -813,7 +864,8 @@ export default function MatchesPage() {
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Pagination Controls for Active Matches */}

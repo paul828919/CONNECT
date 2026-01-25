@@ -8,6 +8,7 @@
 import scrapingWorker from './worker'; // Schedulers initialized automatically on import
 import { startEmailCronJobs } from '../email/cron';
 import { startSME24SyncCron } from '../sme24-api/cron';
+import { startPersonalizationCronJobs } from '../personalization/cron';
 
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log('🤖 Connect Platform - Scraping Service');
@@ -37,12 +38,21 @@ try {
   console.warn('   (This is non-critical - can trigger sync manually via admin API)');
 }
 
-// 4. Worker is already started via import
+// 4. Start personalization cron jobs (Phase 6)
+try {
+  startPersonalizationCronJobs();
+  console.log('✓ Personalization cron jobs enabled');
+} catch (error: any) {
+  console.warn('⚠️  Personalization cron jobs disabled:', error.message);
+  console.warn('   (This is non-critical - personalization will use base scores)');
+}
+
+// 5. Worker is already started via import
 console.log('✓ Scraping worker started (max concurrency: 2)');
 console.log('✓ Monitoring Redis queue:', process.env.REDIS_QUEUE_HOST || 'localhost:6380');
 console.log('');
 
-// 5. Graceful shutdown
+// 6. Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('📴 SIGTERM received, shutting down gracefully...');
   await scrapingWorker.close();
@@ -55,7 +65,7 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-// 6. Health check endpoint (optional, for Docker healthcheck)
+// 7. Health check endpoint (optional, for Docker healthcheck)
 if (process.env.ENABLE_HEALTH_SERVER === 'true') {
   const http = require('http');
 
