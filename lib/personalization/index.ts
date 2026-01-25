@@ -79,3 +79,35 @@ export {
   type CFBoostResult,
   type CoOccurrenceStats,
 } from './item-item-cf';
+
+// Contextual Scoring (Phase 5)
+export {
+  computeContextualBoost,
+  computeContextualBoostBatch,
+  getDaysUntilDeadline,
+  isUrgentDeadline,
+  isNewProgram,
+  forceRefreshTrendingCache,
+  type ContextualBoostResult,
+} from './contextual-scorer';
+
+// Exploration (Phase 5)
+export {
+  injectExplorationSlots,
+  isExplorationEnabled,
+  createNoExplorationConfig,
+  DEFAULT_EXPLORATION_CONFIG,
+  type ExplorationConfig,
+  type ExplorationStrategy,
+  type ExplorationResult,
+} from './exploration';
+
+// Main Personalization Layer (Phase 5)
+export {
+  generatePersonalizedMatches,
+  DEFAULT_PERSONALIZATION_CONFIG,
+  type PersonalizationConfig,
+  type MatchWithScore,
+  type PersonalizedMatchResult,
+  type GeneratePersonalizedMatchesResult,
+} from './personalization-layer';
