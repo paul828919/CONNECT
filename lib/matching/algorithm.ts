@@ -1,5 +1,5 @@
 /**
- * Funding Match Generation Algorithm (v4.0 - Keyword-Rule Based)
+ * Funding Match Generation Algorithm (v4.2 - Cross-Industry Filter Enhancement)
  *
  * Rule-based matching system with deterministic keyword classification.
  * Replaces LLM-based semantic enrichment with keyword rules derived from
@@ -13,16 +13,22 @@
  * - R&D experience match: 10 points
  * - Deadline proximity: 15 points
  *
- * Breaking changes in v4.0:
+ * v4.2 Changes (Cross-Industry False Positive Reduction):
+ * - ADDED: Keyword overlap requirement for medium-relevance (0.45-0.7) cross-industry matches
+ * - ADDED: HR/Training program filter (훈련, 인재성장, 인력양성 programs blocked for companies)
+ * - CHANGED: Industry relevance threshold raised from 0.4 to 0.45
+ *
+ * v4.0 Breaking changes:
  * - REMOVED: LLM semantic sub-domain matching (61% failure rate, ~₩27/program)
  * - REMOVED: Non-enriched penalty (-15 points no longer needed)
  * - ADDED: Keyword-based industry classification (100% coverage, ₩0 cost)
  *
- * Key benefits of v4.0:
+ * Key benefits:
  * - 100% classification coverage (vs 39% with LLM)
  * - Zero LLM cost per program
  * - <10ms processing (vs 2-3 sec/program)
  * - Predictable & debuggable matching
+ * - Reduced false positives for cross-industry matches (v4.2)
  *
  * Previous enhancements retained:
  * - Korean keyword normalization and synonym matching
@@ -250,6 +256,35 @@ export function generateMatches(
       continue; // Consolidated announcement - lacks actionable application details
     }
 
+    // ============================================================================
+    // HR/Training Program Filter (Non-R&D Programs) - v4.2
+    // ============================================================================
+    // Programs focused on talent development, training, or education
+    // are outside the scope of R&D technology funding for companies.
+    // Example: "산업혁신인재성장지원(교육훈련)사업" - HR program, not R&D
+    const trainingProgramPatterns = [
+      /훈련/,           // training
+      /교육훈련/,       // education training
+      /인재성장/,       // talent growth
+      /인력양성/,       // talent development
+      /기술교육/,       // technical education
+      /직업훈련/,       // vocational training
+      /교육과정/,       // curriculum
+      /이론교육/,       // theoretical education
+    ];
+
+    const isTrainingProgram = trainingProgramPatterns.some(pattern =>
+      pattern.test(program.title)
+    );
+
+    // Strong R&D indicators that override training detection
+    // These programs may include "training" in name but are primarily R&D-focused
+    const hasStrongRdKeywords = /기술개발|R&D|연구개발|과제공모|기술혁신/.test(program.title);
+
+    if (isTrainingProgram && !hasStrongRdKeywords && organization.type === 'COMPANY') {
+      continue; // Skip HR/training programs for technology companies
+    }
+
     // Skip if program doesn't target this organization type
     // EXCEPTION: For historical matches (EXPIRED programs), allow all types for reference learning
     if (program.targetType && !program.targetType.includes(organization.type)) {
@@ -464,9 +499,41 @@ export function generateMatches(
 
         if (!options?.includeExpired) {
           // STRICT industry filter for ACTIVE programs (application eligibility)
-          // Threshold raised from 0.3 to 0.4 to improve match quality
-          if (relevanceScore < 0.4) {
+          // Threshold raised from 0.3 to 0.45 to improve match quality (v4.2)
+          if (relevanceScore < 0.45) {
             continue; // Industry mismatch - fundamentally incompatible
+          }
+
+          // ============================================================================
+          // Keyword Overlap Requirement for Cross-Industry Matches (v4.2)
+          // ============================================================================
+          // Medium-relevance cross-industry matches (0.45-0.7) require at least one
+          // keyword overlap to prevent false positives like ICT→MARINE matches.
+          // High-relevance (≥0.7) matches are allowed without keyword check.
+          //
+          // Example blocked: Innowave (ICT/SaaS) → "선박평형수처리장치" (no keyword overlap)
+          // Example allowed: ICT company → "디지털 조선" (has "디지털" keyword overlap)
+          if (orgSector !== programSector && relevanceScore >= 0.45 && relevanceScore < 0.7) {
+            const orgKeywords = [
+              ...(organization.keyTechnologies || []),
+              ...(organization.technologyDomainsSpecific || []),
+              ...(organization.researchFocusAreas || [])
+            ].map(k => k.toLowerCase());
+
+            const programKeywords = (program.keywords || []).map(k => k.toLowerCase());
+            // Also check program title for keyword matches
+            const programTitleWords = program.title.toLowerCase().split(/\s+/);
+            const allProgramKeywords = [...programKeywords, ...programTitleWords];
+
+            const hasKeywordOverlap = orgKeywords.some(orgK =>
+              allProgramKeywords.some(progK =>
+                orgK.includes(progK) || progK.includes(orgK)
+              )
+            );
+
+            if (!hasKeywordOverlap && orgKeywords.length > 0) {
+              continue; // Block medium-relevance cross-industry without keyword overlap
+            }
           }
         }
         // For EXPIRED programs: Allow all cross-industry matches for learning purposes
