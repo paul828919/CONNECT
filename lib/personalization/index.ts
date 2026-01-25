@@ -49,3 +49,24 @@ export {
   type RecommendationEventInput,
   type LogEventsResult,
 } from './event-logger';
+
+// Behavioral scoring (Phase 2)
+export {
+  computeBehavioralBoost,
+  getPositionBiasFactor,
+  computeAdjustedRate,
+  formatReason,
+  getCategoryKoreanLabel,
+  PERSONALIZATION_REASONS_KR,
+  type OrganizationPreferences,
+  type BehavioralBoostResult,
+} from './behavioral-scorer';
+
+// Preference aggregation (Phase 2)
+export {
+  aggregatePreferencesForOrganization,
+  updateColdStartStatus,
+  getColdStartStatus,
+  savePreferences,
+  getOrganizationPreferences,
+} from './preference-aggregator';

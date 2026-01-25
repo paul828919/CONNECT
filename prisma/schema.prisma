@@ -1154,6 +1154,14 @@ enum RecommendationEventType {
   HIDE          // "Don't show again"
 }
 
+// Cold start status for personalization
+// Determines which personalization signals to use
+enum ColdStartStatus {
+  FULL_COLD      // < 5 high-confidence views - use popularity only
+  PARTIAL_COLD   // 5-20 views, < 3 categories - limited personalization
+  WARM           // > 20 views with 3+ categories - full personalization
+}
+
 enum RefundStatus {
   PENDING
   APPROVED
@@ -1286,6 +1294,82 @@ model recommendation_events {
   @@index([createdAt])                            // Retention cleanup queries
 
   @@map("recommendation_events")
+}
+
+// ============================================================================
+// Organization Preferences Derived (조직 선호도 파생 데이터)
+// ============================================================================
+// Aggregated preferences computed from recommendation_events.
+// Learning window: 30 days (weighted for scoring)
+// Retention: 180 days in events table (for historical analysis)
+// Rebuild daily via cron: /scripts/aggregate-preferences.ts
+// ============================================================================
+model organization_preferences_derived {
+  id              String   @id @default(uuid())
+  organizationId  String   @unique
+
+  // Category affinities (from recent saves/views, 30-day window)
+  // Example: { "BIO_HEALTH": 0.72, "ICT": 0.45, "MANUFACTURING": 0.30 }
+  categoryScores  Json     @default("{}")
+
+  // Keyword affinities (normalized Korean keywords)
+  // Example: { "AI": 0.8, "반도체": 0.6, "바이오": 0.55 }
+  keywordScores   Json     @default("{}")
+
+  // Ministry affinities
+  // Example: { "과학기술정보통신부": 0.7, "중소벤처기업부": 0.5 }
+  ministryScores  Json     @default("{}")
+
+  // Behavioral statistics (30-day window)
+  totalImpressions  Int    @default(0)
+  totalViews        Int    @default(0)
+  totalClicks       Int    @default(0)
+  totalSaves        Int    @default(0)
+  totalDismisses    Int    @default(0)
+
+  // Position-debiased engagement rates
+  // Computed with position normalization to avoid bias toward top items
+  adjustedCTR       Float?   // Click-through rate (position-adjusted)
+  adjustedSaveRate  Float?   // Save rate (position-adjusted)
+
+  // Metadata
+  lastComputedAt    DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([organizationId])
+  @@map("organization_preferences_derived")
+}
+
+// ============================================================================
+// Organization Personalization Status (조직 개인화 상태)
+// ============================================================================
+// Tracks cold start status for each organization.
+// Used to decide which personalization signals to apply.
+// ============================================================================
+model organization_personalization_status {
+  id               String          @id @default(uuid())
+  organizationId   String          @unique
+
+  // Cold start classification
+  status           ColdStartStatus @default(FULL_COLD)
+
+  // Event statistics (for status transitions)
+  totalEvents      Int             @default(0)
+  totalViews       Int             @default(0)    // High-confidence views only
+  uniqueCategories Int             @default(0)    // Number of distinct categories viewed
+
+  // Timeline
+  firstEventAt     DateTime?
+  lastEventAt      DateTime?
+
+  // Metadata
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([status])
+  @@index([organizationId])
+  @@map("organization_personalization_status")
 }
 
 // ============================================================================
