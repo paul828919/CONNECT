@@ -94,6 +94,9 @@ export async function POST(request: NextRequest) {
       website,
       // v3.0: Semantic sub-domain for industry-specific matching
       semanticSubDomain,
+      // v5.0: Enhanced profile fields for improved matching quality
+      primaryBusinessDomain,
+      technologyDomainsSpecific, // comma-separated string from form
       // v4.1: Company scale and locations for 중소벤처기업부 matching
       companyScaleType,
       locations, // Array of { locationType: string, region: string }
@@ -178,6 +181,12 @@ export async function POST(request: NextRequest) {
       profileScore += 5;
     if (keyTechnologies && keyTechnologies.trim().length > 0) profileScore += 5;
 
+    // v5.0: Enhanced profile fields for improved matching quality
+    if (primaryBusinessDomain && primaryBusinessDomain.trim().length > 0)
+      profileScore += 5;
+    if (technologyDomainsSpecific && technologyDomainsSpecific.trim().length > 0)
+      profileScore += 5;
+
     // 6. Create organization
     const organization = await db.organizations.create({
       data: {
@@ -219,6 +228,14 @@ export async function POST(request: NextRequest) {
           : [],
         keyTechnologies: keyTechnologies
           ? keyTechnologies
+              .split(',')
+              .map((tech: string) => tech.trim())
+              .filter((tech: string) => tech.length > 0)
+          : [],
+        // v5.0: Enhanced profile fields for improved matching quality
+        primaryBusinessDomain: primaryBusinessDomain || null,
+        technologyDomainsSpecific: technologyDomainsSpecific
+          ? technologyDomainsSpecific
               .split(',')
               .map((tech: string) => tech.trim())
               .filter((tech: string) => tech.length > 0)

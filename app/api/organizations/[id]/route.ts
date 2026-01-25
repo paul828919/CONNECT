@@ -58,6 +58,9 @@ export async function GET(
         parentDepartment: true,
         researchFocusAreas: true,
         keyTechnologies: true,
+        // v5.0: Enhanced profile fields for improved matching quality
+        primaryBusinessDomain: true,
+        technologyDomainsSpecific: true,
         // Tier 2A: Consortium preference fields
         desiredConsortiumFields: true,
         desiredTechnologies: true,
@@ -214,6 +217,9 @@ export async function PATCH(
       // v4.1: Company scale and locations for 중소벤처기업부 matching
       companyScaleType,
       locations, // Array of { locationType: string, region: string }
+      // v5.0: Enhanced profile fields for improved matching quality
+      primaryBusinessDomain,
+      technologyDomainsSpecific,
     } = body;
 
     // Build update data (only include fields that are provided)
@@ -271,6 +277,19 @@ export async function PATCH(
     if (keyTechnologies !== undefined) {
       updateData.keyTechnologies = keyTechnologies
         ? keyTechnologies
+            .split(',')
+            .map((tech: string) => tech.trim())
+            .filter((tech: string) => tech.length > 0)
+        : [];
+    }
+
+    // v5.0: Enhanced profile fields for improved matching quality
+    if (primaryBusinessDomain !== undefined) {
+      updateData.primaryBusinessDomain = primaryBusinessDomain || null;
+    }
+    if (technologyDomainsSpecific !== undefined) {
+      updateData.technologyDomainsSpecific = technologyDomainsSpecific
+        ? technologyDomainsSpecific
             .split(',')
             .map((tech: string) => tech.trim())
             .filter((tech: string) => tech.length > 0)
@@ -384,6 +403,20 @@ export async function PATCH(
         : existingOrg.keyTechnologies;
     if (finalKeyTech && finalKeyTech.length > 0) profileScore += 5;
 
+    // v5.0: Enhanced profile fields for improved matching quality
+    const finalPrimaryBusinessDomain =
+      updateData.primaryBusinessDomain !== undefined
+        ? updateData.primaryBusinessDomain
+        : existingOrg.primaryBusinessDomain;
+    if (finalPrimaryBusinessDomain && finalPrimaryBusinessDomain.length > 0)
+      profileScore += 5;
+    const finalTechDomainsSpecific =
+      updateData.technologyDomainsSpecific !== undefined
+        ? updateData.technologyDomainsSpecific
+        : existingOrg.technologyDomainsSpecific;
+    if (finalTechDomainsSpecific && finalTechDomainsSpecific.length > 0)
+      profileScore += 5;
+
     // Tier 2A: Consortium preference fields (optional but valuable)
     // Award small bonus points for completing consortium preferences (max +10)
     let consortiumScore = 0;
@@ -464,6 +497,9 @@ export async function PATCH(
         parentDepartment: true,
         researchFocusAreas: true,
         keyTechnologies: true,
+        // v5.0: Enhanced profile fields for improved matching quality
+        primaryBusinessDomain: true,
+        technologyDomainsSpecific: true,
         // Tier 2A: Consortium preference fields
         desiredConsortiumFields: true,
         desiredTechnologies: true,

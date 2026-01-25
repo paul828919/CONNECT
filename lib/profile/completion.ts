@@ -86,6 +86,20 @@ const PROFILE_FIELDS: Array<{
     checkEmpty: (v) => !v || (Array.isArray(v) && v.length === 0),
   },
 
+  // v5.0: Enhanced profile fields for improved matching quality
+  {
+    field: 'primaryBusinessDomain',
+    label: '주요 사업 영역',
+    weight: 5,
+    checkEmpty: (v) => !v || v.trim() === '',
+  },
+  {
+    field: 'technologyDomainsSpecific',
+    label: '세부 기술 분야',
+    weight: 5,
+    checkEmpty: (v) => !v || (Array.isArray(v) && v.length === 0),
+  },
+
   // Track Record (10%)
   {
     field: 'priorGrantWins',

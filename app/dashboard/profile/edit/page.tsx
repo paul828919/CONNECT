@@ -89,6 +89,9 @@ const organizationEditSchema = z.object({
   // Tier 1B: Research institute specific fields
   researchFocusAreas: z.string().optional().nullable(),
   keyTechnologies: z.string().optional().nullable(),
+  // v5.0: Enhanced profile fields for improved matching quality
+  primaryBusinessDomain: z.string().max(100).optional().nullable(),
+  technologyDomainsSpecific: z.string().optional().nullable(),
   // Public institution specific field
   parentDepartment: z.string().max(100, '소속 부처는 100자 이하여야 합니다.').optional().nullable(),
   technologyReadinessLevel: z
@@ -491,6 +494,12 @@ export default function EditOrganizationProfilePage() {
         setValue(
           'keyTechnologies',
           data.organization.keyTechnologies?.join(', ') || ''
+        );
+        // v5.0: Enhanced profile fields for improved matching quality
+        setValue('primaryBusinessDomain', data.organization.primaryBusinessDomain || '');
+        setValue(
+          'technologyDomainsSpecific',
+          data.organization.technologyDomainsSpecific?.join(', ') || ''
         );
         setValue('technologyReadinessLevel', data.organization.technologyReadinessLevel);
         setValue('targetResearchTRL', data.organization.targetResearchTRL);
@@ -1495,60 +1504,108 @@ export default function EditOrganizationProfilePage() {
               </div>
             </div>
 
-            {/* Tier 1B: Research Institute and University specific fields */}
-            {(organizationData?.type === 'RESEARCH_INSTITUTE' || organizationData?.type === 'UNIVERSITY') && (
-              <>
-                {/* Research Focus Areas */}
+            {/* v5.0: Enhanced Technology & Research Fields Section - Available for ALL organization types */}
+            <div className="space-y-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <div className="flex items-start gap-2">
+                <span className="text-lg">🔬</span>
                 <div>
-                  <label
-                    htmlFor="researchFocusAreas"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    주요 연구 분야
-                  </label>
-                  <input
-                    type="text"
-                    id="researchFocusAreas"
-                    {...register('researchFocusAreas')}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="예: 문화유산 디지털화, 전시기술, K-Culture AI (쉼표로 구분)"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    💡 연구 분야를 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다.
+                  <h4 className="text-sm font-semibold text-gray-900">기술 및 연구 역량</h4>
+                  <p className="text-xs text-gray-600">
+                    아래 정보를 입력하면 더 정확한 R&D 과제 매칭을 받을 수 있습니다.
                   </p>
-                  {errors.researchFocusAreas && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.researchFocusAreas.message}
-                    </p>
-                  )}
                 </div>
+              </div>
 
-                {/* Key Technologies */}
-                <div>
-                  <label
-                    htmlFor="keyTechnologies"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    핵심 보유 기술
-                  </label>
-                  <input
-                    type="text"
-                    id="keyTechnologies"
-                    {...register('keyTechnologies')}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="예: AR/VR, 디지털 아카이빙, 콘텐츠 관리 시스템 (쉼표로 구분)"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    💡 핵심 기술을 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다.
+              {/* Primary Business Domain */}
+              <div>
+                <label
+                  htmlFor="primaryBusinessDomain"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  주요 사업 영역
+                </label>
+                <input
+                  type="text"
+                  id="primaryBusinessDomain"
+                  {...register('primaryBusinessDomain')}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="예: 바이오의약품 개발, 양자컴퓨팅 솔루션, 스마트양식 시스템, AI 기반 진단기기"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  💡 R&D 과제 공고의 연구 분야와 일치하는 구체적인 사업 영역을 입력하면 매칭 정확도가 향상됩니다.
+                </p>
+              </div>
+
+              {/* Key Technologies */}
+              <div>
+                <label
+                  htmlFor="keyTechnologies"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  보유 핵심 기술
+                </label>
+                <input
+                  type="text"
+                  id="keyTechnologies"
+                  {...register('keyTechnologies')}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="예: AI, 양자센싱, 바이오접합체, 자율주행, 스마트팩토리, 디지털트윈 (쉼표로 구분)"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  💡 정부 R&D 공고에서 자주 사용되는 기술 키워드를 입력하세요.
+                </p>
+                {errors.keyTechnologies && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.keyTechnologies.message}
                   </p>
-                  {errors.keyTechnologies && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.keyTechnologies.message}
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
+                )}
+              </div>
+
+              {/* Technology Domains Specific */}
+              <div>
+                <label
+                  htmlFor="technologyDomainsSpecific"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  세부 기술 분야
+                </label>
+                <input
+                  type="text"
+                  id="technologyDomainsSpecific"
+                  {...register('technologyDomainsSpecific')}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="예: 백신개발, 세포치료제, 신약타겟발굴, 양자센싱, 자율주행, 탄소중립기술 (쉼표로 구분)"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  💡 정부 R&D 공고에서 자주 등장하는 세부 연구 분야를 입력하세요.
+                </p>
+              </div>
+
+              {/* Research Focus Areas */}
+              <div>
+                <label
+                  htmlFor="researchFocusAreas"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  연구 관심 분야
+                </label>
+                <input
+                  type="text"
+                  id="researchFocusAreas"
+                  {...register('researchFocusAreas')}
+                  className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="예: 첨단바이오, 디지털헬스케어, 미래모빌리티, 기술사업화, 탄소중립 (쉼표로 구분)"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  💡 참여하고자 하는 R&D 연구 분야를 입력하세요.
+                </p>
+                {errors.researchFocusAreas && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.researchFocusAreas.message}
+                  </p>
+                )}
+              </div>
+            </div>
 
             {/* Public Institution specific fields */}
             {organizationData?.type === 'PUBLIC_INSTITUTION' && (
@@ -1578,33 +1635,6 @@ export default function EditOrganizationProfilePage() {
                   )}
                 </div>
               </>
-            )}
-
-            {/* Key Technologies - Available for COMPANY and PUBLIC_INSTITUTION */}
-            {(organizationData?.type === 'COMPANY' || organizationData?.type === 'PUBLIC_INSTITUTION') && (
-              <div>
-                <label
-                  htmlFor="keyTechnologies"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  핵심 보유 기술
-                </label>
-                <input
-                  type="text"
-                  id="keyTechnologies"
-                  {...register('keyTechnologies')}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="예: 문화기술(CT), 디지털 콘텐츠, AR/VR (쉼표로 구분)"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  💡 핵심 기술을 입력하면 더 정확한 연구 과제 매칭을 받을 수 있습니다.
-                </p>
-                {errors.keyTechnologies && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.keyTechnologies.message}
-                  </p>
-                )}
-              </div>
             )}
 
             {/* Description */}
