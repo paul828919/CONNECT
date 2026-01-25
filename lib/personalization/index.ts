@@ -111,3 +111,32 @@ export {
   type PersonalizedMatchResult,
   type GeneratePersonalizedMatchesResult,
 } from './personalization-layer';
+
+// Metrics Collection (Phase 6)
+export {
+  recordProcessingMetric,
+  setActiveConfigName,
+  getMetricsSnapshot,
+  flushMetrics,
+  getMetricsAccumulator,
+  getPositionBiasFactor as getMetricsPositionBiasFactor,
+  computeDebiasedRate,
+  createTimer,
+  withTiming,
+  type ProcessingMetric,
+  type ScoreDistribution,
+  type MetricsSnapshot,
+} from './metrics-collector';
+
+// A/B Testing & Interleaving (Phase 6)
+export {
+  teamDraftInterleave,
+  balancedInterleave,
+  computeInterleavingMetrics,
+  isInterleavingSignificant,
+  isInTreatmentGroup,
+  getTestVariant,
+  type InterleavedMatch,
+  type InterleavedResult,
+  type InterleavingMetrics,
+} from './interleaving';

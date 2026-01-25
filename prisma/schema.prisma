@@ -1613,3 +1613,115 @@ model sme_program_matches {
   @@index([createdAt])
   @@map("sme_program_matches")
 }
+
+// ============================================================================
+// Personalization Configuration (A/B Test Configs)
+// ============================================================================
+// Stores personalization algorithm configurations for A/B testing and
+// gradual rollout. Each config defines weights, feature flags, and traffic.
+//
+// Usage:
+// - Create multiple configs for A/B testing
+// - Set trafficPercentage for gradual rollout
+// - Toggle features via enableBehavioral, enableItemItemCF, etc.
+// ============================================================================
+model personalization_config {
+  id                  String   @id @default(uuid())
+  name                String   @unique
+
+  // Weights (must sum to 1.0)
+  baseScoreWeight     Float    @default(0.55)
+  behavioralWeight    Float    @default(0.25)
+  cfWeight            Float    @default(0.10)
+  contextualWeight    Float    @default(0.10)
+
+  // Exploration settings
+  explorationSlots    Int      @default(2)
+  explorationStrategy String   @default("epsilon_greedy")  // random, epsilon_greedy, ucb
+
+  // Feature flags
+  enableBehavioral    Boolean  @default(true)
+  enableItemItemCF    Boolean  @default(true)
+  enableContextual    Boolean  @default(true)
+  enableExploration   Boolean  @default(true)
+
+  // Rollout control
+  isActive            Boolean  @default(false)
+  trafficPercentage   Float?   // 0-100, null = 100%
+
+  // Metadata
+  description         String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([isActive])
+  @@map("personalization_config")
+}
+
+// ============================================================================
+// Personalization Metrics (Daily Aggregates)
+// ============================================================================
+// Stores daily aggregated metrics for monitoring personalization performance.
+// Computed by daily cron job from recommendation_events.
+//
+// Key Metrics:
+// - Volume: impressions, views, saves, dismisses
+// - Quality: CTR, save rate (position-debiased)
+// - UX: time to first save, dwell time, return rate
+// - Exploration: separate metrics for exploration slots
+// ============================================================================
+model personalization_metrics {
+  id                  String   @id @default(uuid())
+  date                DateTime @db.Date
+  configName          String   // Name of personalization_config used
+
+  // Volume metrics
+  totalImpressions    Int      @default(0)
+  totalViews          Int      @default(0)
+  totalClicks         Int      @default(0)
+  totalSaves          Int      @default(0)
+  totalDismisses      Int      @default(0)
+
+  // Unique counts
+  uniqueOrganizations Int      @default(0)
+  uniquePrograms      Int      @default(0)
+
+  // Quality metrics (position-debiased)
+  adjustedCTR         Float?   // Click-through rate adjusted for position
+  adjustedSaveRate    Float?   // Save rate adjusted for position
+  avgPositionOfSave   Float?   // Average position where saves occur
+
+  // Score distribution
+  avgBaseScore        Float?
+  avgPersonalizedScore Float?
+  avgScoreLift        Float?   // personalizedScore - baseScore
+
+  // UX metrics
+  avgTimeToFirstSave  Float?   // Seconds to first save in session
+  avgDwellTime        Float?   // Average view duration in ms
+  returnRate24h       Float?   // % of users returning within 24h
+
+  // Cold start breakdown
+  fullColdCount       Int      @default(0)
+  partialColdCount    Int      @default(0)
+  warmCount           Int      @default(0)
+
+  // Exploration metrics (separate tracking)
+  explorationImpressions Int   @default(0)
+  explorationClicks      Int   @default(0)
+  explorationSaves       Int   @default(0)
+  explorationCTR         Float?
+  explorationSaveRate    Float?
+
+  // Processing metrics
+  avgProcessingTimeMs Float?   // Time to generate personalized matches
+  p95ProcessingTimeMs Float?   // 95th percentile processing time
+  totalMatchGenerations Int    @default(0)
+
+  createdAt           DateTime @default(now())
+
+  @@unique([date, configName])
+  @@index([date])
+  @@index([configName])
+  @@map("personalization_metrics")
+}
