@@ -38,8 +38,26 @@ export function generateExplanation(
   // Generate summary based on score
   const summary = generateSummary(match.score, org.type);
 
-  // Process each reason
+  // Reasons to exclude from display (UX improvements v2.1)
+  // - Deadline reasons: Already displayed in UI card header
+  // - Cross-industry reasons: Replaced by specific keyword citation
+  // - Type match: Basic requirement already understood by user
+  const EXCLUDED_REASONS = [
+    'DEADLINE_URGENT',
+    'DEADLINE_SOON',
+    'DEADLINE_MODERATE',
+    'DEADLINE_FAR',
+    'CROSS_INDUSTRY_HIGH_RELEVANCE',
+    'CROSS_INDUSTRY_MEDIUM_RELEVANCE',
+    'TYPE_MATCH',
+  ];
+
+  // Process each reason (excluding unnecessary ones for cleaner UX)
   for (const reason of match.reasons) {
+    if (EXCLUDED_REASONS.includes(reason)) {
+      continue;
+    }
+
     const explanation = getReasonExplanation(reason, org, program, match);
     if (explanation) {
       if (reason.includes('MISMATCH') || reason.includes('FAR')) {
@@ -180,7 +198,8 @@ function getReasonExplanation(
       return `${sector} 분야로 본 프로그램의 대상 요건에 부합합니다.`;
 
     case 'KEYWORD_MATCH':
-      return '귀하의 기술 분야가 프로그램 키워드와 관련성이 높습니다.';
+      // v3.0: Simplified message (removed keyword citation per user feedback)
+      return '귀사의 보유 기술과 높은 연관성이 있습니다.';
 
     case 'RESEARCH_FOCUS_MATCH':
       return '귀 연구소의 연구 분야가 프로그램 목표와 부합합니다.';
@@ -240,11 +259,12 @@ function getReasonExplanation(
 
     // Enhanced keyword matching (v2.2: Now accurately tracks match source)
     case 'EXACT_KEYWORD_MATCH':
-      // This reason code is now only added when actual keyTechnologies matched
-      return '귀사의 핵심 기술 키워드가 프로그램 요구사항과 정확히 일치합니다.';
+      // v3.0: Simplified message (removed keyword citation per user feedback)
+      return '귀사의 보유 기술과 높은 연관성이 있습니다.';
 
     case 'PARTIAL_KEYWORD_MATCH':
-      return '귀사의 기술 키워드와 프로그램 요구사항이 부분적으로 연관됩니다. 세부 요강을 확인하세요.';
+      // v3.0: Simplified message (removed keyword citation per user feedback)
+      return '귀사의 보유 기술과 부분적으로 연관됩니다. 세부 요강을 확인하세요.';
 
     case 'RESEARCH_KEYWORD_MATCH':
       // New in v2.2: Research focus areas matched
@@ -258,7 +278,8 @@ function getReasonExplanation(
       return '산업 분야가 프로그램의 주요 대상 분야와 일치합니다.';
 
     case 'SECTOR_KEYWORD_MATCH':
-      return '귀하의 산업 분야가 프로그램 대상 분야에 포함됩니다.';
+      // v3.0: Simplified message (removed keyword citation per user feedback)
+      return '귀사의 보유 기술과 높은 연관성이 있습니다.';
 
     case 'SUB_SECTOR_MATCH':
       return '귀하의 세부 산업 분야가 프로그램 목표와 부합합니다.';
