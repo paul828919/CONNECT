@@ -18,8 +18,15 @@ This file provides guidelines for using Claude Code (claude.ai/code) when workin
   1. Complete Step 1 → Local verification → `git commit`
   2. Complete Step 2 → Local verification → `git commit`
   3. ... (repeat for each step)
-  4. All steps complete → Final verification → `git push` (triggers CI/CD)
+  4. All steps complete → Final verification → **Ask user for push approval** → `git push` (triggers CI/CD)
 - **Exception**: If a step involves critical infrastructure changes that need immediate production deployment, ask the user whether to push immediately after that specific commit.
+
+### 1.2. Push Approval Required
+**NEVER push to remote without user approval.**
+- **Rule**: Before executing `git push`, ALWAYS ask the user for explicit approval first.
+- **Format**: Show a summary of commits to be pushed and ask: "Ready to push X commit(s) to main. Approve push to trigger CI/CD deployment?"
+- **Rationale**: Production deployments take ~30 minutes and affect live users. User must have final say on deployment timing.
+- **No Exceptions**: Even for "simple" or "safe" changes, push approval is mandatory.
 **Never use browser automation tools (Playwright) when inspecting GitHub Actions pages.**
 - **Rule**: I(user) will personally visit the pagehttps://github.com/paul828919/CONNECT/actions를 to check and share the latest run results. 
 - **Docker Requirement**: If Docker is not running locally during development or modification, **notify the user to start Docker**. Never skip local verification solely because Docker is not running.
