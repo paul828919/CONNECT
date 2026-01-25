@@ -1140,6 +1140,20 @@ enum RefundReasonCategory {
   OTHER                // 기타
 }
 
+// ============================================================================
+// Recommendation Event Type (개인화 이벤트 유형)
+// For tracking user interactions with funding program recommendations
+// ============================================================================
+enum RecommendationEventType {
+  IMPRESSION    // Item appeared in viewport (any visibility)
+  VIEW          // High-confidence view (threshold met: 60% visible, 800ms dwell)
+  CLICK         // Clicked to view details
+  SAVE          // Saved/bookmarked
+  UNSAVE        // Removed from saved
+  DISMISS       // Explicitly dismissed
+  HIDE          // "Don't show again"
+}
+
 enum RefundStatus {
   PENDING
   APPROVED
@@ -1207,6 +1221,71 @@ model RefundRequest {
   @@index([organizationId])
   @@index([status])
   @@index([reasonCategory])
+}
+
+// ============================================================================
+// Recommendation Events (개인화 이벤트 로그)
+// ============================================================================
+// Append-only event log for user interactions with funding program recommendations.
+// This is the Single Source of Truth (SSOT) for all personalization signals.
+//
+// Design decisions:
+// - eventId @unique for idempotency (client-generated UUID prevents duplicates)
+// - No partitioning (conflicts with eventId unique constraint at current scale)
+// - 180-day retention via TTL cron, 30-day learning window for scoring
+// - Client-side throttling + Redis counters prevent DB read explosion
+// ============================================================================
+model recommendation_events {
+  id              String    @id @default(uuid())
+
+  // Schema version for future evolution
+  schemaVersion   Int       @default(1)
+
+  // Idempotency key (prevents duplicate events from retries)
+  eventId         String    @unique  // Client-generated UUID
+
+  // Core identifiers
+  organizationId  String
+  programId       String
+  userId          String?
+  sessionId       String
+
+  // Event type
+  eventType       RecommendationEventType
+
+  // Context at time of event (critical for debiasing)
+  position        Int       @db.SmallInt   // Position in the list (0-indexed)
+  listSize        Int       @db.SmallInt   // Total items in list when event occurred
+  matchScore      Int       @db.SmallInt   // Algorithm match score (0-100)
+
+  // View quality signals (only for VIEW events)
+  dwellTimeMs     Int?      // Time spent viewing (milliseconds)
+  visibilityRatio Float?    // Percentage of card visible (0.0-1.0)
+  scrollDepth     Float?    // Page scroll depth when viewed (0.0-1.0)
+
+  // Source tracking
+  source          String?   // "match_list", "email_digest", "search", "historical"
+  deviceType      String?   // "desktop", "mobile", "tablet"
+
+  // Timestamps (BOTH client and server) - Force UTC
+  occurredAt      DateTime  // Client time in UTC (ISO8601: 2026-01-25T03:12:34.567Z)
+  createdAt       DateTime  @default(now())  // Server time (when received)
+
+  // Timezone tracking for debugging
+  clientTzOffsetMin  Int?   // Client timezone offset in minutes (e.g., -540 for KST)
+
+  // Batch tracking for debugging
+  batchId         String?   // API batch identifier
+
+  // Indexes for efficient queries
+  // NOTE: No partitioning - eventId unique conflicts with partition key
+  @@index([organizationId, occurredAt])           // User behavior timeline
+  @@index([programId, eventType])                 // Program engagement analysis
+  @@index([sessionId, programId, eventType, createdAt])  // Session-level dedupe
+  @@index([eventType, occurredAt])                // Event type analytics
+  @@index([createdAt])                            // Retention cleanup queries
+
+  @@map("recommendation_events")
 }
 
 // ============================================================================
