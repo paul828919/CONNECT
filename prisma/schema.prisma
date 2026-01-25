@@ -1373,6 +1373,80 @@ model organization_personalization_status {
 }
 
 // ============================================================================
+// Program Co-Occurrence (프로그램 동시 발생 통계)
+// ============================================================================
+// Tracks programs that are frequently saved/viewed together.
+// Used for Item-Item collaborative filtering: "Users who saved X also saved Y"
+//
+// Computed daily via /scripts/compute-co-occurrences.ts
+// Uses 30-day learning window (matches preference aggregator)
+// ============================================================================
+model program_co_occurrence {
+  id            String   @id @default(uuid())
+
+  // Program pair (ordered: programId1 < programId2 lexicographically)
+  programId1    String
+  programId2    String
+
+  // Co-occurrence statistics
+  coSaveCount   Int      @default(0)  // Times saved together by same org
+  coViewCount   Int      @default(0)  // Times viewed together in same session
+  coClickCount  Int      @default(0)  // Times clicked together in same session
+
+  // Statistical confidence (based on sample size)
+  // Higher confidence = more reliable signal
+  confidence    Float    @default(0)
+
+  // Timestamp
+  computedAt    DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Unique constraint on program pair
+  @@unique([programId1, programId2])
+
+  // Indexes for efficient lookup
+  @@index([programId1, coSaveCount(sort: Desc)])
+  @@index([programId2, coSaveCount(sort: Desc)])
+
+  @@map("program_co_occurrence")
+}
+
+// ============================================================================
+// Organization Neighbors (조직 유사도)
+// ============================================================================
+// Top-K similar organizations based on behavioral similarity.
+// NOT full O(n²) matrix - only stores top neighbors for efficiency.
+//
+// Used for: "Organizations similar to you also saved..."
+// Computed weekly (less frequent than co-occurrence)
+// ============================================================================
+model organization_neighbors {
+  id                String   @id @default(uuid())
+
+  // Source organization
+  organizationId    String
+
+  // Similar organization (neighbor)
+  neighborId        String
+
+  // Similarity metrics
+  similarityScore   Float    // 0.0-1.0 (1.0 = identical behavior)
+  sharedSaves       Int      @default(0)  // Programs both saved
+  sharedCategories  Int      @default(0)  // Categories both active in
+
+  // Timestamp
+  computedAt        DateTime @default(now())
+
+  // Unique constraint on org pair
+  @@unique([organizationId, neighborId])
+
+  // Index for finding neighbors (ordered by similarity)
+  @@index([organizationId, similarityScore(sort: Desc)])
+
+  @@map("organization_neighbors")
+}
+
+// ============================================================================
 // SME Support Programs (중소벤처24 지원사업)
 // ============================================================================
 // Separate table for SME24 API programs - distinct from R&D funding_programs.

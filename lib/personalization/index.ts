@@ -70,3 +70,12 @@ export {
   savePreferences,
   getOrganizationPreferences,
 } from './preference-aggregator';
+
+// Item-Item Collaborative Filtering (Phase 4)
+export {
+  getItemItemBoost,
+  getItemItemBoostBatch,
+  getSimilarPrograms,
+  type CFBoostResult,
+  type CoOccurrenceStats,
+} from './item-item-cf';
