@@ -17,30 +17,44 @@ import { createClient } from 'redis';
 // Note: Use separate Redis instance (redis-cache) for rate limiting
 let redisClient: ReturnType<typeof createClient> | null = null;
 
-async function getRedisClient() {
+async function getRedisClient(): Promise<ReturnType<typeof createClient> | null> {
   if (!redisClient) {
-    redisClient = createClient({
-      url: process.env.REDIS_CACHE_URL || 'redis://localhost:6379',
-    });
+    try {
+      redisClient = createClient({
+        url: process.env.REDIS_CACHE_URL || 'redis://localhost:6379',
+      });
 
-    redisClient.on('error', (err) => {
-      console.error('[RATE-LIMIT] Redis connection error:', err.message);
-    });
+      redisClient.on('error', (err) => {
+        console.error('[RATE-LIMIT] Redis connection error:', err.message);
+      });
 
-    redisClient.on('connect', () => {
-      console.log('[RATE-LIMIT] Redis connected successfully');
-    });
+      redisClient.on('connect', () => {
+        console.log('[RATE-LIMIT] Redis connected successfully');
+      });
 
-    redisClient.on('reconnecting', () => {
-      console.log('[RATE-LIMIT] Redis reconnecting...');
-    });
+      redisClient.on('reconnecting', () => {
+        console.log('[RATE-LIMIT] Redis reconnecting...');
+      });
 
-    await redisClient.connect();
+      await redisClient.connect();
+    } catch (error) {
+      console.warn('[RATE-LIMIT] Redis connection failed, using permissive mode:',
+        error instanceof Error ? error.message : error);
+      redisClient = null;
+      return null;
+    }
   }
 
-  if (!redisClient.isOpen) {
-    console.log('[RATE-LIMIT] Redis connection lost, reconnecting...');
-    await redisClient.connect();
+  if (redisClient && !redisClient.isOpen) {
+    try {
+      console.log('[RATE-LIMIT] Redis connection lost, reconnecting...');
+      await redisClient.connect();
+    } catch (error) {
+      console.warn('[RATE-LIMIT] Redis reconnection failed:',
+        error instanceof Error ? error.message : error);
+      redisClient = null;
+      return null;
+    }
   }
 
   return redisClient;
@@ -126,8 +140,6 @@ export async function checkMatchLimit(
     };
   }
 
-  const redis = await getRedisClient();
-
   // Pro and Team users have unlimited matches
   if (subscriptionPlan === 'pro' || subscriptionPlan === 'team') {
     return {
@@ -137,7 +149,20 @@ export async function checkMatchLimit(
     };
   }
 
-  // Free tier: 2 matches per month
+  // Free tier: 2 matches per month - requires Redis for tracking
+  const redis = await getRedisClient();
+
+  // CRITICAL FIX: If Redis is unavailable, allow request (fail open)
+  // This ensures development environments work without Redis
+  if (!redis) {
+    console.warn('[RATE-LIMIT] Redis unavailable, allowing request without rate limit check');
+    return {
+      allowed: true,
+      remaining: 1, // Conservative estimate
+      resetDate: getNextMonthStart(),
+    };
+  }
+
   const key = `match:limit:${userId}:${getMonthKey()}`;
   const currentCount = await redis.get(key);
   const count = currentCount ? parseInt(currentCount, 10) : 0;
@@ -207,8 +232,19 @@ export async function checkContactLimit(
     };
   }
 
-  // Pro tier: 10 contact requests per month
+  // Pro tier: 10 contact requests per month - requires Redis for tracking
   const redis = await getRedisClient();
+
+  // If Redis is unavailable, allow request (fail open)
+  if (!redis) {
+    console.warn('[RATE-LIMIT] Redis unavailable, allowing contact request without rate limit check');
+    return {
+      allowed: true,
+      remaining: 5, // Conservative estimate
+      resetDate: getNextMonthStart(),
+    };
+  }
+
   const key = `contact:limit:${organizationId}:${getMonthKey()}`;
   const currentCount = await redis.get(key);
   const count = currentCount ? parseInt(currentCount, 10) : 0;
@@ -265,6 +301,12 @@ export function withRateLimit(config: RateLimitConfig) {
         }
 
         const redis = await getRedisClient();
+
+        // If Redis unavailable, allow request through (fail open)
+        if (!redis) {
+          console.warn('[RATE-LIMIT] Redis unavailable, allowing request through');
+          return handler(req, res);
+        }
 
         // Generate key for this request
         const key = config.keyGenerator
@@ -344,6 +386,10 @@ function getNextMonthStart(): Date {
  */
 export async function resetRateLimit(key: string): Promise<void> {
   const redis = await getRedisClient();
+  if (!redis) {
+    console.warn('[RATE-LIMIT] Redis unavailable, cannot reset rate limit key');
+    return;
+  }
   await redis.del(key);
 }
 
@@ -358,6 +404,17 @@ export async function getRateLimitStatus(
   max: number
 ): Promise<RateLimitInfo> {
   const redis = await getRedisClient();
+
+  // If Redis unavailable, return default info
+  if (!redis) {
+    console.warn('[RATE-LIMIT] Redis unavailable, returning default rate limit status');
+    return {
+      limit: max,
+      remaining: max,
+      resetTime: new Date(Date.now() + 60000), // 1 minute from now
+    };
+  }
+
   const currentCount = await redis.get(key);
   const count = currentCount ? parseInt(currentCount, 10) : 0;
 
@@ -385,6 +442,12 @@ export async function checkIpRateLimit(
   max: number = 60
 ): Promise<boolean> {
   const redis = await getRedisClient();
+
+  // If Redis unavailable, allow request (fail open)
+  if (!redis) {
+    console.warn('[RATE-LIMIT] Redis unavailable, allowing request without IP rate limit check');
+    return true;
+  }
 
   const forwarded = req.headers['x-forwarded-for'];
   const ip = forwarded ? (forwarded as string).split(',')[0] : req.socket.remoteAddress;
@@ -419,6 +482,13 @@ export async function trackApiUsage(
 ): Promise<void> {
   try {
     const redis = await getRedisClient();
+
+    // If Redis unavailable, skip tracking (non-critical)
+    if (!redis) {
+      console.warn('[RATE-LIMIT] Redis unavailable, skipping API usage tracking');
+      return;
+    }
+
     const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
     const key = `analytics:api:${date}:${userId}:${endpoint}`;
@@ -444,6 +514,16 @@ export async function getUserApiUsage(userId: string): Promise<{
   subscriptionPlan: string;
 }> {
   const redis = await getRedisClient();
+
+  // If Redis unavailable, return zero stats
+  if (!redis) {
+    console.warn('[RATE-LIMIT] Redis unavailable, returning zero API usage stats');
+    return {
+      matchesGenerated: 0,
+      apiCallsToday: 0,
+      subscriptionPlan: 'free',
+    };
+  }
 
   // Get matches generated this month
   const matchKey = `match:limit:${userId}:${getMonthKey()}`;
@@ -473,6 +553,12 @@ export async function getUserApiUsage(userId: string): Promise<{
  */
 export async function cleanupExpiredKeys(): Promise<number> {
   const redis = await getRedisClient();
+
+  // If Redis unavailable, skip cleanup
+  if (!redis) {
+    console.warn('[RATE-LIMIT] Redis unavailable, skipping expired key cleanup');
+    return 0;
+  }
 
   // Get all rate limit keys
   const keys = await redis.keys('ratelimit:*');

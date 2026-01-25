@@ -37,6 +37,17 @@ export async function GET(request: NextRequest) {
 
     // 3. Check rate limit
     const redis = await getCacheClient();
+
+    // If Redis unavailable, allow request through (fail open)
+    if (!redis) {
+      console.warn('[RATE-LIMIT] Redis unavailable, allowing request through');
+      return NextResponse.json({
+        message: 'Request successful (rate limiting unavailable)',
+        ip,
+        requestsRemaining: RATE_LIMIT_MAX_REQUESTS,
+      });
+    }
+
     const currentCount = await redis.get(rateLimitKey);
     const count = currentCount ? parseInt(currentCount, 10) : 0;
 

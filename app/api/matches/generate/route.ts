@@ -337,9 +337,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 10. Store matches in database (UPSERT to handle existing matches)
+    // 10. Validate program IDs exist (cache might have stale data)
+    // This prevents FK constraint violation if programs were deleted while cached
+    const programIdsFromMatches = matchResults.map((m) => m.program.id);
+    const existingPrograms = await db.funding_programs.findMany({
+      where: {
+        id: { in: programIdsFromMatches },
+      },
+      select: { id: true },
+    });
+    const existingProgramIds = new Set(existingPrograms.map((p) => p.id));
+
+    // Filter out matches with stale/deleted program IDs
+    const validMatchResults = matchResults.filter((m) =>
+      existingProgramIds.has(m.program.id)
+    );
+
+    // If stale programs were found, invalidate the programs cache
+    if (validMatchResults.length < matchResults.length) {
+      console.warn(
+        `[MATCH GENERATION] Filtered out ${matchResults.length - validMatchResults.length} stale program(s). Invalidating cache.`
+      );
+      // Invalidate cache so next request fetches fresh data
+      const { invalidateProgramsCache } = await import('@/lib/cache/redis-cache');
+      await invalidateProgramsCache();
+    }
+
+    if (validMatchResults.length === 0) {
+      return NextResponse.json(
+        {
+          success: true,
+          matches: [],
+          usage: {
+            plan: subscriptionPlan,
+            matchesUsed: 2 - rateLimitCheck.remaining + 1,
+            matchesRemaining: rateLimitCheck.remaining - 1,
+            resetDate: rateLimitCheck.resetDate.toISOString(),
+          },
+          message: '유효한 프로그램을 찾을 수 없습니다. 다시 시도해주세요.',
+        },
+        { status: 200 }
+      );
+    }
+
+    // 11. Store matches in database (UPSERT to handle existing matches)
     const createdMatches = await Promise.all(
-      matchResults.map(async (matchResult) => {
+      validMatchResults.map(async (matchResult) => {
         // Generate Korean explanations
         const explanation = generateExplanation(
           matchResult,
@@ -376,9 +419,9 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    // 11. Log match quality for analytics (non-blocking)
+    // 12. Log match quality for analytics (non-blocking)
     await logMatchQualityBulk(
-      matchResults.map((matchResult, index) => ({
+      validMatchResults.map((matchResult, index) => ({
         matchId: createdMatches[index].id,
         organizationId: organization.id,
         programId: matchResult.program.id,
@@ -390,10 +433,10 @@ export async function POST(request: NextRequest) {
       }))
     );
 
-    // 12. Track API usage for analytics
+    // 13. Track API usage for analytics
     await trackApiUsage(userId, '/api/matches/generate');
 
-    // 13. Return matches with explanations
+    // 14. Return matches with explanations
     const response = {
       success: true,
       matches: createdMatches.map((match: any) => ({
@@ -419,8 +462,8 @@ export async function POST(request: NextRequest) {
         resetDate: rateLimitCheck.resetDate.toISOString(),
       },
       message: isHistoricalFallback
-        ? `현재 진행 중인 공고는 없지만, 올해 마감된 유사 프로그램 ${matchResults.length}개를 찾았습니다. 새로운 공고가 올라오면 알림을 받으세요.`
-        : `${matchResults.length}개의 적합한 지원 프로그램을 찾았습니다.`,
+        ? `현재 진행 중인 공고는 없지만, 올해 마감된 유사 프로그램 ${validMatchResults.length}개를 찾았습니다. 새로운 공고가 올라오면 알림을 받으세요.`
+        : `${validMatchResults.length}개의 적합한 지원 프로그램을 찾았습니다.`,
       isHistorical: isHistoricalFallback,
     };
 

@@ -48,33 +48,48 @@ let cacheClient: ReturnType<typeof createClient> | null = null;
  *
  * IMPORTANT: Redis v4+ requires explicit .connect() call before use.
  * This function handles connection state and auto-reconnects if needed.
+ * Returns null if Redis is unavailable (fail open pattern).
  */
-export async function getCacheClient() {
+export async function getCacheClient(): Promise<ReturnType<typeof createClient> | null> {
   if (!cacheClient) {
-    cacheClient = createClient({
-      url: process.env.REDIS_CACHE_URL || 'redis://localhost:6379',
-    });
+    try {
+      cacheClient = createClient({
+        url: process.env.REDIS_CACHE_URL || 'redis://localhost:6379',
+      });
 
-    cacheClient.on('error', (err) => {
-      console.error('[CACHE] Redis connection error:', err.message);
-    });
+      cacheClient.on('error', (err) => {
+        console.error('[CACHE] Redis connection error:', err.message);
+      });
 
-    cacheClient.on('connect', () => {
-      console.log('[CACHE] Redis connected successfully');
-    });
+      cacheClient.on('connect', () => {
+        console.log('[CACHE] Redis connected successfully');
+      });
 
-    cacheClient.on('reconnecting', () => {
-      console.log('[CACHE] Redis reconnecting...');
-    });
+      cacheClient.on('reconnecting', () => {
+        console.log('[CACHE] Redis reconnecting...');
+      });
 
-    // Redis v4+ requires explicit connect() call
-    await cacheClient.connect();
+      // Redis v4+ requires explicit connect() call
+      await cacheClient.connect();
+    } catch (error) {
+      console.warn('[CACHE] Redis connection failed, running without cache:',
+        error instanceof Error ? error.message : error);
+      cacheClient = null;
+      return null;
+    }
   }
 
   // Auto-reconnect if connection was lost
-  if (!cacheClient.isOpen) {
-    console.log('[CACHE] Redis connection lost, reconnecting...');
-    await cacheClient.connect();
+  if (cacheClient && !cacheClient.isOpen) {
+    try {
+      console.log('[CACHE] Redis connection lost, reconnecting...');
+      await cacheClient.connect();
+    } catch (error) {
+      console.warn('[CACHE] Redis reconnection failed:',
+        error instanceof Error ? error.message : error);
+      cacheClient = null;
+      return null;
+    }
   }
 
   return cacheClient;
@@ -123,6 +138,13 @@ export function resetCacheStats(): void {
 export async function getCache<T>(key: string): Promise<T | null> {
   try {
     const redis = await getCacheClient();
+
+    // If Redis unavailable, treat as cache miss
+    if (!redis) {
+      stats.misses++;
+      return null;
+    }
+
     const value = await redis.get(key);
 
     if (value === null) {
@@ -171,6 +193,11 @@ export async function setCache<T>(
   try {
     const redis = await getCacheClient();
 
+    // If Redis unavailable, skip caching (fail open)
+    if (!redis) {
+      return;
+    }
+
     // Wrap data with schema version for future-proofing
     const versionedValue = {
       schemaVersion: CACHE_SCHEMA_VERSION,
@@ -204,6 +231,12 @@ export async function setCache<T>(
 export async function deleteCache(key: string): Promise<void> {
   try {
     const redis = await getCacheClient();
+
+    // If Redis unavailable, skip delete (fail open)
+    if (!redis) {
+      return;
+    }
+
     await redis.del(key);
     console.log('[CACHE] DELETE', key);
   } catch (error) {
@@ -225,6 +258,12 @@ export async function deleteCache(key: string): Promise<void> {
 export async function invalidatePattern(pattern: string): Promise<number> {
   try {
     const redis = await getCacheClient();
+
+    // If Redis unavailable, skip invalidation (fail open)
+    if (!redis) {
+      return 0;
+    }
+
     const keys = await redis.keys(pattern);
 
     if (keys.length === 0) {
@@ -251,6 +290,12 @@ export async function invalidatePattern(pattern: string): Promise<number> {
 export async function existsInCache(key: string): Promise<boolean> {
   try {
     const redis = await getCacheClient();
+
+    // If Redis unavailable, assume key doesn't exist
+    if (!redis) {
+      return false;
+    }
+
     const exists = await redis.exists(key);
     return exists === 1;
   } catch (error) {
@@ -269,6 +314,12 @@ export async function existsInCache(key: string): Promise<boolean> {
 export async function getTTL(key: string): Promise<number> {
   try {
     const redis = await getCacheClient();
+
+    // If Redis unavailable, return -1 (key doesn't exist)
+    if (!redis) {
+      return -1;
+    }
+
     return await redis.ttl(key);
   } catch (error) {
     stats.errors++;
