@@ -477,9 +477,14 @@ export function generateMatches(
     // - Scoring-based approach alone is insufficient (weak keyword matches can accumulate points)
     // - Hard filter ensures semantic industry compatibility before any scoring occurs
     //
-    // THRESHOLD: 0.3 (30% relevance) for ACTIVE programs
-    // - Below 0.3: Industries are fundamentally incompatible (blocked)
-    // - Above 0.3: Industries have meaningful overlap (allowed, then scored)
+    // THRESHOLD: 0.45 (45% relevance) for ACTIVE programs (raised from 0.3 in v4.2)
+    // - Below 0.45: Industries are fundamentally incompatible (blocked)
+    // - 0.45-0.7: Medium relevance, requires keyword overlap (v4.2)
+    // - Above 0.7: Industries have strong overlap (allowed without keyword check)
+    //
+    // PROGRAM SECTOR DETERMINATION (v4.2.1):
+    // Uses program.category if available, falls back to keyword classification (title + ministry)
+    // This prevents programs with null category from bypassing the industry filter entirely
     //
     // RELAXATION FOR HISTORICAL MATCHES:
     // For EXPIRED programs (historical reference), BYPASS industry filter entirely
@@ -488,9 +493,28 @@ export function generateMatches(
     // BYPASS FOR CROSS-INDUSTRY SME PROGRAMS (v4.1):
     // 중소벤처기업부 cross-industry programs already passed scale + region checks above
     // These programs are designed for all industries - filtering by industry would exclude eligible companies
-    if (!bypassIndustryFilterForSME && organization.industrySector && program.category) {
+    if (!bypassIndustryFilterForSME && organization.industrySector) {
       const orgSector = findIndustrySector(organization.industrySector);
-      const programSector = findIndustrySector(program.category);
+
+      // Determine program sector: use category if available, fallback to keyword classification
+      // FIX (v4.2.1): Programs with null category were bypassing the entire industry filter,
+      // allowing irrelevant matches like ICT→MARINE (선박평형수처리장치) to slip through.
+      // Now we use the keyword classifier (title + ministry) as a fallback source.
+      let programSector: string | null = null;
+      if (program.category) {
+        programSector = findIndustrySector(program.category);
+      }
+      if (!programSector) {
+        // Fallback: classify program by title + ministry keywords
+        const fallbackClassification = classifyProgram(
+          program.title,
+          null,
+          program.ministry || null
+        );
+        if (fallbackClassification.industry !== 'GENERAL') {
+          programSector = findIndustrySector(fallbackClassification.industry);
+        }
+      }
 
       // Both sectors must exist in taxonomy for compatibility check
       if (orgSector && programSector) {

@@ -381,12 +381,22 @@ export const INDUSTRY_CROSS_RELEVANCE: Record<string, Record<string, number>> = 
   'ENVIRONMENT': { 'ENERGY': 0.6 },
 
   // ICT is cross-domain
+  // v4.2.1: Added explicit MARINE/AGRICULTURE/CULTURAL entries to prevent
+  // inconsistent defaults (0.2) when keyword-classifier returns these categories
   'ICT': {
     'MANUFACTURING': 0.5,
     'BIO_HEALTH': 0.4,
     'ENERGY': 0.4,
     'CONSTRUCTION': 0.4,
     'TRANSPORTATION': 0.5,
+    'MARINE_FISHERIES': 0.2,  // No overlap: SaaS/AI ↔ 선박/수산/양식
+    'MARINE_SECURITY': 0.2,   // No overlap: SaaS/AI ↔ VTS/해양안전
+    'AGRICULTURE': 0.3,       // Some smart farm/AgTech overlap
+    'VETERINARY': 0.2,        // Minimal overlap
+    'FORESTRY': 0.2,          // Minimal overlap
+    'AEROSPACE': 0.4,         // Satellite data, space ICT
+    'CULTURAL': 0.5,          // Digital content, streaming, gaming
+    'ENVIRONMENT': 0.3,       // Environmental monitoring/data
   },
 
   // Aerospace related
