@@ -17,7 +17,7 @@ export interface FilterState {
 }
 
 export const DEFAULT_FILTERS: FilterState = {
-  bizType: '',
+  bizType: '기술',
   eligibility: '',
   region: '',
   urgentOnly: false,
@@ -30,13 +30,17 @@ interface SMEFilterBarProps {
 }
 
 const BIZ_TYPES = [
-  { value: '', label: '전체 사업유형' },
-  { value: '기술', label: '기술개발' },
-  { value: '금융', label: '금융지원' },
-  { value: '창업', label: '창업지원' },
-  { value: '수출', label: '수출지원' },
-  { value: '인력', label: '인력지원' },
-  { value: '내수', label: '내수판로' },
+  { value: '', label: '전체' },
+  { value: '기술', label: '기술' },
+  { value: '금융', label: '금융' },
+  { value: '창업', label: '창업' },
+  { value: '수출', label: '수출' },
+  { value: '인력', label: '인력' },
+  { value: '내수', label: '내수' },
+  { value: '경영', label: '경영' },
+  { value: '소상공인', label: '소상공인' },
+  { value: '중견', label: '중견' },
+  { value: '기타', label: '기타' },
 ];
 
 const ELIGIBILITY_OPTIONS = [
@@ -79,7 +83,7 @@ export function SMEFilterBar({ filters, onFilterChange }: SMEFilterBarProps) {
   };
 
   const activeFilterCount = [
-    filters.bizType,
+    filters.bizType !== DEFAULT_FILTERS.bizType && filters.bizType,
     filters.eligibility,
     filters.region,
     filters.urgentOnly,
