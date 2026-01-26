@@ -149,10 +149,10 @@ export default function SMEProgramsPage() {
 
   const fetchSubscription = useCallback(async () => {
     try {
-      const res = await fetch('/api/subscription');
-      const data = await res.json();
+      const res = await fetch('/api/subscriptions/me');
       if (res.ok) {
-        setUserPlan(data.plan || 'FREE');
+        const data = await res.json();
+        setUserPlan(data.subscription?.plan || 'FREE');
       }
     } catch {
       // Silently fail - default to FREE
