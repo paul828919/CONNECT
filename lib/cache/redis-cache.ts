@@ -38,6 +38,8 @@ export const CACHE_PREFIX = {
   ORG: 'org:profile',               // org:profile:{orgId}
   PROGRAMS: 'programs:active',      // programs:active:list
   AI: 'ai:explanation',             // ai:explanation:{matchId}
+  SME_MATCH: 'sme-match:org',       // sme-match:org:{orgId}:results
+  SME_PROGRAMS: 'sme-programs:active', // sme-programs:active:list
 } as const;
 
 // Redis client singleton
@@ -378,6 +380,20 @@ export function getHistoricalMatchCacheKey(organizationId: string): string {
 }
 
 /**
+ * Helper: Generate cache key for SME match results
+ */
+export function getSmeMatchCacheKey(organizationId: string): string {
+  return `${CACHE_PREFIX.SME_MATCH}:${organizationId}:results`;
+}
+
+/**
+ * Helper: Generate cache key for active SME programs list
+ */
+export function getSmeProgramsCacheKey(): string {
+  return `${CACHE_PREFIX.SME_PROGRAMS}:list`;
+}
+
+/**
  * Invalidate all match caches (call after scraping completes)
  *
  * @example
@@ -443,6 +459,29 @@ export async function invalidateHistoricalMatches(organizationId: string): Promi
 }
 
 /**
+ * Invalidate all SME match caches (call after SME program sync)
+ */
+export async function invalidateAllSmeMatches(): Promise<number> {
+  return await invalidatePattern(`${CACHE_PREFIX.SME_MATCH}:*`);
+}
+
+/**
+ * Invalidate SME match cache for specific organization
+ */
+export async function invalidateOrgSmeMatches(organizationId: string): Promise<void> {
+  const key = getSmeMatchCacheKey(organizationId);
+  await deleteCache(key);
+}
+
+/**
+ * Invalidate active SME programs cache
+ */
+export async function invalidateSmeProgramsCache(): Promise<void> {
+  const key = getSmeProgramsCacheKey();
+  await deleteCache(key);
+}
+
+/**
  * Graceful shutdown - close Redis connection
  */
 export async function closeCacheConnection(): Promise<void> {
@@ -470,11 +509,16 @@ const redisCache = {
   getProgramsCacheKey,
   getAIExplanationCacheKey,
   getHistoricalMatchCacheKey,
+  getSmeMatchCacheKey,
+  getSmeProgramsCacheKey,
   invalidateAllMatches,
   invalidateOrgMatches,
   invalidateOrgProfile,
   invalidateProgramsCache,
   invalidateHistoricalMatches,
+  invalidateAllSmeMatches,
+  invalidateOrgSmeMatches,
+  invalidateSmeProgramsCache,
   getCacheStats,
   resetCacheStats,
   closeCacheConnection,
