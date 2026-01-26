@@ -20,75 +20,72 @@ interface SMEStatsBarProps {
   onBizTypeClick?: (bizType: string) => void;
 }
 
-export function SMEStatsBar({ stats, bizTypeCounts = [], activeBizType = '', onBizTypeClick }: SMEStatsBarProps) {
-  // Build a lookup map for quick access
+export function SMEStatsBar({
+  stats,
+  bizTypeCounts = [],
+  activeBizType = '',
+  onBizTypeClick,
+}: SMEStatsBarProps) {
   const countMap = new Map(bizTypeCounts.map((b) => [b.category, b.count]));
 
-  // Sort pills by fixed order, include all categories even if count is 0
-  const sortedPills = BIZ_TYPE_ORDER.map((category) => ({
+  const categories = BIZ_TYPE_ORDER.map((category) => ({
     category,
     count: countMap.get(category) || 0,
   }));
 
   const totalCount = stats.totalMatches;
 
-  const handlePillClick = (category: string) => {
-    if (!onBizTypeClick) return;
-    onBizTypeClick(category);
+  const handleClick = (category: string) => {
+    onBizTypeClick?.(category);
   };
 
+  if (bizTypeCounts.length === 0) return null;
+
   return (
-    <div className="rounded-xl border border-violet-100 bg-gradient-to-r from-violet-50/80 via-purple-50/50 to-fuchsia-50/30 p-4 space-y-3">
-      {/* BizType pill navigation */}
-      {bizTypeCounts.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">사업유형별 매칭 현황</h3>
-          <div className="flex flex-wrap gap-1.5">
-            {/* 전체 pill */}
+    <div>
+      <div className="flex flex-wrap items-center gap-x-3 text-[13px]">
+        <button
+          type="button"
+          onClick={() => handleClick('')}
+          className={`px-1 pb-0.5 border-b-2 transition-colors duration-150 ${
+            activeBizType === ''
+              ? 'border-gray-900 font-semibold text-gray-900'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          전체 <span className={`tabular-nums ${activeBizType === '' ? 'text-gray-400' : 'text-gray-400'}`}>{totalCount}</span>
+        </button>
+
+        {categories.map(({ category, count }) => {
+          const isActive = activeBizType === category;
+          const isZero = count === 0;
+
+          return (
             <button
+              key={category}
               type="button"
-              onClick={() => handlePillClick('')}
-              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                activeBizType === ''
-                  ? 'bg-violet-600 text-white shadow-sm'
-                  : 'bg-white border border-gray-200 text-gray-700 hover:bg-violet-50'
+              onClick={() => handleClick(category)}
+              disabled={isZero}
+              className={`px-1 pb-0.5 border-b-2 transition-colors duration-150 ${
+                isActive
+                  ? 'border-gray-900 font-semibold text-gray-900'
+                  : isZero
+                    ? 'border-transparent text-gray-300 cursor-not-allowed'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              전체
-              <span className={`tabular-nums ${activeBizType === '' ? 'text-violet-200' : 'text-gray-400'}`}>
-                {totalCount}
+              {category}{' '}
+              <span
+                className={`tabular-nums ${
+                  isActive ? 'text-gray-400' : isZero ? 'text-gray-200' : 'text-gray-400'
+                }`}
+              >
+                {count}
               </span>
             </button>
-
-            {/* Category pills in fixed order */}
-            {sortedPills.map(({ category, count }) => {
-              const isActive = activeBizType === category;
-              const isZero = count === 0;
-
-              return (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => handlePillClick(category)}
-                  disabled={isZero}
-                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    isActive
-                      ? 'bg-violet-600 text-white shadow-sm'
-                      : isZero
-                        ? 'bg-white border border-gray-200 text-gray-400 opacity-40 cursor-not-allowed'
-                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-violet-50'
-                  }`}
-                >
-                  {category}
-                  <span className={`tabular-nums ${isActive ? 'text-violet-200' : 'text-gray-400'}`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 }

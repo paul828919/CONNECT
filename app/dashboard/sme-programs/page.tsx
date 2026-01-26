@@ -550,17 +550,6 @@ export default function SMEProgramsPage() {
         {/* ================================================================ */}
         {!loading && matches.length > 0 && (
           <>
-            {/* Result count */}
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500">
-                전체 {pagination?.total || 0}개 중{' '}
-                <span className="font-medium text-gray-700">
-                  {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, pagination?.total || 0)}
-                </span>
-                개 표시
-              </p>
-            </div>
-
             <div className="space-y-4">
               {matches.map((match, index) => {
                 // Create or get tracking ref
@@ -592,7 +581,15 @@ export default function SMEProgramsPage() {
             {/* Pagination                                                   */}
             {/* ============================================================ */}
             {pagination && pagination.totalPages > 1 && (
-              <div className="mt-8 flex items-center justify-center gap-2">
+              <div className="mt-8 space-y-3">
+              <p className="text-center text-sm text-gray-400 tabular-nums">
+                전체 {pagination.total}개 중{' '}
+                <span className="font-medium text-gray-600">
+                  {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, pagination.total)}
+                </span>
+                개 표시
+              </p>
+              <div className="flex items-center justify-center gap-2">
                 <button
                   onClick={handlePreviousPage}
                   disabled={currentPage === 1}
@@ -641,6 +638,7 @@ export default function SMEProgramsPage() {
                 >
                   다음 →
                 </button>
+              </div>
               </div>
             )}
           </>
