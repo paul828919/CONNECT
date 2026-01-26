@@ -11,21 +11,27 @@
  * - CHANGED: Score normalization prevents inflation from added dimensions
  *
  * Scoring breakdown (150 raw → normalized to 100):
- * Eligibility factors (70 raw):
- *   - Company scale match: 20 points (STARTUP, SME, MID_SIZED)
- *   - Revenue range match: 15 points (based on program requirements)
- *   - Employee count match: 10 points (based on program requirements)
- *   - Business age match: 10 points (업력)
- *   - Regional match: 10 points (소재지)
+ * Eligibility factors (70 raw max, partial credit for no-requirement):
+ *   - Company scale match: 20 points (10 partial if no req, 20 if matched)
+ *   - Revenue range match: 15 points (7 partial if no req, 15 if matched)
+ *   - Employee count match: 10 points (5 partial if no req, 10 if matched)
+ *   - Business age match: 10 points (5 partial if no req, 10 if matched)
+ *   - Regional match: 10 points (7 partial if nationwide/no req, 10 if matched)
  *   - Required certifications: 5 points (이노비즈, 벤처, 메인비즈)
  *
  * Relevance factors (80 raw):
- *   - bizType match: 25 points (사업유형 - 100% fill rate, best differentiator)
- *   - Industry/Content: 25 points (keyword classification on title+description)
+ *   - Industry/Content: 30 points (keyword classification on title+description)
+ *   - bizType match: 28 points (사업유형 - 100% fill rate, best differentiator)
  *   - Deadline urgency: 15 points (마감임박 우선)
- *   - sportType match: 5 points (지원유형)
- *   - Lifecycle match: 5 points (생애주기 - 0% fill rate, future-proofing)
- *   - Financial relevance: 5 points (지원금액 - 0% fill rate, future-proofing)
+ *   - sportType match: 3 points (지원유형 - 91% "정보", low differentiation)
+ *   - Lifecycle match: 2 points (생애주기 - 0% fill rate, future-proofing)
+ *   - Financial relevance: 2 points (지원금액 - 0% fill rate, future-proofing)
+ *
+ * v2.1 Partial Credit Rationale:
+ *   92.7% of programs have NO eligibility restrictions. Giving full points
+ *   for "no requirement" makes 47% of the total score identical across all
+ *   programs. Partial credit creates meaningful differentiation: programs
+ *   that specifically match an org's profile score higher than generic ones.
  *
  * Weight calibration based on production data (818 active programs, 2026-01-26):
  *   - bizType/sportType: 100% fill → high weights
@@ -83,20 +89,20 @@ export type SMEEligibilityLevel = 'FULLY_ELIGIBLE' | 'CONDITIONALLY_ELIGIBLE' | 
  * Raw points before normalization
  */
 export interface SMEScoreBreakdown {
-  // Eligibility factors (70 raw max)
-  companyScale: number;       // 0-20
-  revenueRange: number;       // 0-15
-  employeeCount: number;      // 0-10
-  businessAge: number;        // 0-10
-  region: number;             // 0-10
+  // Eligibility factors (70 raw max, partial credit for no-requirement)
+  companyScale: number;       // 0-20 (10 partial if no req)
+  revenueRange: number;       // 0-15 (7 partial if no req)
+  employeeCount: number;      // 0-10 (5 partial if no req)
+  businessAge: number;        // 0-10 (5 partial if no req)
+  region: number;             // 0-10 (7 partial if nationwide/no req)
   certifications: number;     // 0-5
-  // Relevance factors (80 raw max)
-  bizType: number;            // 0-25
-  lifecycle: number;          // 0-5
-  industryContent: number;    // 0-25
+  // Relevance factors (80 raw max, rebalanced for differentiation)
+  bizType: number;            // 0-28 (best differentiator, 100% fill rate)
+  lifecycle: number;          // 0-2  (reduced: 0% fill rate)
+  industryContent: number;    // 0-30 (boosted: 99.5% description fill)
   deadline: number;           // 0-15
-  financialRelevance: number; // 0-5
-  sportType: number;          // 0-5
+  financialRelevance: number; // 0-2  (reduced: 0% fill rate)
+  sportType: number;          // 0-3  (reduced: 91% "정보")
 }
 
 /**
@@ -329,24 +335,24 @@ function scoreProgram(program: SMEProgram, org: Organization): SMEMatchResult {
   // 6. Certifications (5 points, was 10)
   scoreBreakdown.certifications = scoreCertifications(org, program, metCriteria);
 
-  // === Relevance factors (80 raw max) ===
+  // === Relevance factors (80 raw max, rebalanced v2.1) ===
 
-  // 7. bizType Match (25 points) — NEW v2.0
+  // 7. bizType Match (28 points, was 25) — best differentiator (100% fill, 10 categories)
   scoreBreakdown.bizType = scoreBizType(org, program, metCriteria);
 
-  // 8. Lifecycle Match (5 points) — NEW v2.0
+  // 8. Lifecycle Match (2 points, was 5) — reduced: 0% fill rate
   scoreBreakdown.lifecycle = scoreLifecycle(org, program, metCriteria);
 
-  // 9. Industry/Content Match (25 points) — NEW v2.0
+  // 9. Industry/Content Match (30 points, was 25) — boosted: 99.5% description fill
   scoreBreakdown.industryContent = scoreIndustryContent(org, program, metCriteria);
 
-  // 10. Deadline Urgency (15 points) — NEW v2.0 (ported from R&D)
+  // 10. Deadline Urgency (15 points) — unchanged
   scoreBreakdown.deadline = scoreDeadline(program, metCriteria);
 
-  // 11. Financial Relevance (5 points) — NEW v2.0
+  // 11. Financial Relevance (2 points, was 5) — reduced: 0% fill rate
   scoreBreakdown.financialRelevance = scoreFinancialRelevance(org, program, metCriteria);
 
-  // 12. sportType Match (5 points) — NEW v2.0
+  // 12. sportType Match (3 points, was 5) — reduced: 91% "정보"
   scoreBreakdown.sportType = scoreSportType(org, program, metCriteria);
 
   // Calculate raw total and normalize to 0-100
@@ -411,9 +417,10 @@ function scoreCompanyScale(
   metCriteria: string[],
   failedCriteria: string[]
 ): number {
-  // No scale requirement - give full points
+  // No scale requirement — partial credit (open to all ≠ specifically matched)
+  // 92.7% of programs have no restriction; full points here kills differentiation
   if (!program.targetCompanyScaleCd || program.targetCompanyScaleCd.length === 0) {
-    return 20;
+    return 10;
   }
 
   // No org data - give partial points
@@ -444,9 +451,9 @@ function scoreRevenueRange(
   failedCriteria: string[],
   warnings: string[]
 ): number {
-  // No revenue requirement
+  // No revenue requirement — partial credit
   if (!program.targetSalesRangeCd || program.targetSalesRangeCd.length === 0) {
-    return 15;
+    return 7;
   }
 
   // No org data
@@ -472,9 +479,9 @@ function scoreEmployeeCount(
   metCriteria: string[],
   failedCriteria: string[]
 ): number {
-  // No employee requirement
+  // No employee requirement — partial credit
   if (!program.targetEmployeeRangeCd || program.targetEmployeeRangeCd.length === 0) {
-    return 10;
+    return 5;
   }
 
   // No org data
@@ -502,9 +509,9 @@ function scoreBusinessAge(
   metCriteria: string[],
   failedCriteria: string[]
 ): number {
-  // No age requirement
+  // No age requirement — partial credit
   if (!program.targetBusinessAgeCd || program.targetBusinessAgeCd.length === 0) {
-    return 10;
+    return 5;
   }
 
   // No org data (businessEstablishedDate)
@@ -548,12 +555,13 @@ function scoreRegion(
   metCriteria: string[],
   failedCriteria: string[]
 ): number {
-  // No regional requirement or nationwide (1000)
+  // No regional requirement or nationwide (1000) — partial credit
+  // Nationwide is still accessible, but less signal than a specific regional match
   if (!program.targetRegionCodes ||
       program.targetRegionCodes.length === 0 ||
       program.targetRegionCodes.includes('1000')) {
     metCriteria.push('전국 대상 프로그램');
-    return 10;
+    return 7;
   }
 
   // No org location data
@@ -601,18 +609,21 @@ function scoreCertifications(
 // ============================================================================
 
 /**
- * Score bizType match (0-25 points)
+ * Score bizType match (0-28 points, was 0-25)
  *
  * Maps program bizType (사업유형) to organization characteristics.
  * Production data: 100% fill rate, 10 distinct categories.
  * Top categories: 경영(28%), 기술(20%), 금융(16%), 수출(13%)
+ *
+ * v2.1: Widened scoring ranges for better differentiation.
+ * Strong match: 24-28, moderate: 14-20, weak: 4-10, mismatch: 0-6
  */
 function scoreBizType(
   org: Organization,
   program: SMEProgram,
   metCriteria: string[]
 ): number {
-  if (!program.bizType) return 13; // Default moderate score
+  if (!program.bizType) return 8; // Default low score (was 13) — no signal
 
   const bizType = program.bizType;
 
@@ -621,110 +632,111 @@ function scoreBizType(
       // Technology programs → favor R&D-experienced and tech-sector companies
       if (org.rdExperience) {
         metCriteria.push('R&D 경험 보유 - 기술지원사업 적합');
-        return 25;
+        return 28;
       }
       const techSectors = ['ICT', 'BIO_HEALTH', 'MANUFACTURING', 'ENERGY'];
       if (org.industrySector && techSectors.includes(org.industrySector.toUpperCase())) {
         metCriteria.push('기술 분야 기업 - 기술지원사업 적합');
-        return 20;
+        return 22;
       }
-      return 12;
+      return 6; // No tech signal — weak match (was 12)
     }
 
     case '금융': {
       // Financial programs → favor smaller companies needing capital
       if (org.companyScaleType === 'STARTUP') {
         metCriteria.push('창업기업 - 금융지원사업 적합');
-        return 25;
+        return 28;
       }
       if (org.companyScaleType === 'SME') {
         metCriteria.push('중소기업 - 금융지원사업 적합');
-        return 20;
+        return 22;
       }
       if (org.revenueRange === 'NONE' || org.revenueRange === 'UNDER_1B') {
-        return 20;
+        return 22;
       }
-      return 12;
+      return 8; // Larger companies: less need for SME financing (was 12)
     }
 
     case '창업': {
       // Startup programs → strongly favor startups and young companies
       if (org.companyScaleType === 'STARTUP') {
         metCriteria.push('창업기업 - 창업지원사업 적합');
-        return 25;
+        return 28;
       }
       // Young companies (< 3 years)
       if (org.businessEstablishedDate) {
         const age = calculateBusinessAge(org.businessEstablishedDate);
         if (age !== null && age < 3) {
           metCriteria.push('업력 3년 미만 - 창업지원사업 적합');
-          return 20;
+          return 22;
+        }
+        if (age !== null && age < 7) {
+          return 14; // Still somewhat relevant for younger companies
         }
       }
-      return 5; // Established companies: low relevance for startup programs
+      return 3; // Established companies: very low relevance (was 5)
     }
 
     case '수출': {
       // Export programs → favor companies with revenue (they have products to export)
       if (org.revenueRange && org.revenueRange !== 'NONE') {
         metCriteria.push('매출 보유 - 수출지원사업 적합');
-        return 22;
+        return 24;
       }
-      return 10;
+      return 6; // No revenue → nothing to export yet (was 10)
     }
 
     case '인력': {
-      // Manpower programs → universal benefit, slight favor for small teams
-      metCriteria.push('인력지원사업');
-      return 18;
+      // Manpower programs → moderate universal benefit
+      return 14; // Broadly applicable but not specifically matched (was 18)
     }
 
     case '경영': {
-      // Management programs → broad applicability
-      metCriteria.push('경영지원사업');
-      return 18;
+      // Management programs → moderate universal benefit
+      return 14; // Broadly applicable but not specifically matched (was 18)
     }
 
     case '내수': {
       // Domestic market programs → favor companies with revenue
       if (org.revenueRange && org.revenueRange !== 'NONE') {
-        return 20;
+        return 22;
       }
-      return 12;
+      return 8; // No revenue (was 12)
     }
 
     case '중견': {
       // Mid-sized company programs
       if (org.companyScaleType === 'MID_SIZED') {
         metCriteria.push('중견기업 대상 사업 적합');
-        return 25;
+        return 28;
       }
       if (org.companyScaleType === 'SME') {
-        return 15; // SMEs can benefit from growth programs
+        return 14; // SMEs can benefit from growth programs (was 15)
       }
-      return 5;
+      return 3; // Startups: not ready for mid-sized programs (was 5)
     }
 
     case '소상공인': {
       // Small business programs
       if (org.companyScaleType === 'STARTUP' || org.revenueRange === 'NONE' || org.revenueRange === 'UNDER_1B') {
         metCriteria.push('소상공인 지원사업 적합');
-        return 22;
+        return 24;
       }
-      return 8;
+      return 4; // Larger companies: poor fit (was 8)
     }
 
     default:
-      return 13; // 기타 or unknown
+      return 8; // 기타 or unknown (was 13)
   }
 }
 
 /**
- * Score lifecycle match (0-5 points)
+ * Score lifecycle match (0-2 points, was 0-5)
  *
  * Maps program lifeCycle to org's derived lifecycle stage.
  * Production data: 0% fill rate for lifeCycle field → derive from bizType as fallback.
- * Reduced weight (5pts) due to no direct data.
+ * v2.1: Reduced from 5pts to 2pts — 0% fill rate means this never differentiates.
  */
 function scoreLifecycle(
   org: Organization,
@@ -734,42 +746,45 @@ function scoreLifecycle(
   // Primary: Use program's lifeCycle field if available
   if (program.lifeCycle && program.lifeCycle.length > 0) {
     const orgLifecycle = deriveOrgLifecycle(org);
-    if (!orgLifecycle) return 3; // No org data
+    if (!orgLifecycle) return 1; // No org data
 
     for (const lc of program.lifeCycle) {
       if (lc.includes('창업') && orgLifecycle === 'startup') {
         metCriteria.push('생애주기 부합: 창업기');
-        return 5;
+        return 2;
       }
       if (lc.includes('성장') && orgLifecycle === 'growth') {
         metCriteria.push('생애주기 부합: 성장기');
-        return 5;
+        return 2;
       }
       if (lc.includes('폐업') || lc.includes('재기')) {
-        // Restart programs - give moderate score (can't verify org status)
-        return 3;
+        return 1;
       }
     }
-    return 2; // Lifecycle exists but doesn't match
+    return 0; // Lifecycle exists but doesn't match
   }
 
   // Fallback: Derive lifecycle from bizType
   if (program.bizType === '창업') {
     const orgLifecycle = deriveOrgLifecycle(org);
-    if (orgLifecycle === 'startup') return 5;
-    if (orgLifecycle === 'growth') return 2;
-    return 3;
+    if (orgLifecycle === 'startup') return 2;
+    if (orgLifecycle === 'growth') return 0;
+    return 1;
   }
 
-  return 3; // No lifecycle data → neutral score
+  return 1; // No lifecycle data → minimal neutral score
 }
 
 /**
- * Score industry/content match (0-25 points)
+ * Score industry/content match (0-30 points, was 0-25)
  *
  * Classifies program by title+description using keyword-classifier,
  * then measures relevance against org's industrySector.
  * Production data: 99.5% description fill rate → strong signal.
+ *
+ * v2.1: Boosted from 25pts to 30pts — one of only two high-signal
+ * relevance factors (along with bizType). 72% of programs have
+ * industry-specific keywords that enable real differentiation.
  */
 function scoreIndustryContent(
   org: Organization,
@@ -788,7 +803,7 @@ function scoreIndustryContent(
     .join(' ');
 
   if (!classificationText || classificationText.length < 5) {
-    return 13; // Default moderate score
+    return 8; // Default low score — no text to classify (was 13)
   }
 
   // Classify program using keyword-classifier
@@ -805,8 +820,8 @@ function scoreIndustryContent(
     classification.industry
   );
 
-  // Scale relevance (0.0-1.0) to points (0-25)
-  const score = Math.round(relevance * 25);
+  // Scale relevance (0.0-1.0) to points (0-30)
+  const score = Math.round(relevance * 30);
 
   if (relevance >= 0.8) {
     const label = getIndustryKoreanLabel(classification.industry);
@@ -860,11 +875,12 @@ function scoreDeadline(
 }
 
 /**
- * Score financial relevance (0-5 points)
+ * Score financial relevance (0-2 points, was 0-5)
  *
  * Compares program maxSupportAmount to org revenueRange.
  * Sweet spot: support is 1-30% of annual revenue.
- * Production data: 0% fill rate for maxSupportAmount → mostly returns default.
+ * v2.1: Reduced from 5pts to 2pts — 0% fill rate for maxSupportAmount
+ * means this always returns default. Minimizes dead-weight on score.
  */
 function scoreFinancialRelevance(
   org: Organization,
@@ -873,95 +889,80 @@ function scoreFinancialRelevance(
 ): number {
   // Both fields needed for comparison
   if (!program.maxSupportAmount || !org.revenueRange) {
-    return 3; // Default moderate score (0% fill rate for amounts)
+    return 1; // Default minimal score (0% fill rate for amounts)
   }
 
   const supportAmount = Number(program.maxSupportAmount);
   const revenueMidpoint = getRevenueMidpoint(org.revenueRange);
 
   if (revenueMidpoint === 0 || supportAmount === 0) {
-    return 3;
+    return 1;
   }
 
   const ratio = supportAmount / revenueMidpoint;
 
-  if (ratio >= 0.01 && ratio <= 0.10) {
+  if (ratio >= 0.01 && ratio <= 0.30) {
     metCriteria.push('지원 규모 적정');
-    return 5; // Sweet spot
+    return 2; // Sweet spot
   }
-  if (ratio > 0.10 && ratio <= 0.30) {
-    return 4; // Moderate - good but significant
-  }
-  if (ratio > 0.30 && ratio <= 0.50) {
-    return 3; // High but possible
-  }
-  if (ratio < 0.01) {
-    return 2; // Too small to matter
-  }
-  return 2; // > 50% of revenue - potentially unrealistic
+  return 1; // Outside sweet spot
 }
 
 /**
- * Score sportType match (0-5 points)
+ * Score sportType match (0-3 points, was 0-5)
  *
  * Maps program sportType (지원유형) to org needs.
  * Production data: 100% fill rate but 91% is "정보" (limited differentiation).
+ * v2.1: Reduced from 5pts to 3pts — 91% "정보" makes this nearly useless.
  */
 function scoreSportType(
   org: Organization,
   program: SMEProgram,
   metCriteria: string[]
 ): number {
-  if (!program.sportType) return 3;
+  if (!program.sportType) return 1;
 
   switch (program.sportType) {
     case '기술개발':
-      // Technology development → favor R&D-oriented companies
       if (org.rdExperience) {
         metCriteria.push('기술개발 지원유형 적합');
-        return 5;
+        return 3;
       }
-      return 3;
+      return 1;
 
     case '창업':
-      // Startup support
-      if (org.companyScaleType === 'STARTUP') return 5;
-      return 2;
+      if (org.companyScaleType === 'STARTUP') return 3;
+      return 1;
 
     case '수출지원':
-      // Export support → favor companies with revenue
-      if (org.revenueRange && org.revenueRange !== 'NONE') return 4;
-      return 2;
+      if (org.revenueRange && org.revenueRange !== 'NONE') return 3;
+      return 1;
 
     case '정책자금':
-      // Policy funding → universal moderate benefit
-      return 4;
-
-    case '인력지원':
-      // Manpower support → universal
-      return 4;
-
-    case '스마트공장':
-      // Smart factory → favor manufacturing
-      if (org.industrySector?.toUpperCase() === 'MANUFACTURING') {
-        metCriteria.push('제조업 - 스마트공장 지원 적합');
-        return 5;
-      }
-      return 3;
-
-    case '소상공인':
-      // Small business
-      if (org.companyScaleType === 'STARTUP' || org.revenueRange === 'NONE' || org.revenueRange === 'UNDER_1B') {
-        return 5;
-      }
       return 2;
 
+    case '인력지원':
+      return 2;
+
+    case '스마트공장':
+      if (org.industrySector?.toUpperCase() === 'MANUFACTURING') {
+        metCriteria.push('제조업 - 스마트공장 지원 적합');
+        return 3;
+      }
+      return 1;
+
+    case '소상공인':
+      if (org.companyScaleType === 'STARTUP' || org.revenueRange === 'NONE' || org.revenueRange === 'UNDER_1B') {
+        return 3;
+      }
+      return 1;
+
     case '정보':
-      // General information (91% of programs) → neutral
-      return 3;
+      // General information (91% of programs) → minimal score
+      return 1;
 
     default:
-      return 3;
+      return 1;
   }
 }
 
@@ -1037,7 +1038,8 @@ function buildSummary(
   score: number,
   eligibility: SMEEligibilityLevel
 ): string {
-  const scoreDesc = score >= 80 ? '매우 적합' : score >= 60 ? '적합' : '부분 적합';
+  // v2.1: Lowered thresholds — partial credit scoring produces lower averages
+  const scoreDesc = score >= 75 ? '매우 적합' : score >= 55 ? '적합' : '부분 적합';
   const institution = program.supportInstitution || '중소벤처기업부';
 
   if (eligibility === 'FULLY_ELIGIBLE') {

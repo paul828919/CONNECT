@@ -85,13 +85,14 @@ function buildEnhancedSummary(
   const institution = program.supportInstitution || '중소벤처기업부';
   const title = program.title || '지원사업';
 
-  if (score >= 80) {
+  // v2.1: Lowered thresholds — partial credit scoring produces lower averages
+  if (score >= 75) {
     return `${institution}의 「${title}」은(는) 귀사에 매우 적합한 지원사업입니다. 적극적인 신청을 권장드립니다.`;
   }
-  if (score >= 65) {
+  if (score >= 55) {
     return `${institution}의 「${title}」은(는) 귀사에 적합한 지원사업입니다.${eligibility === 'CONDITIONALLY_ELIGIBLE' ? ' 일부 조건 확인이 필요합니다.' : ''}`;
   }
-  if (score >= 50) {
+  if (score >= 40) {
     return `${institution}의 「${title}」은(는) 귀사에 부분적으로 적합합니다. 세부 요건을 확인하세요.`;
   }
   return `${institution}의 「${title}」은(는) 적합도가 낮으나 지원 가능합니다. 프로필 업데이트로 적합도를 높일 수 있습니다.`;
@@ -115,13 +116,14 @@ function generateBizTypeReason(
   const score = breakdown.bizType;
   const bizType = program.bizType;
 
-  if (score >= 20) {
+  // v2.1: Adjusted thresholds for 0-28 range (was 0-25)
+  if (score >= 22) {
     // Strong match
     const matchDetail = getBizTypeMatchDetail(bizType, org);
     reasons.push(`✓ ${bizType} 지원 유형으로 귀사에 적합합니다.${matchDetail ? ` (${matchDetail})` : ''}`);
-  } else if (score >= 13) {
+  } else if (score >= 14) {
     reasons.push(`${bizType} 지원 유형의 프로그램입니다.`);
-  } else if (score < 10 && score > 0) {
+  } else if (score < 8) {
     reasons.push(`${bizType} 지원 유형으로 귀사의 특성과 다소 차이가 있습니다.`);
   }
 }
@@ -150,7 +152,7 @@ function getBizTypeMatchDetail(bizType: string, org: Organization): string | nul
 }
 
 /**
- * Industry/content match reason (25pt dimension)
+ * Industry/content match reason (30pt dimension, was 25)
  */
 function generateIndustryContentReason(
   breakdown: SMEScoreBreakdown,
@@ -159,15 +161,15 @@ function generateIndustryContentReason(
 ): void {
   const score = breakdown.industryContent;
 
-  if (score >= 20) {
-    // Classify program to get its industry label
+  // v2.1: Adjusted thresholds for 0-30 range (was 0-25)
+  if (score >= 24) {
     const label = classifyAndGetLabel(program);
     if (label) {
       reasons.push(`✓ ${label} 분야 프로그램으로 귀사의 업종과 높은 연관성이 있습니다.`);
     } else {
       reasons.push('✓ 귀사의 업종과 높은 연관성이 있는 프로그램입니다.');
     }
-  } else if (score >= 13) {
+  } else if (score >= 15) {
     const label = classifyAndGetLabel(program);
     if (label) {
       reasons.push(`${label} 분야 관련 프로그램입니다.`);
@@ -274,20 +276,19 @@ function generateLifecycleReason(
   reasons: string[]
 ): void {
   const score = breakdown.lifecycle;
-  if (score < 4) return; // Only show for strong matches
+  // v2.1: Max is now 2 (was 5), only show for perfect match
+  if (score < 2) return;
 
   const hasLifecycle = program.lifeCycle && program.lifeCycle.length > 0;
   const fromBizType = !hasLifecycle && program.bizType === '창업';
 
-  if (score >= 4) {
-    if (org.companyScaleType === 'STARTUP' || fromBizType) {
-      reasons.push('창업기 기업 대상 프로그램으로 귀사의 생애주기에 부합합니다.');
-    } else if (hasLifecycle) {
-      const lifecycleText = program.lifeCycle!
-        .map(lc => lc.includes('창업') ? '창업기' : lc.includes('성장') ? '성장기' : lc)
-        .join(', ');
-      reasons.push(`기업 생애주기(${lifecycleText}) 대상 프로그램입니다.`);
-    }
+  if (org.companyScaleType === 'STARTUP' || fromBizType) {
+    reasons.push('창업기 기업 대상 프로그램으로 귀사의 생애주기에 부합합니다.');
+  } else if (hasLifecycle) {
+    const lifecycleText = program.lifeCycle!
+      .map(lc => lc.includes('창업') ? '창업기' : lc.includes('성장') ? '성장기' : lc)
+      .join(', ');
+    reasons.push(`기업 생애주기(${lifecycleText}) 대상 프로그램입니다.`);
   }
 }
 
@@ -301,7 +302,8 @@ function generateSportTypeReason(
   reasons: string[]
 ): void {
   if (!program.sportType || program.sportType === '정보') return; // Skip generic '정보'
-  if (breakdown.sportType < 4) return; // Only show for matches
+  // v2.1: Max is now 3 (was 5), show for perfect match only
+  if (breakdown.sportType < 3) return;
 
   const sportTypeLabels: Record<string, string> = {
     '기술개발': '기술개발 지원',
@@ -374,18 +376,19 @@ function generateProfileWarnings(
   warnings: string[]
 ): void {
   // Profile completeness warnings (factors where score is low due to missing data)
+  // v2.1: Adjusted thresholds for partial-credit scoring
   const missingFields: string[] = [];
 
-  if (!org.companyScaleType && breakdown.companyScale < 15) {
+  if (!org.companyScaleType && breakdown.companyScale < 10) {
     missingFields.push('기업규모');
   }
-  if (!org.revenueRange && breakdown.revenueRange < 10) {
+  if (!org.revenueRange && breakdown.revenueRange < 7) {
     missingFields.push('매출액');
   }
-  if (!org.employeeCount && breakdown.employeeCount < 8) {
+  if (!org.employeeCount && breakdown.employeeCount < 5) {
     missingFields.push('종업원수');
   }
-  if (!org.businessEstablishedDate && breakdown.businessAge < 8) {
+  if (!org.businessEstablishedDate && breakdown.businessAge < 5) {
     missingFields.push('설립일');
   }
   if (!org.industrySector && breakdown.industryContent < 15) {
@@ -410,12 +413,12 @@ function generateRecommendations(
   org: Organization,
   recommendations: string[]
 ): void {
-  // Score-based primary recommendation
-  if (score >= 80) {
+  // Score-based primary recommendation (v2.1: lowered thresholds)
+  if (score >= 75) {
     recommendations.push('이 프로그램은 귀사에 매우 적합합니다. 빠른 신청을 권장드립니다.');
-  } else if (score >= 65) {
+  } else if (score >= 55) {
     recommendations.push('적합도가 높은 프로그램입니다. 공고문을 상세히 검토하고 지원서류를 준비하세요.');
-  } else if (score >= 50) {
+  } else if (score >= 40) {
     recommendations.push('세부 지원 요건을 공고문에서 확인한 후 지원을 검토하세요.');
   } else {
     recommendations.push('프로필 정보를 업데이트하면 적합도가 향상될 수 있습니다.');
@@ -431,11 +434,11 @@ function generateRecommendations(
   }
 
   // Profile improvement suggestions
-  if (breakdown.industryContent < 13 && !org.industrySector) {
+  if (breakdown.industryContent < 15 && !org.industrySector) {
     recommendations.push('프로필에 업종 정보를 추가하면 업종 기반 매칭 정확도가 향상됩니다.');
   }
 
-  if (breakdown.bizType < 13 && program.bizType === '기술' && !org.rdExperience) {
+  if (breakdown.bizType < 14 && program.bizType === '기술' && !org.rdExperience) {
     recommendations.push('R&D 경험 정보를 프로필에 추가하면 기술지원사업 매칭이 개선됩니다.');
   }
 
