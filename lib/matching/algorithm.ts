@@ -49,6 +49,12 @@ import {
   type ClassificationResult,
 } from './keyword-classifier';
 
+/**
+ * Algorithm version — increment on any scoring logic, filter, or threshold change.
+ * Embedded in Redis cache keys so deployments auto-invalidate stale matches.
+ */
+export const MATCH_ALGORITHM_VERSION = '4.2.1';
+
 // Type aliases for cleaner code
 type Organization = organizations;
 type FundingProgram = funding_programs;

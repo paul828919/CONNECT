@@ -20,6 +20,9 @@ import { createClient } from 'redis';
 // Import optimized TTL strategies
 import { BASE_TTL } from './ttl-optimizer';
 
+// Import algorithm version for cache key versioning
+import { MATCH_ALGORITHM_VERSION } from '../matching/algorithm';
+
 // TTL constants (in seconds) - now using optimized values
 export const CACHE_TTL = {
   MATCH_RESULTS: BASE_TTL.MATCH_RESULTS,      // 24 hours - matches change on scraping
@@ -337,7 +340,7 @@ export async function getTTL(key: string): Promise<number> {
  * @returns Cache key for match results
  */
 export function getMatchCacheKey(organizationId: string): string {
-  return `${CACHE_PREFIX.MATCH}:${organizationId}:results`;
+  return `${CACHE_PREFIX.MATCH}:${organizationId}:v${MATCH_ALGORITHM_VERSION}:results`;
 }
 
 /**
@@ -383,7 +386,7 @@ export function getHistoricalMatchCacheKey(organizationId: string): string {
  * Helper: Generate cache key for SME match results
  */
 export function getSmeMatchCacheKey(organizationId: string): string {
-  return `${CACHE_PREFIX.SME_MATCH}:${organizationId}:results`;
+  return `${CACHE_PREFIX.SME_MATCH}:${organizationId}:v${MATCH_ALGORITHM_VERSION}:results`;
 }
 
 /**

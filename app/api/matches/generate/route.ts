@@ -37,7 +37,7 @@ const db = globalForPrisma.prisma ?? new PrismaClient({
 if (!globalForPrisma.prisma) {
   globalForPrisma.prisma = db;
 }
-import { generateMatches } from '@/lib/matching/algorithm';
+import { generateMatches, MATCH_ALGORITHM_VERSION } from '@/lib/matching/algorithm';
 import { generateExplanation } from '@/lib/matching/explainer';
 import { checkMatchLimit, trackApiUsage } from '@/lib/rateLimit';
 import {
@@ -134,7 +134,14 @@ export async function POST(request: NextRequest) {
         { status: 200 }
       );
     }
-    // Cache miss - continue to generate fresh matches
+    // Cache miss — likely algorithm version upgrade or TTL expiry.
+    // Clean stale DB matches so GET /api/matches won't serve outdated records.
+    const staleCleanup = await db.funding_matches.deleteMany({
+      where: { organizationId },
+    });
+    if (staleCleanup.count > 0) {
+      console.log(`[MATCH] Cache miss cleanup: deleted ${staleCleanup.count} stale DB matches for org:`, organizationId);
+    }
 
     // 3. Fetch organization profile (with cache)
     const orgCacheKey = getOrgCacheKey(organizationId);
@@ -465,6 +472,7 @@ export async function POST(request: NextRequest) {
         ? `현재 진행 중인 공고는 없지만, 올해 마감된 유사 프로그램 ${validMatchResults.length}개를 찾았습니다. 새로운 공고가 올라오면 알림을 받으세요.`
         : `${validMatchResults.length}개의 적합한 지원 프로그램을 찾았습니다.`,
       isHistorical: isHistoricalFallback,
+      algorithmVersion: MATCH_ALGORITHM_VERSION,
     };
 
     // 13. Cache match results for 24 hours
