@@ -465,7 +465,7 @@ export async function PATCH(
 
     profileScore += Math.min(10, consortiumScore); // Cap at +10 bonus points
 
-    updateData.profileScore = profileScore;
+    updateData.profileScore = Math.min(100, profileScore);
     updateData.updatedAt = new Date();
 
     // Update organization

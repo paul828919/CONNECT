@@ -254,7 +254,7 @@ export async function POST(request: NextRequest) {
             }
           : undefined,
         profileCompleted: true,
-        profileScore,
+        profileScore: Math.min(100, profileScore),
         status: 'ACTIVE',
         users: {
           connect: { id: userId },
