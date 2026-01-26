@@ -254,12 +254,12 @@ export default function SMEProgramsPage() {
               <svg className="mr-2 h-4 w-4" fill={savedFilter ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
-              저장됨만
+              저장
             </button>
             <button
               onClick={handleGenerateMatches}
               disabled={generating}
-              className="inline-flex items-center px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {generating ? (
                 <>
