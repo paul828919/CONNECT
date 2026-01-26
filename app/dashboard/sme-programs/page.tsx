@@ -57,6 +57,7 @@ export default function SMEProgramsPage() {
 
   // Stats state
   const [stats, setStats] = useState<StatsData | null>(null);
+  const [bizTypeCounts, setBizTypeCounts] = useState<Array<{ category: string; count: number; percentage: number }>>([]);
 
   // Subscription & upgrade state
   const [userPlan, setUserPlan] = useState<string>('FREE');
@@ -139,6 +140,7 @@ export default function SMEProgramsPage() {
           fullyEligibleCount: data.data.matches?.fullyEligibleCount || 0,
           urgentCount: data.data.enhanced?.urgentDeadlineCount || 0,
         });
+        setBizTypeCounts(data.data.enhanced?.topBizTypes || []);
       }
     } catch (err) {
       console.error('Error fetching stats:', err);
@@ -322,7 +324,7 @@ export default function SMEProgramsPage() {
   // ============================================================================
 
   const hasActiveFilters =
-    filters.bizType !== '' ||
+    filters.bizType !== DEFAULT_FILTERS.bizType ||
     filters.eligibility !== '' ||
     filters.region !== '' ||
     filters.urgentOnly ||
@@ -417,7 +419,15 @@ export default function SMEProgramsPage() {
         {/* Stats Bar                                                       */}
         {/* ================================================================ */}
         {stats && stats.totalMatches > 0 && (
-          <SMEStatsBar stats={stats} />
+          <SMEStatsBar
+            stats={stats}
+            bizTypeCounts={bizTypeCounts}
+            activeBizType={filters.bizType}
+            onBizTypeClick={(bizType) => {
+              const newBizType = bizType === filters.bizType ? '' : bizType;
+              handleFilterChange({ ...filters, bizType: newBizType });
+            }}
+          />
         )}
 
         {/* ================================================================ */}
