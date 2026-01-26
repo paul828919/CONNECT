@@ -190,6 +190,47 @@ export async function checkMatchLimit(
 }
 
 /**
+ * SME match generation rate limiter (per user)
+ * Enforces free tier limit: 2 SME match generations/month
+ * Separate from R&D match limits (different key prefix)
+ */
+export async function checkSmeMatchLimit(
+  userId: string,
+  subscriptionPlan: 'free' | 'pro' | 'team',
+  userRole?: 'USER' | 'ADMIN' | 'SUPER_ADMIN'
+): Promise<{ allowed: boolean; remaining: number; resetDate: Date }> {
+  if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
+    return { allowed: true, remaining: 999999, resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) };
+  }
+
+  if (subscriptionPlan === 'pro' || subscriptionPlan === 'team') {
+    return { allowed: true, remaining: 999999, resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) };
+  }
+
+  const redis = await getRedisClient();
+  if (!redis) {
+    console.warn('[RATE-LIMIT] Redis unavailable, allowing SME match request');
+    return { allowed: true, remaining: 1, resetDate: getNextMonthStart() };
+  }
+
+  const key = `sme-match:limit:${userId}:${getMonthKey()}`;
+  const currentCount = await redis.get(key);
+  const count = currentCount ? parseInt(currentCount, 10) : 0;
+
+  const MAX_FREE_SME_MATCHES = 2;
+
+  if (count >= MAX_FREE_SME_MATCHES) {
+    return { allowed: false, remaining: 0, resetDate: getNextMonthStart() };
+  }
+
+  await redis.set(key, count + 1, {
+    EXAT: Math.floor(getNextMonthStart().getTime() / 1000),
+  });
+
+  return { allowed: true, remaining: MAX_FREE_SME_MATCHES - (count + 1), resetDate: getNextMonthStart() };
+}
+
+/**
  * Contact request rate limiter (per organization)
  * Enforces subscription-based limits for research collaboration requests
  *

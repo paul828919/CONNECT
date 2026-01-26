@@ -43,6 +43,7 @@ export enum AuditAction {
   // Conversion funnel events
   PROFILE_COMPLETED = 'PROFILE_COMPLETED',
   FIRST_MATCH_GENERATED = 'FIRST_MATCH_GENERATED',
+  SME_FIRST_MATCH_GENERATED = 'SME_FIRST_MATCH_GENERATED',
   MATCH_SAVED = 'MATCH_SAVED',
   UPGRADE_VIEWED = 'UPGRADE_VIEWED',
   UPGRADE_STARTED = 'UPGRADE_STARTED',
@@ -161,6 +162,7 @@ export async function logFunnelEvent(
   const resourceTypeMap: Record<string, string> = {
     [AuditAction.PROFILE_COMPLETED]: 'ORGANIZATION',
     [AuditAction.FIRST_MATCH_GENERATED]: 'MATCH',
+    [AuditAction.SME_FIRST_MATCH_GENERATED]: 'MATCH',
     [AuditAction.MATCH_SAVED]: 'MATCH',
     [AuditAction.UPGRADE_VIEWED]: 'SUBSCRIPTION',
     [AuditAction.UPGRADE_STARTED]: 'SUBSCRIPTION',
