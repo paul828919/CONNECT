@@ -1,16 +1,37 @@
 /**
- * SME Program Matching Algorithm
+ * SME Program Matching Algorithm v2.0
  *
  * Generates matches between organizations and 중소벤처24 SME support programs.
- * Uses different scoring factors than R&D matching:
+ * Uses different scoring factors than R&D matching.
  *
- * Scoring breakdown (100 points total):
- * - Company scale match: 25 points (STARTUP, SME, MID_SIZED)
- * - Revenue range match: 20 points (based on program requirements)
- * - Employee count match: 15 points (based on program requirements)
- * - Business age match: 15 points (업력)
- * - Regional match: 15 points (소재지)
- * - Required certifications: 10 points (이노비즈, 벤처, 메인비즈)
+ * v2.0 Changes (Multi-Signal Recommendation Engine):
+ * - ADDED: 6 new scoring dimensions (bizType, lifecycle, industry/content, deadline, financial, sportType)
+ * - ADDED: Hard eligibility gates (isPreStartup, isRestart, isFemaleOwner, CEO age)
+ * - CHANGED: Reweighted original 6 factors (total raw: 150 → normalized to 100)
+ * - CHANGED: Score normalization prevents inflation from added dimensions
+ *
+ * Scoring breakdown (150 raw → normalized to 100):
+ * Eligibility factors (70 raw):
+ *   - Company scale match: 20 points (STARTUP, SME, MID_SIZED)
+ *   - Revenue range match: 15 points (based on program requirements)
+ *   - Employee count match: 10 points (based on program requirements)
+ *   - Business age match: 10 points (업력)
+ *   - Regional match: 10 points (소재지)
+ *   - Required certifications: 5 points (이노비즈, 벤처, 메인비즈)
+ *
+ * Relevance factors (80 raw):
+ *   - bizType match: 25 points (사업유형 - 100% fill rate, best differentiator)
+ *   - Industry/Content: 25 points (keyword classification on title+description)
+ *   - Deadline urgency: 15 points (마감임박 우선)
+ *   - sportType match: 5 points (지원유형)
+ *   - Lifecycle match: 5 points (생애주기 - 0% fill rate, future-proofing)
+ *   - Financial relevance: 5 points (지원금액 - 0% fill rate, future-proofing)
+ *
+ * Weight calibration based on production data (818 active programs, 2026-01-26):
+ *   - bizType/sportType: 100% fill → high weights
+ *   - description: 99.5% fill → industry/content scoring viable
+ *   - applicationEnd: 63% fill → deadline scoring viable
+ *   - lifeCycle/maxSupportAmount/targetIndustry: 0% fill → reduced weights
  *
  * Eligibility Levels:
  * - FULLY_ELIGIBLE: All hard requirements met, can apply immediately
@@ -24,6 +45,7 @@ import {
   CompanyLocation,
   KoreanRegion,
   SMEProgramStatus,
+  RevenueRange,
 } from '@prisma/client';
 import {
   mapCompanyScaleToCode,
@@ -37,6 +59,12 @@ import {
   calculateBusinessAge,
   mapBusinessAgeToCode,
 } from '@/lib/sme24-api/mappers/code-mapper';
+import {
+  classifyProgram,
+  getIndustryRelevance,
+  getIndustryKoreanLabel,
+  type ClassificationResult,
+} from './keyword-classifier';
 
 // Type aliases
 type SMEProgram = sme_programs;
@@ -44,19 +72,31 @@ type Organization = organizations & {
   locations?: CompanyLocation[];
 };
 
+// Maximum raw score before normalization (sum of all factor maximums)
+const MAX_RAW_SCORE = 150;
+
 // Eligibility levels
 export type SMEEligibilityLevel = 'FULLY_ELIGIBLE' | 'CONDITIONALLY_ELIGIBLE' | 'INELIGIBLE';
 
 /**
- * Score breakdown for transparency
+ * Score breakdown for transparency (v2.0: 12 factors)
+ * Raw points before normalization
  */
 export interface SMEScoreBreakdown {
-  companyScale: number;    // 0-25
-  revenueRange: number;    // 0-20
-  employeeCount: number;   // 0-15
-  businessAge: number;     // 0-15
-  region: number;          // 0-15
-  certifications: number;  // 0-10
+  // Eligibility factors (70 raw max)
+  companyScale: number;       // 0-20
+  revenueRange: number;       // 0-15
+  employeeCount: number;      // 0-10
+  businessAge: number;        // 0-10
+  region: number;             // 0-10
+  certifications: number;     // 0-5
+  // Relevance factors (80 raw max)
+  bizType: number;            // 0-25
+  lifecycle: number;          // 0-5
+  industryContent: number;    // 0-25
+  deadline: number;           // 0-15
+  financialRelevance: number; // 0-5
+  sportType: number;          // 0-5
 }
 
 /**
@@ -74,7 +114,7 @@ export interface SMEMatchExplanation {
  */
 export interface SMEMatchResult {
   program: SMEProgram;
-  score: number;             // 0-100 total score
+  score: number;             // 0-100 normalized score
   eligibilityLevel: SMEEligibilityLevel;
   explanation: SMEMatchExplanation;
   scoreBreakdown: SMEScoreBreakdown;
@@ -219,46 +259,112 @@ function scoreProgram(program: SMEProgram, org: Organization): SMEMatchResult {
     }
   }
 
+  // 4. Pre-Startup Gate (v2.0)
+  if (program.isPreStartup && org.businessEstablishedDate) {
+    return createIneligibleResult(program, '예비창업자 전용 프로그램입니다');
+  }
+
   // ============================================================================
-  // SCORING (100 points total)
+  // SPECIAL WARNINGS (v2.0 - soft gates, don't block but inform)
+  // ============================================================================
+
+  // Restart program warning
+  if (program.isRestart) {
+    warnings.push('재창업/재기 기업 대상 프로그램입니다');
+  }
+
+  // Female owner program warning
+  if (program.isFemaleOwner) {
+    warnings.push('여성 대표 기업 대상 프로그램입니다');
+  }
+
+  // CEO age restriction warning
+  if (program.minCeoAge || program.maxCeoAge) {
+    const ageRange = program.minCeoAge && program.maxCeoAge
+      ? `${program.minCeoAge}~${program.maxCeoAge}세`
+      : program.minCeoAge
+        ? `${program.minCeoAge}세 이상`
+        : `${program.maxCeoAge}세 이하`;
+    warnings.push(`대표자 연령 제한: ${ageRange}`);
+  }
+
+  // ============================================================================
+  // SCORING (150 raw points → normalized to 100)
   // ============================================================================
 
   const scoreBreakdown: SMEScoreBreakdown = {
+    // Eligibility factors
     companyScale: 0,
     revenueRange: 0,
     employeeCount: 0,
     businessAge: 0,
     region: 0,
     certifications: 0,
+    // Relevance factors
+    bizType: 0,
+    lifecycle: 0,
+    industryContent: 0,
+    deadline: 0,
+    financialRelevance: 0,
+    sportType: 0,
   };
 
-  // 1. Company Scale Match (25 points)
+  // === Eligibility factors (70 raw max) ===
+
+  // 1. Company Scale Match (20 points, was 25)
   scoreBreakdown.companyScale = scoreCompanyScale(org, program, metCriteria, failedCriteria);
 
-  // 2. Revenue Range Match (20 points)
+  // 2. Revenue Range Match (15 points, was 20)
   scoreBreakdown.revenueRange = scoreRevenueRange(org, program, metCriteria, failedCriteria, warnings);
 
-  // 3. Employee Count Match (15 points)
+  // 3. Employee Count Match (10 points, was 15)
   scoreBreakdown.employeeCount = scoreEmployeeCount(org, program, metCriteria, failedCriteria);
 
-  // 4. Business Age Match (15 points)
+  // 4. Business Age Match (10 points, was 15)
   scoreBreakdown.businessAge = scoreBusinessAge(org, program, metCriteria, failedCriteria);
 
-  // 5. Regional Match (15 points)
+  // 5. Regional Match (10 points, was 15)
   scoreBreakdown.region = scoreRegion(orgRegions, program, metCriteria, failedCriteria);
 
-  // 6. Certifications (10 points bonus)
+  // 6. Certifications (5 points, was 10)
   scoreBreakdown.certifications = scoreCertifications(org, program, metCriteria);
 
-  // Calculate total score
-  const totalScore = Math.round(
+  // === Relevance factors (80 raw max) ===
+
+  // 7. bizType Match (25 points) — NEW v2.0
+  scoreBreakdown.bizType = scoreBizType(org, program, metCriteria);
+
+  // 8. Lifecycle Match (5 points) — NEW v2.0
+  scoreBreakdown.lifecycle = scoreLifecycle(org, program, metCriteria);
+
+  // 9. Industry/Content Match (25 points) — NEW v2.0
+  scoreBreakdown.industryContent = scoreIndustryContent(org, program, metCriteria);
+
+  // 10. Deadline Urgency (15 points) — NEW v2.0 (ported from R&D)
+  scoreBreakdown.deadline = scoreDeadline(program, metCriteria);
+
+  // 11. Financial Relevance (5 points) — NEW v2.0
+  scoreBreakdown.financialRelevance = scoreFinancialRelevance(org, program, metCriteria);
+
+  // 12. sportType Match (5 points) — NEW v2.0
+  scoreBreakdown.sportType = scoreSportType(org, program, metCriteria);
+
+  // Calculate raw total and normalize to 0-100
+  const rawScore =
     scoreBreakdown.companyScale +
     scoreBreakdown.revenueRange +
     scoreBreakdown.employeeCount +
     scoreBreakdown.businessAge +
     scoreBreakdown.region +
-    scoreBreakdown.certifications
-  );
+    scoreBreakdown.certifications +
+    scoreBreakdown.bizType +
+    scoreBreakdown.lifecycle +
+    scoreBreakdown.industryContent +
+    scoreBreakdown.deadline +
+    scoreBreakdown.financialRelevance +
+    scoreBreakdown.sportType;
+
+  const totalScore = Math.round((rawScore / MAX_RAW_SCORE) * 100);
 
   // ============================================================================
   // DETERMINE ELIGIBILITY LEVEL
@@ -296,7 +402,7 @@ function scoreProgram(program: SMEProgram, org: Organization): SMEMatchResult {
 }
 
 // ============================================================================
-// SCORING FUNCTIONS
+// ELIGIBILITY SCORING FUNCTIONS (reweighted from v1.0)
 // ============================================================================
 
 function scoreCompanyScale(
@@ -307,28 +413,28 @@ function scoreCompanyScale(
 ): number {
   // No scale requirement - give full points
   if (!program.targetCompanyScaleCd || program.targetCompanyScaleCd.length === 0) {
-    return 25;
+    return 20;
   }
 
   // No org data - give partial points
   if (!org.companyScaleType) {
     failedCriteria.push('기업규모 정보 필요');
-    return 10;
+    return 8;
   }
 
   const orgScaleCode = mapCompanyScaleToCode(org.companyScaleType);
   if (!orgScaleCode) {
-    return 10;
+    return 8;
   }
 
   if (program.targetCompanyScaleCd.includes(orgScaleCode)) {
     metCriteria.push('기업규모 조건 충족');
-    return 25;
+    return 20;
   }
 
   // Partial match - similar scale
   failedCriteria.push('기업규모 조건 부분 충족');
-  return 12;
+  return 10;
 }
 
 function scoreRevenueRange(
@@ -340,24 +446,24 @@ function scoreRevenueRange(
 ): number {
   // No revenue requirement
   if (!program.targetSalesRangeCd || program.targetSalesRangeCd.length === 0) {
-    return 20;
+    return 15;
   }
 
   // No org data
   if (!org.revenueRange) {
     warnings.push('매출액 정보가 없어 일부 조건을 확인할 수 없습니다');
-    return 10;
+    return 8;
   }
 
   const revenueCheck = checkRevenueEligibility(org.revenueRange, program.targetSalesRangeCd);
 
   if (revenueCheck.eligible) {
     metCriteria.push('매출액 조건 충족');
-    return 20;
+    return 15;
   }
 
   failedCriteria.push('매출액 조건 미충족');
-  return 5;
+  return 4;
 }
 
 function scoreEmployeeCount(
@@ -368,26 +474,26 @@ function scoreEmployeeCount(
 ): number {
   // No employee requirement
   if (!program.targetEmployeeRangeCd || program.targetEmployeeRangeCd.length === 0) {
-    return 15;
+    return 10;
   }
 
   // No org data
   if (!org.employeeCount) {
-    return 8;
+    return 5;
   }
 
   const orgCode = mapEmployeeCountToCode(org.employeeCount);
   if (!orgCode) {
-    return 8;
+    return 5;
   }
 
   if (program.targetEmployeeRangeCd.includes(orgCode)) {
     metCriteria.push('종업원수 조건 충족');
-    return 15;
+    return 10;
   }
 
   failedCriteria.push('종업원수 조건 부분 충족');
-  return 5;
+  return 3;
 }
 
 function scoreBusinessAge(
@@ -398,42 +504,42 @@ function scoreBusinessAge(
 ): number {
   // No age requirement
   if (!program.targetBusinessAgeCd || program.targetBusinessAgeCd.length === 0) {
-    return 15;
+    return 10;
   }
 
   // No org data (businessEstablishedDate)
   if (!org.businessEstablishedDate) {
-    return 8;
+    return 5;
   }
 
   const businessAge = calculateBusinessAge(org.businessEstablishedDate);
   if (businessAge === null) {
-    return 8;
+    return 5;
   }
 
   const orgAgeCode = mapBusinessAgeToCode(businessAge);
   if (!orgAgeCode) {
-    return 8;
+    return 5;
   }
 
   if (program.targetBusinessAgeCd.includes(orgAgeCode)) {
     metCriteria.push('업력 조건 충족');
-    return 15;
+    return 10;
   }
 
   // Check numeric min/max if available
   if (program.minBusinessAge !== null && businessAge < program.minBusinessAge) {
     failedCriteria.push(`최소 업력 ${program.minBusinessAge}년 필요`);
-    return 3;
+    return 2;
   }
 
   if (program.maxBusinessAge !== null && businessAge > program.maxBusinessAge) {
     failedCriteria.push(`업력 ${program.maxBusinessAge}년 이하 기업 대상`);
-    return 3;
+    return 2;
   }
 
   failedCriteria.push('업력 조건 부분 충족');
-  return 7;
+  return 5;
 }
 
 function scoreRegion(
@@ -447,20 +553,20 @@ function scoreRegion(
       program.targetRegionCodes.length === 0 ||
       program.targetRegionCodes.includes('1000')) {
     metCriteria.push('전국 대상 프로그램');
-    return 15;
+    return 10;
   }
 
   // No org location data
   if (orgRegions.length === 0) {
     failedCriteria.push('소재지 정보 필요');
-    return 5;
+    return 3;
   }
 
   const regionCheck = checkRegionEligibility(orgRegions, program.targetRegionCodes);
 
   if (regionCheck.eligible) {
     metCriteria.push('지역 조건 충족');
-    return 15;
+    return 10;
   }
 
   failedCriteria.push('지역 조건 미충족');
@@ -483,7 +589,7 @@ function scoreCertifications(
   const matchingCerts = orgCertCodes.filter(c => preferredCerts.includes(c));
 
   if (matchingCerts.length > 0) {
-    score = Math.min(10, matchingCerts.length * 4);
+    score = Math.min(5, matchingCerts.length * 2);
     metCriteria.push(`인증 보유: ${matchingCerts.length}개`);
   }
 
@@ -491,8 +597,410 @@ function scoreCertifications(
 }
 
 // ============================================================================
+// NEW RELEVANCE SCORING FUNCTIONS (v2.0)
+// ============================================================================
+
+/**
+ * Score bizType match (0-25 points)
+ *
+ * Maps program bizType (사업유형) to organization characteristics.
+ * Production data: 100% fill rate, 10 distinct categories.
+ * Top categories: 경영(28%), 기술(20%), 금융(16%), 수출(13%)
+ */
+function scoreBizType(
+  org: Organization,
+  program: SMEProgram,
+  metCriteria: string[]
+): number {
+  if (!program.bizType) return 13; // Default moderate score
+
+  const bizType = program.bizType;
+
+  switch (bizType) {
+    case '기술': {
+      // Technology programs → favor R&D-experienced and tech-sector companies
+      if (org.rdExperience) {
+        metCriteria.push('R&D 경험 보유 - 기술지원사업 적합');
+        return 25;
+      }
+      const techSectors = ['ICT', 'BIO_HEALTH', 'MANUFACTURING', 'ENERGY'];
+      if (org.industrySector && techSectors.includes(org.industrySector.toUpperCase())) {
+        metCriteria.push('기술 분야 기업 - 기술지원사업 적합');
+        return 20;
+      }
+      return 12;
+    }
+
+    case '금융': {
+      // Financial programs → favor smaller companies needing capital
+      if (org.companyScaleType === 'STARTUP') {
+        metCriteria.push('창업기업 - 금융지원사업 적합');
+        return 25;
+      }
+      if (org.companyScaleType === 'SME') {
+        metCriteria.push('중소기업 - 금융지원사업 적합');
+        return 20;
+      }
+      if (org.revenueRange === 'NONE' || org.revenueRange === 'UNDER_1B') {
+        return 20;
+      }
+      return 12;
+    }
+
+    case '창업': {
+      // Startup programs → strongly favor startups and young companies
+      if (org.companyScaleType === 'STARTUP') {
+        metCriteria.push('창업기업 - 창업지원사업 적합');
+        return 25;
+      }
+      // Young companies (< 3 years)
+      if (org.businessEstablishedDate) {
+        const age = calculateBusinessAge(org.businessEstablishedDate);
+        if (age !== null && age < 3) {
+          metCriteria.push('업력 3년 미만 - 창업지원사업 적합');
+          return 20;
+        }
+      }
+      return 5; // Established companies: low relevance for startup programs
+    }
+
+    case '수출': {
+      // Export programs → favor companies with revenue (they have products to export)
+      if (org.revenueRange && org.revenueRange !== 'NONE') {
+        metCriteria.push('매출 보유 - 수출지원사업 적합');
+        return 22;
+      }
+      return 10;
+    }
+
+    case '인력': {
+      // Manpower programs → universal benefit, slight favor for small teams
+      metCriteria.push('인력지원사업');
+      return 18;
+    }
+
+    case '경영': {
+      // Management programs → broad applicability
+      metCriteria.push('경영지원사업');
+      return 18;
+    }
+
+    case '내수': {
+      // Domestic market programs → favor companies with revenue
+      if (org.revenueRange && org.revenueRange !== 'NONE') {
+        return 20;
+      }
+      return 12;
+    }
+
+    case '중견': {
+      // Mid-sized company programs
+      if (org.companyScaleType === 'MID_SIZED') {
+        metCriteria.push('중견기업 대상 사업 적합');
+        return 25;
+      }
+      if (org.companyScaleType === 'SME') {
+        return 15; // SMEs can benefit from growth programs
+      }
+      return 5;
+    }
+
+    case '소상공인': {
+      // Small business programs
+      if (org.companyScaleType === 'STARTUP' || org.revenueRange === 'NONE' || org.revenueRange === 'UNDER_1B') {
+        metCriteria.push('소상공인 지원사업 적합');
+        return 22;
+      }
+      return 8;
+    }
+
+    default:
+      return 13; // 기타 or unknown
+  }
+}
+
+/**
+ * Score lifecycle match (0-5 points)
+ *
+ * Maps program lifeCycle to org's derived lifecycle stage.
+ * Production data: 0% fill rate for lifeCycle field → derive from bizType as fallback.
+ * Reduced weight (5pts) due to no direct data.
+ */
+function scoreLifecycle(
+  org: Organization,
+  program: SMEProgram,
+  metCriteria: string[]
+): number {
+  // Primary: Use program's lifeCycle field if available
+  if (program.lifeCycle && program.lifeCycle.length > 0) {
+    const orgLifecycle = deriveOrgLifecycle(org);
+    if (!orgLifecycle) return 3; // No org data
+
+    for (const lc of program.lifeCycle) {
+      if (lc.includes('창업') && orgLifecycle === 'startup') {
+        metCriteria.push('생애주기 부합: 창업기');
+        return 5;
+      }
+      if (lc.includes('성장') && orgLifecycle === 'growth') {
+        metCriteria.push('생애주기 부합: 성장기');
+        return 5;
+      }
+      if (lc.includes('폐업') || lc.includes('재기')) {
+        // Restart programs - give moderate score (can't verify org status)
+        return 3;
+      }
+    }
+    return 2; // Lifecycle exists but doesn't match
+  }
+
+  // Fallback: Derive lifecycle from bizType
+  if (program.bizType === '창업') {
+    const orgLifecycle = deriveOrgLifecycle(org);
+    if (orgLifecycle === 'startup') return 5;
+    if (orgLifecycle === 'growth') return 2;
+    return 3;
+  }
+
+  return 3; // No lifecycle data → neutral score
+}
+
+/**
+ * Score industry/content match (0-25 points)
+ *
+ * Classifies program by title+description using keyword-classifier,
+ * then measures relevance against org's industrySector.
+ * Production data: 99.5% description fill rate → strong signal.
+ */
+function scoreIndustryContent(
+  org: Organization,
+  program: SMEProgram,
+  metCriteria: string[]
+): number {
+  // Build text for classification from available fields
+  const titleText = program.title || '';
+  const descText = program.description || '';
+  const contentsText = program.supportContents || '';
+  const industryText = program.targetIndustry || '';
+
+  // Combine text for classification (title is most important)
+  const classificationText = [titleText, descText, contentsText, industryText]
+    .filter(Boolean)
+    .join(' ');
+
+  if (!classificationText || classificationText.length < 5) {
+    return 13; // Default moderate score
+  }
+
+  // Classify program using keyword-classifier
+  // Pass combined description+contents as programName for keyword matching
+  const classification: ClassificationResult = classifyProgram(
+    titleText,
+    [descText, contentsText, industryText].filter(Boolean).join(' ') || null,
+    null // No ministry for SME programs (all from 중소벤처기업부)
+  );
+
+  // Get relevance between org industry and program classification
+  const relevance = getIndustryRelevance(
+    org.industrySector || null,
+    classification.industry
+  );
+
+  // Scale relevance (0.0-1.0) to points (0-25)
+  const score = Math.round(relevance * 25);
+
+  if (relevance >= 0.8) {
+    const label = getIndustryKoreanLabel(classification.industry);
+    metCriteria.push(`업종 일치: ${label}`);
+  } else if (relevance >= 0.5) {
+    const label = getIndustryKoreanLabel(classification.industry);
+    metCriteria.push(`관련 업종: ${label}`);
+  }
+
+  return score;
+}
+
+/**
+ * Score deadline urgency (0-15 points)
+ *
+ * Ported from R&D matcher: closer deadlines get higher scores
+ * to surface time-sensitive opportunities.
+ * Production data: 63% fill rate for applicationEnd.
+ */
+function scoreDeadline(
+  program: SMEProgram,
+  metCriteria: string[]
+): number {
+  if (!program.applicationEnd) {
+    return 5; // Default score if no deadline (37% of programs)
+  }
+
+  const now = new Date();
+  const deadline = new Date(program.applicationEnd);
+  const daysUntil = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (daysUntil < 0) {
+    return 0; // Expired
+  }
+
+  if (daysUntil <= 7) {
+    metCriteria.push(`마감 ${daysUntil}일 전 - 긴급`);
+    return 15;
+  }
+
+  if (daysUntil <= 30) {
+    metCriteria.push(`마감 ${daysUntil}일 전`);
+    return 12;
+  }
+
+  if (daysUntil <= 60) {
+    return 8;
+  }
+
+  return 5;
+}
+
+/**
+ * Score financial relevance (0-5 points)
+ *
+ * Compares program maxSupportAmount to org revenueRange.
+ * Sweet spot: support is 1-30% of annual revenue.
+ * Production data: 0% fill rate for maxSupportAmount → mostly returns default.
+ */
+function scoreFinancialRelevance(
+  org: Organization,
+  program: SMEProgram,
+  metCriteria: string[]
+): number {
+  // Both fields needed for comparison
+  if (!program.maxSupportAmount || !org.revenueRange) {
+    return 3; // Default moderate score (0% fill rate for amounts)
+  }
+
+  const supportAmount = Number(program.maxSupportAmount);
+  const revenueMidpoint = getRevenueMidpoint(org.revenueRange);
+
+  if (revenueMidpoint === 0 || supportAmount === 0) {
+    return 3;
+  }
+
+  const ratio = supportAmount / revenueMidpoint;
+
+  if (ratio >= 0.01 && ratio <= 0.10) {
+    metCriteria.push('지원 규모 적정');
+    return 5; // Sweet spot
+  }
+  if (ratio > 0.10 && ratio <= 0.30) {
+    return 4; // Moderate - good but significant
+  }
+  if (ratio > 0.30 && ratio <= 0.50) {
+    return 3; // High but possible
+  }
+  if (ratio < 0.01) {
+    return 2; // Too small to matter
+  }
+  return 2; // > 50% of revenue - potentially unrealistic
+}
+
+/**
+ * Score sportType match (0-5 points)
+ *
+ * Maps program sportType (지원유형) to org needs.
+ * Production data: 100% fill rate but 91% is "정보" (limited differentiation).
+ */
+function scoreSportType(
+  org: Organization,
+  program: SMEProgram,
+  metCriteria: string[]
+): number {
+  if (!program.sportType) return 3;
+
+  switch (program.sportType) {
+    case '기술개발':
+      // Technology development → favor R&D-oriented companies
+      if (org.rdExperience) {
+        metCriteria.push('기술개발 지원유형 적합');
+        return 5;
+      }
+      return 3;
+
+    case '창업':
+      // Startup support
+      if (org.companyScaleType === 'STARTUP') return 5;
+      return 2;
+
+    case '수출지원':
+      // Export support → favor companies with revenue
+      if (org.revenueRange && org.revenueRange !== 'NONE') return 4;
+      return 2;
+
+    case '정책자금':
+      // Policy funding → universal moderate benefit
+      return 4;
+
+    case '인력지원':
+      // Manpower support → universal
+      return 4;
+
+    case '스마트공장':
+      // Smart factory → favor manufacturing
+      if (org.industrySector?.toUpperCase() === 'MANUFACTURING') {
+        metCriteria.push('제조업 - 스마트공장 지원 적합');
+        return 5;
+      }
+      return 3;
+
+    case '소상공인':
+      // Small business
+      if (org.companyScaleType === 'STARTUP' || org.revenueRange === 'NONE' || org.revenueRange === 'UNDER_1B') {
+        return 5;
+      }
+      return 2;
+
+    case '정보':
+      // General information (91% of programs) → neutral
+      return 3;
+
+    default:
+      return 3;
+  }
+}
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
+
+/**
+ * Derive organization lifecycle stage from businessEstablishedDate + companyScaleType
+ */
+function deriveOrgLifecycle(org: Organization): 'startup' | 'growth' | null {
+  if (org.companyScaleType === 'STARTUP') return 'startup';
+
+  if (org.businessEstablishedDate) {
+    const age = calculateBusinessAge(org.businessEstablishedDate);
+    if (age !== null) {
+      if (age < 3) return 'startup';
+      return 'growth';
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Get approximate revenue midpoint for a RevenueRange enum value
+ * Values in KRW (won)
+ */
+function getRevenueMidpoint(range: RevenueRange): number {
+  const midpoints: Record<RevenueRange, number> = {
+    NONE: 0,
+    UNDER_1B: 500_000_000,          // ~5억
+    FROM_1B_TO_10B: 5_000_000_000,  // ~50억
+    FROM_10B_TO_50B: 30_000_000_000, // ~300억
+    FROM_50B_TO_100B: 75_000_000_000, // ~750억
+    OVER_100B: 150_000_000_000,     // ~1,500억
+  };
+  return midpoints[range] || 0;
+}
 
 function createIneligibleResult(program: SMEProgram, reason: string): SMEMatchResult {
   return {
@@ -512,6 +1020,12 @@ function createIneligibleResult(program: SMEProgram, reason: string): SMEMatchRe
       businessAge: 0,
       region: 0,
       certifications: 0,
+      bizType: 0,
+      lifecycle: 0,
+      industryContent: 0,
+      deadline: 0,
+      financialRelevance: 0,
+      sportType: 0,
     },
     failedCriteria: [reason],
     metCriteria: [],
