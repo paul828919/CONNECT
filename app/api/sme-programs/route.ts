@@ -8,6 +8,11 @@
  * - page: Page number (default: 1)
  * - limit: Results per page (default: 20)
  * - saved: Filter saved matches only (boolean)
+ * - bizType: Filter by business type (e.g., 기술, 금융, 창업)
+ * - eligibility: Filter by eligibility level (FULLY_ELIGIBLE, CONDITIONALLY_ELIGIBLE)
+ * - region: Filter by target region
+ * - urgentOnly: Filter to D-7 deadline programs only (boolean)
+ * - sort: Sort order (score, deadline, amount, created) - default: score
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -29,6 +34,11 @@ export async function GET(request: NextRequest) {
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
     const savedOnly = searchParams.get('saved') === 'true';
+    const bizType = searchParams.get('bizType');
+    const eligibility = searchParams.get('eligibility');
+    const region = searchParams.get('region');
+    const urgentOnly = searchParams.get('urgentOnly') === 'true';
+    const sort = searchParams.get('sort') || 'score';
 
     // Get user's organization
     const user = await db.user.findUnique({
@@ -50,6 +60,61 @@ export async function GET(request: NextRequest) {
 
     if (savedOnly) {
       whereClause.saved = true;
+    }
+
+    if (eligibility) {
+      whereClause.eligibilityLevel = eligibility;
+    }
+
+    // Program-level filters via nested relation
+    const programFilter: any = {};
+
+    if (bizType) {
+      programFilter.bizType = { contains: bizType };
+    }
+
+    if (region) {
+      programFilter.targetRegions = { has: region };
+    }
+
+    if (urgentOnly) {
+      const now = new Date();
+      const sevenDaysLater = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      programFilter.applicationEnd = {
+        gte: now,
+        lte: sevenDaysLater,
+      };
+    }
+
+    if (Object.keys(programFilter).length > 0) {
+      whereClause.program = programFilter;
+    }
+
+    // Build orderBy based on sort parameter
+    let orderBy: any[];
+    switch (sort) {
+      case 'deadline':
+        orderBy = [
+          { program: { applicationEnd: 'asc' } },
+        ];
+        break;
+      case 'amount':
+        orderBy = [
+          { program: { maxSupportAmount: 'desc' } },
+        ];
+        break;
+      case 'created':
+        orderBy = [
+          { createdAt: 'desc' },
+        ];
+        break;
+      case 'score':
+      default:
+        orderBy = [
+          { saved: 'desc' },
+          { score: 'desc' },
+        ];
+        break;
     }
 
     // Fetch matches with pagination
@@ -81,10 +146,7 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: [
-          { saved: 'desc' },
-          { score: 'desc' },
-        ],
+        orderBy,
         skip: (page - 1) * limit,
         take: limit,
       }),
