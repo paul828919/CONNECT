@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { SMEMatchCard, type SMEMatch } from '@/components/sme/SMEMatchCard';
 import { SMEStatsBar } from '@/components/sme/SMEStatsBar';
-import { SMEFilterBar, type FilterState, DEFAULT_FILTERS } from '@/components/sme/SMEFilterBar';
+import { type FilterState, DEFAULT_FILTERS } from '@/components/sme/SMEFilterBar';
 import { UpgradePromptModal, UpgradePromptBanner } from '@/components/upgrade-prompt-modal';
 import { useMatchTracking } from '@/hooks/useMatchTracking';
 
@@ -439,14 +439,6 @@ export default function SMEProgramsPage() {
             description="Pro 플랜에서 무제한 매칭 생성, 저장, 실시간 알림을 이용하세요."
           />
         )}
-
-        {/* ================================================================ */}
-        {/* Filter Bar                                                      */}
-        {/* ================================================================ */}
-        <SMEFilterBar
-          filters={filters}
-          onFilterChange={handleFilterChange}
-        />
 
         {/* ================================================================ */}
         {/* Success Message                                                 */}
