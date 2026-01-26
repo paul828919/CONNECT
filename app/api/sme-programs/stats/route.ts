@@ -206,7 +206,6 @@ function computeEnhancedStats(
 
   const topBizTypes = Object.entries(bizTypeCounts)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 5)
     .map(([category, count]) => ({
       category,
       count,
