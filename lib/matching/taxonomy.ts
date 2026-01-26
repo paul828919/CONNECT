@@ -344,7 +344,7 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     ENERGY: 0.7, // Smart grid
     ENVIRONMENT: 0.6,
     AGRICULTURE: 0.7, // Smart farm
-    MARINE: 0.6,
+    MARINE: 0.25,
     CONSTRUCTION: 0.6, // Smart construction
     TRANSPORTATION: 0.8, // Autonomous vehicles
     DEFENSE: 0.2, // Military ICT (low relevance for most ICT companies)
@@ -422,7 +422,7 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     OTHER: 0.5, // Medium relevance
   },
   MARINE: {
-    ICT: 0.6,
+    ICT: 0.25,
     MANUFACTURING: 0.6,
     BIO_HEALTH: 0.5,
     ENERGY: 0.5,

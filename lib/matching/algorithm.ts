@@ -53,7 +53,18 @@ import {
  * Algorithm version — increment on any scoring logic, filter, or threshold change.
  * Embedded in Redis cache keys so deployments auto-invalidate stale matches.
  */
-export const MATCH_ALGORITHM_VERSION = '4.2.1';
+/**
+ * Korean stopwords/particles to exclude from program title keyword overlap checks.
+ * These are grammatical words with no domain-relevance signal — e.g. "및" ("and")
+ * would false-positive match any org keyword containing it via `.includes()`.
+ */
+const KOREAN_TITLE_STOPWORDS = new Set([
+  '및', '의', '에', '을', '를', '은', '는', '이', '가', '와', '과', '로', '등',
+  '한', '된', '중', '내', '대한', '위한', '통한', '관한', '또는', '또한',
+  '대응', '공고', '계획', '선정', '신규', '추진', '사업', '지원', '년도',
+]);
+
+export const MATCH_ALGORITHM_VERSION = '4.2.2';
 
 // Type aliases for cleaner code
 type Organization = organizations;
@@ -552,7 +563,10 @@ export function generateMatches(
 
             const programKeywords = (program.keywords || []).map(k => k.toLowerCase());
             // Also check program title for keyword matches
-            const programTitleWords = program.title.toLowerCase().split(/\s+/);
+            // Filter out Korean stopwords and short particles to prevent false positives
+            // e.g. "및" ("and") in "고도화 및 미세플라스틱" would match any orgK containing "및"
+            const programTitleWords = program.title.toLowerCase().split(/\s+/)
+              .filter(word => word.length >= 2 && !KOREAN_TITLE_STOPWORDS.has(word));
             const allProgramKeywords = [...programKeywords, ...programTitleWords];
 
             const hasKeywordOverlap = orgKeywords.some(orgK =>
