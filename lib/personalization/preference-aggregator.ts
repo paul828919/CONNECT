@@ -59,9 +59,12 @@ const EVENT_WEIGHTS: Record<RecommendationEventType, number> = {
   VIEW: 0.3,
   CLICK: 0.5,
   SAVE: 1.0,
-  UNSAVE: -0.5,  // Negative signal
-  DISMISS: -0.3, // Weak negative signal
-  HIDE: -1.0,    // Strong negative signal
+  UNSAVE: -0.5,      // Negative signal
+  DISMISS: -0.3,     // Weak negative signal
+  HIDE: -1.0,        // Strong negative signal
+  APPLIED: 2.0,      // Strongest positive signal (user actually applied)
+  PLANNING: 0.8,     // Strong intent signal (user plans to apply)
+  NOT_ELIGIBLE: -0.2, // Weak negative (not user's fault — structural mismatch)
 };
 
 // Cold start thresholds
