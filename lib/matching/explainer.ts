@@ -191,6 +191,8 @@ function getReasonExplanation(
   match: MatchScore
 ): string | null {
   const type = org.type === 'COMPANY' ? '기업' : '연구기관';
+  // Dual-TRL: Use targetResearchTRL (R&D goal) if available, fallback to current TRL
+  const displayTRL = org.targetResearchTRL || org.technologyReadinessLevel;
 
   switch (reason) {
     case 'INDUSTRY_CATEGORY_MATCH':
@@ -205,20 +207,20 @@ function getReasonExplanation(
       return '귀 연구소의 연구 분야가 프로그램 목표와 부합합니다.';
 
     case 'TRL_COMPATIBLE':
-      if (org.technologyReadinessLevel) {
-        return `기술성숙도(TRL ${org.technologyReadinessLevel})가 본 프로그램의 요구 수준에 적합합니다.`;
+      if (displayTRL) {
+        return `기술성숙도(TRL ${displayTRL})가 본 프로그램의 요구 수준에 적합합니다.`;
       }
       return '본 프로그램의 기술성숙도 요구사항을 충족합니다.';
 
     case 'TRL_TOO_LOW':
-      if (org.technologyReadinessLevel && program.minTrl) {
-        return `⚠️ 현재 기술성숙도(TRL ${org.technologyReadinessLevel})가 최소 요구 수준(TRL ${program.minTrl}) 미만입니다.`;
+      if (displayTRL && program.minTrl) {
+        return `⚠️ 현재 기술성숙도(TRL ${displayTRL})가 최소 요구 수준(TRL ${program.minTrl}) 미만입니다.`;
       }
       return '⚠️ 기술성숙도가 요구 수준보다 낮습니다.';
 
     case 'TRL_TOO_HIGH':
-      if (org.technologyReadinessLevel && program.maxTrl) {
-        return `⚠️ 현재 기술성숙도(TRL ${org.technologyReadinessLevel})가 최대 허용 수준(TRL ${program.maxTrl}) 초과입니다.`;
+      if (displayTRL && program.maxTrl) {
+        return `⚠️ 현재 기술성숙도(TRL ${displayTRL})가 최대 허용 수준(TRL ${program.maxTrl}) 초과입니다.`;
       }
       return '⚠️ 기술성숙도가 상용화 단계에 가까워 다른 프로그램이 더 적합할 수 있습니다.';
 
@@ -295,43 +297,43 @@ function getReasonExplanation(
 
     // Enhanced TRL scoring
     case 'TRL_PERFECT_MATCH':
-      if (org.technologyReadinessLevel && program.minTrl && program.maxTrl) {
-        return `기술성숙도(${getTRLDescription(org.technologyReadinessLevel)})가 본 프로그램의 요구 범위(TRL ${program.minTrl}-${program.maxTrl})에 완벽히 부합합니다.`;
+      if (displayTRL && program.minTrl && program.maxTrl) {
+        return `기술성숙도(${getTRLDescription(displayTRL)})가 본 프로그램의 요구 범위(TRL ${program.minTrl}-${program.maxTrl})에 완벽히 부합합니다.`;
       }
       return '기술성숙도가 프로그램 요구사항에 완벽히 부합합니다.';
 
     case 'TRL_TOO_LOW_CLOSE':
-      if (org.technologyReadinessLevel && program.minTrl) {
-        return `기술성숙도(TRL ${org.technologyReadinessLevel})가 최소 요구 수준(TRL ${program.minTrl})에 근접합니다. 일부 지원 가능할 수 있습니다.`;
+      if (displayTRL && program.minTrl) {
+        return `기술성숙도(TRL ${displayTRL})가 최소 요구 수준(TRL ${program.minTrl})에 근접합니다. 일부 지원 가능할 수 있습니다.`;
       }
       return '기술성숙도가 요구 수준에 근접하여 지원을 고려해볼 수 있습니다.';
 
     case 'TRL_TOO_LOW_MODERATE':
-      if (org.technologyReadinessLevel && program.minTrl) {
-        return `⚠️ 기술성숙도(TRL ${org.technologyReadinessLevel})가 최소 요구 수준(TRL ${program.minTrl})보다 다소 낮습니다.`;
+      if (displayTRL && program.minTrl) {
+        return `⚠️ 기술성숙도(TRL ${displayTRL})가 최소 요구 수준(TRL ${program.minTrl})보다 다소 낮습니다.`;
       }
       return '⚠️ 기술성숙도가 요구 수준보다 다소 낮습니다.';
 
     case 'TRL_TOO_LOW_FAR':
-      if (org.technologyReadinessLevel && program.minTrl) {
-        return `⚠️ 기술성숙도(TRL ${org.technologyReadinessLevel})가 최소 요구 수준(TRL ${program.minTrl})보다 상당히 낮습니다. 기초연구 단계 프로그램을 먼저 검토하세요.`;
+      if (displayTRL && program.minTrl) {
+        return `⚠️ 기술성숙도(TRL ${displayTRL})가 최소 요구 수준(TRL ${program.minTrl})보다 상당히 낮습니다. 기초연구 단계 프로그램을 먼저 검토하세요.`;
       }
       return '⚠️ 기술성숙도가 요구 수준보다 많이 낮습니다.';
 
     case 'TRL_TOO_HIGH_CLOSE':
-      if (org.technologyReadinessLevel && program.maxTrl) {
-        return `기술성숙도(TRL ${org.technologyReadinessLevel})가 최대 허용 수준(TRL ${program.maxTrl})보다 약간 높지만, 예외적으로 지원 가능할 수 있습니다.`;
+      if (displayTRL && program.maxTrl) {
+        return `기술성숙도(TRL ${displayTRL})가 최대 허용 수준(TRL ${program.maxTrl})보다 약간 높지만, 예외적으로 지원 가능할 수 있습니다.`;
       }
       return '기술성숙도가 약간 높지만 지원을 검토해볼 수 있습니다.';
 
     case 'TRL_TOO_HIGH_MODERATE':
-      if (org.technologyReadinessLevel && program.maxTrl) {
-        return `⚠️ 기술성숙도(TRL ${org.technologyReadinessLevel})가 최대 허용 수준(TRL ${program.maxTrl})을 초과합니다. 사업화 단계 프로그램을 검토하세요.`;
+      if (displayTRL && program.maxTrl) {
+        return `⚠️ 기술성숙도(TRL ${displayTRL})가 최대 허용 수준(TRL ${program.maxTrl})을 초과합니다. 사업화 단계 프로그램을 검토하세요.`;
       }
       return '⚠️ 기술성숙도가 허용 수준을 초과합니다.';
 
     case 'TRL_TOO_HIGH_FAR':
-      if (org.technologyReadinessLevel && program.maxTrl) {
+      if (displayTRL && program.maxTrl) {
         return `⚠️ 이미 상용화 단계로, 본 프로그램보다 시장진입 지원 프로그램이 더 적합합니다.`;
       }
       return '⚠️ 기술성숙도가 상용화 단계로, 다른 프로그램이 더 적합합니다.';

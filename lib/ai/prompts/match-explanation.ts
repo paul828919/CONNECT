@@ -24,6 +24,8 @@ export interface MatchExplanationInput {
   companyName: string;
   companyIndustry: string;
   companyTRL: number;
+  companyTargetTRL?: number | null;  // 연구개발 희망 기술 수준 (매칭에 우선 사용)
+  companyCurrentTRL?: number | null;  // 기존 보유 기술 수준
   companyRevenue: number;
   companyEmployees: number;
   certifications: string[];
@@ -32,11 +34,12 @@ export interface MatchExplanationInput {
   // Match score details
   matchScore: number; // 0-100
   scoreBreakdown: {
-    industry: number;      // /30
-    trl: number;           // /20
-    certifications: number; // /20
-    budget: number;        // /15
-    experience: number;    // /15
+    keyword: number;       // /25 키워드 매칭
+    industry: number;      // /20 산업 분야
+    trl: number;           // /15 TRL 적합성
+    type: number;          // /15 조직 유형
+    rd: number;            // /10 R&D 경험
+    deadline: number;      // /15 마감일 근접도
   };
 
   // Additional context
@@ -173,7 +176,7 @@ export function buildMatchExplanationPrompt(input: MatchExplanationInput): strin
   const userPrompt = `<company_info>
 회사명: ${input.companyName}
 산업 분야: ${input.companyIndustry}
-기술 수준: TRL ${input.companyTRL}
+기술 수준: TRL ${input.companyTRL}${input.companyTargetTRL && input.companyCurrentTRL ? ` (연구개발 목표: TRL ${input.companyTargetTRL}, 보유 기술: TRL ${input.companyCurrentTRL})` : ''}
 연매출: ${input.companyRevenue.toLocaleString('ko-KR')}원
 직원 수: ${input.companyEmployees}명
 R&D 경험: ${input.rdExperience}년
@@ -193,12 +196,13 @@ R&D 경험: ${input.rdExperience}년
 <match_score>
 총점: ${input.matchScore}/100점
 
-점수 상세:
-- 산업 분야 매칭: ${input.scoreBreakdown.industry}/30점
-- TRL 적합성: ${input.scoreBreakdown.trl}/20점
-- 인증 요건: ${input.scoreBreakdown.certifications}/20점
-- 예산 적합성: ${input.scoreBreakdown.budget}/15점
-- R&D 경험: ${input.scoreBreakdown.experience}/15점
+점수 상세 (6개 항목):
+- 키워드 매칭: ${input.scoreBreakdown.keyword}/25점
+- 산업 분야: ${input.scoreBreakdown.industry}/20점
+- TRL 적합성: ${input.scoreBreakdown.trl}/15점
+- 조직 유형: ${input.scoreBreakdown.type}/15점
+- R&D 경험: ${input.scoreBreakdown.rd}/10점
+- 마감일 근접도: ${input.scoreBreakdown.deadline}/15점
 </match_score>
 
 ${input.missingRequirements && input.missingRequirements.length > 0 ? `

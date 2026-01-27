@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -78,6 +78,7 @@ const normalizeExternalUrl = (url: string): string | null => {
 export default function MatchesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -365,6 +366,15 @@ export default function MatchesPage() {
     fetchMatches();
     fetchSubscription();
   }, [session, status, router, fetchMatches, fetchSubscription]);
+
+  // Auto-regenerate matches when redirected from profile edit with ?regenerate=true
+  useEffect(() => {
+    if (searchParams.get('regenerate') === 'true' && session && !isRegenerating) {
+      // Clean URL by removing the query param (prevents re-triggering on refresh)
+      router.replace('/dashboard/matches', { scroll: false });
+      handleRegenerateMatches();
+    }
+  }, [searchParams, session, isRegenerating, router, handleRegenerateMatches]);
 
   // Refetch historical matches when historical page changes
   useEffect(() => {

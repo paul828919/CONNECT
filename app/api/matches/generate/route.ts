@@ -397,6 +397,20 @@ export async function POST(request: NextRequest) {
           matchResult.program
         );
 
+        // Merge algorithm's numeric breakdown into explanation JSON
+        // This allows the AI explanation API to read actual scores instead of zeros
+        const explanationWithBreakdown = {
+          ...explanation,
+          scoreBreakdown: {
+            keywordScore: matchResult.breakdown.keywordScore,
+            industryScore: matchResult.breakdown.industryScore,
+            trlScore: matchResult.breakdown.trlScore,
+            typeScore: matchResult.breakdown.typeScore,
+            rdScore: matchResult.breakdown.rdScore,
+            deadlineScore: matchResult.breakdown.deadlineScore,
+          },
+        };
+
         // UPSERT match record (create or update existing)
         // This makes the API idempotent - clicking "Create Match" multiple times is safe
         return db.funding_matches.upsert({
@@ -410,14 +424,14 @@ export async function POST(request: NextRequest) {
             // Update score and explanation if match already exists
             // Preserves user state: viewed, saved, notificationSent flags
             score: matchResult.score,
-            explanation: explanation as any,
+            explanation: explanationWithBreakdown as any,
           },
           create: {
             // Create new match if doesn't exist
             organizationId: organization.id,
             programId: matchResult.program.id,
             score: matchResult.score,
-            explanation: explanation as any,
+            explanation: explanationWithBreakdown as any,
           },
           include: {
             funding_programs: true,

@@ -636,8 +636,8 @@ export default function EditOrganizationProfilePage() {
       // Update session
       await update();
 
-      // Redirect to dashboard
-      router.push('/dashboard');
+      // Redirect to matches page with auto-regeneration flag
+      router.push('/dashboard/matches?regenerate=true');
     } catch (err: any) {
       setError(err.message);
       setIsSubmitting(false);
@@ -1495,6 +1495,9 @@ export default function EditOrganizationProfilePage() {
                 </select>
                 <p className="mt-1 text-xs text-gray-500">
                   국가 R&D 과제 공고 매칭에 사용됩니다. 신규 연구개발하고자 하는 기술의 목표 수준을 선택해주세요.
+                </p>
+                <p className="mt-1 text-xs text-blue-600">
+                  연구개발하려는 기술 수준이 설정되면 R&D 과제 매칭에 우선 사용됩니다.
                 </p>
                 {errors.targetResearchTRL && (
                   <p className="mt-1 text-sm text-red-600">

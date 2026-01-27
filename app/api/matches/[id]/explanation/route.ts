@@ -160,14 +160,26 @@ export async function GET(
     const program = match.funding_programs;
 
     // Parse score breakdown from existing explanation JSON
+    // The algorithm stores: keywordScore, industryScore, trlScore, typeScore, rdScore, deadlineScore
     const existingExplanation = match.explanation as any;
-    const scoreBreakdown = existingExplanation?.scoreBreakdown || {
-      industry: 0,
-      trl: 0,
-      certifications: 0,
-      budget: 0,
-      experience: 0,
-    };
+    const algoBreakdown = existingExplanation?.scoreBreakdown;
+    const scoreBreakdown = algoBreakdown
+      ? {
+          keyword: algoBreakdown.keywordScore || 0,       // /25 키워드 매칭
+          industry: algoBreakdown.industryScore || 0,      // /20 산업 분야
+          trl: algoBreakdown.trlScore || 0,                // /15 TRL 적합성
+          type: algoBreakdown.typeScore || 0,              // /15 조직 유형
+          rd: algoBreakdown.rdScore || 0,                  // /10 R&D 경험
+          deadline: algoBreakdown.deadlineScore || 0,      // /15 마감일 근접도
+        }
+      : {
+          keyword: 0,
+          industry: 0,
+          trl: 0,
+          type: 0,
+          rd: 0,
+          deadline: 0,
+        };
 
     const input: MatchExplanationInput = {
       // Program information
@@ -183,7 +195,9 @@ export async function GET(
       // Company information
       companyName: organization.name,
       companyIndustry: organization.industrySector || '미분류',
-      companyTRL: organization.technologyReadinessLevel || 0,
+      companyTRL: organization.targetResearchTRL || organization.technologyReadinessLevel || 0,
+      companyTargetTRL: organization.targetResearchTRL || null,  // 연구개발 희망 기술 수준
+      companyCurrentTRL: organization.technologyReadinessLevel || null,  // 기존 보유 기술 수준
       companyRevenue: parseRevenue(organization.revenueRange),
       companyEmployees: parseEmployeeCount(organization.employeeCount),
       certifications: [], // TODO: Extract from organization profile when available
