@@ -56,6 +56,9 @@ const VALID_EVENT_TYPES: RecommendationEventType[] = [
   'UNSAVE',
   'DISMISS',
   'HIDE',
+  'APPLIED',
+  'NOT_ELIGIBLE',
+  'PLANNING',
 ];
 
 // ============================================================================

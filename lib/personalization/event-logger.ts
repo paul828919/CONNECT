@@ -39,6 +39,7 @@ export interface RecommendationEventInput {
   occurredAt: string;      // ISO8601 UTC string
   clientTzOffsetMin?: number;
   batchId?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface LogEventsResult {
@@ -103,7 +104,7 @@ const RATE_LIMITS = {
   sessionTTL: 25 * 60 * 60,        // 25 hours (matches active-user-tracking)
 
   // Important event types (never rate limit these)
-  importantTypes: ['CLICK', 'SAVE', 'UNSAVE', 'DISMISS', 'HIDE', 'VIEW'] as RecommendationEventType[],
+  importantTypes: ['CLICK', 'SAVE', 'UNSAVE', 'DISMISS', 'HIDE', 'VIEW', 'APPLIED', 'NOT_ELIGIBLE', 'PLANNING'] as RecommendationEventType[],
 } as const;
 
 // ============================================================================
@@ -166,6 +167,7 @@ export async function logRecommendationEvents(
         occurredAt: new Date(e.occurredAt),
         clientTzOffsetMin: e.clientTzOffsetMin,
         batchId: e.batchId,
+        metadata: e.metadata ?? undefined,
       })),
       skipDuplicates: true, // Idempotent: ON CONFLICT DO NOTHING
     });
@@ -315,7 +317,8 @@ export function validateEventInput(event: Partial<RecommendationEventInput>): {
 
   // Validate eventType enum
   const validTypes: RecommendationEventType[] = [
-    'IMPRESSION', 'VIEW', 'CLICK', 'SAVE', 'UNSAVE', 'DISMISS', 'HIDE'
+    'IMPRESSION', 'VIEW', 'CLICK', 'SAVE', 'UNSAVE', 'DISMISS', 'HIDE',
+    'APPLIED', 'NOT_ELIGIBLE', 'PLANNING',
   ];
   if (event.eventType && !validTypes.includes(event.eventType as RecommendationEventType)) {
     errors.push(`eventType must be one of: ${validTypes.join(', ')}`);
