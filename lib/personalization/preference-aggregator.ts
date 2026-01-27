@@ -67,6 +67,20 @@ const EVENT_WEIGHTS: Record<RecommendationEventType, number> = {
   NOT_ELIGIBLE: -0.2, // Weak negative (not user's fault — structural mismatch)
 };
 
+// Outcome confidence weights (anti-gaming measures)
+// Self-reported outcomes are weighted at 50% to prevent manipulation.
+// Verified outcomes (document or system) are weighted near 100%.
+// All outcomes have a 7-day reflection delay before affecting preferences.
+export const OUTCOME_CONFIDENCE_WEIGHTS: Record<string, number> = {
+  SELF_REPORTED: 0.5,       // User self-reported → 50% weight
+  DOCUMENT_VERIFIED: 0.9,   // Evidence-backed → 90% weight
+  SYSTEM_VERIFIED: 1.0,     // System-confirmed → full weight
+};
+
+// Outcomes entered within this window are not yet reflected in preferences.
+// This prevents gaming via rapid false outcome reporting.
+export const OUTCOME_REFLECTION_DELAY_DAYS = 7;
+
 // Cold start thresholds
 const COLD_START_THRESHOLDS = {
   fullColdMaxViews: 5,
