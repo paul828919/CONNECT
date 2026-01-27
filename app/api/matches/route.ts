@@ -103,9 +103,10 @@ export async function GET(request: NextRequest) {
         funding_programs: true,
       },
       orderBy: [
-        { score: 'desc' },                               // 1. Highest match score first
-        { funding_programs: { deadline: 'asc' } },       // 2. Then by urgency (closest deadline first, NULLs last)
-        { funding_programs: { publishedAt: 'desc' } },   // 3. Then newest announcements
+        { personalizedScore: { sort: 'desc', nulls: 'last' } }, // 1. Personalized score first (nulls last = non-personalized at bottom)
+        { score: 'desc' },                               // 2. Fallback: base match score
+        { funding_programs: { deadline: 'asc' } },       // 3. Then by urgency (closest deadline first, NULLs last)
+        { funding_programs: { publishedAt: 'desc' } },   // 4. Then newest announcements
       ],
       skip,
       take: itemsPerPage,
@@ -130,6 +131,7 @@ export async function GET(request: NextRequest) {
           eligibilityConfidence: match.funding_programs.eligibilityConfidence,
         },
         score: match.score,
+        personalizedScore: match.personalizedScore ?? null,
         explanation: match.explanation,
         viewed: match.viewed,
         saved: match.saved,
