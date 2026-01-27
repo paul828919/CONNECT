@@ -26,7 +26,10 @@ export type RecommendationEventType =
   | 'SAVE'
   | 'UNSAVE'
   | 'DISMISS'
-  | 'HIDE';
+  | 'HIDE'
+  | 'APPLIED'
+  | 'NOT_ELIGIBLE'
+  | 'PLANNING';
 
 export interface RecommendationEvent {
   eventId: string;         // Client-generated UUID for idempotency
@@ -46,6 +49,7 @@ export interface RecommendationEvent {
   occurredAt: string;      // ISO8601 UTC timestamp
   clientTzOffsetMin?: number; // Timezone offset in minutes
   batchId?: string;        // API batch identifier (set by sendBatch)
+  metadata?: Record<string, any>; // Optional metadata (e.g., NOT_ELIGIBLE reason)
 }
 
 // ============================================================================
@@ -251,6 +255,57 @@ export class ImpressionTracker {
   }
 
   /**
+   * Log an application event (user applied to a program)
+   */
+  logApplied(params: {
+    programId: string;
+    position: number;
+    listSize: number;
+    matchScore: number;
+    source?: string;
+  }): void {
+    this.queueEvent({
+      eventType: 'APPLIED',
+      ...params,
+    });
+  }
+
+  /**
+   * Log a not-eligible event (user marked as ineligible)
+   */
+  logNotEligible(params: {
+    programId: string;
+    position: number;
+    listSize: number;
+    matchScore: number;
+    reason: string;
+    source?: string;
+  }): void {
+    const { reason, ...rest } = params;
+    this.queueEvent({
+      eventType: 'NOT_ELIGIBLE',
+      ...rest,
+      metadata: { reason },
+    });
+  }
+
+  /**
+   * Log a planning event (user plans to apply)
+   */
+  logPlanning(params: {
+    programId: string;
+    position: number;
+    listSize: number;
+    matchScore: number;
+    source?: string;
+  }): void {
+    this.queueEvent({
+      eventType: 'PLANNING',
+      ...params,
+    });
+  }
+
+  /**
    * Force flush pending events (call on page unload)
    */
   async flush(): Promise<void> {
@@ -288,6 +343,7 @@ export class ImpressionTracker {
     visibilityRatio?: number;
     scrollDepth?: number;
     source?: string;
+    metadata?: Record<string, any>;
   }): void {
     const now = new Date();
 
@@ -308,6 +364,7 @@ export class ImpressionTracker {
       deviceType: this.detectDeviceType(),
       occurredAt: now.toISOString(),
       clientTzOffsetMin: now.getTimezoneOffset(),
+      metadata: params.metadata,
     };
 
     this.pendingEvents.push(event);

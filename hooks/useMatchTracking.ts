@@ -63,6 +63,37 @@ interface UseMatchTrackingReturn {
   }) => void;
 
   /**
+   * Log an applied event (user applied to a program)
+   */
+  logApplied: (params: {
+    programId: string;
+    position: number;
+    matchScore: number;
+    source?: string;
+  }) => void;
+
+  /**
+   * Log a not-eligible event (with reason)
+   */
+  logNotEligible: (params: {
+    programId: string;
+    position: number;
+    matchScore: number;
+    reason: string;
+    source?: string;
+  }) => void;
+
+  /**
+   * Log a planning event (user plans to apply)
+   */
+  logPlanning: (params: {
+    programId: string;
+    position: number;
+    matchScore: number;
+    source?: string;
+  }) => void;
+
+  /**
    * Get current tracking stats
    */
   getStats: () => { impressionCount: number; uniquePrograms: number } | null;
@@ -232,6 +263,70 @@ export function useMatchTracking({
   );
 
   /**
+   * Log an applied event
+   */
+  const logApplied = useCallback(
+    (params: {
+      programId: string;
+      position: number;
+      matchScore: number;
+      source?: string;
+    }) => {
+      if (!trackerRef.current) return;
+
+      trackerRef.current.logApplied({
+        ...params,
+        listSize,
+        source: params.source || 'match_list',
+      });
+    },
+    [listSize]
+  );
+
+  /**
+   * Log a not-eligible event
+   */
+  const logNotEligible = useCallback(
+    (params: {
+      programId: string;
+      position: number;
+      matchScore: number;
+      reason: string;
+      source?: string;
+    }) => {
+      if (!trackerRef.current) return;
+
+      trackerRef.current.logNotEligible({
+        ...params,
+        listSize,
+        source: params.source || 'match_list',
+      });
+    },
+    [listSize]
+  );
+
+  /**
+   * Log a planning event
+   */
+  const logPlanning = useCallback(
+    (params: {
+      programId: string;
+      position: number;
+      matchScore: number;
+      source?: string;
+    }) => {
+      if (!trackerRef.current) return;
+
+      trackerRef.current.logPlanning({
+        ...params,
+        listSize,
+        source: params.source || 'match_list',
+      });
+    },
+    [listSize]
+  );
+
+  /**
    * Get current stats
    */
   const getStats = useCallback(() => {
@@ -244,6 +339,9 @@ export function useMatchTracking({
     logClick,
     logSave,
     logUnsave,
+    logApplied,
+    logNotEligible,
+    logPlanning,
     getStats,
     isTracking: enabled && !!organizationId && !!trackerRef.current,
   };
