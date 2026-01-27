@@ -35,7 +35,7 @@ function getRedisClient(): Redis {
 }
 
 // Cache configuration
-const CACHE_TTL_SECONDS = 6 * 60 * 60; // 6 hours (reduced from 24h for status-aware caching)
+const CACHE_TTL_SECONDS = 3; // TEMPORARY: 3 seconds for verification (revert to 6 * 60 * 60 after confirming fix)
 const CACHE_KEY_PREFIX = 'match:explanation:';
 
 /**
