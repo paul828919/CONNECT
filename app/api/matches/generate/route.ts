@@ -51,6 +51,8 @@ import {
 } from '@/lib/cache/redis-cache';
 import { logMatchQualityBulk } from '@/lib/analytics/match-performance';
 import { logFunnelEvent, hasFunnelEvent, AuditAction } from '@/lib/audit';
+import { generatePersonalizedMatches, type MatchWithScore } from '@/lib/personalization';
+import { loadActivePersonalizationConfig } from '@/lib/personalization/config-loader';
 
 // Plan-based match limits per API call
 const MAX_MATCHES_BY_PLAN: Record<string, number> = {
@@ -387,6 +389,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 10.5. Personalization Layer (re-ranks matches based on user behavior)
+    // Wrapped in try/catch: failure falls back to base scores (graceful degradation)
+    let personalizedScoreMap = new Map<string, number>();
+    try {
+      const personalizationConfig = await loadActivePersonalizationConfig();
+
+      if (personalizationConfig.isActive && personalizationConfig.config) {
+        console.log('[PERSONALIZATION] Active config:', personalizationConfig.configName);
+
+        // Transform to MatchWithScore[] for personalization layer
+        const baseMatches: MatchWithScore[] = validMatchResults.map(m => ({
+          program: m.program,
+          baseScore: m.score,
+        }));
+
+        const personalizedResult = await generatePersonalizedMatches(
+          organizationId,
+          baseMatches,
+          personalizationConfig.config
+        );
+
+        // Build programId → personalizedScore map
+        for (const pm of personalizedResult.matches) {
+          personalizedScoreMap.set(
+            pm.program.id,
+            Math.round(pm.personalizedScore)
+          );
+        }
+
+        console.log('[PERSONALIZATION] Generated personalized scores:', {
+          coldStartStatus: personalizedResult.coldStartStatus,
+          explorationCount: personalizedResult.explorationCount,
+          matchCount: personalizedResult.matches.length,
+        });
+      } else {
+        console.log('[PERSONALIZATION] Inactive — using base scores only');
+      }
+    } catch (personalizationError) {
+      // Graceful degradation: continue with base scores
+      console.error('[PERSONALIZATION] Error (fallback to base scores):', personalizationError);
+      personalizedScoreMap = new Map(); // Clear any partial results
+    }
+
     // 11. Store matches in database (UPSERT to handle existing matches)
     const createdMatches = await Promise.all(
       validMatchResults.map(async (matchResult) => {
@@ -413,6 +458,10 @@ export async function POST(request: NextRequest) {
 
         // UPSERT match record (create or update existing)
         // This makes the API idempotent - clicking "Create Match" multiple times is safe
+        // Resolve personalized score (null if personalization inactive)
+        const pScore = personalizedScoreMap.get(matchResult.program.id) ?? null;
+        const pAt = pScore !== null ? new Date() : null;
+
         return db.funding_matches.upsert({
           where: {
             organizationId_programId: {
@@ -425,6 +474,8 @@ export async function POST(request: NextRequest) {
             // Preserves user state: viewed, saved, notificationSent flags
             score: matchResult.score,
             explanation: explanationWithBreakdown as any,
+            personalizedScore: pScore,
+            personalizedAt: pAt,
           },
           create: {
             // Create new match if doesn't exist
@@ -432,6 +483,8 @@ export async function POST(request: NextRequest) {
             programId: matchResult.program.id,
             score: matchResult.score,
             explanation: explanationWithBreakdown as any,
+            personalizedScore: pScore,
+            personalizedAt: pAt,
           },
           include: {
             funding_programs: true,
@@ -473,6 +526,7 @@ export async function POST(request: NextRequest) {
           announcementUrl: match.funding_programs.announcementUrl,
         },
         score: match.score,
+        personalizedScore: match.personalizedScore ?? null,
         explanation: match.explanation as any, // Already a JSON object
         createdAt: match.createdAt.toISOString(),
       })),
