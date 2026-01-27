@@ -258,10 +258,13 @@ model funding_matches {
   savedAt             DateTime?
   notificationSent    Boolean               @default(false)
   notifiedAt          DateTime?
+  personalizedScore   Int?                  @db.SmallInt
+  personalizedAt      DateTime?
   createdAt           DateTime              @default(now())
   organizations       organizations         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   funding_programs    funding_programs      @relation(fields: [programId], references: [id], onDelete: Cascade)
   match_notifications match_notifications[]
+  application_outcomes application_outcomes[]
 
   @@unique([organizationId, programId])
   @@index([createdAt])
@@ -507,6 +510,7 @@ model organizations {
   teamInviteLinks                                                team_invite_links[]
   locations                                                      CompanyLocation[]   // 소재지 정보 (본사, 연구소, 공장)
   sme_program_matches                                            sme_program_matches[] // SME24 매칭 결과
+  application_outcomes                                           application_outcomes[]
 
   // ===== SME24 Certification Verification Fields =====
   // API-verified certifications from 중소벤처24 (이노비즈, 벤처, 메인비즈)
@@ -742,6 +746,7 @@ model User {
   processedRefunds       RefundRequest[]       @relation("RefundProcessedBy")
   teamInviteLinks        team_invite_links[]
   accountLinkingRequests AccountLinkingRequest[]
+  application_outcomes   application_outcomes[]
 
   @@index([email])
   @@index([organizationId])
@@ -1152,6 +1157,9 @@ enum RecommendationEventType {
   UNSAVE        // Removed from saved
   DISMISS       // Explicitly dismissed
   HIDE          // "Don't show again"
+  APPLIED       // User applied to the program
+  NOT_ELIGIBLE  // User marked as not eligible (with reason in metadata)
+  PLANNING      // User is planning to apply
 }
 
 // Cold start status for personalization
@@ -1284,6 +1292,9 @@ model recommendation_events {
 
   // Batch tracking for debugging
   batchId         String?   // API batch identifier
+
+  // Optional metadata (for APPLIED date, NOT_ELIGIBLE reason, etc.)
+  metadata        Json?
 
   // Indexes for efficient queries
   // NOTE: No partitioning - eventId unique conflicts with partition key
@@ -1724,4 +1735,65 @@ model personalization_metrics {
   @@index([date])
   @@index([configName])
   @@map("personalization_metrics")
+}
+
+// ============================================================================
+// Application Status (지원 결과 상태)
+// ============================================================================
+// Tracks the lifecycle of a funding application from planning to outcome.
+// Used for outcome tracking, win-rate analytics, and personalization feedback.
+// ============================================================================
+enum ApplicationStatus {
+  PLANNING       // 지원 계획 중
+  IN_PROGRESS    // 지원서 작성 중
+  SUBMITTED      // 지원 완료
+  UNDER_REVIEW   // 심사 중
+  SELECTED       // 선정됨
+  REJECTED       // 탈락
+  WITHDRAWN      // 자진 철회
+}
+
+enum OutcomeConfidence {
+  SELF_REPORTED      // 사용자 자가 보고
+  DOCUMENT_VERIFIED  // 증빙 서류 확인
+  SYSTEM_VERIFIED    // 시스템 자동 확인
+}
+
+// ============================================================================
+// Application Outcomes (지원 결과 추적)
+// ============================================================================
+// Tracks funding application outcomes for each organization.
+// Supports status transitions with audit trail (previousStatusId + isCurrent).
+// Used for: win-rate analytics, personalization feedback, outcome-based learning.
+// ============================================================================
+model application_outcomes {
+  id                String              @id @default(uuid())
+  matchId           String?
+  organizationId    String
+  programId         String
+  userId            String
+  status            ApplicationStatus
+  applicationDate   DateTime?
+  resultDate        DateTime?
+  awardAmount       BigInt?
+  rejectionReason   String?
+  notes             String?
+  confidence        OutcomeConfidence   @default(SELF_REPORTED)
+  verifiedAt        DateTime?
+  previousStatusId  String?
+  isCurrent         Boolean             @default(true)
+  metadata          Json?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  organization      organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fundingMatch      funding_matches?    @relation(fields: [matchId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, programId, isCurrent])
+  @@index([organizationId])
+  @@index([programId])
+  @@index([status])
+  @@index([userId])
+  @@map("application_outcomes")
 }
