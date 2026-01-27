@@ -30,6 +30,7 @@ interface Match {
     eligibilityConfidence?: ConfidenceLevel; // Eligibility extraction confidence (HIGH, MEDIUM, LOW)
   };
   score: number;
+  personalizedScore?: number | null;
   explanation: {
     summary: string;
     reasons: string[];
@@ -676,13 +677,16 @@ export default function MatchesPage() {
                     <h2 className="text-xl font-bold text-gray-900">
                       {match.program.title}
                     </h2>
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getScoreColor(
-                        match.score
-                      )}`}
-                    >
-                      {getScoreLabel(match.score)} ({match.score}점)
-                    </span>
+                    {(() => {
+                      const displayScore = match.personalizedScore ?? match.score;
+                      return (
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getScoreColor(displayScore)}`}
+                        >
+                          {getScoreLabel(displayScore)} ({displayScore}점)
+                        </span>
+                      );
+                    })()}
                   </div>
                   <div className="flex items-center gap-4 text-sm text-gray-600">
                     <span className="font-medium">
