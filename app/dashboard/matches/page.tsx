@@ -97,6 +97,9 @@ export default function MatchesPage() {
   const [userPlan, setUserPlan] = useState<string>('FREE');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [savingMatchId, setSavingMatchId] = useState<string | null>(null);
+  // Application status tracking (strong label events)
+  const [applicationStatuses, setApplicationStatuses] = useState<Record<string, string>>({});
+  const [notEligibleMatchId, setNotEligibleMatchId] = useState<string | null>(null);
   // Pagination state (for both active and historical matches)
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -109,7 +112,7 @@ export default function MatchesPage() {
   // Phase 6: Initialize personalization event tracking
   const orgId = (session?.user as any)?.organizationId;
   const userId = session?.user?.id;
-  const { createCardRef, logClick, logSave, logUnsave, isTracking } = useMatchTracking({
+  const { createCardRef, logClick, logSave, logUnsave, logApplied, logNotEligible, logPlanning, isTracking } = useMatchTracking({
     organizationId: orgId,
     userId,
     listSize: matches.length,
@@ -869,7 +872,89 @@ export default function MatchesPage() {
                   )}
                   {match.saved ? '저장됨' : '북마크'}
                 </button>
+
+                {/* Application Status Buttons (Strong Label Events) */}
+                <div className="ml-auto flex items-center gap-2">
+                  {applicationStatuses[match.id] ? (
+                    <span className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium ${
+                      applicationStatuses[match.id] === 'APPLIED' ? 'bg-green-100 text-green-700' :
+                      applicationStatuses[match.id] === 'PLANNING' ? 'bg-blue-100 text-blue-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {applicationStatuses[match.id] === 'APPLIED' && '✅ 지원 완료'}
+                      {applicationStatuses[match.id] === 'PLANNING' && '📋 지원 예정'}
+                      {applicationStatuses[match.id] === 'NOT_ELIGIBLE' && '❌ 부적격'}
+                    </span>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          logApplied({ programId: match.program.id, position: index, matchScore: match.score });
+                          setApplicationStatuses(prev => ({ ...prev, [match.id]: 'APPLIED' }));
+                        }}
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors"
+                      >
+                        ✅ 지원 완료
+                      </button>
+                      <button
+                        onClick={() => setNotEligibleMatchId(match.id)}
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors"
+                      >
+                        ❌ 부적격
+                      </button>
+                      <button
+                        onClick={() => {
+                          logPlanning({ programId: match.program.id, position: index, matchScore: match.score });
+                          setApplicationStatuses(prev => ({ ...prev, [match.id]: 'PLANNING' }));
+                        }}
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"
+                      >
+                        📋 지원 예정
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
+
+              {/* Not Eligible Reason Dialog */}
+              {notEligibleMatchId === match.id && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm font-semibold text-red-800 mb-3">부적격 사유를 선택하세요:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      '매출액 부족',
+                      '업력 요건 미충족',
+                      '기업 유형 불일치',
+                      '지역 요건 미충족',
+                      '기술 분야 불일치',
+                      '중복 지원 제한',
+                    ].map((reason) => (
+                      <button
+                        key={reason}
+                        onClick={() => {
+                          logNotEligible({
+                            programId: match.program.id,
+                            position: index,
+                            matchScore: match.score,
+                            reason,
+                          });
+                          setApplicationStatuses(prev => ({ ...prev, [match.id]: 'NOT_ELIGIBLE' }));
+                          setNotEligibleMatchId(null);
+                        }}
+                        className="px-3 py-2 text-sm text-red-700 bg-white border border-red-200 rounded-lg hover:bg-red-100 transition-colors text-left"
+                      >
+                        {reason}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setNotEligibleMatchId(null)}
+                    className="mt-2 text-sm text-gray-500 hover:text-gray-700"
+                  >
+                    취소
+                  </button>
+                </div>
+              )}
 
               {/* AI Explanation (Expandable) */}
               {expandedMatchId === match.id && (
