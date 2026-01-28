@@ -499,6 +499,14 @@ model organizations {
   // Company scale classification for 중소벤처기업부 program matching
   companyScaleType                                               CompanyScaleType?
 
+  // ═══════════════════════════════════════════════════════════════
+  // v4.3: Negative Domain Exclusion (User Preference)
+  // ═══════════════════════════════════════════════════════════════
+  // Allows users to explicitly exclude industries from their matches.
+  // Example: ICT company excludes VETERINARY, FORESTRY, MARINE_FISHERIES
+  // Stored as uppercase industry codes matching keyword-classifier.ts IndustryCategory
+  excludedDomains                                                String[]          @default([])
+
   ai_cost_logs                                                   ai_cost_logs[]
   consortium_members                                             consortium_members[]
   consortium_projects                                            consortium_projects[]

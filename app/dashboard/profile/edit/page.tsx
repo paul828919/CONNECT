@@ -55,6 +55,8 @@ const organizationEditSchema = z.object({
     .optional()
     .or(z.literal('')),
   industrySector: z.string().min(1, '산업 분야를 선택해주세요.').optional(),
+  // v4.3: Negative domain exclusion - domains to exclude from matching
+  excludedDomains: z.array(z.string()).optional(),
   employeeCount: z
     .enum(['UNDER_10', 'FROM_10_TO_50', 'FROM_50_TO_100', 'FROM_100_TO_300', 'OVER_300'])
     .optional(),
@@ -475,6 +477,8 @@ export default function EditOrganizationProfilePage() {
         setValue('rdExperienceCount', data.organization.rdExperience ? '1' : '0');
         // Company scale type (v4.1 - 중소벤처기업부 matching)
         setValue('companyScaleType', data.organization.companyScaleType);
+        // v4.3: Negative domain exclusion
+        setValue('excludedDomains', data.organization.excludedDomains || []);
         // Location fields (v4.1 - regional R&D matching)
         if (data.organization.locations) {
           const headquarters = data.organization.locations.find((l: any) => l.locationType === 'HEADQUARTERS');
@@ -611,6 +615,8 @@ export default function EditOrganizationProfilePage() {
           companyScaleType: data.companyScaleType || null,
           // Locations for regional R&D program matching (v4.1)
           locations: locations.length > 0 ? locations : null,
+          // v4.3: Negative domain exclusion
+          excludedDomains: data.excludedDomains || [],
         }),
       });
 
@@ -1018,6 +1024,66 @@ export default function EditOrganizationProfilePage() {
                   {errors.industrySector.message}
                 </p>
               )}
+            </div>
+
+            {/* v4.3: Negative Domain Exclusion - Industries to exclude from matching */}
+            <div className="space-y-3 rounded-lg border border-orange-200 bg-orange-50 p-4">
+              <div className="flex items-start gap-2">
+                <span className="text-lg">🚫</span>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900">관련 없는 분야 제외</h4>
+                  <p className="text-xs text-gray-600">
+                    매칭에서 제외할 분야를 선택하세요. 선택한 분야의 연구과제는 표시되지 않습니다.
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {[
+                  { value: 'VETERINARY', label: '수의/동물의약' },
+                  { value: 'MARINE_FISHERIES', label: '해양/수산' },
+                  { value: 'MARINE_SECURITY', label: '해양안전/경비' },
+                  { value: 'FORESTRY', label: '산림/임업' },
+                  { value: 'AGRICULTURE', label: '농업/축산' },
+                  { value: 'DEFENSE', label: '국방/방위' },
+                  { value: 'AEROSPACE', label: '우주항공' },
+                  { value: 'CONSTRUCTION', label: '건설' },
+                  { value: 'TRANSPORTATION', label: '교통/물류' },
+                  { value: 'CULTURAL', label: '문화/콘텐츠' },
+                  { value: 'ENERGY', label: '에너지' },
+                  { value: 'ENVIRONMENT', label: '환경' },
+                  { value: 'MANUFACTURING', label: '제조업' },
+                  { value: 'BIO_HEALTH', label: '바이오/헬스케어' },
+                  { value: 'ICT', label: 'ICT/정보통신' },
+                ].filter(domain => {
+                  // Don't show user's own industry as an option to exclude
+                  const userIndustry = watch('industrySector')?.toUpperCase();
+                  return domain.value !== userIndustry;
+                }).map((domain) => {
+                  const excludedDomains = watch('excludedDomains') || [];
+                  const isChecked = excludedDomains.includes(domain.value);
+                  return (
+                    <label key={domain.value} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const current = watch('excludedDomains') || [];
+                          if (e.target.checked) {
+                            setValue('excludedDomains', [...current, domain.value]);
+                          } else {
+                            setValue('excludedDomains', current.filter((d: string) => d !== domain.value));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                      />
+                      <span className="text-sm text-gray-700">{domain.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-500">
+                💡 예: ICT 회사라면 수의/동물의약, 해양/수산 등을 제외하면 관련 없는 공고가 표시되지 않습니다.
+              </p>
             </div>
 
             {/* Semantic Sub-Domain (v3.0 - Industry-specific matching) */}

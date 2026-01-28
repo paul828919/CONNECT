@@ -80,6 +80,8 @@ export async function GET(
             region: true,
           },
         },
+        // v4.3: Negative domain exclusion for improved match quality
+        excludedDomains: true,
         profileCompleted: true,
         profileScore: true,
         status: true,
@@ -220,6 +222,8 @@ export async function PATCH(
       // v5.0: Enhanced profile fields for improved matching quality
       primaryBusinessDomain,
       technologyDomainsSpecific,
+      // v4.3: Negative domain exclusion
+      excludedDomains,
     } = body;
 
     // Build update data (only include fields that are provided)
@@ -339,6 +343,53 @@ export async function PATCH(
     // v4.1: Company scale for 중소벤처기업부 program matching
     if (companyScaleType !== undefined) {
       updateData.companyScaleType = companyScaleType;
+    }
+
+    // ============================================================================
+    // v4.3: Negative Domain Exclusion Validation
+    // ============================================================================
+    if (excludedDomains !== undefined) {
+      if (!Array.isArray(excludedDomains)) {
+        return NextResponse.json(
+          { error: 'excludedDomains must be an array' },
+          { status: 400 }
+        );
+      }
+
+      // Normalize to uppercase and remove duplicates
+      const normalizedDomains = [...new Set(
+        excludedDomains.map((d: string) => d.trim().toUpperCase())
+      )];
+
+      // Validate against known industry categories
+      const validExcludableDomains = new Set([
+        'VETERINARY', 'MARINE_FISHERIES', 'MARINE_SECURITY', 'FORESTRY',
+        'AGRICULTURE', 'DEFENSE', 'AEROSPACE', 'CONSTRUCTION', 'TRANSPORTATION',
+        'CULTURAL', 'ENERGY', 'ENVIRONMENT', 'MANUFACTURING', 'BIO_HEALTH', 'ICT',
+      ]);
+
+      const invalidDomains = normalizedDomains.filter(
+        (d: string) => !validExcludableDomains.has(d)
+      );
+      if (invalidDomains.length > 0) {
+        return NextResponse.json(
+          { error: `Invalid domains: ${invalidDomains.join(', ')}` },
+          { status: 400 }
+        );
+      }
+
+      // Prevent excluding own industry sector
+      if (existingOrg.industrySector) {
+        const orgSectorNormalized = existingOrg.industrySector.toUpperCase();
+        if (normalizedDomains.includes(orgSectorNormalized)) {
+          return NextResponse.json(
+            { error: '자신의 산업 분야는 제외할 수 없습니다' },
+            { status: 400 }
+          );
+        }
+      }
+
+      updateData.excludedDomains = normalizedDomains;
     }
 
     // v4.1: Handle locations (delete existing, create new)
@@ -519,6 +570,8 @@ export async function PATCH(
             region: true,
           },
         },
+        // v4.3: Negative domain exclusion
+        excludedDomains: true,
         profileCompleted: true,
         profileScore: true,
         updatedAt: true,

@@ -300,6 +300,22 @@ export function generateMatches(
     }
 
     // ============================================================================
+    // v4.3: Negative Domain Exclusion Filter (User Preference)
+    // ============================================================================
+    // If user has excluded certain domains, filter out matching programs EARLY
+    // before any other processing. Uses keyword classification (not program.category)
+    // to ensure accurate domain detection.
+    // Cast to extended type that may include excludedDomains
+    const orgWithExclusions = organization as OrganizationWithLocations & { excludedDomains?: string[] };
+    if (orgWithExclusions.excludedDomains && orgWithExclusions.excludedDomains.length > 0) {
+      if (programClassification.industry !== 'GENERAL' &&
+          orgWithExclusions.excludedDomains.includes(programClassification.industry)) {
+        excludedByDomainCount++;
+        continue; // User explicitly excluded this domain
+      }
+    }
+
+    // ============================================================================
     // Filter Consolidated Announcements (통합 공고)
     // ============================================================================
     // Consolidated announcements lack critical application details and reference
