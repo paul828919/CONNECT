@@ -398,6 +398,13 @@ jobs:
           AI_RATE_LIMIT_PER_MINUTE=50
           AI_DAILY_BUDGET_KRW=50000
 
+          # 3-Tier Extraction Pipeline (Tier 2: Haiku, Tier 3: Opus)
+          # Toggle to enable LLM-based field extraction during scraping
+          ENABLE_TIER2_EXTRACTION=false
+          ENABLE_TIER3_EXTRACTION=false
+          MAX_TIER2_COST_PER_JOB=50
+          MAX_TIER3_COST_PER_JOB=300
+
           # ============================================
           # Payment Integration (Toss Payments)
           # ============================================

@@ -5,7 +5,7 @@
  * Batches related fields into groups (A-D) to minimize API calls.
  *
  * Cost: ~$0.003 per announcement (average 1-2 group calls)
- * Model: claude-haiku-4-5-20251101
+ * Model: claude-haiku-4-5-20251001
  * Pricing: $1/MTok input, $5/MTok output
  *
  * Field Groups:
@@ -36,7 +36,7 @@ export interface Tier2Result {
 // Configuration
 // ============================================================================
 
-const HAIKU_MODEL = 'claude-haiku-4-5-20251101';
+const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 const MAX_INPUT_CHARS = 4000; // ~1000 tokens for Korean text
 const MAX_OUTPUT_TOKENS = 1024;
 
