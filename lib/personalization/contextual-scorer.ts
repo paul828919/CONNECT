@@ -141,7 +141,7 @@ function computeDeadlineBoost(
 
   const now = new Date();
   const daysUntilDeadline = Math.floor(
-    (program.deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    (new Date(program.deadline).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
   );
 
   // Past deadline = no boost
@@ -178,7 +178,7 @@ function computeFreshnessBoost(
 ): number {
   const now = new Date();
   const daysSinceCreation = Math.floor(
-    (now.getTime() - program.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+    (now.getTime() - new Date(program.createdAt).getTime()) / (1000 * 60 * 60 * 24)
   );
 
   // Fresh: < 7 days
@@ -283,7 +283,7 @@ export function getDaysUntilDeadline(program: funding_programs): number | null {
 
   const now = new Date();
   return Math.floor(
-    (program.deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    (new Date(program.deadline).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
   );
 }
 
@@ -301,7 +301,7 @@ export function isUrgentDeadline(program: funding_programs): boolean {
 export function isNewProgram(program: funding_programs): boolean {
   const now = new Date();
   const daysSinceCreation = Math.floor(
-    (now.getTime() - program.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+    (now.getTime() - new Date(program.createdAt).getTime()) / (1000 * 60 * 60 * 24)
   );
   return daysSinceCreation <= CONTEXTUAL_CONFIG.freshDays;
 }

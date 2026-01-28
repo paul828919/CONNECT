@@ -392,7 +392,7 @@ function formatReasonKorean(
   cf: CFBoostResult
 ): string {
   const daysUntilDeadline = program.deadline
-    ? Math.floor((program.deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    ? Math.floor((new Date(program.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null;
 
   const categoryLabel = program.category
