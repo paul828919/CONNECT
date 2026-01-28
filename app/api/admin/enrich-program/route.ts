@@ -109,7 +109,7 @@ async function handleNTISQuery(
       orderBy = [{ deadline: { sort: 'asc', nulls: 'last' } }];
   }
 
-  // Fetch programs
+  // Fetch programs with extraction tier info from scraping_jobs
   const programs = await db.funding_programs.findMany({
     where,
     select: {
@@ -123,6 +123,15 @@ async function handleNTISQuery(
       applicationStart: true,
       budgetAmount: true,
       scrapedAt: true,
+      scraping_job: {
+        select: {
+          extractionTier: true,
+          tier2TokensUsed: true,
+          tier3TokensUsed: true,
+          extractionCostKRW: true,
+          processingStatus: true,
+        },
+      },
     },
     orderBy,
     take: 100,
@@ -149,6 +158,10 @@ async function handleNTISQuery(
       scrapedAt: program.scrapedAt.toISOString(),
       daysUntilDeadline,
       source: 'NTIS',
+      // 3-Tier extraction metadata
+      extractionTier: program.scraping_job?.extractionTier || 1,
+      needsOpus: program.scraping_job?.processingStatus === 'NEEDS_OPUS',
+      extractionCostKRW: program.scraping_job?.extractionCostKRW || 0,
     };
   });
 
@@ -286,4 +299,83 @@ async function handleSME24Query(
     stats,
     source: 'SME24',
   });
+}
+
+/**
+ * POST: Flag a program for Tier 3 (Opus) extraction
+ *
+ * Body: { programId: string, action: 'NEEDS_OPUS' | 'CLEAR_OPUS' }
+ */
+export async function POST(request: NextRequest) {
+  try {
+    // Auth check
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { programId, action } = body;
+
+    if (!programId || !action) {
+      return NextResponse.json(
+        { error: 'Missing programId or action' },
+        { status: 400 }
+      );
+    }
+
+    if (action === 'NEEDS_OPUS') {
+      // Find the scraping_job linked to this program
+      const scrapingJob = await db.scraping_jobs.findFirst({
+        where: { fundingProgramId: programId },
+      });
+
+      if (!scrapingJob) {
+        return NextResponse.json(
+          { error: 'No scraping job found for this program' },
+          { status: 404 }
+        );
+      }
+
+      await db.scraping_jobs.update({
+        where: { id: scrapingJob.id },
+        data: { processingStatus: 'NEEDS_OPUS' },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Program ${programId} flagged for Tier 3 (Opus) extraction`,
+      });
+    } else if (action === 'CLEAR_OPUS') {
+      const scrapingJob = await db.scraping_jobs.findFirst({
+        where: { fundingProgramId: programId },
+      });
+
+      if (scrapingJob) {
+        await db.scraping_jobs.update({
+          where: { id: scrapingJob.id },
+          data: { processingStatus: 'COMPLETED' },
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Opus flag cleared for program ${programId}`,
+      });
+    }
+
+    return NextResponse.json(
+      { error: `Unknown action: ${action}` },
+      { status: 400 }
+    );
+  } catch (error: any) {
+    console.error('Error updating enrichment flag:', error);
+    return NextResponse.json(
+      { error: 'Failed to update program', details: error.message },
+      { status: 500 }
+    );
+  }
 }
