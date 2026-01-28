@@ -63,6 +63,22 @@ const SCORING_VERSION = process.env.MATCHING_SCORING_VERSION || 'v4.3';
 console.log(`[matching] Initialized with SCORING_VERSION=${SCORING_VERSION}`);
 
 /**
+ * Configurable scoring weights by version.
+ *
+ * v4.2 (legacy): Balanced weights, keyword = 25pts
+ * v4.3 (current): Keyword-heavy weights, keyword = 40pts
+ *
+ * Total: 100 points across all dimensions.
+ * Keyword rebalance rationale: Keyword classification is now the most accurate
+ * signal (uses title keywords + ministry), so it should dominate scoring.
+ */
+const SCORING_WEIGHTS: Record<string, { keyword: number; industry: number; trl: number; type: number; rd: number; deadline: number }> = {
+  'v4.2': { keyword: 25, industry: 20, trl: 15, type: 15, rd: 10, deadline: 15 },
+  'v4.3': { keyword: 40, industry: 15, trl: 15, type: 10, rd: 5, deadline: 15 },
+};
+const weights = SCORING_WEIGHTS[SCORING_VERSION] || SCORING_WEIGHTS['v4.3'];
+
+/**
  * Korean stopwords/particles to exclude from program title keyword overlap checks.
  * These are grammatical words with no domain-relevance signal — e.g. "및" ("and")
  * would false-positive match any org keyword containing it via `.includes()`.
@@ -723,7 +739,13 @@ export function generateMatches(
 
 /**
  * Calculate match score between organization and program
- * Updated in v4.0 to use keyword-based classification instead of LLM semantic enrichment
+ *
+ * v4.0: Replaced LLM semantic enrichment with keyword-based classification
+ * v4.3: Rebalanced weights with configurable SCORING_VERSION feature flag
+ *
+ * @param organization - Organization to score
+ * @param program - Funding program to score against
+ * @param precomputedClassification - Optional pre-computed classification (for performance)
  */
 export function calculateMatchScore(
   organization: Organization,
@@ -749,34 +771,34 @@ export function calculateMatchScore(
 
   const reasons: string[] = [];
 
-  // 1. Keyword-Based Industry Match (25 points) - NEW in v4.0
-  // Uses precomputed classification or computes fresh if not provided
+  // 1. Sector Relevance Score (v4.3: 40 points, v4.2: 25 points)
+  // Uses keyword classification to determine sector-to-sector relevance
   const classification = precomputedClassification || classifyProgram(
     program.title,
     null,  // programName not in schema
     program.ministry || null
   );
-  const keywordScore = scoreKeywordIndustryMatch(organization, classification, reasons);
+  const keywordScore = scoreSectorRelevance(organization, classification, reasons, weights.keyword);
 
-  // 2. Industry/Keyword alignment (20 points)
+  // 2. Industry/Keyword alignment (v4.3: 15 points, v4.2: 20 points)
   const industryResult = scoreIndustryKeywordsEnhanced(organization, program);
-  const industryScore = Math.min(20, Math.round(industryResult.score * (20 / 30)));
+  const industryScore = Math.min(weights.industry, Math.round(industryResult.score * (weights.industry / 30)));
   reasons.push(...industryResult.reasons);
 
-  // 3. TRL compatibility (15 points)
+  // 3. TRL compatibility (15 points - unchanged)
   const trlResult = scoreTRLEnhanced(organization, program);
-  const trlScore = Math.min(15, Math.round(trlResult.score * (15 / 20)));
+  const trlScore = Math.min(weights.trl, Math.round(trlResult.score * (weights.trl / 20)));
   reasons.push(trlResult.reason);
 
-  // 4. Organization type match (15 points)
+  // 4. Organization type match (v4.3: 10 points, v4.2: 15 points)
   const rawTypeScore = scoreOrganizationType(organization, program, reasons);
-  const typeScore = Math.min(15, Math.round(rawTypeScore * (15 / 20)));
+  const typeScore = Math.min(weights.type, Math.round(rawTypeScore * (weights.type / 20)));
 
-  // 5. R&D experience (10 points)
+  // 5. R&D experience (v4.3: 5 points, v4.2: 10 points)
   const rawRdScore = scoreRDExperience(organization, program, reasons);
-  const rdScore = Math.min(10, Math.round(rawRdScore * (10 / 15)));
+  const rdScore = Math.min(weights.rd, Math.round(rawRdScore * (weights.rd / 15)));
 
-  // 6. Deadline proximity (15 points)
+  // 6. Deadline proximity (15 points - unchanged)
   const deadlineScore = scoreDeadline(program, reasons);
 
   const totalScore = keywordScore + industryScore + trlScore + typeScore + rdScore + deadlineScore;
@@ -798,30 +820,45 @@ export function calculateMatchScore(
 }
 
 /**
- * Score keyword-based industry alignment (0-25 points)
- * Replaces LLM semantic sub-domain scoring with deterministic keyword classification
+ * Score sector-to-sector relevance using keyword classification
+ *
+ * This function calculates the relevance between the organization's industry
+ * sector and the program's classified industry (determined via keyword analysis).
+ *
+ * NOTE: This is NOT keyword TF-IDF scoring. The name "sector relevance" reflects
+ * that we're measuring how related two industry sectors are (e.g., ICT ↔ BIO_HEALTH).
+ * The keyword classification happens earlier (classifyProgram), and this function
+ * simply looks up the relevance score between two sectors.
+ *
+ * @param org - Organization with industrySector or primaryBusinessDomain
+ * @param classification - Pre-computed program classification result
+ * @param reasons - Array to append scoring reason codes
+ * @param maxPoints - Maximum points for this dimension (v4.3: 40, v4.2: 25)
+ * @returns Score from 0 to maxPoints
  */
-function scoreKeywordIndustryMatch(
+function scoreSectorRelevance(
   org: Organization,
   classification: ClassificationResult,
-  reasons: string[]
+  reasons: string[],
+  maxPoints: number
 ): number {
   const orgIndustry = org.industrySector || org.primaryBusinessDomain;
 
   if (!orgIndustry) {
-    // No industry data for organization - give moderate score
+    // No industry data for organization - give moderate score (40% of max)
     reasons.push('KEYWORD_NO_ORG_INDUSTRY');
-    return 10;
+    return Math.round(maxPoints * 0.4);
   }
 
   // Get relevance between org industry and program's classified industry
   const relevance = getIndustryRelevance(orgIndustry, classification.industry);
 
-  // Perfect match (relevance 1.0) = 25 points
-  // High relevance (0.7+) = 18-24 points
-  // Medium relevance (0.4-0.7) = 10-17 points
-  // Low relevance (<0.4) = 0-9 points
-  const score = Math.round(25 * relevance);
+  // Scale score by maxPoints (40 in v4.3, 25 in v4.2)
+  // Perfect match (relevance 1.0) = maxPoints
+  // High relevance (0.7+) = 70-99% of maxPoints
+  // Medium relevance (0.4-0.7) = 40-69% of maxPoints
+  // Low relevance (<0.4) = 0-39% of maxPoints
+  const score = Math.round(maxPoints * relevance);
 
   if (relevance >= 0.9) {
     reasons.push('KEYWORD_INDUSTRY_MATCH');
