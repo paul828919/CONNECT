@@ -373,6 +373,15 @@ export default function EditOrganizationProfilePage() {
     showOnPartnerProfile: false,
   });
 
+  // v4.3: Domain exclusion suggestions from user feedback
+  const [domainSuggestions, setDomainSuggestions] = useState<{
+    domain: string;
+    label: string;
+    reason: 'HIDE_DISMISS' | 'NOT_ELIGIBLE';
+    programCount: number;
+  }[]>([]);
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
+
   // Check if redirected from partner search page with preferences flag
   useEffect(() => {
     if (searchParams.get('preferences') === 'true') {
@@ -566,6 +575,18 @@ export default function EditOrganizationProfilePage() {
         } catch (userProfileErr) {
           console.error('Error fetching user profile:', userProfileErr);
           // Non-critical error, continue without user profile data
+        }
+
+        // v4.3: Fetch domain exclusion suggestions based on user feedback
+        try {
+          const suggestionsRes = await fetch(`/api/organizations/${data.organization.id}/excluded-domain-suggestions`);
+          if (suggestionsRes.ok) {
+            const suggestionsData = await suggestionsRes.json();
+            setDomainSuggestions(suggestionsData.suggestions || []);
+          }
+        } catch (suggestionsErr) {
+          console.error('Error fetching domain suggestions:', suggestionsErr);
+          // Non-critical error, continue without suggestions
         }
 
         setIsLoading(false);
@@ -1025,6 +1046,65 @@ export default function EditOrganizationProfilePage() {
                 </p>
               )}
             </div>
+
+            {/* v4.3: Domain Exclusion Suggestions Banner */}
+            {domainSuggestions.filter(s => !dismissedSuggestions.has(s.domain)).length > 0 && (
+              <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-4">
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">💡</span>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-gray-900">추천 제외 분야</h4>
+                    <p className="text-xs text-gray-600 mb-3">
+                      최근 숨김 또는 부적격 처리한 과제를 분석하여 제외 분야를 추천합니다.
+                    </p>
+                    <div className="space-y-2">
+                      {domainSuggestions
+                        .filter(s => !dismissedSuggestions.has(s.domain))
+                        .map((suggestion) => (
+                          <div
+                            key={suggestion.domain}
+                            className="flex items-center justify-between rounded-md bg-white p-2 shadow-sm"
+                          >
+                            <div>
+                              <span className="font-medium text-sm text-gray-900">
+                                {suggestion.label}
+                              </span>
+                              <span className="ml-2 text-xs text-gray-500">
+                                ({suggestion.reason === 'HIDE_DISMISS' ? '숨김' : '부적격'} {suggestion.programCount}건)
+                              </span>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  // Add to excluded domains
+                                  const current = watch('excludedDomains') || [];
+                                  if (!current.includes(suggestion.domain)) {
+                                    setValue('excludedDomains', [...current, suggestion.domain]);
+                                  }
+                                  setDismissedSuggestions(prev => new Set([...prev, suggestion.domain]));
+                                }}
+                                className="px-2 py-1 text-xs bg-orange-500 text-white rounded hover:bg-orange-600"
+                              >
+                                적용
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setDismissedSuggestions(prev => new Set([...prev, suggestion.domain]));
+                                }}
+                                className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                              >
+                                무시
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* v4.3: Negative Domain Exclusion - Industries to exclude from matching */}
             <div className="space-y-3 rounded-lg border border-orange-200 bg-orange-50 p-4">
