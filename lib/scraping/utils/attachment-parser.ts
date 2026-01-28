@@ -38,7 +38,7 @@ const execAsync = promisify(exec);
  * @param fileName - Attachment file name (e.g., "application_guide.pdf")
  * @param fileBuffer - File contents as Buffer
  * @param sharedContext - Optional shared browser context for HWP conversion (preserves authentication)
- * @returns Extracted text (up to 5000 characters for performance)
+ * @returns Extracted text (up to 50000 characters for full document coverage)
  */
 export async function extractTextFromAttachment(
   fileName: string,
@@ -294,8 +294,9 @@ async function extractTextFromHWPViaHwp5(
 
     console.log(`[ATTACHMENT-PARSER] ✓ pyhwp extraction succeeded: ${text.length} chars`);
 
-    // Return first 5000 characters for performance (matches other formats)
-    return text.substring(0, 5000);
+    // Return first 50000 characters (matches PDF/HWPX limits)
+    // Budget data often appears deep in HWP documents
+    return text.substring(0, 50000);
   } catch (error: any) {
     console.error(`[ATTACHMENT-PARSER] pyhwp extraction failed for ${fileName}:`, error.message);
     return null;
@@ -367,7 +368,7 @@ async function extractTextFromHWP(
       console.log(
         `[ATTACHMENT-PARSER] ✓ Hancom Tesseract fallback succeeded: ${hancomText.length} chars`
       );
-      return hancomText.substring(0, 5000);
+      return hancomText.substring(0, 50000);
     }
 
     console.error(`[ATTACHMENT-PARSER] Both pyhwp and Hancom failed for ${fileName}`);
