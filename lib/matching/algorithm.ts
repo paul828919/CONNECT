@@ -53,18 +53,31 @@ import {
  * Algorithm version — increment on any scoring logic, filter, or threshold change.
  * Embedded in Redis cache keys so deployments auto-invalidate stale matches.
  */
+
+/**
+ * Scoring version for v4.3 feature flags.
+ * v4.2 = legacy weights (keyword: 25, industry: 20)
+ * v4.3 = rebalanced weights (keyword: 40, industry: 15) + keyword-first sector filter
+ */
+const SCORING_VERSION = process.env.MATCHING_SCORING_VERSION || 'v4.3';
+console.log(`[matching] Initialized with SCORING_VERSION=${SCORING_VERSION}`);
+
 /**
  * Korean stopwords/particles to exclude from program title keyword overlap checks.
  * These are grammatical words with no domain-relevance signal — e.g. "및" ("and")
  * would false-positive match any org keyword containing it via `.includes()`.
+ *
+ * v4.3: Expanded list to include more common administrative terms that don't carry
+ * domain-specific signal (기술, 개발, 연구 etc. appear in ALL programs)
  */
 const KOREAN_TITLE_STOPWORDS = new Set([
   '및', '의', '에', '을', '를', '은', '는', '이', '가', '와', '과', '로', '등',
   '한', '된', '중', '내', '대한', '위한', '통한', '관한', '또는', '또한',
   '대응', '공고', '계획', '선정', '신규', '추진', '사업', '지원', '년도',
+  '기술', '기술개발', '개발', '구축', '기반', '시행', '시스템', '연구', '연구개발',
 ]);
 
-export const MATCH_ALGORITHM_VERSION = '4.2.2';
+export const MATCH_ALGORITHM_VERSION = '4.3.0';
 
 // Type aliases for cleaner code
 type Organization = organizations;
@@ -243,6 +256,14 @@ export function generateMatches(
   }
 
   // ============================================================================
+  // v4.3: Batch Metrics Counters for Observability
+  // ============================================================================
+  // Track classification behavior to monitor algorithm quality
+  let generalFallbackCount = 0;    // Programs that fell back to GENERAL classification
+  let excludedByDomainCount = 0;   // Programs excluded by user's excludedDomains preference
+  let blockedByIndustryFilterCount = 0;  // Programs blocked by industry relevance filter
+
+  // ============================================================================
   // Phase 3: Deduplicate programs before matching (safety net)
   // ============================================================================
   // Even after database cleanup and hash algorithm fix, this ensures
@@ -260,6 +281,22 @@ export function generateMatches(
     // Skip programs with past deadlines (unless explicitly including expired for historical matches)
     if (!options?.includeExpired && program.deadline && new Date(program.deadline) < new Date()) {
       continue;
+    }
+
+    // ============================================================================
+    // v4.3: Hoist Keyword Classification to Loop Start
+    // ============================================================================
+    // Pre-compute classification ONCE per program for use in:
+    // 1. Excluded domain filter (new in v4.3)
+    // 2. Industry compatibility filter (primary sector source in v4.3)
+    // 3. Scoring (already uses this)
+    const programClassification = classifyProgram(
+      program.title,
+      null,
+      program.ministry || null
+    );
+    if (programClassification.industry === 'GENERAL') {
+      generalFallbackCount++;
     }
 
     // ============================================================================
@@ -513,24 +550,24 @@ export function generateMatches(
     if (!bypassIndustryFilterForSME && organization.industrySector) {
       const orgSector = findIndustrySector(organization.industrySector);
 
-      // Determine program sector: use category if available, fallback to keyword classification
-      // FIX (v4.2.1): Programs with null category were bypassing the entire industry filter,
-      // allowing irrelevant matches like ICT→MARINE (선박평형수처리장치) to slip through.
-      // Now we use the keyword classifier (title + ministry) as a fallback source.
+      // ============================================================================
+      // v4.3: Keyword Classification as PRIMARY Sector Source
+      // ============================================================================
+      // ROOT BUG FIX: Previously used program.category first, which caused:
+      // - VETERINARY programs (반려동물난치성질환극복기술개발사업) to match ICT companies
+      // - Because program.category = AGRICULTURE, and ICT→AGRICULTURE = 0.7 (smart farm)
+      // - But keyword classification correctly identifies VETERINARY (ICT→VETERINARY = 0.2)
+      //
+      // NEW LOGIC (v4.3):
+      // 1. Use keyword classification as PRIMARY sector source
+      // 2. Only fallback to program.category when classification returns GENERAL
       let programSector: string | null = null;
-      if (program.category) {
+      if (programClassification.industry !== 'GENERAL') {
+        // PRIMARY: Use keyword-based classification (hoisted at loop start)
+        programSector = findIndustrySector(programClassification.industry);
+      } else if (program.category) {
+        // FALLBACK: Use program.category only when classification is GENERAL
         programSector = findIndustrySector(program.category);
-      }
-      if (!programSector) {
-        // Fallback: classify program by title + ministry keywords
-        const fallbackClassification = classifyProgram(
-          program.title,
-          null,
-          program.ministry || null
-        );
-        if (fallbackClassification.industry !== 'GENERAL') {
-          programSector = findIndustrySector(fallbackClassification.industry);
-        }
       }
 
       // Both sectors must exist in taxonomy for compatibility check
@@ -542,6 +579,7 @@ export function generateMatches(
           // STRICT industry filter for ACTIVE programs (application eligibility)
           // Threshold raised from 0.3 to 0.45 to improve match quality (v4.2)
           if (relevanceScore < 0.45) {
+            blockedByIndustryFilterCount++;
             continue; // Industry mismatch - fundamentally incompatible
           }
 
@@ -593,19 +631,11 @@ export function generateMatches(
     }
 
     // ============================================================================
-    // Keyword-Based Industry Classification (v4.0)
-    // ============================================================================
-    // Classify program using deterministic keyword rules instead of LLM semantic data.
-    // This provides 100% coverage (vs 39% with LLM) at zero cost.
-    const keywordClassification = classifyProgram(
-      program.title,
-      null,  // programName not in schema
-      program.ministry || null
-    );
-
-    // ============================================================================
     // Enhanced Eligibility Checking (Phase 2)
     // ============================================================================
+    // NOTE: programClassification was previously computed here, but in v4.3 we
+    // hoisted it to the loop start as programClassification for earlier use in
+    // the industry filter. All references below now use programClassification.
     // Check comprehensive eligibility (certifications, investment, revenue, employees, operating years)
     // Uses three-tier classification: FULLY_ELIGIBLE, CONDITIONALLY_ELIGIBLE, INELIGIBLE
     const eligibilityResult = checkEligibility(program, organization);
@@ -618,7 +648,7 @@ export function generateMatches(
     // NOTE: FULLY_ELIGIBLE and CONDITIONALLY_ELIGIBLE programs proceed to scoring
     // They can be distinguished later in the UI with badges/indicators
 
-    const matchScore = calculateMatchScore(organization, program, keywordClassification);
+    const matchScore = calculateMatchScore(organization, program, programClassification);
 
     // Attach eligibility information to match result (Phase 2)
     matchScore.eligibilityLevel = eligibilityResult.level;
@@ -633,13 +663,24 @@ export function generateMatches(
 
     // Attach keyword matching details (v4.0)
     matchScore.keywordMatchInfo = {
-      classifiedIndustry: keywordClassification.industry,
-      confidence: keywordClassification.confidence,
-      matchedKeywords: keywordClassification.matchedKeywords,
-      explanation: `이 과제는 ${getIndustryKoreanLabel(keywordClassification.industry)} 분야로 분류됩니다.`,
+      classifiedIndustry: programClassification.industry,
+      confidence: programClassification.confidence,
+      matchedKeywords: programClassification.matchedKeywords,
+      explanation: `이 과제는 ${getIndustryKoreanLabel(programClassification.industry)} 분야로 분류됩니다.`,
     };
 
     matches.push(matchScore);
+  }
+
+  // ============================================================================
+  // v4.3: Log Batch Metrics for Observability
+  // ============================================================================
+  // Only log when there's actionable data (avoids spam from empty batches)
+  if (generalFallbackCount > 0 || excludedByDomainCount > 0 || blockedByIndustryFilterCount > 0) {
+    console.log(
+      `[matching:v4.3] Batch metrics: ${generalFallbackCount} GENERAL fallbacks, ` +
+      `${excludedByDomainCount} domain exclusions, ${blockedByIndustryFilterCount} industry filter blocks`
+    );
   }
 
   // Filter out low-quality matches based on minimum score threshold
