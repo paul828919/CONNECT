@@ -126,6 +126,20 @@ export class ExtractionLogger {
         'ELIGIBILITY',
         'DESCRIPTION',
         'KEYWORDS',
+        'INVESTMENT_REQUIREMENT',
+        // 3-Tier Pipeline additions
+        'DEADLINE_TIME_RULE',
+        'SUBMISSION_SYSTEM',
+        'CONTACT_INFO',
+        'BUDGET_PER_PROJECT',
+        'FUNDING_RATE',
+        'FUNDING_PERIOD',
+        'NUM_AWARDS',
+        'LEAD_ROLE_ALLOWED',
+        'CO_ROLE_ALLOWED',
+        'EXCLUSION_RULES',
+        'PRIMARY_TARGET_INDUSTRY',
+        'SEMANTIC_SUB_DOMAIN',
       ]);
 
       // Filter out invalid enum values to prevent Prisma validation errors

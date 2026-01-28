@@ -322,7 +322,7 @@ export class Tier2HaikuExtractor {
     try {
       await db.ai_cost_logs.create({
         data: {
-          serviceType: 'MATCH_EXPLANATION', // Reuse existing enum (closest match)
+          serviceType: 'EXTRACTION',
           endpoint: 'tier2-haiku-extraction',
           model: HAIKU_MODEL,
           inputTokens: Math.round(totalTokens * 0.7), // Approximate split

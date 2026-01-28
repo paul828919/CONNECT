@@ -595,9 +595,15 @@ model scraping_jobs {
   fundingProgramId     String?            @unique
   fundingProgram       funding_programs?  @relation(fields: [fundingProgramId], references: [id])
   contentHash          String             @unique
+  // 3-Tier Pipeline tracking
+  extractionTier       Int?               @db.SmallInt // 1, 2, or 3 (highest tier used)
+  tier2TokensUsed      Int?               // Haiku tokens consumed
+  tier3TokensUsed      Int?               // Opus tokens consumed
+  extractionCostKRW    Float?             // Total extraction cost in KRW
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
   extraction_logs      extraction_logs[]
+  tier3_feedback       tier3_feedback[]
 
   @@index([scrapingStatus, processingStatus])
   @@index([dateRange])
@@ -859,6 +865,7 @@ enum AIFeedbackRating {
 enum AIServiceType {
   MATCH_EXPLANATION
   QA_CHAT
+  EXTRACTION
 }
 
 enum AgencyId {
@@ -1054,6 +1061,7 @@ enum ProcessingStatus {
   COMPLETED
   FAILED
   SKIPPED
+  NEEDS_OPUS
 }
 
 model extraction_logs {
@@ -1074,6 +1082,35 @@ model extraction_logs {
   @@index([field])
   @@index([dataSource])
   @@index([createdAt])
+}
+
+// ============================================================================
+// Tier 3 Feedback (3-Tier Pipeline Improvement Loop)
+// ============================================================================
+// Stores Opus extraction results with pattern suggestions for improving
+// Tier 1 regex patterns. Reviewed periodically to promote patterns.
+// ============================================================================
+model tier3_feedback {
+  id                String        @id @default(uuid())
+  scrapingJobId     String
+  scrapingJob       scraping_jobs @relation(fields: [scrapingJobId], references: [id], onDelete: Cascade)
+  field             String        // Field name (e.g., "budgetAmount", "deadline")
+  tier1Value        String?       // What Tier 1 extracted (may be null)
+  tier2Value        String?       // What Tier 2 extracted (may be null)
+  tier3Value        String?       // What Tier 3 (Opus) extracted
+  originalContext   String?       @db.Text // Surrounding text where value was found
+  opusReasoning     String?       @db.Text // Why existing patterns failed
+  patternSuggestion String?       // Suggested regex pattern for Tier 1
+  incorporated      Boolean       @default(false) // Has suggestion been added to tier1-patterns.ts?
+  incorporatedAt    DateTime?
+  incorporatedBy    String?
+  createdAt         DateTime      @default(now())
+
+  @@index([scrapingJobId])
+  @@index([field])
+  @@index([incorporated])
+  @@index([createdAt])
+  @@map("tier3_feedback")
 }
 
 model eligibility_verification {
@@ -1122,11 +1159,26 @@ enum ExtractionField {
   DESCRIPTION
   KEYWORDS
   INVESTMENT_REQUIREMENT
+  // 3-Tier Pipeline additions
+  DEADLINE_TIME_RULE
+  SUBMISSION_SYSTEM
+  CONTACT_INFO
+  BUDGET_PER_PROJECT
+  FUNDING_RATE
+  FUNDING_PERIOD
+  NUM_AWARDS
+  LEAD_ROLE_ALLOWED
+  CO_ROLE_ALLOWED
+  EXCLUSION_RULES
+  PRIMARY_TARGET_INDUSTRY
+  SEMANTIC_SUB_DOMAIN
 }
 
 enum DataSource {
   ANNOUNCEMENT_FILE
   DETAIL_PAGE
+  HAIKU_TIER2
+  OPUS_TIER3
   FAILED
 }
 
