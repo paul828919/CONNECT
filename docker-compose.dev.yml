@@ -156,6 +156,12 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5-20250929}
 
+      # 3-Tier Extraction Pipeline
+      ENABLE_TIER2_EXTRACTION: ${ENABLE_TIER2_EXTRACTION:-false}
+      ENABLE_TIER3_EXTRACTION: ${ENABLE_TIER3_EXTRACTION:-false}
+      MAX_TIER2_COST_PER_JOB: ${MAX_TIER2_COST_PER_JOB:-50}
+      MAX_TIER3_COST_PER_JOB: ${MAX_TIER3_COST_PER_JOB:-300}
+
       # Hancom Docs (HWP to PDF Converter)
       HANCOM_DOCS_URL: ${HANCOM_DOCS_URL:-https://www.hancomdocs.com/ko/}
       HANCOM_DOCS_ID: ${HANCOM_DOCS_ID}
@@ -185,6 +191,8 @@ services:
       - ./logs/scraper:/app/logs
       - ./data/scraper:/app/data
       - ./scripts:/app/scripts  # Mount scripts for ad-hoc runs
+      - ./lib:/app/lib          # Mount lib for latest extraction code
+      - ./prisma:/app/prisma    # Mount prisma for latest schema
     depends_on:
       postgres:
         condition: service_healthy
