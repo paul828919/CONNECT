@@ -74,8 +74,11 @@ import * as os from 'os';
 import type { Browser, BrowserContext } from 'playwright';
 import { createAuthenticatedHancomBrowser } from '../lib/scraping/utils/hancom-docs-tesseract-converter';
 
-// Import two-tier extraction system
+// Import two-tier extraction system (legacy, still used for core fields)
 import { TwoTierExtractor } from '../lib/scraping/two-tier-extractor';
+
+// Import three-tier extraction system (new: adds LLM tiers for supplementary fields)
+import { ThreeTierExtractor, getConfigFromEnv as getThreeTierConfig } from '../lib/scraping/three-tier-extractor';
 
 // Import eligibility extraction with database integration
 import { extractAndSaveEligibility } from '../lib/scraping/eligibility-extractor';
@@ -1022,6 +1025,37 @@ async function processJob(
     await extractionLogger.flush();
     extractionLogger.printSummary();
 
+    // STEP 12.5: Run 3-Tier extraction for supplementary fields (if enabled)
+    let extractionTier = 1;
+    let tier2TokensUsed = 0;
+    let tier3TokensUsed = 0;
+    let extractionCostKRW = 0;
+
+    const threeTierConfig = getThreeTierConfig();
+    if (threeTierConfig.enableTier2 || threeTierConfig.enableTier3) {
+      try {
+        console.log('   🔬 Running 3-Tier extraction for supplementary fields...');
+        const threeTierExtractor = new ThreeTierExtractor(
+          job.id,
+          detailData,
+          { filenames: job.attachmentFilenames, announcementFiles, otherFiles },
+          extractionLogger,
+          threeTierConfig
+        );
+
+        const threeTierResult = await threeTierExtractor.extract();
+        extractionTier = threeTierResult.highestTierUsed;
+        tier2TokensUsed = threeTierResult.tier2TokensUsed;
+        tier3TokensUsed = threeTierResult.tier3TokensUsed;
+        extractionCostKRW = threeTierResult.estimatedCostKRW;
+
+        console.log(`   ✅ 3-Tier extraction complete: tier ${extractionTier}, ${threeTierResult.fields.size} fields, ${extractionCostKRW} KRW`);
+      } catch (threeTierError: any) {
+        console.warn(`   ⚠️  3-Tier extraction failed (non-fatal): ${threeTierError.message}`);
+        // Non-fatal: Continue processing with Tier 1 results only
+      }
+    }
+
     // STEP 13: Determine status (ACTIVE vs EXPIRED)
     const status = deadline && deadline < new Date() ? 'EXPIRED' : 'ACTIVE';
 
@@ -1159,6 +1193,11 @@ async function processJob(
           processedAt: new Date(),
           processingWorker: null,
           processingError: null,
+          // 3-Tier extraction tracking
+          extractionTier,
+          tier2TokensUsed: tier2TokensUsed || null,
+          tier3TokensUsed: tier3TokensUsed || null,
+          extractionCostKRW: extractionCostKRW || null,
         },
       });
     }
