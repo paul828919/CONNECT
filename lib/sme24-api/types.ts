@@ -211,14 +211,16 @@ export interface OrganizationCertificationResult {
 
 /**
  * Search parameters for announcement API
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 1
  *
- * Note: Only token, strDt, and endDt are officially supported (per PDF guide page 2).
+ * Note: Only token, strDt, endDt, and html are officially supported.
  * - pageNo/numOfRows are NOT supported - API returns all matching records
  * - bizTypeCd/sportTypeCd/areaCd are NOT documented as supported params
  */
 export interface SME24SearchParams {
   strDt?: string;                 // 검색시작일 (YYYYMMDD) - optional
   endDt?: string;                 // 검색종료일 (YYYYMMDD) - optional
+  html?: 'yes' | 'no';            // HTML 여부 - 'yes'=HTML태그포함(기본값), 'no'=텍스트만
   // Legacy fields kept for backward compatibility but not sent to API
   pageNo?: number;                // DEPRECATED: Not supported by API
   numOfRows?: number;             // DEPRECATED: Not supported by API
@@ -244,13 +246,15 @@ export interface SME24ApiResponse<T> {
 // ============================================================================
 
 /**
- * Company scale codes from SME24 API
+ * Company scale codes from SME24 API (기업분류기준코드)
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 5
  */
 export const COMPANY_SCALE_CODES = {
   CC10: '중소기업',
   CC30: '소상공인',
-  CC50: '중견기업',
+  CC50: '1인기업',      // Fixed: was incorrectly '중견기업'
   CC60: '창업기업',
+  CC70: '예비창업자',   // Added: was missing
   CC80: '기타',
 } as const;
 
@@ -280,53 +284,181 @@ export const EMPLOYEE_COUNT_CODES = {
 } as const;
 
 /**
- * Business age codes from SME24 API
+ * Business age codes from SME24 API (업력구간코드)
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 6
  */
 export const BUSINESS_AGE_CODES = {
   OI01: '3년미만',
-  OI02: '3~5년',
-  OI03: '5~7년',
-  OI04: '7~10년',
-  OI05: '10~15년',
-  OI06: '15년이상',
+  OI02: '3년이상~5년미만',
+  OI03: '5년이상~7년미만',
+  OI04: '7년이상~10년미만',
+  OI05: '10년이상~20년미만',  // Fixed: was '10~15년'
+  OI06: '20년이상',           // Fixed: was '15년이상'
 } as const;
 
 /**
- * Certification codes from SME24 API
+ * Certification codes from SME24 API (기업인증/확인유형코드)
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 5-6
  */
 export const CERTIFICATION_CODES = {
-  EC06: '이노비즈',
-  EC07: '메인비즈',
+  EC01: '수출유망중소기업',
+  EC02: '여성기업',
+  EC03: '장애인기업',
+  EC04: '중소기업',
+  EC05: '소상공인',
+  EC06: '기술혁신형중소기업',  // 이노비즈
+  EC07: '경영혁신형중소기업',  // 메인비즈
   EC08: '벤처기업',
-  EC01: '여성기업',
-  EC02: '장애인기업',
-  EC03: '사회적기업',
-  EC04: '녹색인증기업',
-  EC05: '기업부설연구소',
-  EC09: '가족친화기업',
-  EC10: '고용우수기업',
+  EC09: '우수그린비즈',
+  EC10: '사회적기업',
+  EC11: '연구소보유',
+  EC12: '지식재산경영인증 기업',
+  EC13: '부품소재기업',
+  EC14: '뿌리기술기업',
+  EC15: '에너지기술기업',
+  EC16: '기술전문기업',
+  EC17: '직접생산확인기업',
 } as const;
 
 /**
- * Region codes from SME24 API
+ * Region codes from SME24 API (지역코드)
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 7-8
+ *
+ * NOTE: API returns 10-digit codes (행정표준코드), PDF shows 4-digit codes.
+ * We support both formats for compatibility.
  */
 export const REGION_CODES = {
+  // 4-digit codes (per PDF documentation)
   '1000': '전국',
-  '1100': '서울',
-  '2100': '부산',
-  '2200': '대구',
-  '2300': '인천',
-  '2400': '광주',
-  '2500': '대전',
-  '2600': '울산',
-  '2900': '세종',
-  '3100': '경기',
-  '3200': '강원',
-  '3300': '충북',
-  '3400': '충남',
-  '3500': '전북',
-  '3600': '전남',
-  '3700': '경북',
-  '3800': '경남',
-  '3900': '제주',
+  '1100': '서울특별시',
+  '2600': '부산광역시',
+  '2700': '대구광역시',
+  '2800': '인천광역시',
+  '2900': '광주광역시',
+  '3000': '대전광역시',
+  '3100': '울산광역시',
+  '3611': '세종특별자치시',
+  '4100': '경기도',
+  '4200': '강원도',
+  '4300': '충청북도',
+  '4400': '충청남도',
+  '4500': '전라북도',
+  '4600': '전라남도',
+  '4700': '경상북도',
+  '4800': '경상남도',
+  '5000': '제주특별자치도',
+  // 10-digit codes (actual API response format - 행정표준코드)
+  '1000000000': '전국',
+  '1100000000': '서울특별시',
+  '2600000000': '부산광역시',
+  '2700000000': '대구광역시',
+  '2800000000': '인천광역시',
+  '2900000000': '광주광역시',
+  '3000000000': '대전광역시',
+  '3100000000': '울산광역시',
+  '3611000000': '세종특별자치시',
+  '4100000000': '경기도',
+  '4200000000': '강원도',
+  '4300000000': '충청북도',
+  '4400000000': '충청남도',
+  '4500000000': '전라북도',
+  '4600000000': '전라남도',
+  '4700000000': '경상북도',
+  '4800000000': '경상남도',
+  '5000000000': '제주특별자치도',
+} as const;
+
+/**
+ * Life cycle division codes from SME24 API (생애주기구분코드)
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 6
+ */
+export const LIFE_CYCLE_CODES = {
+  LC01: '창업',
+  LC02: '성장',
+  LC03: '폐업·재기',
+} as const;
+
+/**
+ * Business type codes from SME24 API (사업유형코드)
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 6
+ */
+export const BUSINESS_TYPE_CODES = {
+  PC10: '금융',
+  PC11: '벤처',
+  PC12: '기타지원',    // Added: found in live API data
+  PC20: '기술',
+  PC30: '인력',
+  PC40: '수출',
+  PC50: '내수',
+  PC60: '창업',
+  PC70: '경영',
+  PC80: '소상공인',
+  PC90: '지원',
+  PC99: '기타',        // Added: found in live API data
+} as const;
+
+/**
+ * Support type codes from SME24 API (지원유형코드)
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 6-7
+ */
+export const SUPPORT_TYPE_CODES = {
+  RT01: '창업',
+  RT02: '기술개발',
+  RT03: '정책자금',
+  RT04: '기술보증',
+  RT05: '스마트공장',
+  RT06: '소상공인',
+  RT07: '인력지원',
+  RT08: '수출지원',
+  RT09: '기업지원',
+  RT10: '정보',
+} as const;
+
+/**
+ * Support institution codes from SME24 API (지원기관코드)
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 7
+ */
+export const SUPPORT_INSTITUTION_CODES = {
+  SP01: '중소벤처기업진흥공단',
+  SP02: '중소기업기술정보진흥원',
+  SP03: '중소기업유통센터',
+  SP04: '창업진흥원',
+  SP05: '소상공인시장진흥공단',
+  SP06: '기술보증기금',
+  SP10: '대·중소기업·농어업협력재단',
+  SP12: '여성기업종합지원센터',
+  SP13: '(재)장애인기업종합지원센터',
+  SP14: '한국산업기술진흥원',
+  SP15: '지역신용보증재단',
+  SP16: '중소벤처기업부',
+  SP17: '중소기업중앙회',
+  SP18: '중소기업융합중앙회',
+  SP19: '한국창업보육협회',
+  SP20: '이노비즈협회',
+  SP21: '한국경영혁신중소기업협회',
+  SP22: '대한무역투자진흥공사',
+  SP99: '기타',
+} as const;
+
+/**
+ * Contact institution codes from SME24 API (연계기관코드)
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 8
+ */
+export const CONTACT_INSTITUTION_CODES = {
+  BI01: 'SMTECH',
+  BI02: 'K-STARTUP',
+  BI03: '스마트공장',
+  BI04: '소상공인 마당',
+  BI05: '중소기업 벤처진흥공단(정책자금)',
+  BI06: '기술보증기금',
+  BI07: '판판대로',
+  BI08: '기술보호울타리',
+  BI09: '중소기업인력지원사업종합관리시스템',
+  BI10: '중소기업해외전시포탈',
+  BI11: '협업정보시스템',
+  BI12: '중소기업수출지원센터',
+  BI13: 'IRIS',
+  BI14: '소셜벤처스퀘어',
+  BI15: '무역24',
+  BI90: '중소기업 벤처진흥공단(기타)',
 } as const;

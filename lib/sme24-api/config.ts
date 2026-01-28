@@ -78,13 +78,17 @@ export const rateLimitConfig = {
 
 /**
  * SME24 API Response codes
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 5
  */
 export const API_RESPONSE_CODES = {
-  SUCCESS: '00',
-  NO_DATA: '01',
-  INVALID_KEY: '10',
-  INVALID_PARAMS: '20',
-  SERVER_ERROR: '99',
+  SUCCESS: '0',           // Fixed: was '00', correct is '0'
+  INVALID_KEY_NOT_ALLOWED: '9',   // 인증키 오류. 허용되지 않은 인증키입니다.
+  INVALID_KEY_WRONG_API: '10',    // 인증키 오류. 해당 API의 인증키가 아닙니다.
+  INVALID_START_DATE: '11',       // 시작일자 길이 오류
+  INVALID_END_DATE: '12',         // 종료일자 길이 오류
+  INVALID_DATE_RANGE: '13',       // 검색 기간 오류
+  IP_NOT_ALLOWED: '14',           // 허용되지 않은 IP 접근입니다.
+  SERVER_ERROR: '99',             // 기타 오류 발생
 } as const;
 
 /**

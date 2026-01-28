@@ -174,16 +174,17 @@ export function calculateBusinessAge(establishedDate: Date | null): number | nul
 
 /**
  * Map business age (years) to SME24 code
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 6
  */
 export function mapBusinessAgeToCode(years: number | null): string | null {
   if (years === null) return null;
 
   if (years < 3) return 'OI01';      // 3년미만
-  if (years < 5) return 'OI02';      // 3~5년
-  if (years < 7) return 'OI03';      // 5~7년
-  if (years < 10) return 'OI04';     // 7~10년
-  if (years < 15) return 'OI05';     // 10~15년
-  return 'OI06';                      // 15년이상
+  if (years < 5) return 'OI02';      // 3년이상~5년미만
+  if (years < 7) return 'OI03';      // 5년이상~7년미만
+  if (years < 10) return 'OI04';     // 7년이상~10년미만
+  if (years < 20) return 'OI05';     // 10년이상~20년미만 (Fixed: was <15)
+  return 'OI06';                      // 20년이상 (Fixed: was 15년이상)
 }
 
 // ============================================================================
@@ -192,33 +193,72 @@ export function mapBusinessAgeToCode(years: number | null): string | null {
 
 /**
  * Certification name variations to SME24 code mapping
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 5-6
  */
 const CERT_NAME_TO_CODE: Record<string, string> = {
-  // InnoBiz
+  // EC01 - 수출유망중소기업
+  '수출유망중소기업': 'EC01',
+  '수출유망': 'EC01',
+
+  // EC02 - 여성기업
+  '여성기업': 'EC02',
+
+  // EC03 - 장애인기업
+  '장애인기업': 'EC03',
+
+  // EC04 - 중소기업
+  '중소기업': 'EC04',
+
+  // EC05 - 소상공인
+  '소상공인': 'EC05',
+
+  // EC06 - 기술혁신형중소기업 (InnoBiz)
   '이노비즈': 'EC06',
   'INNO-BIZ': 'EC06',
   'INNOBIZ': 'EC06',
   '기술혁신형중소기업': 'EC06',
 
-  // MainBiz
+  // EC07 - 경영혁신형중소기업 (MainBiz)
   '메인비즈': 'EC07',
   'MAIN-BIZ': 'EC07',
   'MAINBIZ': 'EC07',
   '경영혁신형중소기업': 'EC07',
 
-  // Venture
+  // EC08 - 벤처기업
   '벤처기업': 'EC08',
   'VENTURE': 'EC08',
   '벤처': 'EC08',
 
-  // Other certifications
-  '여성기업': 'EC01',
-  '장애인기업': 'EC02',
-  '사회적기업': 'EC03',
-  '녹색인증기업': 'EC04',
-  '기업부설연구소': 'EC05',
-  '가족친화기업': 'EC09',
-  '고용우수기업': 'EC10',
+  // EC09 - 우수그린비즈
+  '우수그린비즈': 'EC09',
+  '그린비즈': 'EC09',
+
+  // EC10 - 사회적기업
+  '사회적기업': 'EC10',
+
+  // EC11 - 연구소보유
+  '연구소보유': 'EC11',
+  '기업부설연구소': 'EC11',
+
+  // EC12 - 지식재산경영인증 기업
+  '지식재산경영인증': 'EC12',
+  '지식재산경영인증 기업': 'EC12',
+
+  // EC13 - 부품소재기업
+  '부품소재기업': 'EC13',
+
+  // EC14 - 뿌리기술기업
+  '뿌리기술기업': 'EC14',
+  '뿌리기업': 'EC14',
+
+  // EC15 - 에너지기술기업
+  '에너지기술기업': 'EC15',
+
+  // EC16 - 기술전문기업
+  '기술전문기업': 'EC16',
+
+  // EC17 - 직접생산확인기업
+  '직접생산확인기업': 'EC17',
 };
 
 /**
@@ -283,26 +323,27 @@ export function checkCertificationEligibility(
 
 /**
  * Map Connect KoreanRegion to SME24 region code
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 7-8
  */
 export function mapRegionToCode(region: KoreanRegion): string {
   const mapping: Record<KoreanRegion, string> = {
     SEOUL: '1100',
-    GYEONGGI: '3100',
-    INCHEON: '2300',
-    BUSAN: '2100',
-    DAEGU: '2200',
-    GWANGJU: '2400',
-    DAEJEON: '2500',
-    ULSAN: '2600',
-    SEJONG: '2900',
-    GANGWON: '3200',
-    CHUNGBUK: '3300',
-    CHUNGNAM: '3400',
-    JEONBUK: '3500',
-    JEONNAM: '3600',
-    GYEONGBUK: '3700',
-    GYEONGNAM: '3800',
-    JEJU: '3900',
+    GYEONGGI: '4100',    // Fixed: was 3100
+    INCHEON: '2800',     // Fixed: was 2300
+    BUSAN: '2600',       // Fixed: was 2100
+    DAEGU: '2700',       // Fixed: was 2200
+    GWANGJU: '2900',     // Fixed: was 2400
+    DAEJEON: '3000',     // Fixed: was 2500
+    ULSAN: '3100',       // Fixed: was 2600
+    SEJONG: '3611',      // Fixed: was 2900
+    GANGWON: '4200',     // Fixed: was 3200
+    CHUNGBUK: '4300',    // Fixed: was 3300
+    CHUNGNAM: '4400',    // Fixed: was 3400
+    JEONBUK: '4500',     // Fixed: was 3500
+    JEONNAM: '4600',     // Fixed: was 3600
+    GYEONGBUK: '4700',   // Fixed: was 3700
+    GYEONGNAM: '4800',   // Fixed: was 3800
+    JEJU: '5000',        // Fixed: was 3900
   };
 
   return mapping[region];
@@ -310,29 +351,43 @@ export function mapRegionToCode(region: KoreanRegion): string {
 
 /**
  * Map SME24 region code to KoreanRegion
+ * Reference: 공고정보 연계 API 가이드_V2.pdf Page 7-8
+ *
+ * NOTE: API returns 10-digit codes (행정표준코드), we handle both formats.
  */
 export function mapCodeToRegion(code: string): KoreanRegion | null {
+  // Normalize: convert 10-digit to 4-digit by taking first 4 chars
+  const normalizedCode = code.length === 10 ? code.substring(0, 4) : code;
+
   const mapping: Record<string, KoreanRegion> = {
     '1100': 'SEOUL',
-    '3100': 'GYEONGGI',
-    '2300': 'INCHEON',
-    '2100': 'BUSAN',
-    '2200': 'DAEGU',
-    '2400': 'GWANGJU',
-    '2500': 'DAEJEON',
-    '2600': 'ULSAN',
-    '2900': 'SEJONG',
-    '3200': 'GANGWON',
-    '3300': 'CHUNGBUK',
-    '3400': 'CHUNGNAM',
-    '3500': 'JEONBUK',
-    '3600': 'JEONNAM',
-    '3700': 'GYEONGBUK',
-    '3800': 'GYEONGNAM',
-    '3900': 'JEJU',
+    '4100': 'GYEONGGI',
+    '2800': 'INCHEON',
+    '2600': 'BUSAN',
+    '2700': 'DAEGU',
+    '2900': 'GWANGJU',
+    '3000': 'DAEJEON',
+    '3100': 'ULSAN',
+    '3611': 'SEJONG',
+    '4200': 'GANGWON',
+    '4300': 'CHUNGBUK',
+    '4400': 'CHUNGNAM',
+    '4500': 'JEONBUK',
+    '4600': 'JEONNAM',
+    '4700': 'GYEONGBUK',
+    '4800': 'GYEONGNAM',
+    '5000': 'JEJU',
   };
 
-  return mapping[code] || null;
+  return mapping[normalizedCode] || null;
+}
+
+/**
+ * Normalize region code to 4-digit format
+ * API returns 10-digit codes (행정표준코드), PDF documents 4-digit codes
+ */
+function normalizeRegionCode(code: string): string {
+  return code.length === 10 ? code.substring(0, 4) : code;
 }
 
 /**
@@ -342,8 +397,13 @@ export function checkRegionEligibility(
   orgRegions: KoreanRegion[],
   programRegionCodes: string[]
 ): { eligible: boolean; reason: string } {
+  // Normalize all program region codes to 4-digit format
+  const normalizedProgramCodes = programRegionCodes.map(normalizeRegionCode);
+
   // No requirement or 전국 (nationwide) - eligible
-  if (programRegionCodes.length === 0 || programRegionCodes.includes('1000')) {
+  if (normalizedProgramCodes.length === 0 ||
+      normalizedProgramCodes.includes('1000') ||
+      programRegionCodes.includes('1000000000')) {
     return { eligible: true, reason: '지역 제한 없음' };
   }
 
@@ -353,7 +413,7 @@ export function checkRegionEligibility(
   }
 
   const orgRegionCodes = orgRegions.map(mapRegionToCode);
-  const hasMatch = programRegionCodes.some(code => orgRegionCodes.includes(code));
+  const hasMatch = normalizedProgramCodes.some(code => orgRegionCodes.includes(code));
 
   return {
     eligible: hasMatch,

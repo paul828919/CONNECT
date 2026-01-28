@@ -126,12 +126,14 @@ export class SME24Client {
 
     try {
       // Build query params - only include supported parameters
+      // Reference: 공고정보 연계 API 가이드_V2.pdf Page 1
       // Note: The token may already be URL-encoded in .env, so we build the URL manually
       // to avoid double-encoding (URLSearchParams would encode % as %25)
       const queryParts: string[] = [];
       queryParts.push(`token=${sme24Config.announcementApiKey}`);
       if (params.strDt) queryParts.push(`strDt=${params.strDt}`);
       if (params.endDt) queryParts.push(`endDt=${params.endDt}`);
+      if (params.html) queryParts.push(`html=${params.html}`);
 
       const url = `${sme24Config.announcementBaseUrl}?${queryParts.join('&')}`;
       console.log(`[SME24] Fetching: ${sme24Config.announcementBaseUrl}?token=***&strDt=${params.strDt || 'N/A'}&endDt=${params.endDt || 'N/A'}`);
