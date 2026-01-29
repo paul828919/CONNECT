@@ -65,7 +65,12 @@ import {
   calculateBusinessAge,
   mapBusinessAgeToCode,
   extractRegionFromTitle,
+  extractRegionFromTitleAndDescription,
 } from '@/lib/sme24-api/mappers/code-mapper';
+import {
+  extractEligibilityFromText,
+  extractCompanyScale,
+} from '@/lib/sme24-api/mappers/eligibility-text-extractor';
 import {
   classifyProgram,
   getIndustryRelevance,
@@ -269,25 +274,25 @@ function scoreProgram(program: SMEProgram, org: Organization): SMEMatchResult {
       metCriteria.push('전국 대상 프로그램');
     }
   } else {
-    // FALLBACK: targetRegionCodes is empty, extract region from title
+    // FALLBACK: targetRegionCodes is empty, extract region from title AND description
     // This handles cases where SME24 API doesn't provide region codes
-    // but the title clearly indicates a regional program (e.g., "[대구] 2025년...")
-    const titleRegions = extractRegionFromTitle(program.title);
+    // but the text clearly indicates a regional program (e.g., "[대구] 2025년...", "부산시 소재 기업")
+    const extractedRegions = extractRegionFromTitleAndDescription(program.title, program.description);
 
-    if (titleRegions.length > 0) {
-      // Title indicates regional program - enforce hard filter
+    if (extractedRegions.length > 0) {
+      // Text extraction indicates regional program - enforce hard filter
       if (orgRegions.length === 0) {
         // User has no location set - cannot determine eligibility
         return createIneligibleResult(program, '지역 제한 프로그램 (소재지 정보 필요)');
       }
 
-      // Check if any org region matches any title region
-      const hasRegionMatch = titleRegions.some(titleRegion =>
-        orgRegions.includes(titleRegion)
+      // Check if any org region matches any extracted region
+      const hasRegionMatch = extractedRegions.some(extractedRegion =>
+        orgRegions.includes(extractedRegion)
       );
 
       if (!hasRegionMatch) {
-        const regionNames = titleRegions.map(r => {
+        const regionNames = extractedRegions.map(r => {
           const nameMap: Record<KoreanRegion, string> = {
             SEOUL: '서울', GYEONGGI: '경기', INCHEON: '인천', BUSAN: '부산',
             DAEGU: '대구', GWANGJU: '광주', DAEJEON: '대전', ULSAN: '울산',
@@ -300,9 +305,9 @@ function scoreProgram(program: SMEProgram, org: Organization): SMEMatchResult {
         return createIneligibleResult(program, `${regionNames} 지역 제한 프로그램`);
       }
 
-      metCriteria.push('지역 조건 충족 (제목 기반)');
+      metCriteria.push('지역 조건 충족 (텍스트 추출)');
     }
-    // If no region codes AND no region in title, treat as nationwide (no restriction)
+    // If no region codes AND no region in text, treat as nationwide (no restriction)
   }
 
   // 4. Pre-Startup Gate (v2.0)
@@ -623,22 +628,22 @@ function scoreRegion(
     return 0;
   }
 
-  // Case 3: targetRegionCodes is empty - check title for region indicator
-  const titleRegions = extractRegionFromTitle(program.title);
+  // Case 3: targetRegionCodes is empty - check title AND description for region indicator
+  const extractedRegions = extractRegionFromTitleAndDescription(program.title, program.description);
 
-  if (titleRegions.length > 0) {
-    // Title indicates regional program
+  if (extractedRegions.length > 0) {
+    // Text extraction indicates regional program
     if (orgRegions.length === 0) {
       failedCriteria.push('소재지 정보 필요');
       return 3;
     }
 
-    const hasRegionMatch = titleRegions.some(titleRegion =>
-      orgRegions.includes(titleRegion)
+    const hasRegionMatch = extractedRegions.some(extractedRegion =>
+      orgRegions.includes(extractedRegion)
     );
 
     if (hasRegionMatch) {
-      metCriteria.push('지역 조건 충족 (제목 기반)');
+      metCriteria.push('지역 조건 충족 (텍스트 추출)');
       return 10;
     }
 
@@ -648,7 +653,7 @@ function scoreRegion(
     return 0;
   }
 
-  // No region codes AND no region in title - treat as nationwide (partial credit)
+  // No region codes AND no region in text - treat as nationwide (partial credit)
   metCriteria.push('전국 대상 프로그램');
   return 7;
 }

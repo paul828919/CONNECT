@@ -756,6 +756,127 @@ export function hasRegionalIndicatorInTitle(title: string): boolean {
   return extractRegionFromTitle(title).length > 0;
 }
 
+/**
+ * Extract region from description/supportTarget text when targetRegionCodes is empty.
+ *
+ * Handles patterns like:
+ *   - "부산시 소재 기업" → BUSAN
+ *   - "경기도 내 중소기업" → GYEONGGI
+ *   - "서울특별시에 본사를 둔" → SEOUL
+ *   - "대구광역시 관내 기업" → DAEGU
+ *   - "전남 지역 소재" → JEONNAM
+ *   - "○○시/도에 사업장을 둔" → matched region
+ *
+ * @param text Description or supportTarget text
+ * @returns Array of KoreanRegion enums extracted, empty if nationwide/no region
+ */
+export function extractRegionFromDescription(text: string | null | undefined): KoreanRegion[] {
+  if (!text) return [];
+
+  const regions: KoreanRegion[] = [];
+
+  // Extended region name patterns including full administrative names
+  const REGION_PATTERNS: Array<{ pattern: RegExp; region: KoreanRegion }> = [
+    // Seoul
+    { pattern: /서울(?:특별시|시)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'SEOUL' },
+    // Busan
+    { pattern: /부산(?:광역시|시)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'BUSAN' },
+    // Daegu
+    { pattern: /대구(?:광역시|시)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'DAEGU' },
+    // Incheon
+    { pattern: /인천(?:광역시|시)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'INCHEON' },
+    // Gwangju
+    { pattern: /광주(?:광역시|시)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'GWANGJU' },
+    // Daejeon
+    { pattern: /대전(?:광역시|시)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'DAEJEON' },
+    // Ulsan
+    { pattern: /울산(?:광역시|시)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'ULSAN' },
+    // Sejong
+    { pattern: /세종(?:특별자치시|시)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'SEJONG' },
+    // Gyeonggi
+    { pattern: /경기(?:도)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'GYEONGGI' },
+    // Gangwon
+    { pattern: /강원(?:도|특별자치도)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'GANGWON' },
+    // Chungbuk
+    { pattern: /충(?:청)?북(?:도)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'CHUNGBUK' },
+    // Chungnam
+    { pattern: /충(?:청)?남(?:도)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'CHUNGNAM' },
+    // Jeonbuk
+    { pattern: /전(?:라)?북(?:도|특별자치도)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'JEONBUK' },
+    // Jeonnam
+    { pattern: /전(?:라)?남(?:도)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'JEONNAM' },
+    // Gyeongbuk
+    { pattern: /경(?:상)?북(?:도)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'GYEONGBUK' },
+    // Gyeongnam
+    { pattern: /경(?:상)?남(?:도)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'GYEONGNAM' },
+    // Jeju
+    { pattern: /제주(?:특별자치도|도)?(?:\s*(?:소재|관내|내|에|지역))/g, region: 'JEJU' },
+  ];
+
+  // Additional context patterns for stronger signals
+  const STRONG_CONTEXT_PATTERNS: Array<{ pattern: RegExp; region: KoreanRegion }> = [
+    // "본사/사업장/주소지를 OO에 둔" patterns
+    { pattern: /본사.*서울/g, region: 'SEOUL' },
+    { pattern: /본사.*부산/g, region: 'BUSAN' },
+    { pattern: /본사.*대구/g, region: 'DAEGU' },
+    { pattern: /본사.*인천/g, region: 'INCHEON' },
+    { pattern: /본사.*광주/g, region: 'GWANGJU' },
+    { pattern: /본사.*대전/g, region: 'DAEJEON' },
+    { pattern: /본사.*울산/g, region: 'ULSAN' },
+    { pattern: /본사.*경기/g, region: 'GYEONGGI' },
+    { pattern: /본사.*강원/g, region: 'GANGWON' },
+    { pattern: /본사.*충북/g, region: 'CHUNGBUK' },
+    { pattern: /본사.*충남/g, region: 'CHUNGNAM' },
+    { pattern: /본사.*전북/g, region: 'JEONBUK' },
+    { pattern: /본사.*전남/g, region: 'JEONNAM' },
+    { pattern: /본사.*경북/g, region: 'GYEONGBUK' },
+    { pattern: /본사.*경남/g, region: 'GYEONGNAM' },
+    { pattern: /본사.*제주/g, region: 'JEJU' },
+    { pattern: /본사.*세종/g, region: 'SEJONG' },
+  ];
+
+  // Check primary patterns
+  for (const { pattern, region } of REGION_PATTERNS) {
+    if (pattern.test(text) && !regions.includes(region)) {
+      regions.push(region);
+    }
+  }
+
+  // Check strong context patterns if no match yet
+  if (regions.length === 0) {
+    for (const { pattern, region } of STRONG_CONTEXT_PATTERNS) {
+      if (pattern.test(text) && !regions.includes(region)) {
+        regions.push(region);
+      }
+    }
+  }
+
+  return regions;
+}
+
+/**
+ * Combine region extraction from title and description
+ * Returns regions from title first (higher confidence), then description
+ *
+ * @param title Program title
+ * @param description Program description
+ * @returns Combined array of KoreanRegion enums
+ */
+export function extractRegionFromTitleAndDescription(
+  title: string,
+  description: string | null | undefined
+): KoreanRegion[] {
+  const titleRegions = extractRegionFromTitle(title);
+
+  // If title has regions, use those (higher confidence)
+  if (titleRegions.length > 0) {
+    return titleRegions;
+  }
+
+  // Otherwise, try description
+  return extractRegionFromDescription(description);
+}
+
 // ============================================================================
 // Export all mappings
 // ============================================================================
@@ -793,5 +914,7 @@ export const CodeMapper = {
   mapCodeToRegion,
   checkRegionEligibility,
   extractRegionFromTitle,
+  extractRegionFromDescription,
+  extractRegionFromTitleAndDescription,
   hasRegionalIndicatorInTitle,
 };
