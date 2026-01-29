@@ -518,6 +518,7 @@ model organizations {
   teamInviteLinks                                                team_invite_links[]
   locations                                                      CompanyLocation[]   // 소재지 정보 (본사, 연구소, 공장)
   sme_program_matches                                            sme_program_matches[] // SME24 매칭 결과
+  sme_match_sessions                                             sme_match_sessions[]  // SME24 매칭 세션 (for ranking metrics)
   application_outcomes                                           application_outcomes[]
 
   // ===== SME24 Certification Verification Fields =====
@@ -1324,7 +1325,12 @@ model recommendation_events {
   organizationId  String
   programId       String
   userId          String?
-  sessionId       String
+  sessionId       String         // Browser session ID (frontend tracking)
+
+  // SME Match Session linkage (for direct attribution - P1)
+  // When present, attribution doesn't need fallback SQL
+  smeSessionId    String?        @map("sme_session_id")
+  smeSession      sme_match_sessions? @relation(fields: [smeSessionId], references: [id])
 
   // Event type
   eventType       RecommendationEventType
@@ -1363,6 +1369,7 @@ model recommendation_events {
   @@index([sessionId, programId, eventType, createdAt])  // Session-level dedupe
   @@index([eventType, occurredAt])                // Event type analytics
   @@index([createdAt])                            // Retention cleanup queries
+  @@index([smeSessionId, occurredAt])             // SME session direct attribution
 
   @@map("recommendation_events")
 }
@@ -1638,6 +1645,41 @@ model sme_programs {
 }
 
 // ============================================================================
+// SME Match Sessions (SME 매칭 세션 추적)
+// ============================================================================
+// Tracks each match generation event for ranking quality metrics.
+// - Fresh session: source_session_id = NULL, new matches generated
+// - Cache hit session: source_session_id = <original_session_id>
+// - is_cached: computed from source_session_id presence
+//
+// Used for: Precision@K, nDCG@K calculation, attribution of saves to sessions.
+// ============================================================================
+model sme_match_sessions {
+  id                  String              @id @default(uuid())
+  organizationId      String
+
+  // For cache hits: references the original session that generated the matches
+  sourceSessionId     String?             @map("source_session_id")
+
+  // Algorithm configuration identifier (e.g., "v2.1-a1b2c3d4")
+  configName          String              @map("config_name")
+
+  // Timestamps
+  createdAt           DateTime            @default(now()) @map("created_at")
+
+  // Relations
+  organization        organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sourceSession       sme_match_sessions? @relation("SessionCache", fields: [sourceSessionId], references: [id])
+  derivedSessions     sme_match_sessions[] @relation("SessionCache")
+  matches             sme_program_matches[]
+  events              recommendation_events[]  // Direct attribution: SAVEs linked to this session
+
+  @@index([organizationId, createdAt])
+  @@index([sourceSessionId])
+  @@map("sme_match_sessions")
+}
+
+// ============================================================================
 // SME Program Match Results (중소벤처24 매칭 결과)
 // ============================================================================
 // Stores match results between organizations and SME support programs.
@@ -1647,6 +1689,8 @@ model sme_programs {
 // - FULLY_ELIGIBLE: All criteria met, can apply immediately
 // - CONDITIONALLY_ELIGIBLE: Most criteria met, minor issues (e.g., cert expiring)
 // - INELIGIBLE: Hard requirement failed (filtered out, not stored)
+//
+// v2.2: Added sessionId and position for ranking quality metrics (Precision@K, nDCG@K)
 // ============================================================================
 model sme_program_matches {
   id                  String        @id @default(uuid())
@@ -1663,6 +1707,10 @@ model sme_program_matches {
   // Score breakdown (100 points total)
   scoreBreakdown      Json?         // { companyScale, revenueRange, employeeCount, businessAge, region, certifications }
 
+  // Ranking metrics support (v2.2)
+  sessionId           String?       // Links to generating session for attribution
+  position            Int?          @db.SmallInt  // 1-based position in ranking (top = 1)
+
   // User actions
   viewed              Boolean       @default(false)
   saved               Boolean       @default(false)
@@ -1675,6 +1723,7 @@ model sme_program_matches {
   // Relations
   organization        organizations @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   program             sme_programs  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  session             sme_match_sessions? @relation(fields: [sessionId], references: [id])
 
   @@unique([organizationId, programId])
   @@index([organizationId, score])
@@ -1682,7 +1731,63 @@ model sme_program_matches {
   @@index([saved])
   @@index([viewed])
   @@index([createdAt])
+  @@index([sessionId])
   @@map("sme_program_matches")
+}
+
+// ============================================================================
+// Ranking Quality Metrics (랭킹 품질 메트릭)
+// ============================================================================
+// Stores computed ranking quality metrics (Precision@K, nDCG@K) for monitoring
+// and A/B testing the SME matching algorithm.
+//
+// Computation:
+// - Daily batch job aggregates attribution data (saves traced back to sessions)
+// - 7-day rolling window for statistical significance
+// - Minimum sample threshold (30) for reliable metrics
+//
+// Revision tracking:
+// - superseded_at/superseded_by for metric corrections
+// - Only latest (superseded_at IS NULL) used for dashboards
+// ============================================================================
+model ranking_quality_metrics {
+  id                      String    @id @default(uuid())
+
+  // Time period for aggregation (KST date boundaries)
+  periodStart             DateTime  @db.Date @map("period_start")
+  periodEnd               DateTime  @db.Date @map("period_end")
+
+  // Algorithm configuration identifier
+  configName              String    @map("config_name")
+
+  // Ranking quality metrics (0.0000 to 1.0000)
+  generatedPrecisionAt5   Decimal?  @db.Decimal(5, 4) @map("generated_precision_at_5")
+  generatedPrecisionAt10  Decimal?  @db.Decimal(5, 4) @map("generated_precision_at_10")
+  ndcgAt10Conditional     Decimal?  @db.Decimal(5, 4) @map("ndcg_at_10_conditional")
+  hitRate                 Decimal?  @db.Decimal(5, 4) @map("hit_rate")
+
+  // Sample statistics
+  sampleSize              Int       @map("sample_size")
+  cachedSessionRatio      Decimal?  @db.Decimal(5, 4) @map("cached_session_ratio")
+
+  // Minimum sample threshold (default 30 for statistical significance)
+  minSampleThreshold      Int       @default(30) @map("min_sample_threshold")
+
+  // Revision tracking (for corrections)
+  revision                Int       @default(1)
+  computedAt              DateTime  @default(now()) @map("computed_at")
+  dataWatermark           DateTime  @map("data_watermark")  // Latest event timestamp used
+
+  // Supersession (for corrections)
+  supersededAt            DateTime? @map("superseded_at")
+  supersededById          String?   @map("superseded_by")
+  supersededBy            ranking_quality_metrics? @relation("MetricSupersession", fields: [supersededById], references: [id])
+  supersedes              ranking_quality_metrics[] @relation("MetricSupersession")
+
+  @@unique([periodEnd, configName, revision])
+  @@index([periodEnd, configName])
+  @@index([supersededAt])
+  @@map("ranking_quality_metrics")
 }
 
 // ============================================================================

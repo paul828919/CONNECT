@@ -1,8 +1,14 @@
 /**
- * SME Programs Match Generation API (v2.0)
+ * SME Programs Match Generation API (v2.2)
  *
  * POST /api/sme-programs/generate
  * Generates new SME program matches for the user's organization.
+ *
+ * v2.2 Changes (Ranking Metrics Infrastructure):
+ * - Session tracking: Each match generation creates SmeMatchSession record
+ * - Position assignment: Matches stored with 1-based position for nDCG@K
+ * - Cache hit sessions: Reference source session via sourceSessionId
+ * - Config name: Stable hash of scoring weights for A/B test tracking
  *
  * v2.0 Changes:
  * - Redis caching (24h TTL for match results, 4h for programs)
@@ -28,6 +34,8 @@ import {
 } from '@/lib/cache/redis-cache';
 import { checkSmeMatchLimit } from '@/lib/rateLimit';
 import { AuditAction, logFunnelEvent, hasFunnelEvent } from '@/lib/audit';
+import { getConfigName, DEFAULT_SME_WEIGHTS } from '@/lib/analytics/ranking-metrics';
+import { randomUUID } from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
@@ -103,26 +111,56 @@ export async function POST(request: NextRequest) {
     }
 
     // ========================================================================
-    // Cache Check (Step 3)
+    // Session & Config Setup (v2.2)
     // ========================================================================
+    const sessionId = randomUUID();
+    const configName = getConfigName(DEFAULT_SME_WEIGHTS);
     const matchCacheKey = getSmeMatchCacheKey(organization.id);
+    const sessionCacheKey = `${matchCacheKey}:sessionId`;
 
+    // ========================================================================
+    // Cache Check with Session Tracking (Step 3)
+    // ========================================================================
     if (!forceRegenerate) {
       const cachedResults = await getCache<any>(matchCacheKey);
-      if (cachedResults) {
-        console.log(`[SME Match Gen] Cache HIT for org: ${organization.id}`);
-        return NextResponse.json({
-          success: true,
-          data: {
-            ...cachedResults,
-            cached: true,
-            rateLimitRemaining: rateLimitCheck.remaining,
-          },
+      const cachedSessionId = await getCache<string>(sessionCacheKey);
+
+      if (cachedResults && cachedSessionId) {
+        // Validate source session belongs to same org (defense in depth)
+        const sourceSession = await db.sme_match_sessions.findUnique({
+          where: { id: cachedSessionId },
+          select: { organizationId: true },
         });
+
+        if (sourceSession && sourceSession.organizationId === organization.id) {
+          // Create cache hit session (references source session)
+          await db.sme_match_sessions.create({
+            data: {
+              id: sessionId,
+              organizationId: organization.id,
+              sourceSessionId: cachedSessionId,
+              configName,
+            },
+          });
+
+          console.log(`[SME Match Gen] Cache HIT for org: ${organization.id}, session: ${sessionId}, source: ${cachedSessionId}`);
+
+          return NextResponse.json({
+            success: true,
+            data: {
+              ...cachedResults,
+              cached: true,
+              sessionId,
+              rateLimitRemaining: rateLimitCheck.remaining,
+            },
+          });
+        }
+        // If org validation fails, treat as cache miss
+        console.log(`[SME Match Gen] Cache session org mismatch, treating as cache miss`);
       }
     }
 
-    console.log(`[SME Match Gen] Generating matches for org: ${organization.id}`);
+    console.log(`[SME Match Gen] Generating matches for org: ${organization.id}, session: ${sessionId}`);
 
     // ========================================================================
     // Fetch Active Programs (with cache)
@@ -162,12 +200,27 @@ export async function POST(request: NextRequest) {
     console.log(`[SME Match Gen] Generated ${matchResults.length} matches`);
 
     // ========================================================================
-    // UPSERT Pattern (Step 4) - Preserve user state
+    // Create Fresh Session Record (v2.2)
+    // ========================================================================
+    await db.sme_match_sessions.create({
+      data: {
+        id: sessionId,
+        organizationId: organization.id,
+        sourceSessionId: null, // Fresh session
+        configName,
+      },
+    });
+
+    // ========================================================================
+    // UPSERT Pattern (Step 4) - Preserve user state, add position
     // ========================================================================
     const currentProgramIds = matchResults.map(m => m.program.id);
 
-    // UPSERT each match — preserves viewed/saved/notificationSent flags
-    for (const match of matchResults) {
+    // UPSERT each match with position (1-based for ranking metrics)
+    for (let i = 0; i < matchResults.length; i++) {
+      const match = matchResults[i];
+      const position = i + 1; // 1-based position
+
       await db.sme_program_matches.upsert({
         where: {
           organizationId_programId: {
@@ -182,6 +235,8 @@ export async function POST(request: NextRequest) {
           metCriteria: match.metCriteria,
           scoreBreakdown: JSON.parse(JSON.stringify(match.scoreBreakdown)),
           explanation: JSON.parse(JSON.stringify(match.explanation)),
+          sessionId,   // Update to latest session
+          position,    // Update position (may change on re-generation)
           // DO NOT update: viewed, saved, viewedAt, savedAt, notificationSent, notifiedAt
         },
         create: {
@@ -193,6 +248,8 @@ export async function POST(request: NextRequest) {
           metCriteria: match.metCriteria,
           scoreBreakdown: JSON.parse(JSON.stringify(match.scoreBreakdown)),
           explanation: JSON.parse(JSON.stringify(match.explanation)),
+          sessionId,
+          position,
         },
       });
     }
@@ -243,6 +300,7 @@ export async function POST(request: NextRequest) {
     const responseData = {
       matchesGenerated: matchResults.length,
       matches: storedMatches,
+      sessionId,
       rateLimitRemaining: rateLimitCheck.remaining,
       message: matchResults.length > 0
         ? `${matchResults.length}개의 적합한 지원사업을 찾았습니다.`
@@ -250,9 +308,10 @@ export async function POST(request: NextRequest) {
     };
 
     // ========================================================================
-    // Cache Results (Step 3)
+    // Cache Results with Session ID (Step 3, v2.2)
     // ========================================================================
     await setCache(matchCacheKey, responseData, CACHE_TTL.MATCH_RESULTS);
+    await setCache(sessionCacheKey, sessionId, CACHE_TTL.MATCH_RESULTS);
 
     // ========================================================================
     // Analytics Logging (Step 5)
@@ -267,7 +326,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[SME Match Gen] Completed for org: ${organization.id}, ${matchResults.length} matches, cached=true`);
+    console.log(`[SME Match Gen] Completed for org: ${organization.id}, session: ${sessionId}, ${matchResults.length} matches, config: ${configName}`);
 
     return NextResponse.json({
       success: true,
