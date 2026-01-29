@@ -8,10 +8,16 @@
  * - Avoids conflicts with NTIS scraper (01:00, 05:00 UTC)
  * - Lightweight HTTP API calls (no Playwright/browser)
  * - Expected duration: 2-5 minutes per sync
+ *
+ * Post-sync: Tier 1 Enrichment automatically runs after successful sync
+ * - Extracts eligibility criteria from text fields
+ * - Updates targetRegionCodes, targetCompanyScale, etc.
+ * - Expected duration: 1-2 minutes
  */
 
 import cron from 'node-cron';
 import { dailySync, syncSMEPrograms } from './program-service';
+import { runTier1Enrichment } from './enrichment-service';
 
 /**
  * Start the SME24 sync cron job
@@ -51,6 +57,31 @@ export function startSME24SyncCron(): void {
           console.log(`  - Updated: ${result.programsUpdated}`);
           console.log(`  - Expired: ${result.programsExpired}`);
           console.log(`  - Duration: ${(result.duration / 1000).toFixed(1)}s`);
+
+          // Schedule Tier 1 enrichment 1 minute after sync completes
+          console.log('\n📊 [SME24 Cron] Enrichment scheduled to run in 1 minute...');
+          setTimeout(async () => {
+            const enrichStartTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+            console.log(`\n📊 [SME24 Cron] Starting Tier 1 enrichment (KST: ${enrichStartTime})`);
+            try {
+              const enrichResult = await runTier1Enrichment();
+
+              if (enrichResult.success) {
+                console.log(`✓ [SME24 Cron] Enrichment completed:`);
+                console.log(`  - Programs processed: ${enrichResult.processed}`);
+                console.log(`  - Updated: ${enrichResult.updated}`);
+                console.log(`  - Skipped: ${enrichResult.skipped}`);
+                console.log(`  - Regions extracted: ${enrichResult.breakdown.regions}`);
+                console.log(`  - Company scale extracted: ${enrichResult.breakdown.companyScale}`);
+                console.log(`  - Duration: ${(enrichResult.duration / 1000).toFixed(1)}s`);
+              } else {
+                console.error(`✗ [SME24 Cron] Enrichment failed`);
+              }
+            } catch (enrichError: any) {
+              console.error('✗ [SME24 Cron] Enrichment error:', enrichError.message);
+            }
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          }, 60 * 1000); // 1 minute delay
         } else {
           console.error(`✗ [SME24 Cron] Sync failed: ${result.errors.join(', ')}`);
         }
