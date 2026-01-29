@@ -449,12 +449,39 @@ const REGION_NAME_TO_ENUM: Record<string, KoreanRegion> = {
 };
 
 /**
+ * Strong context keywords that indicate regional program scope
+ * when appearing after a region name (e.g., "강원 로컬벤처" → Gangwon-specific)
+ */
+const REGIONAL_CONTEXT_KEYWORDS = [
+  '로컬벤처',
+  '로컬크리에이터',
+  '창업',
+  '스타트업',
+  '육성',
+  '지원',
+  '혁신',
+  '소상공인',
+  '중소기업',
+  '벤처',
+  '기업',
+  '테크노파크',
+  '창조경제',
+  '경제혁신',
+];
+
+/**
  * Extract region from program title when targetRegionCodes is empty.
  * Handles patterns like:
  *   - "[대구] 2025년 ..." → DAEGU
  *   - "[전남] 소상공인 ..." → JEONNAM
  *   - "[대구ㆍ경북] ..." → [DAEGU, GYEONGBUK]
  *   - "대구 주도형 AI 대전환 ..." → DAEGU
+ *   - "2026년 강원 로컬벤처기업 ..." → GANGWON (v2.0)
+ *   - "2025년도 부산 창업지원 ..." → BUSAN (v2.0)
+ *
+ * v2.0 Enhancements (2026-01-29):
+ * - Pattern 3: Region after year prefix (e.g., "2026년 강원 ...")
+ * - Pattern 4: Region with context keywords anywhere in title
  *
  * @param title Program title
  * @returns Array of KoreanRegion enums extracted from title, empty if nationwide/no region
@@ -484,6 +511,39 @@ export function extractRegionFromTitle(title: string): KoreanRegion[] {
         regions.push(region);
         break;
       }
+    }
+  }
+
+  // Pattern 3 (v2.0): Region after year prefix, e.g., "2026년 강원 로컬벤처..."
+  // Matches: "2026년 강원", "2025년도 부산", "2026년 경기 창업"
+  if (regions.length === 0) {
+    const yearPrefixMatch = title.match(/^\d{4}년도?\s+([가-힣]{2,3})\s/);
+    if (yearPrefixMatch) {
+      const possibleRegion = yearPrefixMatch[1];
+      if (REGION_NAME_TO_ENUM[possibleRegion]) {
+        regions.push(REGION_NAME_TO_ENUM[possibleRegion]);
+      }
+    }
+  }
+
+  // Pattern 4 (v2.0): Region with strong context keywords anywhere in title
+  // e.g., "강원 로컬벤처", "부산 창업지원", "대구 스타트업 육성"
+  // This pattern requires both region name AND context keyword to avoid false positives
+  if (regions.length === 0) {
+    for (const [name, region] of Object.entries(REGION_NAME_TO_ENUM)) {
+      // Build pattern: region name followed by space and context keyword
+      for (const contextKeyword of REGIONAL_CONTEXT_KEYWORDS) {
+        // Check if title contains "지역 + 컨텍스트키워드" pattern
+        // e.g., "강원 로컬벤처", "강원로컬벤처", "강원 로컬벤처기업"
+        const patternWithSpace = `${name} ${contextKeyword}`;
+        const patternNoSpace = `${name}${contextKeyword}`;
+
+        if (title.includes(patternWithSpace) || title.includes(patternNoSpace)) {
+          regions.push(region);
+          break;
+        }
+      }
+      if (regions.length > 0) break;
     }
   }
 
