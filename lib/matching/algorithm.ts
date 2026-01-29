@@ -93,7 +93,7 @@ const KOREAN_TITLE_STOPWORDS = new Set([
   '기술', '기술개발', '개발', '구축', '기반', '시행', '시스템', '연구', '연구개발',
 ]);
 
-export const MATCH_ALGORITHM_VERSION = '4.3.0';
+export const MATCH_ALGORITHM_VERSION = '4.4.0'; // v4.4.0: Enhanced regional detection (title-based Pattern 3/4)
 
 // Type aliases for cleaner code
 type Organization = organizations;
