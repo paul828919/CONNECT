@@ -91,8 +91,10 @@ export function extractCompanyScale(text: string): string[] {
 /**
  * Extract employee count range from text
  *
- * Patterns:
+ * Patterns (v2.1 - extended):
  * - "상시근로자 50인 미만"
+ * - "상시근로자수 5인 이상"        ← NEW
+ * - "상시 근로자 수가 3명 미만"    ← NEW
  * - "종업원 10명 이상"
  * - "직원 수 5~20명"
  * - "고용인원 100명 이하"
@@ -100,29 +102,49 @@ export function extractCompanyScale(text: string): string[] {
 export function extractEmployeeCount(text: string): { min: number | null; max: number | null } {
   const result = { min: null as number | null, max: null as number | null };
 
+  // Extended employee prefix pattern to handle various formats:
+  // - 상시근로자, 상시 근로자, 상시근로자수, 상시 근로자 수, 상시 근로자 수가
+  // - 종업원, 직원, 고용인원
+  const employeePrefix = /(?:상시\s*)?(?:근로자|종업원|직원|고용인원)(?:\s*수)?(?:\s*가)?/;
+
   // Pattern: "XX명 미만" or "XX인 미만"
-  const underMatch = text.match(/(?:상시\s*)?(?:근로자|종업원|직원|고용인원)\s*(\d+)\s*(?:명|인)\s*미만/);
+  const underPattern = new RegExp(employeePrefix.source + /\s*(\d+)\s*(?:명|인)\s*미만/.source);
+  const underMatch = text.match(underPattern);
   if (underMatch) {
     result.max = parseInt(underMatch[1], 10) - 1;
   }
 
   // Pattern: "XX명 이하" or "XX인 이하"
-  const maxMatch = text.match(/(?:상시\s*)?(?:근로자|종업원|직원|고용인원)\s*(\d+)\s*(?:명|인)\s*이하/);
+  const maxPattern = new RegExp(employeePrefix.source + /\s*(\d+)\s*(?:명|인)\s*이하/.source);
+  const maxMatch = text.match(maxPattern);
   if (maxMatch) {
     result.max = parseInt(maxMatch[1], 10);
   }
 
   // Pattern: "XX명 이상" or "XX인 이상"
-  const minMatch = text.match(/(?:상시\s*)?(?:근로자|종업원|직원|고용인원)\s*(\d+)\s*(?:명|인)\s*이상/);
+  const minPattern = new RegExp(employeePrefix.source + /\s*(\d+)\s*(?:명|인)\s*이상/.source);
+  const minMatch = text.match(minPattern);
   if (minMatch) {
     result.min = parseInt(minMatch[1], 10);
   }
 
-  // Pattern: "XX~YY명" or "XX명~YY명" (also handles "직원 수" with space)
-  const rangeMatch = text.match(/(?:상시\s*)?(?:근로자|종업원|직원|고용인원)(?:\s*수)?\s*(\d+)\s*(?:명|인)?\s*[~\-]\s*(\d+)\s*(?:명|인)/);
+  // Pattern: "XX~YY명" or "XX명~YY명" range
+  const rangePattern = new RegExp(
+    employeePrefix.source + /\s*(\d+)\s*(?:명|인)?\s*[~\-]\s*(\d+)\s*(?:명|인)/.source
+  );
+  const rangeMatch = text.match(rangePattern);
   if (rangeMatch) {
     result.min = parseInt(rangeMatch[1], 10);
     result.max = parseInt(rangeMatch[2], 10);
+  }
+
+  // Pattern: "XX인 이상 YY인 미만" (compound range in same sentence)
+  const compoundRangeMatch = text.match(
+    /(?:상시\s*)?(?:근로자|종업원|직원|고용인원)(?:\s*수)?(?:\s*가)?\s*(\d+)\s*(?:명|인)\s*이상\s*(\d+)\s*(?:명|인)\s*미만/
+  );
+  if (compoundRangeMatch) {
+    result.min = parseInt(compoundRangeMatch[1], 10);
+    result.max = parseInt(compoundRangeMatch[2], 10) - 1;
   }
 
   return result;
@@ -212,8 +234,10 @@ export function extractRevenue(text: string): { min: number | null; max: number 
 /**
  * Extract business age range from text
  *
- * Patterns:
+ * Patterns (v2.1 - extended):
  * - "창업 7년 이내"
+ * - "창업 후 3년 초과 7년 이내"    ← NEW
+ * - "창업 후 10년 이내"            ← NEW
  * - "업력 3년 미만"
  * - "설립 5년 이상"
  * - "창업 3~7년"
@@ -223,29 +247,53 @@ export function extractRevenue(text: string): { min: number | null; max: number 
 export function extractBusinessAge(text: string): { min: number | null; max: number | null } {
   const result = { min: null as number | null, max: null as number | null };
 
-  // Pattern: "XX년 이내" or "XX년 미만"
-  const underMatch = text.match(/(?:창업|업력|설립)\s*(\d+)\s*년\s*(?:이내|미만)/);
-  if (underMatch) {
-    result.max = parseInt(underMatch[1], 10);
+  // Extended prefix to handle "창업 후", "창업후" patterns
+  const agePrefix = /(?:창업|업력|설립)(?:\s*후)?/;
+
+  // Pattern: "창업 후 XX년 초과 YY년 이내" (range with 초과)
+  const rangeWithExceedMatch = text.match(
+    /(?:창업|업력|설립)(?:\s*후)?\s*(\d+)\s*년\s*초과\s*(\d+)\s*(?:\*?\s*)?년?\s*(?:이내|이하|미만)/
+  );
+  if (rangeWithExceedMatch) {
+    result.min = parseInt(rangeWithExceedMatch[1], 10) + 1; // 초과 means greater than
+    result.max = parseInt(rangeWithExceedMatch[2], 10);
+  }
+
+  // Pattern: "XX년 이내" or "XX년 미만" (only if not already matched)
+  if (result.max === null) {
+    const underPattern = new RegExp(agePrefix.source + /\s*(\d+)\s*(?:\*?\s*)?년\s*(?:이내|미만)/.source);
+    const underMatch = text.match(underPattern);
+    if (underMatch) {
+      result.max = parseInt(underMatch[1], 10);
+    }
   }
 
   // Pattern: "XX년 이하"
-  const maxMatch = text.match(/(?:창업|업력|설립)\s*(\d+)\s*년\s*이하/);
-  if (maxMatch) {
-    result.max = parseInt(maxMatch[1], 10);
+  if (result.max === null) {
+    const maxPattern = new RegExp(agePrefix.source + /\s*(\d+)\s*년\s*이하/.source);
+    const maxMatch = text.match(maxPattern);
+    if (maxMatch) {
+      result.max = parseInt(maxMatch[1], 10);
+    }
   }
 
   // Pattern: "XX년 이상"
-  const minMatch = text.match(/(?:창업|업력|설립)\s*(\d+)\s*년\s*이상/);
-  if (minMatch) {
-    result.min = parseInt(minMatch[1], 10);
+  if (result.min === null) {
+    const minPattern = new RegExp(agePrefix.source + /\s*(\d+)\s*년\s*이상/.source);
+    const minMatch = text.match(minPattern);
+    if (minMatch) {
+      result.min = parseInt(minMatch[1], 10);
+    }
   }
 
   // Pattern: "XX~YY년" or "XX년~YY년"
-  const rangeMatch = text.match(/(?:창업|업력|설립)\s*(\d+)\s*(?:년)?\s*[~\-]\s*(\d+)\s*년/);
-  if (rangeMatch) {
-    result.min = parseInt(rangeMatch[1], 10);
-    result.max = parseInt(rangeMatch[2], 10);
+  if (result.min === null && result.max === null) {
+    const rangePattern = new RegExp(agePrefix.source + /\s*(\d+)\s*(?:년)?\s*[~\-]\s*(\d+)\s*년/.source);
+    const rangeMatch = text.match(rangePattern);
+    if (rangeMatch) {
+      result.min = parseInt(rangeMatch[1], 10);
+      result.max = parseInt(rangeMatch[2], 10);
+    }
   }
 
   // Pattern: "XX년차 이상/이하" (convert to years)
@@ -253,9 +301,9 @@ export function extractBusinessAge(text: string): { min: number | null; max: num
   if (yearMatch) {
     const years = parseInt(yearMatch[1], 10);
     if (yearMatch[2] === '이상') {
-      result.min = years;
+      if (result.min === null) result.min = years;
     } else {
-      result.max = years;
+      if (result.max === null) result.max = years;
     }
   }
 
@@ -280,20 +328,19 @@ export function extractEligibilityFromText(
   supportTarget: string | null | undefined
 ): ExtractedEligibility {
   // Combine all text sources for extraction
+  // v2.1: Use all text for all extractions to avoid missing patterns in description
   const allText = [
     title,
     description || '',
     supportTarget || '',
   ].join(' ');
 
-  // Prioritize supportTarget for eligibility criteria (most relevant)
-  const targetText = supportTarget || description || title;
-
-  // Extract each criterion
+  // Extract each criterion from combined text
+  // Note: Previously used targetText (supportTarget only) which missed patterns in description
   const companyScale = extractCompanyScale(allText);
-  const employees = extractEmployeeCount(targetText);
-  const revenue = extractRevenue(targetText);
-  const businessAge = extractBusinessAge(targetText);
+  const employees = extractEmployeeCount(allText);
+  const revenue = extractRevenue(allText);
+  const businessAge = extractBusinessAge(allText);
 
   // Extract regions (title first, then description)
   const titleRegions = extractRegionFromTitle(title);
