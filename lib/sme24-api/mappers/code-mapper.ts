@@ -422,6 +422,85 @@ export function checkRegionEligibility(
 }
 
 // ============================================================================
+// Region Extraction from Title (Fallback for missing targetRegionCodes)
+// ============================================================================
+
+/**
+ * Region name to KoreanRegion mapping for title extraction
+ */
+const REGION_NAME_TO_ENUM: Record<string, KoreanRegion> = {
+  '서울': 'SEOUL',
+  '경기': 'GYEONGGI',
+  '인천': 'INCHEON',
+  '부산': 'BUSAN',
+  '대구': 'DAEGU',
+  '광주': 'GWANGJU',
+  '대전': 'DAEJEON',
+  '울산': 'ULSAN',
+  '세종': 'SEJONG',
+  '강원': 'GANGWON',
+  '충북': 'CHUNGBUK',
+  '충남': 'CHUNGNAM',
+  '전북': 'JEONBUK',
+  '전남': 'JEONNAM',
+  '경북': 'GYEONGBUK',
+  '경남': 'GYEONGNAM',
+  '제주': 'JEJU',
+};
+
+/**
+ * Extract region from program title when targetRegionCodes is empty.
+ * Handles patterns like:
+ *   - "[대구] 2025년 ..." → DAEGU
+ *   - "[전남] 소상공인 ..." → JEONNAM
+ *   - "[대구ㆍ경북] ..." → [DAEGU, GYEONGBUK]
+ *   - "대구 주도형 AI 대전환 ..." → DAEGU
+ *
+ * @param title Program title
+ * @returns Array of KoreanRegion enums extracted from title, empty if nationwide/no region
+ */
+export function extractRegionFromTitle(title: string): KoreanRegion[] {
+  const regions: KoreanRegion[] = [];
+
+  // Pattern 1: Bracketed region at start, e.g., "[대구]", "[전남]", "[대구ㆍ경북]"
+  const bracketMatch = title.match(/^\[([^\]]+)\]/);
+  if (bracketMatch) {
+    const bracketContent = bracketMatch[1];
+    // Split by common separators (ㆍ, ·, /, ,)
+    const parts = bracketContent.split(/[ㆍ·\/,]/);
+    for (const part of parts) {
+      const trimmed = part.trim();
+      if (REGION_NAME_TO_ENUM[trimmed]) {
+        regions.push(REGION_NAME_TO_ENUM[trimmed]);
+      }
+    }
+  }
+
+  // Pattern 2: Region name at start without brackets, e.g., "대구 주도형"
+  if (regions.length === 0) {
+    for (const [name, region] of Object.entries(REGION_NAME_TO_ENUM)) {
+      // Match region name followed by space at start of title
+      if (title.startsWith(`${name} `) || title.startsWith(`${name}시 `) || title.startsWith(`${name}도 `)) {
+        regions.push(region);
+        break;
+      }
+    }
+  }
+
+  return regions;
+}
+
+/**
+ * Check if a program title indicates a regional program (not nationwide)
+ *
+ * @param title Program title
+ * @returns true if title suggests a regional restriction
+ */
+export function hasRegionalIndicatorInTitle(title: string): boolean {
+  return extractRegionFromTitle(title).length > 0;
+}
+
+// ============================================================================
 // Export all mappings
 // ============================================================================
 
@@ -450,4 +529,6 @@ export const CodeMapper = {
   mapRegionToCode,
   mapCodeToRegion,
   checkRegionEligibility,
+  extractRegionFromTitle,
+  hasRegionalIndicatorInTitle,
 };

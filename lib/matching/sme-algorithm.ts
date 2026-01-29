@@ -64,6 +64,7 @@ import {
   checkRevenueEligibility,
   calculateBusinessAge,
   mapBusinessAgeToCode,
+  extractRegionFromTitle,
 } from '@/lib/sme24-api/mappers/code-mapper';
 import {
   classifyProgram,
@@ -251,18 +252,57 @@ function scoreProgram(program: SMEProgram, org: Organization): SMEMatchResult {
   // 3. Regional Requirement Check
   const orgRegions: KoreanRegion[] = org.locations?.map(l => l.region) || [];
 
+  // First, check if targetRegionCodes is populated from API
   if (program.targetRegionCodes && program.targetRegionCodes.length > 0) {
-    const regionCheck = checkRegionEligibility(orgRegions, program.targetRegionCodes);
+    // Check for nationwide codes (both 4-digit and 10-digit formats)
+    const hasNationwideCode =
+      program.targetRegionCodes.includes('1000') ||
+      program.targetRegionCodes.includes('1000000000');
 
-    if (!regionCheck.eligible) {
-      // Check if it's a hard regional requirement (non-nationwide)
-      if (!program.targetRegionCodes.includes('1000')) {
+    if (!hasNationwideCode) {
+      const regionCheck = checkRegionEligibility(orgRegions, program.targetRegionCodes);
+      if (!regionCheck.eligible) {
         return createIneligibleResult(program, '지역 제한 미충족');
       }
-    }
-    if (regionCheck.eligible) {
       metCriteria.push(regionCheck.reason);
+    } else {
+      metCriteria.push('전국 대상 프로그램');
     }
+  } else {
+    // FALLBACK: targetRegionCodes is empty, extract region from title
+    // This handles cases where SME24 API doesn't provide region codes
+    // but the title clearly indicates a regional program (e.g., "[대구] 2025년...")
+    const titleRegions = extractRegionFromTitle(program.title);
+
+    if (titleRegions.length > 0) {
+      // Title indicates regional program - enforce hard filter
+      if (orgRegions.length === 0) {
+        // User has no location set - cannot determine eligibility
+        return createIneligibleResult(program, '지역 제한 프로그램 (소재지 정보 필요)');
+      }
+
+      // Check if any org region matches any title region
+      const hasRegionMatch = titleRegions.some(titleRegion =>
+        orgRegions.includes(titleRegion)
+      );
+
+      if (!hasRegionMatch) {
+        const regionNames = titleRegions.map(r => {
+          const nameMap: Record<KoreanRegion, string> = {
+            SEOUL: '서울', GYEONGGI: '경기', INCHEON: '인천', BUSAN: '부산',
+            DAEGU: '대구', GWANGJU: '광주', DAEJEON: '대전', ULSAN: '울산',
+            SEJONG: '세종', GANGWON: '강원', CHUNGBUK: '충북', CHUNGNAM: '충남',
+            JEONBUK: '전북', JEONNAM: '전남', GYEONGBUK: '경북', GYEONGNAM: '경남',
+            JEJU: '제주',
+          };
+          return nameMap[r];
+        }).join('/');
+        return createIneligibleResult(program, `${regionNames} 지역 제한 프로그램`);
+      }
+
+      metCriteria.push('지역 조건 충족 (제목 기반)');
+    }
+    // If no region codes AND no region in title, treat as nationwide (no restriction)
   }
 
   // 4. Pre-Startup Gate (v2.0)
@@ -555,30 +595,62 @@ function scoreRegion(
   metCriteria: string[],
   failedCriteria: string[]
 ): number {
-  // No regional requirement or nationwide (1000) — partial credit
-  // Nationwide is still accessible, but less signal than a specific regional match
-  if (!program.targetRegionCodes ||
-      program.targetRegionCodes.length === 0 ||
-      program.targetRegionCodes.includes('1000')) {
+  // Check for nationwide codes (both 4-digit and 10-digit formats)
+  const hasNationwideCode =
+    program.targetRegionCodes?.includes('1000') ||
+    program.targetRegionCodes?.includes('1000000000');
+
+  // Case 1: targetRegionCodes is populated and contains nationwide code
+  if (hasNationwideCode) {
     metCriteria.push('전국 대상 프로그램');
     return 7;
   }
 
-  // No org location data
-  if (orgRegions.length === 0) {
-    failedCriteria.push('소재지 정보 필요');
-    return 3;
+  // Case 2: targetRegionCodes is populated with specific regions
+  if (program.targetRegionCodes && program.targetRegionCodes.length > 0) {
+    if (orgRegions.length === 0) {
+      failedCriteria.push('소재지 정보 필요');
+      return 3;
+    }
+
+    const regionCheck = checkRegionEligibility(orgRegions, program.targetRegionCodes);
+    if (regionCheck.eligible) {
+      metCriteria.push('지역 조건 충족');
+      return 10;
+    }
+
+    failedCriteria.push('지역 조건 미충족');
+    return 0;
   }
 
-  const regionCheck = checkRegionEligibility(orgRegions, program.targetRegionCodes);
+  // Case 3: targetRegionCodes is empty - check title for region indicator
+  const titleRegions = extractRegionFromTitle(program.title);
 
-  if (regionCheck.eligible) {
-    metCriteria.push('지역 조건 충족');
-    return 10;
+  if (titleRegions.length > 0) {
+    // Title indicates regional program
+    if (orgRegions.length === 0) {
+      failedCriteria.push('소재지 정보 필요');
+      return 3;
+    }
+
+    const hasRegionMatch = titleRegions.some(titleRegion =>
+      orgRegions.includes(titleRegion)
+    );
+
+    if (hasRegionMatch) {
+      metCriteria.push('지역 조건 충족 (제목 기반)');
+      return 10;
+    }
+
+    // Note: This case shouldn't happen as hard filter in eligibility check
+    // would have already filtered out this program. But handle for safety.
+    failedCriteria.push('지역 조건 미충족');
+    return 0;
   }
 
-  failedCriteria.push('지역 조건 미충족');
-  return 0;
+  // No region codes AND no region in title - treat as nationwide (partial credit)
+  metCriteria.push('전국 대상 프로그램');
+  return 7;
 }
 
 function scoreCertifications(
