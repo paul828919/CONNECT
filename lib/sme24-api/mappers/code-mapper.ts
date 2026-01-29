@@ -743,6 +743,51 @@ export function extractRegionFromTitle(title: string): KoreanRegion[] {
     }
   }
 
+  // Pattern 5 (v2.1): "in 지역명" pattern at end or in parentheses
+  // e.g., "소담스퀘어 in 대구", "(in 서울)", "센터 in 부산)"
+  if (regions.length === 0) {
+    for (const [name, region] of Object.entries(REGION_NAME_TO_ENUM)) {
+      // Match "in 지역명" or "in 지역명)" at end of title
+      const inPattern = new RegExp(`in\\s+${name}\\)?\\s*$`, 'i');
+      if (inPattern.test(title)) {
+        regions.push(region);
+        break;
+      }
+    }
+  }
+
+  // Pattern 6 (v2.1): Full administrative names anywhere in title
+  // e.g., "서울특별시 청년 쿡", "부산광역시 창업", "경기도 혁신"
+  // Maps full names to regions for unambiguous extraction
+  if (regions.length === 0) {
+    const FULL_ADMIN_NAMES: Array<{ pattern: RegExp; region: KoreanRegion }> = [
+      { pattern: /서울특별시/, region: 'SEOUL' },
+      { pattern: /부산광역시/, region: 'BUSAN' },
+      { pattern: /대구광역시/, region: 'DAEGU' },
+      { pattern: /인천광역시/, region: 'INCHEON' },
+      { pattern: /광주광역시/, region: 'GWANGJU' },
+      { pattern: /대전광역시/, region: 'DAEJEON' },
+      { pattern: /울산광역시/, region: 'ULSAN' },
+      { pattern: /세종특별자치시/, region: 'SEJONG' },
+      { pattern: /경기도/, region: 'GYEONGGI' },
+      { pattern: /강원특별자치도|강원도/, region: 'GANGWON' },
+      { pattern: /충청북도/, region: 'CHUNGBUK' },
+      { pattern: /충청남도/, region: 'CHUNGNAM' },
+      { pattern: /전라북도|전북특별자치도/, region: 'JEONBUK' },
+      { pattern: /전라남도/, region: 'JEONNAM' },
+      { pattern: /경상북도/, region: 'GYEONGBUK' },
+      { pattern: /경상남도/, region: 'GYEONGNAM' },
+      { pattern: /제주특별자치도/, region: 'JEJU' },
+    ];
+
+    for (const { pattern, region } of FULL_ADMIN_NAMES) {
+      if (pattern.test(title)) {
+        regions.push(region);
+        break;
+      }
+    }
+  }
+
   return regions;
 }
 
