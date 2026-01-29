@@ -352,6 +352,18 @@ export const KEYWORD_INDUSTRY_MAP: Record<string, IndustryCategory> = {
   'K-뷰티': 'CULTURAL',           // 시장대응형(K-뷰티)
   '뷰티': 'CULTURAL',             // K-뷰티 cosmetics/beauty programs
   '탄소감축': 'ENVIRONMENT',      // 탄소감축 기술개발
+
+  // === LOCAL VENTURE PROGRAMS (v2.0) ===
+  // Local venture programs are REGIONAL, INDUSTRY-AGNOSTIC
+  // They focus on utilizing local resources for business innovation
+  // Critical: These programs require HARD regional filtering (not just scoring)
+  // Example: "2026년 강원 로컬벤처기업 육성사업" → Gangwon-only
+  '로컬벤처': 'GENERAL',           // Local venture company programs
+  '로컬크리에이터': 'GENERAL',     // Local creator support programs
+  '로컬푸드': 'AGRICULTURE',       // Local food (exception: has agriculture focus)
+  '지역자원': 'GENERAL',           // Regional resource utilization
+  '지역기반': 'GENERAL',           // Regional-based programs
+  '지역특화': 'GENERAL',           // Regional specialization programs
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -624,4 +636,93 @@ export const INDUSTRY_KOREAN_LABELS: Record<IndustryCategory, string> = {
 
 export function getIndustryKoreanLabel(industry: IndustryCategory): string {
   return INDUSTRY_KOREAN_LABELS[industry] || industry;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Regional Program Detection (v2.0)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Keywords that indicate a program requires regional filtering.
+ *
+ * These programs are designed for companies in specific regions and should
+ * NOT be shown to companies outside those regions (hard filter, not soft scoring).
+ *
+ * Categories:
+ * - Local Venture: 로컬벤처, 로컬크리에이터, 지역자원
+ * - Regional Innovation: 지역혁신, 지역특화
+ * - Specific Region: 강원, 부산, 대구 etc. (handled by extractRegionFromTitle)
+ */
+const REGIONAL_REQUIRED_KEYWORDS = [
+  '로컬벤처',
+  '로컬크리에이터',
+  '로컬푸드',
+  '지역자원',
+  '지역기반',
+  '지역특화',
+  '지역혁신선도',
+  '지역혁신',
+  '지역주도',
+];
+
+/**
+ * Check if a program requires regional filtering based on keywords.
+ *
+ * v2.0 Enhancement (2026-01-29):
+ * These programs are industry-agnostic but REGION-SPECIFIC.
+ * Companies outside the target region should NOT see these programs.
+ *
+ * Example: "2026년 강원 로컬벤처기업 육성사업"
+ * - Industry: GENERAL (any industry eligible)
+ * - Region: HARD REQUIREMENT (Gangwon only)
+ *
+ * @param title Program title
+ * @param description Optional program description
+ * @returns true if program requires regional filtering
+ */
+export function isRegionalRequiredProgram(title: string, description?: string | null): boolean {
+  const text = `${title} ${description || ''}`.toLowerCase();
+
+  return REGIONAL_REQUIRED_KEYWORDS.some(keyword =>
+    text.includes(keyword.toLowerCase())
+  );
+}
+
+/**
+ * Extended classification result with regional flag
+ */
+export interface ExtendedClassificationResult extends ClassificationResult {
+  requiresRegionalFilter: boolean;
+  regionalKeywords: string[];
+}
+
+/**
+ * Classify program with extended regional detection
+ *
+ * @param title Program title
+ * @param programName Program name (optional)
+ * @param ministry Announcing ministry (optional)
+ * @param description Program description (optional)
+ * @returns Extended classification with regional flag
+ */
+export function classifyProgramExtended(
+  title: string,
+  programName: string | null,
+  ministry: string | null,
+  description?: string | null
+): ExtendedClassificationResult {
+  // Get base classification
+  const baseResult = classifyProgram(title, programName, ministry);
+
+  // Check for regional requirement
+  const text = `${title} ${programName || ''} ${description || ''}`.toLowerCase();
+  const matchedRegionalKeywords = REGIONAL_REQUIRED_KEYWORDS.filter(keyword =>
+    text.includes(keyword.toLowerCase())
+  );
+
+  return {
+    ...baseResult,
+    requiresRegionalFilter: matchedRegionalKeywords.length > 0,
+    regionalKeywords: matchedRegionalKeywords,
+  };
 }
