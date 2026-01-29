@@ -290,6 +290,9 @@ export async function POST(request: NextRequest) {
             detailUrl: true,
             applicationUrl: true,
             status: true,
+            // v2.1: Include description for text-based amount extraction
+            description: true,
+            supportScale: true,
           },
         },
       },

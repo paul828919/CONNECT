@@ -46,6 +46,9 @@ export interface SMEMatch {
     detailUrl: string | null;
     applicationUrl: string | null;
     status: string;
+    // v2.1: Text fields for amount extraction fallback
+    description: string | null;
+    supportScale: string | null;
   };
 }
 
@@ -67,13 +70,73 @@ function isFreshMatch(createdAt: string): boolean {
   return (now.getTime() - created.getTime()) / (1000 * 60 * 60) <= 48;
 }
 
-function formatAmount(amount: string | null): string {
+function formatAmount(amount: string | number | null): string {
   if (!amount) return '-';
-  const num = parseInt(amount);
-  if (isNaN(num)) return amount;
+  const num = typeof amount === 'number' ? amount : parseInt(amount);
+  if (isNaN(num)) return String(amount);
   if (num >= 100000000) return `${Math.floor(num / 100000000)}억원`;
   if (num >= 10000) return `${Math.floor(num / 10000)}만원`;
   return `${num.toLocaleString()}원`;
+}
+
+/**
+ * Extract support amount from description/supportScale text
+ * Parses Korean currency patterns like "2,000만원", "3천만원", "5억원"
+ */
+function extractAmountFromText(text: string | null): { min: number | null; max: number | null } {
+  if (!text) return { min: null, max: null };
+
+  const amounts: number[] = [];
+
+  // Pattern 1: "N,NNN만원" or "N,NNN 만원"
+  const commaManwonMatches = text.matchAll(/(\d{1,3}(?:,\d{3})+)\s*만\s*원/g);
+  for (const match of commaManwonMatches) {
+    const numStr = match[1].replace(/,/g, '');
+    amounts.push(parseInt(numStr, 10) * 10_000);
+  }
+
+  // Pattern 2: "NNN만원" (plain number without comma)
+  const plainManwonMatches = text.matchAll(/(?<![,\d])(\d{2,4})\s*만\s*원/g);
+  for (const match of plainManwonMatches) {
+    const num = parseInt(match[1], 10);
+    if (num >= 10) amounts.push(num * 10_000);
+  }
+
+  // Pattern 3: "N천만원"
+  const cheonManwonMatches = text.matchAll(/(\d+)\s*천\s*만원/g);
+  for (const match of cheonManwonMatches) {
+    amounts.push(parseInt(match[1], 10) * 10_000_000);
+  }
+
+  // Pattern 4: "N억원" or "N억"
+  const eokMatches = text.matchAll(/(\d+(?:\.\d+)?)\s*억(?:원)?/g);
+  for (const match of eokMatches) {
+    amounts.push(Math.round(parseFloat(match[1]) * 100_000_000));
+  }
+
+  // Pattern 5: "N백만원" (hundred million won)
+  const baekManwonMatches = text.matchAll(/(\d+)\s*백\s*만원/g);
+  for (const match of baekManwonMatches) {
+    amounts.push(parseInt(match[1], 10) * 1_000_000);
+  }
+
+  const uniqueAmounts = [...new Set(amounts)].sort((a, b) => a - b);
+
+  if (uniqueAmounts.length === 0) return { min: null, max: null };
+  return {
+    min: uniqueAmounts[0],
+    max: uniqueAmounts[uniqueAmounts.length - 1],
+  };
+}
+
+/**
+ * Check if interest rate is relevant for this program type
+ * Interest rate only applies to "금융" (Finance) programs
+ */
+function isInterestRateRelevant(bizType: string | null, sportType: string | null): boolean {
+  const financeKeywords = ['금융', '정책자금', '융자', '대출', '보증'];
+  const combinedType = `${bizType || ''} ${sportType || ''}`.toLowerCase();
+  return financeKeywords.some(keyword => combinedType.includes(keyword));
 }
 
 function formatDate(dateStr: string | null): string {
@@ -167,51 +230,73 @@ export function SMEMatchCard({ match, index, onToggleSave, saving, cardRef }: SM
         </div>
 
         {/* Row 4: Details grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 p-3 rounded-lg bg-gray-50 border border-gray-100">
-          {/* Support amount */}
-          <div>
-            <div className="text-xs text-gray-400 mb-0.5">지원금액</div>
-            <div className="text-sm font-semibold text-gray-900">
-              {program.maxSupportAmount
-                ? `최대 ${formatAmount(program.maxSupportAmount)}`
-                : program.minSupportAmount
-                  ? formatAmount(program.minSupportAmount)
-                  : '-'}
+        {(() => {
+          // Extract amounts from text if structured data is not available
+          const hasStructuredAmount = program.minSupportAmount || program.maxSupportAmount;
+          const textAmount = !hasStructuredAmount
+            ? extractAmountFromText(program.description || program.supportScale)
+            : null;
+          const displayAmount = hasStructuredAmount
+            ? { min: program.minSupportAmount, max: program.maxSupportAmount }
+            : textAmount;
+
+          // Check if interest rate should be shown
+          const showInterestRate = isInterestRateRelevant(program.bizType, program.sportType);
+          const hasInterestRate = program.minInterestRate || program.maxInterestRate;
+
+          // Determine grid columns: 3 for non-finance, 4 for finance programs
+          const gridCols = showInterestRate ? 'sm:grid-cols-4' : 'sm:grid-cols-3';
+
+          return (
+            <div className={`grid grid-cols-2 ${gridCols} gap-3 mb-4 p-3 rounded-lg bg-gray-50 border border-gray-100`}>
+              {/* Support amount */}
+              <div>
+                <div className="text-xs text-gray-400 mb-0.5">지원금액</div>
+                <div className="text-sm font-semibold text-gray-900">
+                  {displayAmount?.max
+                    ? `최대 ${formatAmount(displayAmount.max)}`
+                    : displayAmount?.min
+                      ? formatAmount(displayAmount.min)
+                      : <span className="text-gray-400">-</span>}
+                </div>
+              </div>
+              {/* Interest rate - only show for finance programs */}
+              {showInterestRate && (
+                <div>
+                  <div className="text-xs text-gray-400 mb-0.5">금리</div>
+                  <div className="text-sm font-semibold text-gray-900">
+                    {hasInterestRate
+                      ? `${program.minInterestRate}~${program.maxInterestRate}%`
+                      : <span className="text-gray-400">-</span>}
+                  </div>
+                </div>
+              )}
+              {/* Deadline */}
+              <div>
+                <div className="text-xs text-gray-400 mb-0.5">마감일</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-semibold text-gray-900">
+                    {formatDate(program.applicationEnd)}
+                  </span>
+                  <SMEDeadlineBadge deadline={program.applicationEnd} />
+                </div>
+              </div>
+              {/* Certifications */}
+              <div>
+                <div className="text-xs text-gray-400 mb-0.5">필요인증</div>
+                <div className="text-sm font-semibold text-gray-900">
+                  {program.requiredCerts?.length > 0
+                    ? program.requiredCerts.map((cert, idx) => (
+                        <span key={idx} className="text-emerald-600">
+                          {cert}{idx < program.requiredCerts.length - 1 ? ', ' : ''}
+                        </span>
+                      ))
+                    : <span className="text-gray-400">없음</span>}
+                </div>
+              </div>
             </div>
-          </div>
-          {/* Interest rate */}
-          <div>
-            <div className="text-xs text-gray-400 mb-0.5">금리</div>
-            <div className="text-sm font-semibold text-gray-900">
-              {program.minInterestRate
-                ? `${program.minInterestRate}~${program.maxInterestRate}%`
-                : '-'}
-            </div>
-          </div>
-          {/* Deadline */}
-          <div>
-            <div className="text-xs text-gray-400 mb-0.5">마감일</div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-semibold text-gray-900">
-                {formatDate(program.applicationEnd)}
-              </span>
-              <SMEDeadlineBadge deadline={program.applicationEnd} />
-            </div>
-          </div>
-          {/* Certifications */}
-          <div>
-            <div className="text-xs text-gray-400 mb-0.5">필요인증</div>
-            <div className="text-sm font-semibold text-gray-900">
-              {program.requiredCerts?.length > 0
-                ? program.requiredCerts.map((cert, idx) => (
-                    <span key={idx} className="text-emerald-600">
-                      {cert}{idx < program.requiredCerts.length - 1 ? ', ' : ''}
-                    </span>
-                  ))
-                : <span className="text-gray-400">없음</span>}
-            </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Row 5: Score breakdown */}
         <SMEScoreBreakdown breakdown={match.scoreBreakdown} className="mb-4" />
