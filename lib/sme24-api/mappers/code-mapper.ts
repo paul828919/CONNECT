@@ -187,6 +187,202 @@ export function mapBusinessAgeToCode(years: number | null): string | null {
   return 'OI06';                      // 20년이상 (Fixed: was 15년이상)
 }
 
+/**
+ * Infer business age requirements from program description text.
+ *
+ * v2.0 Enhancement (2026-01-29):
+ * Extracts minBusinessAge and maxBusinessAge from Korean text patterns
+ * when SME24 API doesn't provide structured data.
+ *
+ * Supported patterns:
+ * - "창업 N년 이내" → maxBusinessAge = N
+ * - "업력 N년 미만" → maxBusinessAge = N-1
+ * - "업력 N년 이상" → minBusinessAge = N
+ * - "업력 N년~M년" → minBusinessAge = N, maxBusinessAge = M
+ * - "업력 N년 이내 기업" → maxBusinessAge = N
+ *
+ * @param text Description text (title + description + supportTarget)
+ * @returns Object with inferred minBusinessAge and maxBusinessAge (null if not found)
+ */
+export function inferBusinessAgeFromText(text: string): {
+  minBusinessAge: number | null;
+  maxBusinessAge: number | null;
+  inferredCodes: string[];
+} {
+  const result = {
+    minBusinessAge: null as number | null,
+    maxBusinessAge: null as number | null,
+    inferredCodes: [] as string[],
+  };
+
+  if (!text) return result;
+
+  // Pattern 1: "창업 N년 이내" (within N years of founding)
+  // e.g., "창업 7년 이내 기업의 대표자"
+  const withinYearsMatch = text.match(/창업\s*(\d+)년\s*이내/);
+  if (withinYearsMatch) {
+    result.maxBusinessAge = parseInt(withinYearsMatch[1], 10);
+  }
+
+  // Pattern 2: "업력 N년 미만" (business age less than N years)
+  // e.g., "업력 3년 미만 기업"
+  const underYearsMatch = text.match(/업력\s*(\d+)년\s*미만/);
+  if (underYearsMatch && result.maxBusinessAge === null) {
+    result.maxBusinessAge = parseInt(underYearsMatch[1], 10) - 1;
+  }
+
+  // Pattern 3: "업력 N년 이상" (business age at least N years)
+  // e.g., "업력 3년 이상 기업"
+  const atLeastYearsMatch = text.match(/업력\s*(\d+)년\s*이상/);
+  if (atLeastYearsMatch) {
+    result.minBusinessAge = parseInt(atLeastYearsMatch[1], 10);
+  }
+
+  // Pattern 4: "업력 N년~M년" or "업력 N~M년" (range)
+  // e.g., "업력 3년~7년 기업"
+  const rangeMatch = text.match(/업력\s*(\d+)(?:년)?[~\-](\d+)년/);
+  if (rangeMatch) {
+    result.minBusinessAge = parseInt(rangeMatch[1], 10);
+    result.maxBusinessAge = parseInt(rangeMatch[2], 10);
+  }
+
+  // Pattern 5: "N년 이내 기업" (company within N years) - fallback
+  // e.g., "7년 이내 창업기업"
+  const companyWithinMatch = text.match(/(\d+)년\s*이내\s*(?:창업)?기업/);
+  if (companyWithinMatch && result.maxBusinessAge === null) {
+    result.maxBusinessAge = parseInt(companyWithinMatch[1], 10);
+  }
+
+  // Pattern 6: Stage-based inference from 창업기/정착기/도약기
+  // "창업기: 2025년 1월 창업 ~ 예비창업가" → 0-1 year
+  // "정착기: 2023년 1월 ~ 2024년 12월 창업" → 1-3 years
+  // "도약기: 2019년 1월 ~ 2022년 12월 창업" → 3-7 years
+  if (text.includes('창업기') && text.includes('도약기')) {
+    // This program has multiple stages, likely up to 7 years
+    if (result.maxBusinessAge === null) {
+      result.maxBusinessAge = 7;
+    }
+  }
+
+  // Generate SME24 codes based on inferred values
+  if (result.maxBusinessAge !== null || result.minBusinessAge !== null) {
+    // Generate all applicable age codes
+    const min = result.minBusinessAge ?? 0;
+    const max = result.maxBusinessAge ?? 30;
+
+    if (min < 3 && max >= 0) result.inferredCodes.push('OI01'); // 3년미만
+    if (min < 5 && max >= 3) result.inferredCodes.push('OI02'); // 3년~5년미만
+    if (min < 7 && max >= 5) result.inferredCodes.push('OI03'); // 5년~7년미만
+    if (min < 10 && max >= 7) result.inferredCodes.push('OI04'); // 7년~10년미만
+    if (min < 20 && max >= 10) result.inferredCodes.push('OI05'); // 10년~20년미만
+    if (max >= 20) result.inferredCodes.push('OI06'); // 20년이상
+  }
+
+  return result;
+}
+
+/**
+ * Infer pre-startup eligibility from program text.
+ *
+ * v2.0 Enhancement (2026-01-29):
+ * Detects if program accepts pre-entrepreneurs (예비창업자) based on
+ * keywords in title/description when API isPreStartup flag is false.
+ *
+ * @param text Combined title + description text
+ * @returns true if program likely accepts pre-entrepreneurs
+ */
+export function inferPreStartupFromText(text: string): boolean {
+  if (!text) return false;
+
+  const PRE_STARTUP_KEYWORDS = [
+    '예비창업',
+    '예비창업자',
+    '예비창업가',
+    '예비 창업',
+    '사업자등록증 발급',       // Covers "발급 가능", "발급이 가능한"
+    '사업자등록 예정',
+    '사업자등록을 하지 않은',
+    '창업 예정자',
+    '창업예정자',
+  ];
+
+  const lowerText = text.toLowerCase();
+  return PRE_STARTUP_KEYWORDS.some(keyword => lowerText.includes(keyword.toLowerCase()));
+}
+
+/**
+ * Extract support amount from program description text.
+ *
+ * v2.0 Enhancement (2026-01-29):
+ * Parses Korean currency patterns when SME24 API doesn't provide structured amounts.
+ *
+ * Supported patterns:
+ * - "2,000만원" → 20,000,000
+ * - "3천만원" → 30,000,000
+ * - "5억원" → 500,000,000
+ * - "최대 1억원" → maxAmount = 100,000,000
+ *
+ * @param text Description text
+ * @returns Object with minAmount and maxAmount (null if not found)
+ */
+export function extractSupportAmountFromText(text: string): {
+  minAmount: number | null;
+  maxAmount: number | null;
+} {
+  const result = {
+    minAmount: null as number | null,
+    maxAmount: null as number | null,
+  };
+
+  if (!text) return result;
+
+  const amounts: number[] = [];
+
+  // Pattern 1: "N,NNN 만원" or "N,NNN만원" (comma-separated thousands + optional space + 만원)
+  // e.g., "2,000만원", "2,000 만원", "1,500만원"
+  const commaManwonMatches = text.matchAll(/(\d{1,3}(?:,\d{3})+)\s*만\s*원/g);
+  for (const match of commaManwonMatches) {
+    const numStr = match[1].replace(/,/g, '');
+    amounts.push(parseInt(numStr, 10) * 10_000);
+  }
+
+  // Pattern 2: "NNN만원" or "NNN 만원" (plain number without comma + optional space + 만원)
+  // e.g., "500만원", "2000만원", "500 만원"
+  // Use word boundary and exclude numbers that are part of comma-formatted numbers
+  const plainManwonMatches = text.matchAll(/(?<![,\d])(\d{2,4})\s*만\s*원/g);
+  for (const match of plainManwonMatches) {
+    const num = parseInt(match[1], 10);
+    // Filter out partial matches like "00" from "2,000만원"
+    if (num >= 10) {
+      amounts.push(num * 10_000);
+    }
+  }
+
+  // Pattern 3: "N천만원" (cheon + 만원)
+  // e.g., "3천만원" → 30,000,000
+  const cheonManwonMatches = text.matchAll(/(\d+)\s*천\s*만원/g);
+  for (const match of cheonManwonMatches) {
+    amounts.push(parseInt(match[1], 10) * 10_000_000);
+  }
+
+  // Pattern 4: "N억원" or "N억" (eok)
+  // e.g., "5억원" → 500,000,000
+  const eokMatches = text.matchAll(/(\d+(?:\.\d+)?)\s*억(?:원)?/g);
+  for (const match of eokMatches) {
+    amounts.push(Math.round(parseFloat(match[1]) * 100_000_000));
+  }
+
+  // Deduplicate and sort amounts
+  const uniqueAmounts = [...new Set(amounts)].sort((a, b) => a - b);
+
+  if (uniqueAmounts.length > 0) {
+    result.minAmount = uniqueAmounts[0];
+    result.maxAmount = uniqueAmounts[uniqueAmounts.length - 1];
+  }
+
+  return result;
+}
+
 // ============================================================================
 // Certification Mapping
 // ============================================================================
@@ -580,6 +776,13 @@ export const CodeMapper = {
   // Business Age
   calculateBusinessAge,
   mapBusinessAgeToCode,
+  inferBusinessAgeFromText,        // v2.0: Infer from description
+
+  // Pre-Startup Detection
+  inferPreStartupFromText,         // v2.0: Detect 예비창업자 eligibility
+
+  // Support Amount Extraction
+  extractSupportAmountFromText,    // v2.0: Parse Korean currency
 
   // Certifications
   mapCertificationsToCode,
