@@ -777,10 +777,10 @@ export default function MatchesPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-4 border-t border-gray-200">
                 <button
                   onClick={() => setExpandedMatchId(expandedMatchId === match.id ? null : match.id)}
-                  className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  className="inline-flex items-center px-3 sm:px-4 py-2 text-sm sm:text-base bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors whitespace-nowrap"
                 >
                   <svg
                     className="mr-2 w-4 h-4"
@@ -795,7 +795,7 @@ export default function MatchesPage() {
                       d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                     />
                   </svg>
-                  {expandedMatchId === match.id ? 'AI 설명 닫기' : 'AI 설명 보기'}
+                  {expandedMatchId === match.id ? 'AI 설명 닫기' : 'AI 설명'}
                 </button>
                 {normalizeExternalUrl(match.program.announcementUrl) ? (
                   <a
@@ -812,9 +812,9 @@ export default function MatchesPage() {
                       });
                       window.location.hash = `match-${match.id}`;
                     }}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
                   >
-                    공고 확인하기
+                    공고 확인
                     <svg
                       className="ml-2 w-4 h-4"
                       fill="none"
@@ -832,10 +832,10 @@ export default function MatchesPage() {
                 ) : (
                   <button
                     disabled
-                    className="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed"
+                    className="inline-flex items-center px-3 sm:px-4 py-2 text-sm sm:text-base bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed whitespace-nowrap"
                     title="공고 URL이 유효하지 않습니다"
                   >
-                    공고 확인하기
+                    공고 확인
                     <svg
                       className="ml-2 w-4 h-4"
                       fill="none"
@@ -854,7 +854,7 @@ export default function MatchesPage() {
                 <button
                   onClick={() => handleSaveMatch(match.id, !!match.saved, index, match.score, match.program.id)}
                   disabled={savingMatchId === match.id}
-                  className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
+                  className={`inline-flex items-center px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg transition-colors whitespace-nowrap ${
                     match.saved
                       ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -874,9 +874,9 @@ export default function MatchesPage() {
                 </button>
 
                 {/* Application Status Buttons (Strong Label Events) */}
-                <div className="ml-auto flex items-center gap-2">
+                <div className="w-full sm:w-auto sm:ml-auto flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                   {applicationStatuses[match.id] ? (
-                    <span className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium ${
+                    <span className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${
                       applicationStatuses[match.id] === 'APPLIED' ? 'bg-green-100 text-green-700' :
                       applicationStatuses[match.id] === 'PLANNING' ? 'bg-blue-100 text-blue-700' :
                       'bg-red-100 text-red-700'
@@ -892,13 +892,13 @@ export default function MatchesPage() {
                           logApplied({ programId: match.program.id, position: index, matchScore: match.score });
                           setApplicationStatuses(prev => ({ ...prev, [match.id]: 'APPLIED' }));
                         }}
-                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors"
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-colors whitespace-nowrap"
                       >
-                        ✅ 지원 완료
+                        ✅ 지원완료
                       </button>
                       <button
                         onClick={() => setNotEligibleMatchId(match.id)}
-                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors"
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors whitespace-nowrap"
                       >
                         ❌ 부적격
                       </button>
@@ -907,9 +907,9 @@ export default function MatchesPage() {
                           logPlanning({ programId: match.program.id, position: index, matchScore: match.score });
                           setApplicationStatuses(prev => ({ ...prev, [match.id]: 'PLANNING' }));
                         }}
-                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors whitespace-nowrap"
                       >
-                        📋 지원 예정
+                        📋 지원예정
                       </button>
                     </>
                   )}
@@ -1192,7 +1192,7 @@ export default function MatchesPage() {
                           d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                         />
                       </svg>
-                      {expandedMatchId === match.id ? 'AI 설명 닫기' : 'AI 설명 보기'}
+                      {expandedMatchId === match.id ? 'AI 설명 닫기' : 'AI 설명'}
                     </button>
 
                     {/* Different CTA: "Study for 2026" instead of "Apply Now" */}
