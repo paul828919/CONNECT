@@ -1,9 +1,14 @@
 /**
  * SME Tier 3 Document Enrichment — Batch Processing Script
  *
- * Downloads announcement attachments (PDF/HWP/HWPX) from SME programs,
- * extracts text, and uses Claude LLM to extract eligibility criteria
- * that Tier 1 (regex) and Tier 2 (LLM on API text) couldn't capture.
+ * Extracts eligibility criteria from SME program text using Claude LLM.
+ * Prefers scraped bizinfo.go.kr text (~94% available) over attachment
+ * downloads (~20% success rate).
+ *
+ * Text source priority:
+ *   1. detailPageDocumentText (bizinfo 공고문 — highest quality)
+ *   2. detailPageText (bizinfo HTML — always available if scraped)
+ *   3. Attachment download (fallback — ~20% success)
  *
  * Run: npx tsx scripts/enrich-sme-tier3-documents.ts [options]
  *
@@ -55,6 +60,9 @@ interface Tier3Stats {
   processed: number;
   downloaded: number;
   textExtracted: number;
+  textFromBizinfoDoc: number;
+  textFromBizinfoHtml: number;
+  textFromDownload: number;
   llmCalled: number;
   updated: number;
   skipped: number;
@@ -111,6 +119,9 @@ async function main() {
     processed: 0,
     downloaded: 0,
     textExtracted: 0,
+    textFromBizinfoDoc: 0,
+    textFromBizinfoHtml: 0,
+    textFromDownload: 0,
     llmCalled: 0,
     updated: 0,
     skipped: 0,
@@ -131,10 +142,12 @@ async function main() {
     },
   };
 
-  // Query programs with attachments but missing eligibility data
+  // Query programs with text sources (scraped or attachments) but missing eligibility
   const whereConditions: any = {
     status: 'ACTIVE',
     OR: [
+      { detailPageDocumentText: { not: null } },
+      { detailPageText: { not: null } },
       { NOT: { attachmentUrls: { isEmpty: true } } },
       { announcementFileUrl: { not: null } },
     ],
@@ -159,6 +172,8 @@ async function main() {
     select: {
       id: true,
       title: true,
+      detailPageText: true,
+      detailPageDocumentText: true,
       attachmentUrls: true,
       attachmentNames: true,
       announcementFileUrl: true,
@@ -199,36 +214,50 @@ async function main() {
         stats.processed++;
         const shortTitle = program.title.substring(0, 50);
 
-        // Step 1: Download
-        const { results: downloads, errors: dlErrors } = await downloadSMEAttachments({
-          id: program.id,
-          attachmentUrls: program.attachmentUrls,
-          attachmentNames: program.attachmentNames,
-          announcementFileUrl: program.announcementFileUrl,
-          announcementFileName: program.announcementFileName,
-        });
+        // Step 1: Resolve text source (priority: scraped > downloaded)
+        let documentText: string | null = null;
+        let textSource = '';
 
-        stats.downloadErrors.push(...dlErrors);
+        // Priority 1: bizinfo 공고문 full text
+        if (program.detailPageDocumentText && program.detailPageDocumentText.length > 100) {
+          documentText = program.detailPageDocumentText;
+          textSource = 'bizinfo-document';
+          stats.textFromBizinfoDoc++;
+        }
+        // Priority 2: bizinfo HTML text
+        else if (program.detailPageText && program.detailPageText.length > 100) {
+          documentText = program.detailPageText;
+          textSource = 'bizinfo-html';
+          stats.textFromBizinfoHtml++;
+        }
+        // Priority 3: Download attachment (fallback)
+        else {
+          const { results: downloads, errors: dlErrors } = await downloadSMEAttachments({
+            id: program.id,
+            attachmentUrls: program.attachmentUrls,
+            attachmentNames: program.attachmentNames,
+            announcementFileUrl: program.announcementFileUrl,
+            announcementFileName: program.announcementFileName,
+          });
 
-        if (downloads.length === 0) {
-          console.log(`  ⏭️  No downloadable attachments: ${shortTitle}`);
-          stats.skipped++;
-          continue;
+          stats.downloadErrors.push(...dlErrors);
+
+          if (downloads.length > 0) {
+            stats.downloaded++;
+            const download = downloads[0];
+            documentText = await extractTextFromAttachment(
+              download.fileName,
+              download.fileBuffer
+            );
+            if (documentText && documentText.length >= 100) {
+              textSource = 'attachment-download';
+              stats.textFromDownload++;
+            }
+          }
         }
 
-        stats.downloaded++;
-        const download = downloads[0];
-
-        // Step 2: Extract text
-        const documentText = await extractTextFromAttachment(
-          download.fileName,
-          download.fileBuffer
-        );
-
         if (!documentText || documentText.length < 100) {
-          console.log(
-            `  ⏭️  Insufficient text (${documentText?.length || 0} chars): ${shortTitle}`
-          );
+          console.log(`  ⏭️  No usable text: ${shortTitle}`);
           stats.skipped++;
           continue;
         }
@@ -237,7 +266,7 @@ async function main() {
 
         if (dryRun) {
           console.log(
-            `  [DRY RUN] ${shortTitle} — ${download.fileName} (${documentText.length} chars)`
+            `  [DRY RUN] ${shortTitle} — ${textSource} (${documentText.length} chars)`
           );
           continue;
         }
@@ -383,8 +412,10 @@ function printSummary(stats: Tier3Stats, dryRun: boolean, model: string) {
   console.log(`Model: ${model}`);
   console.log(`Total programs found: ${stats.total}`);
   console.log(`Processed: ${stats.processed}`);
-  console.log(`Downloaded: ${stats.downloaded}`);
   console.log(`Text extracted: ${stats.textExtracted}`);
+  console.log(`  From bizinfo document: ${stats.textFromBizinfoDoc}`);
+  console.log(`  From bizinfo HTML: ${stats.textFromBizinfoHtml}`);
+  console.log(`  From attachment download: ${stats.textFromDownload}`);
   console.log(`LLM calls: ${stats.llmCalled}`);
   console.log(`Updated: ${stats.updated}`);
   console.log(`Skipped: ${stats.skipped}`);
