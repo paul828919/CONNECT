@@ -1,7 +1,7 @@
 # Data Quality Console — Master Plan
 
 > **Created**: 2026-01-30
-> **Status**: Phase 1 Complete — Awaiting local verification
+> **Status**: ✅ Phase 1 Complete — Deployed to production
 > **Route**: `/admin/data-quality-console`
 > **Page Name**: Data Quality Console (데이터 품질 콘솔)
 
@@ -196,62 +196,59 @@ Response:
 
 ## 6. Phase 1: Read-Only Data Browser
 
-> **Status**: 📋 Planning
-> **Estimated files**: ~15-20 new files
+> **Status**: ✅ Complete — Deployed (commit `d64ffe0`)
+> **Files created**: 17 new files + 1 modified
 > **Risk**: 🟢 Low (no write operations)
 
-### 6.1 File Structure
+### 6.1 File Structure (Actual Implementation)
 
 ```
 app/
   admin/
     data-quality-console/
-      page.tsx                          # Main page with tab navigation
+      page.tsx                          # Main page with 5-tab navigation + auth guard
       components/
-        DataQualityTabs.tsx             # Tab container component
         SmePrograms/
-          SmeProgramsTab.tsx            # Tab content with table + filters
-          SmeProgramsColumns.tsx        # Column definitions (default + all)
-          SmeProgramsFilters.tsx        # Filter bar component
+          SmeProgramsTab.tsx            # Tab: columns, filters, search, detail drawer (default export)
         SmeMatches/
           SmeMatchesTab.tsx
-          SmeMatchesColumns.tsx
-          SmeMatchesFilters.tsx
         FundingPrograms/
           FundingProgramsTab.tsx
-          FundingProgramsColumns.tsx
-          FundingProgramsFilters.tsx
         FundingMatches/
           FundingMatchesTab.tsx
-          FundingMatchesColumns.tsx
-          FundingMatchesFilters.tsx
         UsersOrgs/
           UsersOrgsTab.tsx
-          UsersOrgsColumns.tsx
-          UsersOrgsFilters.tsx
         shared/
-          DataTable.tsx                 # Reusable TanStack Table wrapper
-          DetailDrawer.tsx              # Side panel for full row details
-          CompletenessBar.tsx           # Visual field completeness indicator
-          ColumnToggle.tsx              # Column visibility dropdown
-          ExportCSV.tsx                 # CSV download button
-          StatusBadge.tsx               # Reusable status badge
-          CompletnessBadge.tsx          # NULL/populated field indicator
+          DataTable.tsx                 # Generic TanStack Table wrapper (named export)
+          DetailDrawer.tsx              # Right-side Sheet panel with field groups (named export)
+          CompletenessBar.tsx           # Color-coded progress bar: red/yellow/green (named export)
+          StatsBar.tsx                  # Horizontal stat cards with loading skeletons (named export)
+          ExportCSV.tsx                 # UTF-8 BOM CSV export for Korean (named export)
 
-api/
-  admin/
-    data-quality-console/
-      sme-programs/
-        route.ts                        # GET handler with pagination/filter/sort
-      sme-matches/
-        route.ts
-      funding-programs/
-        route.ts
-      funding-matches/
-        route.ts
-      users-orgs/
-        route.ts
+  api/
+    admin/
+      data-quality-console/
+        sme-programs/
+          route.ts                      # GET: pagination, search, filters, completeness, stats
+        sme-matches/
+          route.ts                      # GET: pagination, filters, org/program relations
+        funding-programs/
+          route.ts                      # GET: pagination, search, filters, completeness, stats
+        funding-matches/
+          route.ts                      # GET: pagination, filters, org/program relations
+        users-orgs/
+          route.ts                      # GET: pagination, search, filters, profile completeness
+
+components/
+  layout/
+    UserMenu.tsx                        # Modified: added "데이터 품질 콘솔" admin menu link
 ```
+
+**Design decisions vs. original plan:**
+- Columns, filters, and field groups are co-located inside each Tab component (not split into separate files) — reduces file count from ~25 to 17 while keeping each tab self-contained
+- Shared components use **named exports**; tab components use **default exports** — consistent with codebase conventions
+- `StatsBar` replaces the planned `StatusBadge` — stats are displayed as a horizontal card row, not individual badges
+- All API routes include a `serializeRow()` helper to convert `BigInt`/`Decimal` fields to JSON-safe types (critical Prisma + Next.js fix)
 
 ### 6.2 Shared DataTable Component
 
@@ -394,27 +391,38 @@ Legend: 🟢 = field populated, 🔴 = field NULL/empty
 
 ### 6.5 Data Completeness Calculation
 
-Each row gets a computed "completeness" percentage:
+Each row gets a computed "completeness" object (server-side):
 
 ```typescript
-function calculateCompleteness(row: Record<string, any>, fields: string[]): number {
-  const populated = fields.filter(f => row[f] !== null && row[f] !== '' && row[f] !== undefined);
-  return Math.round((populated.length / fields.length) * 100);
+// Returns { percent, filled, total } for display in table + detail drawer
+function computeCompleteness(row: any): { percent: number; filled: number; total: number } {
+  let filled = 0;
+  for (const field of COMPLETENESS_FIELDS) {
+    const value = row[field];
+    if (value === null || value === undefined) continue;
+    if (Array.isArray(value)) { if (value.length > 0) filled++; }
+    else { filled++; }
+  }
+  return { percent: Math.round((filled / TOTAL_FIELDS) * 100), filled, total: TOTAL_FIELDS };
 }
 ```
 
-- Displayed as a progress bar in the table column
+- **SME Programs**: 23 fields checked
+- **R&D Programs**: 18 fields checked
+- **Users/Orgs**: 15 organization fields checked
+- Displayed as a progress bar in the table column (`CompletenessBar`)
 - Color-coded: 🔴 0-40%, 🟡 41-70%, 🟢 71-100%
-- Detail drawer shows per-field status
+- Detail drawer shows per-field green/red dot indicator
+
+**Important**: All API responses pass through `serializeRow()` to convert Prisma's `BigInt`/`Decimal` types to `Number`, preventing `"Do not know how to serialize a BigInt"` errors from `NextResponse.json()`.
 
 ### 6.6 CSV Export
 
-Each tab has an "Export CSV" button that:
-- Exports currently filtered/sorted data (not just current page)
-- Includes ALL columns (not just visible ones)
-- Uses Korean column headers
+Each tab has an "CSV 내보내기" button (`ExportCSV` component) that:
+- Fetches data matching current filters (client-side JSON → CSV conversion)
+- Includes UTF-8 BOM (`\uFEFF`) for proper Korean character display in Excel
 - Filename format: `{table}_{YYYY-MM-DD}.csv` (e.g., `sme_programs_2026-01-30.csv`)
-- Server-side generation to handle large datasets
+- Downloads via `Blob` + `URL.createObjectURL` pattern
 
 ### 6.7 API Endpoints (Phase 1)
 
@@ -483,43 +491,45 @@ Query params:
 
 Each tab displays a summary stats bar at the top:
 
-**SME Programs:**
-- Total Programs: 2,134
-- Active: 892 | Expired: 1,042 | Archived: 200
-- Avg Completeness: 64%
-- Low Confidence: 234
+**SME Programs** (actual data as of 2026-01-30):
+- 전체 프로그램: 2,067
+- 활성: 1,244 | 만료: 823
+- 평균 완성도: 49%
+- 낮은 신뢰도: 2,059
 
 **SME Matches:**
-- Total Matches: 10,234
-- Avg Score: 68.5
-- Viewed: 45% | Saved: 12%
-- Unique Organizations: 89
+- 전체 매칭: 100
+- 평균 점수: 71.08
+- 조회율: 99% | 저장율: 0%
+- 고유 기업: 1
 
 **R&D Programs:**
-- Total Programs: 523
-- By Agency: NTIS 210 | IITP 95 | KEIT 80 | TIPA 73 | KIMST 65
-- Avg Completeness: 71%
-- Low Confidence: 45
+- 전체 프로그램: 1,905
+- 기관별: NTIS 1,904 / KEIT 1
+- 평균 완성도: 63%
+- 낮은 신뢰도: 194
 
 **R&D Matches:**
-- Total Matches: 5,678
-- Avg Score: 72.1
-- Viewed: 52% | Saved: 18%
-- Personalized: 3,200 (56%)
+- 전체 매칭: 8
+- 평균 점수: 76.38
+- 조회율: 0% | 저장율: 0%
+- 개인화 적용: 8
+- 고유 기업: 1
 
 **Users & Orgs:**
-- Total Users: 234 | Admins: 3
-- Total Orgs: 156
-- Profile Completed: 78%
-- Active Subscriptions: 45
+- 전체 사용자: 18 | 관리자: 1
+- 전체 기업: 71
+- 프로필 완성율: 100%
+- 구독 현황: FREE 0 / PRO 0 / TEAM 1
 
 ---
 
 ## 7. Phase 2: Single-Row Delete with Audit
 
-> **Status**: 📋 Not Started
+> **Status**: ✅ Complete
 > **Prerequisites**: Phase 1 complete
 > **Risk**: 🟡 Medium
+> **Completed**: 2026-01-30
 
 ### Scope
 - Add "Delete" button per row (trash icon) in all 5 tabs
@@ -697,5 +707,8 @@ Admin pages are accessible via sidebar or direct URL. Check `components/layout/S
 | Date | Change | Author |
 |---|---|---|
 | 2026-01-30 | Initial master plan created | Claude + Paul |
-| 2026-01-30 | Phase 1 implementation complete (16 files: 5 API routes, 5 shared components, 5 tab components, 1 main page + admin nav link) | Claude + Paul |
+| 2026-01-30 | Phase 1 implementation complete (17 new files + 1 modified: 5 API routes, 5 shared components, 5 tab components, 1 main page, 1 master plan doc + UserMenu nav link) | Claude + Paul |
+| 2026-01-30 | Bug fix: BigInt/Decimal serialization causing 500 errors on all API routes. Added `serializeRow()` helper to all 5 routes. Also fixed completeness format (number → `{ percent, filled, total }` object) and DetailDrawer nested key access. | Claude + Paul |
+| 2026-01-30 | Local verification passed (all 5 tabs working). Committed as `d64ffe0`, pushed to production. | Claude + Paul |
+| 2026-01-30 | Phase 2 implementation complete: Single-row soft-delete with audit. 4 new files + 9 modified (schema, 2 API routes, 2 shared components, 5 tab components, 1 master plan). 7 commits: schema migration, DELETE API, undo API, shared UI components, 5-tab integration, GET route filters, docs update. | Claude + Paul |
 | | | |
