@@ -20,7 +20,9 @@
 9. [Phase 4: Inline Field Editing](#9-phase-4-inline-field-editing)
 10. [Database Schema Reference](#10-database-schema-reference)
 11. [Existing Admin Patterns Reference](#11-existing-admin-patterns-reference)
-12. [Change Log](#12-change-log)
+12. [Implementation Deviations from Original Plan](#12-implementation-deviations-from-original-plan)
+13. [Future Work Backlog](#13-future-work-backlog)
+14. [Change Log](#14-change-log)
 
 ---
 
@@ -87,15 +89,15 @@ To inspect or manage data quality, an admin must:
 
 ### Tech Stack (Aligned with Existing Codebase)
 
-| Component | Technology | Rationale |
-|---|---|---|
-| Page rendering | Client-side (Next.js App Router) | Consistent with all existing admin pages |
-| Data table | `@tanstack/react-table` v8 | Already installed; supports sorting, filtering, pagination, column visibility |
-| Data fetching | `@tanstack/react-query` v5 | Already installed; handles caching, refetching, loading states |
-| UI components | shadcn/ui + Radix UI + Tailwind | Existing component library |
-| Icons | `lucide-react` | Already installed |
-| Forms (Phase 4) | `react-hook-form` + `zod` | Already installed |
-| Auth guard | `useSession` + role check | Existing pattern in all admin pages |
+| Component | Planned Technology | Actually Used | Notes |
+|---|---|---|---|
+| Page rendering | Client-side (Next.js App Router) | ✅ Same | Consistent with all existing admin pages |
+| Data table | `@tanstack/react-table` v8 | ✅ Same | Sorting, filtering, pagination all working |
+| Data fetching | `@tanstack/react-query` v5 | ⚠️ **`fetch()` + `useState`** | React Query was NOT adopted; plain fetch with local state. See §12 Deviations |
+| UI components | shadcn/ui + Radix UI + Tailwind | ✅ Same | Sheet, Select, Switch, Input, AlertDialog, Badge, etc. |
+| Icons | `lucide-react` | ✅ Same | Trash2, Pencil, Save, X, Loader2 |
+| Forms (Phase 4) | `react-hook-form` + `zod` | ⚠️ **`zod` only** | Zod used for server-side PATCH validation; `react-hook-form` NOT used. Custom controlled components instead. See §12 Deviations |
+| Auth guard | `useSession` + role check | ✅ Same | Existing pattern in all admin pages |
 
 ### UX Pattern: Smart Column Presets
 
@@ -829,7 +831,77 @@ Admin pages are accessible via sidebar or direct URL. Check `components/layout/S
 
 ---
 
-## 12. Change Log
+## 12. Implementation Deviations from Original Plan
+
+> **Purpose**: Document differences between the original plan and actual implementation so future work can reference ground truth, not assumptions.
+> **Added**: 2026-01-31 (post Phase 4 completion audit)
+
+### 12.1 Confirmed Deviations
+
+| # | Section | Planned | Actually Implemented | Impact | Recommendation |
+|---|---------|---------|---------------------|--------|----------------|
+| D-1 | §3 Tech Stack | `@tanstack/react-query` v5 for data fetching | Plain `fetch()` + `useState` + `useCallback` in all 5 tabs | 🟡 Medium — no automatic cache invalidation; `fetchData()` must be called manually after edits/deletes | Migrate to React Query if adding optimistic updates or cross-tab cache invalidation |
+| D-2 | §3 Tech Stack | `react-hook-form` + `zod` for Phase 4 | `zod` (server-side only) + custom controlled `<Input>` / `<Select>` components | 🟢 Low — works correctly, just no form-level validation UX (per-field errors come from server) | Consider `react-hook-form` only if adding complex multi-step forms |
+| D-3 | §6.2 DataTable | "Row selection (checkbox column)" described as built-in | Phase 3 bulk delete uses its own checkbox UI inside `DuplicateDetectionPanel`, not DataTable row selection | 🟢 Negligible — DataTable may support checkboxes but they aren't wired to any tab |
+| D-4 | §6.3 Column Presets | SME Programs default column #1 listed as `ID` | Actual first column is `pblancSeq` (공고번호); `ID` is not a table column, only visible in DetailDrawer | 🟢 Negligible — better UX decision, `pblancSeq` is more meaningful to admins |
+| D-5 | §9 Phase 4 (original) | "Click any cell in the table → inline edit mode" | Editing is **DetailDrawer-only** (click row → drawer → 편집 button) | 🟢 Intentional — simpler UX, lower risk of accidental edits, already documented in updated §9 |
+
+### 12.2 Impact Summary
+
+- **No functional gaps**: All planned features are delivered. Deviations are architectural choices, not missing functionality.
+- **D-1 is the only actionable item**: If future phases require cross-tab data synchronization (e.g., editing a program in Tab 1 should update match scores in Tab 2), migrating to React Query would be necessary.
+- **All deviations were pragmatic**: Each simplification reduced implementation complexity without sacrificing user-facing features.
+
+---
+
+## 13. Future Work Backlog
+
+> **Purpose**: Potential enhancements identified during the Phase 1–4 implementation. These are NOT planned phases — they are backlog items for prioritization.
+> **Added**: 2026-01-31
+
+### 13.1 Data Fetching & State Management
+
+| ID | Item | Effort | Value | Dependencies |
+|---|------|--------|-------|-------------|
+| F-1 | **Migrate to `@tanstack/react-query`** — Replace `fetch()` + `useState` pattern in all 5 tabs with `useQuery` / `useMutation`. Enables automatic cache invalidation after edits, background refetching, and optimistic updates. | Medium (5 tabs + 2 hooks) | High if adding real-time features | None |
+| F-2 | **Optimistic updates for inline editing** — Show updated value immediately in the drawer before PATCH response returns. Revert on error. Requires React Query (F-1). | Low | Medium (perceived speed) | F-1 |
+
+### 13.2 Editing Enhancements
+
+| ID | Item | Effort | Value | Dependencies |
+|---|------|--------|-------|-------------|
+| F-3 | **Bulk field editing** — Select multiple rows in the table → edit a shared field across all (e.g., set `status: ARCHIVED` for 50 expired programs). Uses existing PATCH endpoint in a loop or a new bulk PATCH. | Medium | High for batch operations | None |
+| F-4 | **Table-cell inline editing** — Click a cell directly in the DataTable to edit (original Phase 4 scope). Higher accidental-edit risk; requires click-outside detection and cell-level dirty state. | High | Medium (power users) | None |
+| F-5 | **Field-level undo** — After saving, show "실행 취소" toast (like delete undo) that reverts the edit using `beforeValues` from `audit_logs`. | Medium | Medium | None |
+
+### 13.3 Audit & Monitoring
+
+| ID | Item | Effort | Value | Dependencies |
+|---|------|--------|-------|-------------|
+| F-6 | **Audit log viewer UI** — New tab or panel showing `audit_logs` entries filtered by `resourceType` / `resourceId`. Display `beforeValues` → `afterValues` diff with field-level highlighting. The data already exists (Phase 2 DELETE + Phase 4 UPDATE both write audit logs). | Medium | High for accountability | None |
+| F-7 | **Per-record edit history** — In the EditableDetailDrawer, add a "변경 이력" accordion showing all past edits for this record from `audit_logs`. | Low | Medium | F-6 (shared components) |
+
+### 13.4 UX Improvements
+
+| ID | Item | Effort | Value | Dependencies |
+|---|------|--------|-------|-------------|
+| F-8 | **Column visibility toggle** — Add a dropdown in DataTable header to show/hide columns. `@tanstack/react-table` supports this natively via `columnVisibility` state. Mentioned in §3 and §6.2 of the original plan. | Low | Medium (wide tables) | None |
+| F-9 | **Keyboard shortcuts in EditableDetailDrawer** — `Ctrl+S` to save, `Escape` to cancel edit mode, `Ctrl+E` to enter edit mode. | Low | Low (power users) | None |
+| F-10 | **Completeness recalculation after edit** — When a field is edited from empty → populated (or vice versa), update the completeness bar in real-time without refetching. | Low | Medium (immediate feedback) | None |
+
+### 13.5 Priority Recommendation
+
+If continuing development, the recommended order is:
+
+1. **F-8** (Column visibility toggle) — Low effort, fills a documented gap
+2. **F-6** (Audit log viewer) — High value, all data already exists
+3. **F-1** (React Query migration) — Foundational for F-2 and future real-time features
+4. **F-3** (Bulk field editing) — High value for admin productivity
+5. **F-7** (Per-record edit history) — Builds on F-6
+
+---
+
+## 14. Change Log
 
 | Date | Change | Author |
 |---|---|---|
@@ -841,4 +913,5 @@ Admin pages are accessible via sidebar or direct URL. Check `components/layout/S
 | 2026-01-31 | Phase 3 implementation complete: Bulk duplicate detection & delete. 7 new files + 4 modified. Three-tier detection algorithm (contentHash, pblancSeq, Damerau-Levenshtein title similarity ≥90%). Shared completeness utils extracted to `lib/utils/`. DuplicateDetectionPanel with expandable group cards, auto-suggest keep, bulk delete with transactional audit + undo. 5 commits (A–E). | Claude + Paul |
 | 2026-01-31 | Fix: Center pagination controls in DataTable to prevent overlap with feedback button. 1 commit. | Claude + Paul |
 | 2026-01-31 | Phase 4 implementation complete: Inline field editing in DetailDrawer. 4 new files + 9 modified. Schema: `afterValues` added to `audit_logs`. PATCH API with Zod `.strict()` validation + READONLY_FIELDS defense-in-depth. EditableField component (8 input types + enum Select). EditableDetailDrawer with dirty tracking, batch save, unsaved changes guard. Integrated into all 5 tabs. 5 commits. | Claude + Paul |
+| 2026-01-31 | Post-Phase 4 audit: Added §12 (Implementation Deviations — 5 documented deviations between plan and actual code), §13 (Future Work Backlog — 10 items with effort/value/priority ranking), updated §3 tech stack table with actual-vs-planned annotations. Renumbered Change Log to §14. | Claude + Paul |
 | | | |
