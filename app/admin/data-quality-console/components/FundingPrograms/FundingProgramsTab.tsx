@@ -20,6 +20,7 @@ import { StatsBar } from '../shared/StatsBar';
 import { ExportCSV } from '../shared/ExportCSV';
 import { DeleteConfirmDialog } from '../shared/DeleteConfirmDialog';
 import { useDeleteRow } from '../shared/useDeleteRow';
+import { DuplicateDetectionPanel } from '../shared/DuplicateDetectionPanel';
 
 const API_ENDPOINT = '/api/admin/data-quality-console/funding-programs';
 const PAGE_SIZE = 50;
@@ -436,6 +437,8 @@ export default function FundingProgramsTab() {
           filename={`funding_programs_${new Date().toISOString().slice(0, 10)}`}
         />
       </div>
+
+      <DuplicateDetectionPanel tableName="funding-programs" onRefreshData={fetchData} />
 
       <DataTable
         columns={columns}
