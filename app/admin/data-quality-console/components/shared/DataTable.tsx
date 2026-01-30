@@ -202,15 +202,8 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between px-2">
-        <div className="text-sm text-muted-foreground">
-          {totalCount.toLocaleString()}개 중 {startItem.toLocaleString()}-
-          {endItem.toLocaleString()} 표시
-        </div>
+      <div className="flex flex-col items-center gap-2 px-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            페이지 {page} / {totalPages || 1}
-          </span>
           <Button
             variant="outline"
             size="sm"
@@ -219,6 +212,9 @@ export function DataTable<TData, TValue>({
           >
             이전
           </Button>
+          <span className="text-sm text-muted-foreground">
+            페이지 {page} / {totalPages || 1}
+          </span>
           <Button
             variant="outline"
             size="sm"
@@ -227,6 +223,10 @@ export function DataTable<TData, TValue>({
           >
             다음
           </Button>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {totalCount.toLocaleString()}개 중 {startItem.toLocaleString()}-
+          {endItem.toLocaleString()} 표시
         </div>
       </div>
     </div>
