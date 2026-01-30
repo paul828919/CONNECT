@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
         endDt: options.endDt,
       });
     } else {
-      // Daily sync (last 7 days)
+      // Daily sync (last 2 days)
       result = await dailySync();
     }
 

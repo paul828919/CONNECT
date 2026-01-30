@@ -190,12 +190,12 @@ export async function getSyncStats(): Promise<{
 
 /**
  * Daily sync helper - called by scheduler
- * Syncs programs from the last 7 days
+ * Syncs programs from the last 2 days
  */
 export async function dailySync(): Promise<SyncResult> {
   const today = new Date();
-  const sevenDaysAgo = new Date(today);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const twoDaysAgo = new Date(today);
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
 
   // Format dates as YYYYMMDD for API
   const formatDate = (d: Date) => {
@@ -206,7 +206,7 @@ export async function dailySync(): Promise<SyncResult> {
   };
 
   return syncSMEPrograms({
-    strDt: formatDate(sevenDaysAgo),
+    strDt: formatDate(twoDaysAgo),
     endDt: formatDate(today),
   });
 }
