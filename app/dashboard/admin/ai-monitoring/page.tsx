@@ -76,7 +76,16 @@ interface BudgetStats {
     byService: {
       MATCH_EXPLANATION: { count: number; cost: number; averageDuration: number };
       QA_CHAT: { count: number; cost: number; averageDuration: number };
+      EXTRACTION?: { count: number; cost: number; averageDuration: number };
+      DOCUMENT_EXTRACTION?: { count: number; cost: number; averageDuration: number };
     };
+    byModel?: Record<string, {
+      count: number;
+      cost: number;
+      inputTokens: number;
+      outputTokens: number;
+      averageDuration: number;
+    }>;
   };
   timestamp: string;
 }
@@ -213,7 +222,7 @@ export default function AIMonitoringDashboard() {
     },
   });
 
-  // Prepare pie chart data
+  // Prepare pie chart data (all service types)
   const pieData = budgetStats
     ? [
         {
@@ -226,10 +235,28 @@ export default function AIMonitoringDashboard() {
           value: budgetStats.stats.byService.QA_CHAT?.cost || 0,
           count: budgetStats.stats.byService.QA_CHAT?.count || 0,
         },
-      ]
+        {
+          name: 'API 추출',
+          value: budgetStats.stats.byService.EXTRACTION?.cost || 0,
+          count: budgetStats.stats.byService.EXTRACTION?.count || 0,
+        },
+        {
+          name: '문서 추출',
+          value: budgetStats.stats.byService.DOCUMENT_EXTRACTION?.cost || 0,
+          count: budgetStats.stats.byService.DOCUMENT_EXTRACTION?.count || 0,
+        },
+      ].filter((d) => d.value > 0 || d.count > 0)
     : [];
 
-  const COLORS = ['#3b82f6', '#8b5cf6']; // Blue for Match, Purple for Q&A
+  const COLORS = ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981']; // Blue, Purple, Amber, Green
+
+  // Prepare model comparison data
+  const modelData = budgetStats?.stats.byModel
+    ? Object.entries(budgetStats.stats.byModel).map(([model, data]) => ({
+        model: model.replace('claude-', '').replace(/-\d+$/, ''),
+        ...data,
+      }))
+    : [];
 
   // Format currency
   const formatKRW = (amount: number) => {
@@ -417,6 +444,8 @@ export default function AIMonitoringDashboard() {
                     <Line type="monotone" dataKey="totalCost" stroke="#3b82f6" strokeWidth={2} name="총 비용" />
                     <Line type="monotone" dataKey="matchExplanationCost" stroke="#10b981" strokeWidth={1} name="매칭 설명" />
                     <Line type="monotone" dataKey="qaChatCost" stroke="#8b5cf6" strokeWidth={1} name="Q&A 채팅" />
+                    <Line type="monotone" dataKey="extractionCost" stroke="#f59e0b" strokeWidth={1} name="API 추출" />
+                    <Line type="monotone" dataKey="documentExtractionCost" stroke="#ef4444" strokeWidth={1} name="문서 추출" />
                   </LineChart>
                 </ResponsiveContainer>
                 <div className="grid grid-cols-3 gap-4 mt-4 text-sm">
@@ -488,6 +517,44 @@ export default function AIMonitoringDashboard() {
             )}
           </Card>
         </div>
+
+        {/* Model Cost Comparison */}
+        {modelData.length > 0 && (
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center">
+              <DollarSign className="h-5 w-5 mr-2 text-amber-500" />
+              모델별 비용 비교
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {modelData.map((m) => (
+                <div key={m.model} className="p-4 border rounded-lg">
+                  <div className="text-sm font-medium text-muted-foreground mb-1">
+                    {m.model}
+                  </div>
+                  <div className="text-2xl font-bold">{formatKRW(m.cost)}</div>
+                  <div className="grid grid-cols-2 gap-2 mt-3 text-xs text-muted-foreground">
+                    <div>
+                      <div>요청 수</div>
+                      <div className="text-sm font-semibold text-foreground">{m.count.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div>평균 처리</div>
+                      <div className="text-sm font-semibold text-foreground">{Math.round(m.averageDuration)}ms</div>
+                    </div>
+                    <div>
+                      <div>입력 토큰</div>
+                      <div className="text-sm font-semibold text-foreground">{(m.inputTokens / 1000).toFixed(1)}K</div>
+                    </div>
+                    <div>
+                      <div>출력 토큰</div>
+                      <div className="text-sm font-semibold text-foreground">{(m.outputTokens / 1000).toFixed(1)}K</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* Top Users */}
         <Card className="p-6">

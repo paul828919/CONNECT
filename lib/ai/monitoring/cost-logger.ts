@@ -10,6 +10,22 @@ import { nanoid } from 'nanoid';
 import { db } from '@/lib/db';
 
 
+// Model-specific pricing (KRW per 1K tokens)
+export const MODEL_PRICING_KRW: Record<string, { inputPer1K: number; outputPer1K: number }> = {
+  'claude-sonnet-4-5-20250929': { inputPer1K: 3.90, outputPer1K: 19.50 },
+  'claude-haiku-4-5-20251001': { inputPer1K: 1.30, outputPer1K: 6.50 },
+  'claude-opus-4-5-20251101': { inputPer1K: 19.50, outputPer1K: 97.50 },
+};
+
+/**
+ * Calculate cost in KRW from token usage and model
+ */
+export function calculateCostKRW(model: string, inputTokens: number, outputTokens: number): number {
+  const pricing = MODEL_PRICING_KRW[model];
+  if (!pricing) return 0;
+  return (inputTokens / 1000) * pricing.inputPer1K + (outputTokens / 1000) * pricing.outputPer1K;
+}
+
 export interface CostLogEntry {
   serviceType: AIServiceType;
   userId?: string;
@@ -152,6 +168,8 @@ export async function getDailyCostBreakdown(days: number): Promise<Array<{
   totalRequests: number;
   matchExplanationCost: number;
   qaChatCost: number;
+  extractionCost: number;
+  documentExtractionCost: number;
 }>> {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
@@ -168,7 +186,7 @@ export async function getDailyCostBreakdown(days: number): Promise<Array<{
   });
 
   // Group by date
-  const byDate: Record<string, { totalCost: number; totalRequests: number; matchExplanationCost: number; qaChatCost: number }> = {};
+  const byDate: Record<string, { totalCost: number; totalRequests: number; matchExplanationCost: number; qaChatCost: number; extractionCost: number; documentExtractionCost: number }> = {};
   for (const log of logs) {
     const date = log.createdAt.toISOString().split('T')[0];
     if (!byDate[date]) {
@@ -177,6 +195,8 @@ export async function getDailyCostBreakdown(days: number): Promise<Array<{
         totalRequests: 0,
         matchExplanationCost: 0,
         qaChatCost: 0,
+        extractionCost: 0,
+        documentExtractionCost: 0,
       };
     }
     byDate[date].totalCost += log.costKRW;
@@ -185,6 +205,10 @@ export async function getDailyCostBreakdown(days: number): Promise<Array<{
       byDate[date].matchExplanationCost += log.costKRW;
     } else if (log.serviceType === 'QA_CHAT') {
       byDate[date].qaChatCost += log.costKRW;
+    } else if (log.serviceType === 'EXTRACTION') {
+      byDate[date].extractionCost += log.costKRW;
+    } else if (log.serviceType === 'DOCUMENT_EXTRACTION') {
+      byDate[date].documentExtractionCost += log.costKRW;
     }
   }
 

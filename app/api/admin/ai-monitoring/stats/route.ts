@@ -54,7 +54,31 @@ export async function GET(request: NextRequest) {
     // 6. Get cost statistics from database
     const costStats = await getCostStats(startDate, endDate);
 
-    // 7. Combine and return
+    // 7. Build model breakdown from cost stats byService
+    // Query model-level breakdown from database
+    const { db } = await import('@/lib/db');
+    const modelLogs = await db.ai_cost_logs.groupBy({
+      by: ['model'],
+      _sum: { costKRW: true, inputTokens: true, outputTokens: true },
+      _count: { id: true },
+      _avg: { duration: true },
+      where: {
+        createdAt: { gte: startDate, lte: endDate },
+      },
+    });
+
+    const byModel: Record<string, { count: number; cost: number; inputTokens: number; outputTokens: number; averageDuration: number }> = {};
+    for (const entry of modelLogs) {
+      byModel[entry.model] = {
+        count: entry._count.id,
+        cost: entry._sum.costKRW || 0,
+        inputTokens: entry._sum.inputTokens || 0,
+        outputTokens: entry._sum.outputTokens || 0,
+        averageDuration: entry._avg.duration || 0,
+      };
+    }
+
+    // 8. Combine and return
     const response = {
       budget: {
         dailyLimit: budgetStatus.dailyLimit,
@@ -76,6 +100,7 @@ export async function GET(request: NextRequest) {
         averageCost: costStats.averageCost,
         averageDuration: costStats.averageDuration,
         byService: costStats.byService,
+        byModel,
       },
       timestamp: new Date().toISOString(),
     };

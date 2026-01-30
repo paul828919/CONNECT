@@ -875,6 +875,7 @@ enum AIServiceType {
   MATCH_EXPLANATION
   QA_CHAT
   EXTRACTION
+  DOCUMENT_EXTRACTION
 }
 
 enum AgencyId {
