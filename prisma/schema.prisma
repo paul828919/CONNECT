@@ -101,6 +101,7 @@ model audit_logs {
   userAgent     String?
   requestPath   String?
   beforeValues  Json?
+  afterValues   Json?
   undoToken     String?   @unique
   undoExpiresAt DateTime?
   createdAt     DateTime  @default(now())
