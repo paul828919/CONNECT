@@ -156,7 +156,7 @@ export function generateSMEMatches(
   programs: SMEProgram[],
   options: SMEMatchOptions = {}
 ): SMEMatchResult[] {
-  const { minimumScore = 40, includeExpired = false, limit = 50 } = options;
+  const { minimumScore = 50, includeExpired = false, limit = 50 } = options;
 
   if (!organization || !programs || programs.length === 0) {
     return [];

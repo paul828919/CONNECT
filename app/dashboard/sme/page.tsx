@@ -205,7 +205,7 @@ export default function SMEDashboardPage() {
           <div className="rounded-xl bg-white p-6 shadow-sm text-center min-h-[120px] flex flex-col justify-center">
             <div className="text-sm font-medium text-gray-600">접수 중 지원사업</div>
             <div className="mt-2 text-3xl font-bold text-green-600">
-              {stats?.programs.active || '-'}
+              {stats?.programs.active ? stats.programs.active.toLocaleString() : '-'}
             </div>
             <div className="mt-1 text-xs text-gray-500">중기부 공모 중</div>
           </div>

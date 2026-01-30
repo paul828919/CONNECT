@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
     // Generate Matches
     // ========================================================================
     const matchResults = generateSMEMatches(organization, programs, {
-      minimumScore: 40,
+      minimumScore: 50,
       limit: 100,
     });
 
