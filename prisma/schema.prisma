@@ -91,17 +91,20 @@ model ai_feedback {
 }
 
 model audit_logs {
-  id           String   @id @default(uuid())
-  userId       String?
-  action       String
-  resourceType String
-  resourceId   String
-  purpose      String?
-  ipAddress    String?
-  userAgent    String?
-  requestPath  String?
-  createdAt    DateTime @default(now())
-  user         User?    @relation(fields: [userId], references: [id])
+  id            String    @id @default(uuid())
+  userId        String?
+  action        String
+  resourceType  String
+  resourceId    String
+  purpose       String?
+  ipAddress     String?
+  userAgent     String?
+  requestPath   String?
+  beforeValues  Json?
+  undoToken     String?   @unique
+  undoExpiresAt DateTime?
+  createdAt     DateTime  @default(now())
+  user          User?     @relation(fields: [userId], references: [id])
 
   @@index([action])
   @@index([createdAt])
@@ -260,6 +263,7 @@ model funding_matches {
   notifiedAt          DateTime?
   personalizedScore   Int?                  @db.SmallInt
   personalizedAt      DateTime?
+  deletedAt           DateTime?
   createdAt           DateTime              @default(now())
   organizations       organizations         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   funding_programs    funding_programs      @relation(fields: [programId], references: [id], onDelete: Cascade)
@@ -268,6 +272,7 @@ model funding_matches {
 
   @@unique([organizationId, programId])
   @@index([createdAt])
+  @@index([deletedAt])
   @@index([organizationId, score])
   @@index([programId])
   @@index([saved])
@@ -1725,6 +1730,7 @@ model sme_program_matches {
   savedAt             DateTime?
   notificationSent    Boolean       @default(false)
   notifiedAt          DateTime?
+  deletedAt           DateTime?
   createdAt           DateTime      @default(now())
 
   // Relations
@@ -1738,6 +1744,7 @@ model sme_program_matches {
   @@index([saved])
   @@index([viewed])
   @@index([createdAt])
+  @@index([deletedAt])
   @@index([sessionId])
   @@map("sme_program_matches")
 }
