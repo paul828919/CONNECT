@@ -15,6 +15,13 @@ import {
   hasExtractedEligibility,
 } from './mappers/eligibility-text-extractor';
 
+// Re-export Tier 3 for convenience
+export {
+  runTier3DocumentEnrichment,
+  type DocumentEnrichmentResult,
+  type DocumentEnrichmentOptions,
+} from './document-extraction-service';
+
 // ============================================================================
 // Types
 // ============================================================================
