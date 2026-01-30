@@ -80,6 +80,9 @@ export default function UserMenu() {
             <DropdownMenuItem onClick={() => router.push('/admin/refund-management')}>
               환불 관리
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/admin/data-quality-console')}>
+              데이터 품질 콘솔
+            </DropdownMenuItem>
           </>
         )}
         <DropdownMenuSeparator />
