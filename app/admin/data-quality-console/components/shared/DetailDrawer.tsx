@@ -9,7 +9,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { CompletenessBar } from './CompletenessBar';
 
-interface FieldGroup {
+export interface FieldGroup {
   title: string;
   icon: string;
   fields: {
@@ -28,14 +28,14 @@ interface DetailDrawerProps {
   completeness?: { percent: number; filled?: number; populated?: number; total?: number };
 }
 
-function isPopulated(value: any): boolean {
+export function isPopulated(value: any): boolean {
   if (value === null || value === undefined) return false;
   if (typeof value === 'string' && value.trim() === '') return false;
   if (Array.isArray(value) && value.length === 0) return false;
   return true;
 }
 
-function formatDate(value: any): string {
+export function formatDate(value: any): string {
   if (!value) return '';
   try {
     const d = new Date(value);
@@ -57,7 +57,7 @@ function formatNumber(value: any): string {
   return num.toLocaleString();
 }
 
-function renderValue(
+export function renderValue(
   value: any,
   type: string = 'text'
 ): React.ReactNode {
