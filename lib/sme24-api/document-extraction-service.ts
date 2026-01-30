@@ -2,16 +2,17 @@
  * SME Document Extraction Service (Tier 3)
  *
  * Orchestrates the full document-based enrichment pipeline:
- *   1. Download announcement attachments (PDF/HWP/HWPX)
- *   2. Extract text from downloaded files
- *   3. Send document text to LLM for eligibility extraction
+ *   1. Check for scraped bizinfo.go.kr text (preferred — ~94% availability)
+ *   2. Fall back to attachment download (PDF/HWP/HWPX — ~20% availability)
+ *   3. Send text to LLM for eligibility extraction
  *   4. Update database with extracted fields (conditional — never overwrite API data)
  *
- * This service handles programs that Tier 1 (regex) and Tier 2 (LLM on API text)
- * couldn't enrich because the eligibility data only exists in attached documents.
+ * Text Sources (priority order):
+ *   1. detailPageDocumentText — bizinfo 공고문 full text (highest quality)
+ *   2. detailPageText — bizinfo HTML text (always available if scraped)
+ *   3. Downloaded attachment text — current Tier 3 fallback
  *
- * Uses `eligibilityConfidence = 'HIGH'` to mark Tier 3 processed programs,
- * as document-based extraction provides the highest confidence level.
+ * Uses `eligibilityConfidence = 'HIGH'` to mark Tier 3 processed programs.
  */
 
 import { db } from '@/lib/db';
@@ -158,10 +159,13 @@ export async function runTier3DocumentEnrichment(
   };
 
   try {
-    // Build query: active programs with attachments but missing eligibility
+    // Build query: active programs with text sources but missing eligibility
+    // Now includes programs with scraped bizinfo text (not just attachments)
     const whereConditions: any = {
       status: 'ACTIVE',
       OR: [
+        { detailPageDocumentText: { not: null } },
+        { detailPageText: { not: null } },
         { NOT: { attachmentUrls: { isEmpty: true } } },
         { announcementFileUrl: { not: null } },
       ],
@@ -189,6 +193,8 @@ export async function runTier3DocumentEnrichment(
         id: true,
         title: true,
         description: true,
+        detailPageText: true,
+        detailPageDocumentText: true,
         attachmentUrls: true,
         attachmentNames: true,
         announcementFileUrl: true,
@@ -216,45 +222,55 @@ export async function runTier3DocumentEnrichment(
       try {
         result.processed++;
 
-        // Step 1: Download attachments
-        const { results: downloads, errors: dlErrors } = await downloadSMEAttachments({
-          id: program.id,
-          attachmentUrls: program.attachmentUrls,
-          attachmentNames: program.attachmentNames,
-          announcementFileUrl: program.announcementFileUrl,
-          announcementFileName: program.announcementFileName,
-        });
+        // Step 1: Resolve text source (priority: scraped > downloaded > skip)
+        let documentText: string | null = null;
+        let textSource = '';
 
-        result.downloadErrors.push(...dlErrors);
+        // Priority 1: bizinfo 공고문 full text (highest quality)
+        if (program.detailPageDocumentText && program.detailPageDocumentText.length > 100) {
+          documentText = program.detailPageDocumentText;
+          textSource = 'bizinfo-document';
+        }
+        // Priority 2: bizinfo HTML text (always available if scraped)
+        else if (program.detailPageText && program.detailPageText.length > 100) {
+          documentText = program.detailPageText;
+          textSource = 'bizinfo-html';
+        }
+        // Priority 3: Download attachment (fallback — ~20% success)
+        else {
+          const { results: downloads, errors: dlErrors } = await downloadSMEAttachments({
+            id: program.id,
+            attachmentUrls: program.attachmentUrls,
+            attachmentNames: program.attachmentNames,
+            announcementFileUrl: program.announcementFileUrl,
+            announcementFileName: program.announcementFileName,
+          });
 
-        if (downloads.length === 0) {
-          console.log(`[Tier3] No downloadable attachments for: ${program.title.substring(0, 50)}`);
-          result.skipped++;
-          continue;
+          result.downloadErrors.push(...dlErrors);
+
+          if (downloads.length > 0) {
+            result.downloaded++;
+            const download = downloads[0];
+            documentText = await extractTextFromAttachment(
+              download.fileName,
+              download.fileBuffer
+            );
+            textSource = 'attachment-download';
+          }
         }
 
-        result.downloaded++;
-        const download = downloads[0]; // Use first successful download
-
-        // Step 2: Extract text from document
-        const documentText = await extractTextFromAttachment(
-          download.fileName,
-          download.fileBuffer
-        );
-
         if (!documentText || documentText.length < 100) {
-          console.log(
-            `[Tier3] Insufficient text extracted (${documentText?.length || 0} chars): ${download.fileName}`
-          );
+          console.log(`[Tier3] No usable text for: ${program.title.substring(0, 50)}`);
           result.skipped++;
           continue;
         }
 
         result.extracted++;
+        console.log(`[Tier3] Text source: ${textSource} (${documentText.length} chars)`);
 
         if (dryRun) {
           console.log(
-            `[Tier3] [DRY RUN] Would extract from ${download.fileName} (${documentText.length} chars)`
+            `[Tier3] [DRY RUN] Would extract from ${textSource} (${documentText.length} chars)`
           );
           continue;
         }
