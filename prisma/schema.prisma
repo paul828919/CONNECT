@@ -1632,6 +1632,12 @@ model sme_programs {
   manualReviewCompletedBy   String?
   eligibilityLastUpdated    DateTime?
 
+  // ===== bizinfo.go.kr Detail Page Scraping Fields =====
+  detailPageText            String?          @db.Text   // Scraped HTML text from bizinfo detail page
+  detailPageScrapedAt       DateTime?                   // When last scraped
+  detailPageDocumentText    String?          @db.Text   // Extracted text from downloaded 공고문 file
+  detailPageTags            String[]         @default([]) // 해시태그 from detail page
+
   // ===== Relations =====
   matches               sme_program_matches[]
 
