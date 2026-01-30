@@ -6,8 +6,8 @@
  * Tier 3: Title similarity >= 90% using Damerau-Levenshtein (O(n²) with length pre-filter)
  */
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const damerauLevenshtein = require('damerau-levenshtein');
+// @ts-ignore — no type declarations available for this package
+import damerauLevenshtein from 'damerau-levenshtein';
 
 export interface DuplicateProgram {
   id: string;
