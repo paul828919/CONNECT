@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ColumnDef, SortingState } from '@tanstack/react-table';
+import { Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -15,6 +17,8 @@ import { DataTable } from '../shared/DataTable';
 import { DetailDrawer } from '../shared/DetailDrawer';
 import { StatsBar } from '../shared/StatsBar';
 import { ExportCSV } from '../shared/ExportCSV';
+import { DeleteConfirmDialog } from '../shared/DeleteConfirmDialog';
+import { useDeleteRow } from '../shared/useDeleteRow';
 
 const API_ENDPOINT = '/api/admin/data-quality-console/funding-matches';
 const PAGE_SIZE = 50;
@@ -85,6 +89,11 @@ export default function FundingMatchesTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [rowToDelete, setRowToDelete] = useState<any>(null);
+  const { deleteRow, isDeleting } = useDeleteRow({
+    tableName: 'funding-matches',
+    onSuccess: () => fetchData(),
+  });
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -202,6 +211,24 @@ export default function FundingMatchesTab() {
         size: 110,
         cell: ({ getValue }) => formatDate(getValue() as string | null),
       },
+      {
+        id: 'actions',
+        header: '',
+        size: 50,
+        cell: ({ row }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
+            onClick={(e) => {
+              e.stopPropagation();
+              setRowToDelete(row.original);
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        ),
+      },
     ],
     []
   );
@@ -308,6 +335,23 @@ export default function FundingMatchesTab() {
         }
         data={selectedRow}
         fieldGroups={fieldGroups}
+      />
+
+      <DeleteConfirmDialog
+        open={!!rowToDelete}
+        onOpenChange={(open) => { if (!open) setRowToDelete(null); }}
+        title={
+          rowToDelete?.organizations?.name && rowToDelete?.funding_programs?.title
+            ? `${rowToDelete.organizations.name} ↔ ${rowToDelete.funding_programs.title}`
+            : rowToDelete?.id || ''
+        }
+        isDeleting={isDeleting}
+        onConfirm={async () => {
+          if (rowToDelete) {
+            await deleteRow(rowToDelete.id);
+            setRowToDelete(null);
+          }
+        }}
       />
     </div>
   );
