@@ -9,15 +9,17 @@
  * - Lightweight HTTP API calls (no Playwright/browser)
  * - Expected duration: 2-5 minutes per sync
  *
- * Post-sync: Tier 1 Enrichment automatically runs after successful sync
- * - Extracts eligibility criteria from text fields
- * - Updates targetRegionCodes, targetCompanyScale, etc.
- * - Expected duration: 1-2 minutes
+ * Post-sync pipeline:
+ * 1. Tier 1 Enrichment (1 min after sync) — regex extraction
+ * 2. bizinfo.go.kr Detail Page Scraping (5 min after Tier 1) — HTML scraping
+ *
+ * Pipeline: Sync → +1min → Tier 1 → +5min → bizinfo scraping
  */
 
 import cron from 'node-cron';
 import { dailySync, syncSMEPrograms } from './program-service';
 import { runTier1Enrichment } from './enrichment-service';
+import { runBizinfoDetailScraping } from './bizinfo-cron-runner';
 
 /**
  * Start the SME24 sync cron job
@@ -77,10 +79,26 @@ export function startSME24SyncCron(): void {
               } else {
                 console.error(`✗ [SME24 Cron] Enrichment failed`);
               }
+              // Schedule bizinfo.go.kr detail scraping 5 minutes after Tier 1
+              console.log('\n🌐 [SME24 Cron] bizinfo.go.kr scraping scheduled in 5 minutes...');
+              setTimeout(async () => {
+                const scrapeStartTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+                console.log(`\n🌐 [SME24 Cron] Starting bizinfo.go.kr detail scraping (KST: ${scrapeStartTime})`);
+                try {
+                  const scrapeResult = await runBizinfoDetailScraping({ limit: 100 });
+                  console.log(`✓ [SME24 Cron] bizinfo scraping completed:`);
+                  console.log(`  - Programs scraped: ${scrapeResult.scraped}/${scrapeResult.total}`);
+                  console.log(`  - DB updated: ${scrapeResult.dbUpdated}`);
+                  console.log(`  - Errors: ${scrapeResult.errors}`);
+                  console.log(`  - Duration: ${(scrapeResult.duration / 1000).toFixed(1)}s`);
+                } catch (scrapeError: any) {
+                  console.error('✗ [SME24 Cron] bizinfo scraping error:', scrapeError.message);
+                }
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+              }, 5 * 60 * 1000); // 5 minute delay
             } catch (enrichError: any) {
               console.error('✗ [SME24 Cron] Enrichment error:', enrichError.message);
             }
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
           }, 60 * 1000); // 1 minute delay
         } else {
           console.error(`✗ [SME24 Cron] Sync failed: ${result.errors.join(', ')}`);
