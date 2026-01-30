@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '../shared/DataTable';
-import { DetailDrawer } from '../shared/DetailDrawer';
+import { EditableDetailDrawer } from '../shared/EditableDetailDrawer';
+import { READONLY_FIELDS } from '@/lib/validations/data-quality-schemas';
 import { StatsBar } from '../shared/StatsBar';
 import { ExportCSV } from '../shared/ExportCSV';
 import { DeleteConfirmDialog } from '../shared/DeleteConfirmDialog';
@@ -325,7 +326,7 @@ export default function FundingMatchesTab() {
         isLoading={isLoading}
       />
 
-      <DetailDrawer
+      <EditableDetailDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         title={
@@ -335,6 +336,13 @@ export default function FundingMatchesTab() {
         }
         data={selectedRow}
         fieldGroups={fieldGroups}
+        tableName="funding-matches"
+        recordId={selectedRow?.id ?? null}
+        readOnlyKeys={READONLY_FIELDS['funding-matches']}
+        onSaveSuccess={(updatedRow) => {
+          fetchData();
+          setSelectedRow((prev: any) => prev ? { ...prev, ...updatedRow } : prev);
+        }}
       />
 
       <DeleteConfirmDialog

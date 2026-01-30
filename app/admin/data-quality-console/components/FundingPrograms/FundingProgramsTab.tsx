@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '../shared/DataTable';
-import { DetailDrawer } from '../shared/DetailDrawer';
+import { EditableDetailDrawer } from '../shared/EditableDetailDrawer';
+import { READONLY_FIELDS } from '@/lib/validations/data-quality-schemas';
 import { CompletenessBar } from '../shared/CompletenessBar';
 import { StatsBar } from '../shared/StatsBar';
 import { ExportCSV } from '../shared/ExportCSV';
@@ -453,13 +454,20 @@ export default function FundingProgramsTab() {
         isLoading={isLoading}
       />
 
-      <DetailDrawer
+      <EditableDetailDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         title={selectedRow?.title || 'Funding 프로그램 상세'}
         data={selectedRow}
         fieldGroups={fieldGroups}
         completeness={selectedRow?.completeness}
+        tableName="funding-programs"
+        recordId={selectedRow?.id ?? null}
+        readOnlyKeys={READONLY_FIELDS['funding-programs']}
+        onSaveSuccess={(updatedRow) => {
+          fetchData();
+          setSelectedRow((prev: any) => prev ? { ...prev, ...updatedRow } : prev);
+        }}
       />
 
       <DeleteConfirmDialog

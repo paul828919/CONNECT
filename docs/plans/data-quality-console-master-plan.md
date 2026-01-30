@@ -1,7 +1,7 @@
 # Data Quality Console — Master Plan
 
 > **Created**: 2026-01-30
-> **Status**: ✅ Phase 1 Complete — Deployed to production
+> **Status**: ✅ Phase 4 Complete — Inline Field Editing
 > **Route**: `/admin/data-quality-console`
 > **Page Name**: Data Quality Console (데이터 품질 콘솔)
 
@@ -188,7 +188,7 @@ Response:
 | **Phase 1** | Read-only data browser | 🟢 Low | 5 tabs, search, filters, sort, pagination, column toggle, detail drawer, completeness badges, CSV export |
 | **Phase 2** | Single-row delete | 🟡 Medium | Soft-delete with confirmation dialog, audit log integration, undo within 5 minutes |
 | **Phase 3** | Bulk duplicate detection & delete | 🟠 High | Auto-detection by contentHash/title, bulk select, bulk soft-delete |
-| **Phase 4** | Inline field editing | 🔴 Very High | Click-to-edit cells, change history, field-level validation |
+| **Phase 4** | Inline field editing | ✅ Complete | DetailDrawer inline editing, Zod validation, before/after audit, enum dropdowns |
 
 **Phase 1 solves ~70% of the stated need** — monitoring data extraction progress and determining data supplementation tasks requires seeing the data, not editing it.
 
@@ -554,56 +554,183 @@ POST /api/admin/data-quality-console/undo/[undoToken]
 
 ## 8. Phase 3: Bulk Duplicate Detection & Delete
 
-> **Status**: 📋 Not Started
+> **Status**: ✅ Complete
 > **Prerequisites**: Phase 2 complete
 > **Risk**: 🟠 High
+> **Completed**: 2026-01-31
 
 ### Scope
-- **Auto-detection**: Run duplicate scan based on:
-  - Exact `contentHash` match
-  - Title similarity > 90% (Levenshtein or n-gram)
-  - Same `pblancSeq` with different IDs (should not happen, but catch it)
-- **Duplicate groups UI**: Show grouped duplicates with diff highlight
-- **Bulk select**: Checkbox selection + "Delete Selected" action
-- **Keep best**: Auto-suggest which duplicate to keep (highest completeness %)
-- All bulk deletes logged individually to `audit_logs`
+- **Three-tier duplicate detection algorithm**:
+  - **Tier 1**: Exact `contentHash` match (O(n) grouping) — catches identical scraped content
+  - **Tier 2**: Same `pblancSeq`, different IDs — SME only (O(n) grouping) — catches integrity violations
+  - **Tier 3**: Title similarity ≥ 90% via Damerau-Levenshtein (O(n²) with length pre-filter) — catches near-duplicate announcements
+- **Duplicate groups UI**: Expandable group cards with reason badges, similarity %, per-group and global actions
+- **Bulk select**: Checkbox per program, pre-selected non-suggested items, "전체 자동 선택" button
+- **Keep best**: Auto-suggest which duplicate to keep (highest completeness % → most matches → most recent)
+- **Bulk delete**: Prisma `$transaction` for atomicity, individual `audit_logs` per row, individual undo tokens
+- **Undo All**: Sequential undo via existing `/undo/[token]` endpoint for each token (5-minute window)
+- **Shared utilities**: Extracted completeness fields and computation from GET routes into `lib/utils/completeness.ts`
 
-### API Additions
+### Algorithm Optimization (Tier 3)
+- **Length pre-filter**: Two strings with length ratio < 0.9 cannot have ≥90% similarity → eliminates ~90% of O(n²) comparisons
+- **Union-Find**: Transitive grouping — if A matches B and B matches C, all three are grouped together (with path compression for near-O(1) lookups)
+- **Performance**: ~2000 programs → ~200K–400K filtered pairs, each Damerau-Levenshtein call ~1–5µs on 30–60 char Korean titles → total ~0.2–2s
+
+### File Structure (Actual Implementation)
+
+```
+lib/
+  utils/
+    completeness.ts                    # Shared completeness fields, computeCompleteness(), serializeRow()
+    duplicate-detection.ts             # Three-tier detection: contentHash, pblancSeq, title similarity
+
+app/
+  api/
+    admin/
+      data-quality-console/
+        [table]/
+          duplicates/
+            route.ts                   # GET: scan non-ARCHIVED programs, return duplicate groups
+          bulk-delete/
+            route.ts                   # POST: transactional bulk soft-delete with audit + undo tokens
+
+  admin/
+    data-quality-console/
+      components/
+        shared/
+          useBulkDelete.ts             # Hook: bulk delete API call, toast with "전체 실행 취소"
+          BulkDeleteConfirmDialog.tsx   # Confirmation dialog with count + match warning
+          DuplicateDetectionPanel.tsx   # Main UI: scan button, summary, group cards, bulk actions
+```
+
+**Modified files:**
+- `SmeProgramsTab.tsx` — Added `<DuplicateDetectionPanel tableName="sme-programs" />`
+- `FundingProgramsTab.tsx` — Added `<DuplicateDetectionPanel tableName="funding-programs" />`
+- `sme-programs/route.ts` — Refactored to import from shared `lib/utils/completeness.ts`
+- `funding-programs/route.ts` — Refactored to import from shared `lib/utils/completeness.ts`
+
+### API Endpoints
+
 ```
 GET /api/admin/data-quality-console/[table]/duplicates
-  → Returns grouped duplicates with similarity scores
+  → Only valid for sme-programs and funding-programs (400 for others)
+  → Fetches all non-ARCHIVED programs with _count relations
+  → Runs three-tier detectDuplicates() algorithm
+  → Returns { groups: DuplicateGroup[], summary: { totalGroups, totalDuplicates, byReason } }
 
 POST /api/admin/data-quality-console/[table]/bulk-delete
-  Body: { ids: ['id1', 'id2', ...] }
-  → Soft-deletes all, creates audit entries
+  Body: { ids: ['id1', 'id2', ...] }  (max 100)
+  → Prisma $transaction: fetch all → soft-delete all → create audit entries
+  → Returns { success, deletedCount, undoTokens[], message }
 ```
+
+### DuplicateGroup Response Shape
+
+```typescript
+interface DuplicateGroup {
+  groupId: string;                   // e.g. "hash-1", "seq-2", "title-3"
+  reason: 'contentHash' | 'pblancSeq' | 'titleSimilarity';
+  similarity: number;                // 1.0 for exact, 0.90–0.99 for fuzzy
+  programs: DuplicateProgram[];      // id, title, pblancSeq, contentHash, status, completeness, matchCount, createdAt, updatedAt
+  suggestedKeepId: string;           // highest completeness → most matches → most recent
+}
+```
+
+### UI Components
+
+**DuplicateDetectionPanel** layout:
+```
+├── "중복 검사" Button (triggers scan)
+├── Loading spinner
+├── Summary bar: "N개 중복 그룹 (contentHash: X, 제목유사: Y)"
+├── DuplicateGroupCard (per group, expandable)
+│    ├── Reason badge + similarity %
+│    ├── Program rows with:
+│    │    ├── Checkbox (pre-checked for non-suggested items)
+│    │    ├── Title
+│    │    ├── Completeness bar
+│    │    ├── Match count
+│    │    └── "추천" badge on suggestedKeepId (green star)
+│    └── "선택 삭제" button (per group)
+├── "전체 자동 선택" button + "N개 선택 삭제" button (global)
+└── BulkDeleteConfirmDialog
+```
+
+### Commits
+
+| # | SHA | Description |
+|---|-----|-------------|
+| A | `405cbd3` | `feat(admin): add shared completeness utils and duplicate detection algorithm` |
+| B | `6e9c01e` | `feat(admin): add duplicates detection and bulk delete API routes` |
+| C | `8a939be` | `feat(admin): add duplicate detection panel UI with bulk delete` |
+| D | `c507527` | `feat(admin): integrate duplicate detection into SME and R&D program tabs` |
+| E | `c6c2fb7` | `fix(admin): resolve ESLint error in duplicate-detection import` |
+
+### Additional Fix (same session)
+
+| SHA | Description |
+|-----|-------------|
+| `d7cced7` | `fix(admin): center pagination controls in data quality console` — Moved page navigation to bottom center to prevent overlap with the feedback button |
 
 ---
 
 ## 9. Phase 4: Inline Field Editing
 
-> **Status**: 📋 Not Started
+> **Status**: ✅ Complete
 > **Prerequisites**: Phase 3 complete
-> **Risk**: 🔴 Very High
+> **Completed**: 2026-01-31
 
-### Scope
-- Click any cell in the table → inline edit mode
-- Or edit from the Detail Drawer
-- Field-level validation using `zod` schemas
-- **Change history**: Every edit creates a changelog entry (old value → new value)
-- **Restricted fields**: `id`, `createdAt`, computed fields are read-only
-- **Batch save**: Multiple field edits collected, single save operation
-- Real-time validation feedback
+### Implementation Summary
 
-### API Additions
+**Edit surface**: DetailDrawer only (not table cells). Users click a row → EditableDetailDrawer opens → click "편집" button → fields become inline editors → batch save via single PATCH request → audit log with before/after values.
+
+### New Files (4)
+| File | Purpose |
+|---|---|
+| `lib/validations/data-quality-schemas.ts` | Zod schemas, READONLY_FIELDS, ENUM_OPTIONS per table |
+| `app/admin/data-quality-console/components/shared/EditableField.tsx` | Type-aware input renderer (text, date, json, array, boolean, number, url, enum select) |
+| `app/admin/data-quality-console/components/shared/useEditRow.ts` | PATCH API hook with field-level error handling |
+| `app/admin/data-quality-console/components/shared/EditableDetailDrawer.tsx` | Editable drawer with edit mode, dirty tracking, save/cancel, unsaved changes guard |
+
+### Modified Files (9)
+| File | Change |
+|---|---|
+| `prisma/schema.prisma` | Added `afterValues Json?` to `audit_logs` |
+| `app/api/admin/data-quality-console/[table]/[id]/route.ts` | Added PATCH handler with Zod validation + audit logging |
+| `app/admin/data-quality-console/components/shared/DetailDrawer.tsx` | Exported shared types/utils (FieldGroup, renderValue, isPopulated, formatDate) |
+| `SmeProgramsTab.tsx` | Replaced DetailDrawer with EditableDetailDrawer |
+| `SmeMatchesTab.tsx` | Replaced DetailDrawer with EditableDetailDrawer |
+| `FundingProgramsTab.tsx` | Replaced DetailDrawer with EditableDetailDrawer |
+| `FundingMatchesTab.tsx` | Replaced DetailDrawer with EditableDetailDrawer |
+| `UsersOrgsTab.tsx` | Replaced DetailDrawer with EditableDetailDrawer |
+
+### API
 ```
 PATCH /api/admin/data-quality-console/[table]/[id]
   Body: { field1: newValue1, field2: newValue2 }
-  → Validates with zod
-  → Updates row
-  → Creates audit_log with before/after values
-  → Returns updated row
+  → Auth check (ADMIN/SUPER_ADMIN)
+  → Validates with per-table Zod schema (.strict() rejects unknown keys)
+  → Strips READONLY_FIELDS as defense-in-depth
+  → Updates row via Prisma
+  → Creates audit_log with beforeValues + afterValues (new)
+  → Returns { success, updatedRow, message }
+  → On validation failure: 400 { error, fieldErrors: { key: message } }
 ```
+
+### Commits (5)
+1. `feat(admin): add afterValues to audit_logs and create Zod validation schemas`
+2. `feat(admin): add PATCH handler for inline field editing`
+3. `feat(admin): add EditableField component and useEditRow hook`
+4. `feat(admin): add EditableDetailDrawer with edit mode and dirty tracking`
+5. `feat(admin): integrate inline editing into all 5 tabs`
+
+### Key Design Decisions
+- **DetailDrawer-only editing** (not table cells) — simpler UX, lower risk of accidental edits
+- **Dirty tracking** — only includes truly changed fields in PATCH body
+- **Unsaved changes guard** — AlertDialog warns before closing drawer with dirty fields
+- **Defense-in-depth** — Zod `.strict()` rejects unknown keys AND runtime strips READONLY_FIELDS
+- **users-orgs special handling** — `organization.` prefix stripped before PATCH (org model is flat)
+- **Enum dropdowns** — ENUM_OPTIONS map drives automatic Select rendering for enum fields
 
 ---
 
@@ -711,4 +838,7 @@ Admin pages are accessible via sidebar or direct URL. Check `components/layout/S
 | 2026-01-30 | Bug fix: BigInt/Decimal serialization causing 500 errors on all API routes. Added `serializeRow()` helper to all 5 routes. Also fixed completeness format (number → `{ percent, filled, total }` object) and DetailDrawer nested key access. | Claude + Paul |
 | 2026-01-30 | Local verification passed (all 5 tabs working). Committed as `d64ffe0`, pushed to production. | Claude + Paul |
 | 2026-01-30 | Phase 2 implementation complete: Single-row soft-delete with audit. 4 new files + 9 modified (schema, 2 API routes, 2 shared components, 5 tab components, 1 master plan). 7 commits: schema migration, DELETE API, undo API, shared UI components, 5-tab integration, GET route filters, docs update. | Claude + Paul |
+| 2026-01-31 | Phase 3 implementation complete: Bulk duplicate detection & delete. 7 new files + 4 modified. Three-tier detection algorithm (contentHash, pblancSeq, Damerau-Levenshtein title similarity ≥90%). Shared completeness utils extracted to `lib/utils/`. DuplicateDetectionPanel with expandable group cards, auto-suggest keep, bulk delete with transactional audit + undo. 5 commits (A–E). | Claude + Paul |
+| 2026-01-31 | Fix: Center pagination controls in DataTable to prevent overlap with feedback button. 1 commit. | Claude + Paul |
+| 2026-01-31 | Phase 4 implementation complete: Inline field editing in DetailDrawer. 4 new files + 9 modified. Schema: `afterValues` added to `audit_logs`. PATCH API with Zod `.strict()` validation + READONLY_FIELDS defense-in-depth. EditableField component (8 input types + enum Select). EditableDetailDrawer with dirty tracking, batch save, unsaved changes guard. Integrated into all 5 tabs. 5 commits. | Claude + Paul |
 | | | |

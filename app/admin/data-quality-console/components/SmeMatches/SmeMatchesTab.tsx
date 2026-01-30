@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '../shared/DataTable';
-import { DetailDrawer } from '../shared/DetailDrawer';
+import { EditableDetailDrawer } from '../shared/EditableDetailDrawer';
+import { READONLY_FIELDS } from '@/lib/validations/data-quality-schemas';
 import { StatsBar } from '../shared/StatsBar';
 import { ExportCSV } from '../shared/ExportCSV';
 import { DeleteConfirmDialog } from '../shared/DeleteConfirmDialog';
@@ -359,12 +360,19 @@ export default function SmeMatchesTab() {
         isLoading={isLoading}
       />
 
-      <DetailDrawer
+      <EditableDetailDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         title={selectedRow?.organization?.name ? `${selectedRow.organization.name} 매칭 상세` : 'SME 매칭 상세'}
         data={selectedRow}
         fieldGroups={fieldGroups}
+        tableName="sme-matches"
+        recordId={selectedRow?.id ?? null}
+        readOnlyKeys={READONLY_FIELDS['sme-matches']}
+        onSaveSuccess={(updatedRow) => {
+          fetchData();
+          setSelectedRow((prev: any) => prev ? { ...prev, ...updatedRow } : prev);
+        }}
       />
 
       <DeleteConfirmDialog
