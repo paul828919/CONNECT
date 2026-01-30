@@ -192,6 +192,7 @@ export async function runTier3DocumentEnrichment(
         attachmentUrls: true,
         attachmentNames: true,
         announcementFileUrl: true,
+        announcementFileName: true,
         targetRegionCodes: true,
         targetRegions: true,
         targetCompanyScale: true,
@@ -221,6 +222,7 @@ export async function runTier3DocumentEnrichment(
           attachmentUrls: program.attachmentUrls,
           attachmentNames: program.attachmentNames,
           announcementFileUrl: program.announcementFileUrl,
+          announcementFileName: program.announcementFileName,
         });
 
         result.downloadErrors.push(...dlErrors);

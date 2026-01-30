@@ -162,6 +162,7 @@ async function main() {
       attachmentUrls: true,
       attachmentNames: true,
       announcementFileUrl: true,
+      announcementFileName: true,
       targetRegionCodes: true,
       targetRegions: true,
       targetCompanyScale: true,
@@ -204,6 +205,7 @@ async function main() {
           attachmentUrls: program.attachmentUrls,
           attachmentNames: program.attachmentNames,
           announcementFileUrl: program.announcementFileUrl,
+          announcementFileName: program.announcementFileName,
         });
 
         stats.downloadErrors.push(...dlErrors);

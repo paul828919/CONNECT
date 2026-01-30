@@ -37,13 +37,12 @@ async function main() {
   // 1. Program with HWP attachment
   // 2. Program with PDF attachment
   // 3. Program where Tier 1/2 failed (empty eligibility)
+  // Prioritize programs with attachmentUrls (bizinfo.go.kr — reliable downloads)
+  // smes.go.kr announcementFileUrl frequently returns empty responses
   const programs = await prisma.sme_programs.findMany({
     where: {
       status: 'ACTIVE',
-      OR: [
-        { NOT: { attachmentUrls: { isEmpty: true } } },
-        { announcementFileUrl: { not: null } },
-      ],
+      NOT: { attachmentUrls: { isEmpty: true } },
     },
     select: {
       id: true,
@@ -53,6 +52,7 @@ async function main() {
       attachmentUrls: true,
       attachmentNames: true,
       announcementFileUrl: true,
+      announcementFileName: true,
       targetRegionCodes: true,
       targetRegions: true,
       targetCompanyScale: true,
@@ -64,29 +64,23 @@ async function main() {
       maxBusinessAge: true,
       eligibilityConfidence: true,
     },
-    take: 20, // Get a pool to select from
+    take: 50, // Large pool since many URLs return empty downloads
     orderBy: { syncedAt: 'desc' },
   });
 
   console.log(`Found ${programs.length} programs with attachments\n`);
 
-  // Select up to 3 diverse programs
-  const testPrograms = selectDiversePrograms(programs);
-
-  if (testPrograms.length === 0) {
-    console.log('No suitable programs found for testing.');
-    return;
-  }
-
-  console.log(`Selected ${testPrograms.length} programs for testing:\n`);
-
+  // Iterate through pool, testing the first 3 programs that successfully download
   let successCount = 0;
   let totalCost = 0;
+  let testedCount = 0;
 
-  for (let i = 0; i < testPrograms.length; i++) {
-    const program = testPrograms[i];
+  console.log(`Pool: ${programs.length} programs. Testing first 3 with downloadable attachments.\n`);
+
+  for (let idx = 0; idx < programs.length && testedCount < 3; idx++) {
+    const program = programs[idx];
     console.log(`\n${'='.repeat(60)}`);
-    console.log(`TEST ${i + 1}/${testPrograms.length}: ${program.title.substring(0, 60)}`);
+    console.log(`CANDIDATE ${idx + 1}: ${program.title.substring(0, 60)}`);
     console.log(`${'='.repeat(60)}`);
     console.log(`  ID: ${program.id}`);
     console.log(`  Attachments: ${program.attachmentNames.join(', ') || 'none'}`);
@@ -103,6 +97,7 @@ async function main() {
       attachmentUrls: program.attachmentUrls,
       attachmentNames: program.attachmentNames,
       announcementFileUrl: program.announcementFileUrl,
+      announcementFileName: program.announcementFileName,
     });
 
     if (dlErrors.length > 0) {
@@ -110,7 +105,7 @@ async function main() {
     }
 
     if (downloads.length === 0) {
-      console.log('  FAILED: No files downloaded');
+      console.log('  → Skipping (no downloadable files)');
       continue;
     }
 
@@ -124,9 +119,12 @@ async function main() {
     const text = await extractTextFromAttachment(download.fileName, download.fileBuffer);
 
     if (!text || text.length < 100) {
-      console.log(`  FAILED: Insufficient text extracted (${text?.length || 0} chars)`);
+      console.log(`  → Skipping (insufficient text: ${text?.length || 0} chars)`);
       continue;
     }
+
+    // This program successfully downloaded and extracted — count it
+    testedCount++;
 
     console.log(`  Extracted: ${text.length} characters`);
     console.log(`  Sample: ${text.substring(0, 200).replace(/\n/g, ' ')}...`);
@@ -171,14 +169,14 @@ async function main() {
   console.log(`\n${'='.repeat(60)}`);
   console.log('=== TEST SUMMARY ===');
   console.log(`${'='.repeat(60)}`);
-  console.log(`Programs tested: ${testPrograms.length}`);
-  console.log(`Successful extractions: ${successCount}/${testPrograms.length}`);
+  console.log(`Programs tested: ${testedCount}`);
+  console.log(`Successful extractions: ${successCount}/${testedCount}`);
   console.log(`Total LLM cost: $${totalCost.toFixed(4)} (₩${Math.round(totalCost * 1300)})`);
   console.log(
-    `Avg cost per program: $${testPrograms.length > 0 ? (totalCost / testPrograms.length).toFixed(4) : '0'}`
+    `Avg cost per program: $${testedCount > 0 ? (totalCost / testedCount).toFixed(4) : '0'}`
   );
   console.log(
-    `\nVerdict: ${successCount >= 2 ? 'PASS — Ready for batch processing' : 'NEEDS INVESTIGATION'}`
+    `\nVerdict: ${successCount >= 2 ? 'PASS — Ready for batch processing' : testedCount === 0 ? 'NO DOWNLOADABLE FILES — Check attachment URLs' : 'NEEDS INVESTIGATION'}`
   );
 
   if (dryRun) {
@@ -190,33 +188,9 @@ async function main() {
 // Helpers
 // ============================================================================
 
-function selectDiversePrograms(programs: any[]): any[] {
+// Unused — kept for reference
+function _selectDiversePrograms(programs: any[]): any[] {
   const selected: any[] = [];
-
-  // Try to find one with HWP attachment
-  const hwpProgram = programs.find((p) =>
-    p.attachmentNames.some((n: string) => n.toLowerCase().endsWith('.hwp'))
-  );
-  if (hwpProgram) selected.push(hwpProgram);
-
-  // Try to find one with PDF attachment
-  const pdfProgram = programs.find(
-    (p) =>
-      !selected.includes(p) &&
-      p.attachmentNames.some((n: string) => n.toLowerCase().endsWith('.pdf'))
-  );
-  if (pdfProgram) selected.push(pdfProgram);
-
-  // Try to find one with empty eligibility (Tier 1/2 failed)
-  const emptyProgram = programs.find(
-    (p) =>
-      !selected.includes(p) &&
-      (!p.targetRegionCodes || p.targetRegionCodes.length === 0) &&
-      (!p.targetCompanyScale || p.targetCompanyScale.length === 0)
-  );
-  if (emptyProgram) selected.push(emptyProgram);
-
-  // Fill remaining slots
   for (const p of programs) {
     if (selected.length >= 3) break;
     if (!selected.includes(p)) selected.push(p);

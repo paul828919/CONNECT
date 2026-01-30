@@ -57,6 +57,7 @@ async function main() {
       attachmentUrls: true,
       attachmentNames: true,
       announcementFileUrl: true,
+      announcementFileName: true,
     },
     take: limit * 2, // Get extra in case some fail to download
     orderBy: { syncedAt: 'desc' },
@@ -86,6 +87,7 @@ async function main() {
         attachmentUrls: program.attachmentUrls,
         attachmentNames: program.attachmentNames,
         announcementFileUrl: program.announcementFileUrl,
+        announcementFileName: program.announcementFileName,
       });
 
       if (downloads.length === 0) {

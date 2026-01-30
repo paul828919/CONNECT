@@ -4,9 +4,12 @@
  * Downloads HWP/PDF announcement files from SME program URLs.
  * Prioritizes formats: PDF > HWPX > HWP for optimal text extraction.
  *
- * Sources (in priority order):
- * 1. Direct HTTP GET from attachmentUrls[]
- * 2. announcementFileUrl fallback
+ * Data pattern (from SME24 API):
+ * - announcementFileUrl + announcementFileName: PRIMARY source
+ *   Has actual HWP/HWPX files with Korean filenames (e.g., "공고문.hwp")
+ * - attachmentUrls[]: SECONDARY source
+ *   Often opaque bizinfo.go.kr URLs without filenames
+ *   Content-Type header used to determine format
  *
  * Constraints:
  * - 30s timeout per download
@@ -22,7 +25,7 @@ export interface DownloadResult {
   programId: string;
   fileName: string;
   fileBuffer: Buffer;
-  source: 'attachmentUrl' | 'announcementFileUrl';
+  source: 'announcementFileUrl' | 'attachmentUrl';
   downloadDuration: number;
 }
 
@@ -37,6 +40,7 @@ interface SMEProgramInput {
   attachmentUrls: string[];
   attachmentNames: string[];
   announcementFileUrl: string | null;
+  announcementFileName?: string | null;
 }
 
 // ============================================================================
@@ -46,8 +50,15 @@ interface SMEProgramInput {
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB
 
-/** Supported extensions ordered by extraction quality */
-const SUPPORTED_EXTENSIONS = ['.pdf', '.hwpx', '.hwp'];
+/** Content-Type to extension mapping for opaque URLs */
+const CONTENT_TYPE_TO_EXT: Record<string, string> = {
+  'application/pdf': '.pdf',
+  'application/x-hwp': '.hwp',
+  'application/haansofthwp': '.hwp',
+  'application/vnd.hancom.hwp': '.hwp',
+  'application/vnd.hancom.hwpx': '.hwpx',
+  'application/octet-stream': '', // ambiguous, check magic bytes
+};
 
 // ============================================================================
 // Main Download Function
@@ -56,11 +67,16 @@ const SUPPORTED_EXTENSIONS = ['.pdf', '.hwpx', '.hwp'];
 /**
  * Download announcement attachments from an SME program
  *
- * Tries attachmentUrls first (prioritizing PDF > HWPX > HWP),
- * then falls back to announcementFileUrl.
+ * Priority order (based on actual data patterns):
+ * 1. attachmentUrls[] (bizinfo.go.kr — always returns actual files)
+ * 2. announcementFileUrl (smes.go.kr — often returns Content-Length: 0)
+ *
+ * Note: smes.go.kr getFile endpoint frequently returns empty responses
+ * without proper session cookies. bizinfo.go.kr works reliably and
+ * includes Content-Disposition headers with Korean filenames.
  *
  * @param program SME program with attachment URLs
- * @returns Array of successfully downloaded files
+ * @returns Array of successfully downloaded files + any errors
  */
 export async function downloadSMEAttachments(
   program: SMEProgramInput
@@ -68,16 +84,15 @@ export async function downloadSMEAttachments(
   const results: DownloadResult[] = [];
   const errors: DownloadError[] = [];
 
-  // Sort attachments by format priority (PDF first)
-  const sortedAttachments = getSortedAttachments(program);
+  // Priority 1: attachmentUrls (bizinfo.go.kr — reliable)
+  for (let i = 0; i < program.attachmentUrls.length; i++) {
+    const url = program.attachmentUrls[i];
+    const fileName = program.attachmentNames[i] || null;
 
-  // Try each attachment URL
-  for (const { url, fileName } of sortedAttachments) {
     try {
-      const result = await downloadFile(url, fileName, program.id, 'attachmentUrl');
+      const result = await downloadFileWithDetection(url, fileName, program.id);
       if (result) {
         results.push(result);
-        // Return after first successful download — one document is usually sufficient
         return { results, errors };
       }
     } catch (error: any) {
@@ -89,10 +104,10 @@ export async function downloadSMEAttachments(
     }
   }
 
-  // Fallback: try announcementFileUrl
+  // Priority 2: announcementFileUrl (smes.go.kr — may return empty)
   if (results.length === 0 && program.announcementFileUrl) {
+    const fileName = program.announcementFileName || extractFileNameFromUrl(program.announcementFileUrl);
     try {
-      const fileName = extractFileNameFromUrl(program.announcementFileUrl);
       const result = await downloadFile(
         program.announcementFileUrl,
         fileName,
@@ -119,31 +134,7 @@ export async function downloadSMEAttachments(
 // ============================================================================
 
 /**
- * Sort attachments by extraction quality priority: PDF > HWPX > HWP
- * Filters out unsupported file types.
- */
-function getSortedAttachments(
-  program: SMEProgramInput
-): Array<{ url: string; fileName: string }> {
-  const attachments: Array<{ url: string; fileName: string; priority: number }> = [];
-
-  for (let i = 0; i < program.attachmentUrls.length; i++) {
-    const url = program.attachmentUrls[i];
-    const fileName = program.attachmentNames[i] || `attachment_${i}`;
-    const ext = getExtension(fileName);
-    const priority = SUPPORTED_EXTENSIONS.indexOf(ext);
-
-    if (priority !== -1) {
-      attachments.push({ url, fileName, priority });
-    }
-  }
-
-  // Sort by priority (lower index = higher priority)
-  return attachments.sort((a, b) => a.priority - b.priority);
-}
-
-/**
- * Download a single file via HTTP GET
+ * Download a file with a known filename
  */
 async function downloadFile(
   url: string,
@@ -173,7 +164,6 @@ async function downloadFile(
   const arrayBuffer = await response.arrayBuffer();
   const fileBuffer = Buffer.from(arrayBuffer);
 
-  // Validate downloaded size
   if (fileBuffer.length > MAX_FILE_SIZE_BYTES) {
     throw new Error(`Downloaded file too large: ${fileBuffer.length} bytes`);
   }
@@ -191,6 +181,104 @@ async function downloadFile(
     source,
     downloadDuration,
   };
+}
+
+/**
+ * Download from an opaque URL and detect file type from Content-Type/magic bytes
+ */
+async function downloadFileWithDetection(
+  url: string,
+  knownFileName: string | null,
+  programId: string
+): Promise<DownloadResult | null> {
+  const startTime = Date.now();
+
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; ConnectBot/1.0)',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} ${response.statusText}`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const fileBuffer = Buffer.from(arrayBuffer);
+
+  if (fileBuffer.length === 0) {
+    throw new Error('Downloaded file is empty');
+  }
+
+  if (fileBuffer.length > MAX_FILE_SIZE_BYTES) {
+    throw new Error(`Downloaded file too large: ${fileBuffer.length} bytes`);
+  }
+
+  // Determine filename
+  let fileName = knownFileName || '';
+  if (!fileName || !getExtension(fileName)) {
+    // Try Content-Type header
+    const contentType = response.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase() || '';
+    const ext = CONTENT_TYPE_TO_EXT[contentType] || '';
+
+    if (ext) {
+      fileName = `attachment${ext}`;
+    } else {
+      // Try magic bytes detection
+      const detectedExt = detectFileType(fileBuffer);
+      fileName = detectedExt ? `attachment${detectedExt}` : 'attachment.bin';
+    }
+
+    // Try Content-Disposition header for filename
+    const disposition = response.headers.get('content-disposition');
+    if (disposition) {
+      const filenameMatch = disposition.match(/filename\*?=(?:UTF-8''|"?)([^";\n]+)/i);
+      if (filenameMatch) {
+        fileName = decodeURIComponent(filenameMatch[1].trim());
+      }
+    }
+  }
+
+  // Skip unsupported file types
+  const ext = getExtension(fileName);
+  if (ext && !['.pdf', '.hwp', '.hwpx'].includes(ext)) {
+    return null;
+  }
+
+  const downloadDuration = Date.now() - startTime;
+
+  return {
+    programId,
+    fileName,
+    fileBuffer,
+    source: 'attachmentUrl',
+    downloadDuration,
+  };
+}
+
+/**
+ * Detect file type from magic bytes
+ */
+function detectFileType(buffer: Buffer): string | null {
+  if (buffer.length < 8) return null;
+
+  // PDF: starts with %PDF
+  if (buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46) {
+    return '.pdf';
+  }
+
+  // HWP: starts with OLE compound document signature (D0 CF 11 E0)
+  if (buffer[0] === 0xd0 && buffer[1] === 0xcf && buffer[2] === 0x11 && buffer[3] === 0xe0) {
+    return '.hwp';
+  }
+
+  // HWPX/ZIP: starts with PK (50 4B)
+  if (buffer[0] === 0x50 && buffer[1] === 0x4b) {
+    return '.hwpx';
+  }
+
+  return null;
 }
 
 /**

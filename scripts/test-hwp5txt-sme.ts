@@ -4,11 +4,16 @@
  * Verifies that hwp5txt can correctly extract Korean text from actual
  * SME program HWP attachments, checking for eligibility keyword presence.
  *
+ * Data pattern discovery:
+ * - attachmentUrls (bizinfo.go.kr): WORKS — returns actual files with Content-Disposition
+ * - announcementFileUrl (smes.go.kr): UNRELIABLE — often returns Content-Length: 0
+ *
  * Run: npx tsx scripts/test-hwp5txt-sme.ts
  */
 
 import { PrismaClient } from '@prisma/client';
 import { extractTextFromAttachment } from '../lib/scraping/utils/attachment-parser';
+import { downloadSMEAttachments } from '../lib/sme24-api/attachment-downloader';
 
 const prisma = new PrismaClient();
 
@@ -29,7 +34,8 @@ const ELIGIBILITY_KEYWORDS = [
 async function main() {
   console.log('=== hwp5txt SME Attachment Test ===\n');
 
-  // Find programs with HWP/PDF attachments
+  // Find programs with attachmentUrls (bizinfo.go.kr — reliable download source)
+  // Many attachment URLs return empty — expand pool and filter by actual downloadability
   const programs = await prisma.sme_programs.findMany({
     where: {
       status: 'ACTIVE',
@@ -41,70 +47,59 @@ async function main() {
       attachmentUrls: true,
       attachmentNames: true,
       announcementFileUrl: true,
+      announcementFileName: true,
     },
-    take: 10,
+    take: 30, // Large pool since many URLs return empty
     orderBy: { syncedAt: 'desc' },
   });
 
   console.log(`Found ${programs.length} programs with attachments\n`);
 
-  // Filter for HWP and PDF files
-  const testCandidates: Array<{
-    programId: string;
-    title: string;
-    url: string;
-    fileName: string;
-  }> = [];
+  // Test up to 3 programs that actually download successfully
+  let passCount = 0;
+  let testedCount = 0;
 
-  for (const program of programs) {
-    for (let i = 0; i < program.attachmentUrls.length; i++) {
-      const url = program.attachmentUrls[i];
-      const name = program.attachmentNames[i] || `attachment_${i}`;
-      const ext = name.toLowerCase();
-
-      if (ext.endsWith('.hwp') || ext.endsWith('.hwpx') || ext.endsWith('.pdf')) {
-        testCandidates.push({
-          programId: program.id,
-          title: program.title,
-          url,
-          fileName: name,
-        });
-      }
-    }
-  }
-
-  console.log(`Found ${testCandidates.length} HWP/PDF attachments to test\n`);
-
-  // Test up to 3 files
-  const toTest = testCandidates.slice(0, 3);
-
-  for (const candidate of toTest) {
-    console.log(`--- Testing: ${candidate.fileName} ---`);
-    console.log(`  Program: ${candidate.title.substring(0, 60)}`);
-    console.log(`  URL: ${candidate.url.substring(0, 80)}...`);
+  for (let idx = 0; idx < programs.length && testedCount < 3; idx++) {
+    const program = programs[idx];
+    console.log(`\n--- Test ${testedCount + 1}/3: ${program.title.substring(0, 60)} ---`);
+    console.log(`  Attachment URLs: ${program.attachmentUrls.length}`);
+    console.log(`  Announcement URL: ${program.announcementFileUrl ? 'yes' : 'no'}`);
+    console.log(`  Announcement Name: ${program.announcementFileName || '(none)'}`);
 
     const startTime = Date.now();
 
     try {
-      // Download the file
-      const response = await fetch(candidate.url, {
-        signal: AbortSignal.timeout(30000),
+      // Use the downloader (handles priority + content-type detection)
+      const { results: downloads, errors: dlErrors } = await downloadSMEAttachments({
+        id: program.id,
+        attachmentUrls: program.attachmentUrls,
+        attachmentNames: program.attachmentNames,
+        announcementFileUrl: program.announcementFileUrl,
+        announcementFileName: program.announcementFileName,
       });
 
-      if (!response.ok) {
-        console.log(`  DOWNLOAD FAILED: HTTP ${response.status}\n`);
+      if (dlErrors.length > 0) {
+        console.log(`  Download errors: ${dlErrors.map((e) => e.error).join(', ')}`);
+      }
+
+      if (downloads.length === 0) {
+        console.log(`  DOWNLOAD FAILED: No files downloaded — skipping to next`);
         continue;
       }
 
-      const arrayBuffer = await response.arrayBuffer();
-      const fileBuffer = Buffer.from(arrayBuffer);
-      const downloadDuration = Date.now() - startTime;
+      const download = downloads[0];
+      if (download.fileBuffer.length === 0) {
+        console.log(`  DOWNLOAD EMPTY: 0 bytes — skipping to next`);
+        continue;
+      }
 
-      console.log(`  Downloaded: ${fileBuffer.length} bytes (${downloadDuration}ms)`);
+      // This program actually downloaded — count it as tested
+      testedCount++;
+      console.log(`  Downloaded: ${download.fileName} (${download.fileBuffer.length} bytes, ${download.downloadDuration}ms, source: ${download.source})`);
 
       // Extract text
       const extractStart = Date.now();
-      const text = await extractTextFromAttachment(candidate.fileName, fileBuffer);
+      const text = await extractTextFromAttachment(download.fileName, download.fileBuffer);
       const extractDuration = Date.now() - extractStart;
 
       if (!text) {
@@ -133,16 +128,14 @@ async function main() {
       // Overall assessment
       const totalDuration = Date.now() - startTime;
       const isGood = hasKorean && text.length > 100;
-      console.log(`  Result: ${isGood ? 'PASS' : 'FAIL'} (total ${totalDuration}ms)\n`);
+      console.log(`  Result: ${isGood ? 'PASS' : 'FAIL'} (total ${totalDuration}ms)`);
+      if (isGood) passCount++;
     } catch (error: any) {
       console.error(`  ERROR: ${error.message}\n`);
     }
   }
 
-  if (toTest.length === 0) {
-    console.log('No HWP/PDF attachments found to test.');
-    console.log('Check if sme_programs have attachmentUrls populated.');
-  }
+  console.log(`\n=== Summary: ${passCount}/${testedCount} PASSED (${programs.length - testedCount} skipped due to empty downloads) ===`);
 }
 
 main()
