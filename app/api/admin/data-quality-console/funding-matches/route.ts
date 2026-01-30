@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
     const viewed = searchParams.get('viewed');
     const saved = searchParams.get('saved');
 
-    // Build where clause
-    const where: any = {};
+    // Build where clause — exclude soft-deleted matches
+    const where: any = { deletedAt: null };
 
     if (organizationId) where.organizationId = organizationId;
     if (programId) where.programId = programId;
@@ -78,17 +78,18 @@ export async function GET(request: NextRequest) {
       db.funding_matches.count({ where }),
     ]);
 
-    // Compute stats
+    // Compute stats (exclude soft-deleted)
+    const activeFilter = { deletedAt: null };
     const [total, viewedCount, savedCount, personalizedCount, scoreAgg] = await Promise.all([
-      db.funding_matches.count(),
-      db.funding_matches.count({ where: { viewed: true } }),
-      db.funding_matches.count({ where: { saved: true } }),
-      db.funding_matches.count({ where: { personalizedScore: { not: null } } }),
-      db.funding_matches.aggregate({ _avg: { score: true } }),
+      db.funding_matches.count({ where: activeFilter }),
+      db.funding_matches.count({ where: { ...activeFilter, viewed: true } }),
+      db.funding_matches.count({ where: { ...activeFilter, saved: true } }),
+      db.funding_matches.count({ where: { ...activeFilter, personalizedScore: { not: null } } }),
+      db.funding_matches.aggregate({ where: activeFilter, _avg: { score: true } }),
     ]);
 
-    // Unique orgs
-    const uniqueOrgsResult = await db.funding_matches.groupBy({ by: ['organizationId'] });
+    // Unique orgs (exclude soft-deleted)
+    const uniqueOrgsResult = await db.funding_matches.groupBy({ by: ['organizationId'], where: activeFilter });
 
     const viewedPercent = total > 0 ? Math.round((viewedCount / total) * 100 * 100) / 100 : 0;
     const savedPercent = total > 0 ? Math.round((savedCount / total) * 100 * 100) / 100 : 0;

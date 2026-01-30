@@ -49,8 +49,8 @@ export async function GET(request: NextRequest) {
     const saved = searchParams.get('saved');
     const sessionId = searchParams.get('sessionId');
 
-    // Build where clause
-    const where: any = {};
+    // Build where clause — exclude soft-deleted matches
+    const where: any = { deletedAt: null };
 
     if (organizationId) where.organizationId = organizationId;
     if (programId) where.programId = programId;
@@ -82,18 +82,19 @@ export async function GET(request: NextRequest) {
       db.sme_program_matches.count({ where }),
     ]);
 
-    // Compute stats
+    // Compute stats (exclude soft-deleted)
+    const activeFilter = { deletedAt: null };
     const [total, viewedCount, savedCount, scoreAgg] = await Promise.all([
-      db.sme_program_matches.count(),
-      db.sme_program_matches.count({ where: { viewed: true } }),
-      db.sme_program_matches.count({ where: { saved: true } }),
-      db.sme_program_matches.aggregate({ _avg: { score: true } }),
+      db.sme_program_matches.count({ where: activeFilter }),
+      db.sme_program_matches.count({ where: { ...activeFilter, viewed: true } }),
+      db.sme_program_matches.count({ where: { ...activeFilter, saved: true } }),
+      db.sme_program_matches.aggregate({ where: activeFilter, _avg: { score: true } }),
     ]);
 
-    // Unique orgs and programs
+    // Unique orgs and programs (exclude soft-deleted)
     const [uniqueOrgsResult, uniqueProgramsResult] = await Promise.all([
-      db.sme_program_matches.groupBy({ by: ['organizationId'] }),
-      db.sme_program_matches.groupBy({ by: ['programId'] }),
+      db.sme_program_matches.groupBy({ by: ['organizationId'], where: activeFilter }),
+      db.sme_program_matches.groupBy({ by: ['programId'], where: activeFilter }),
     ]);
 
     const viewedPercent = total > 0 ? Math.round((viewedCount / total) * 100 * 100) / 100 : 0;
