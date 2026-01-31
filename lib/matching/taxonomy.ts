@@ -194,6 +194,36 @@ export const INDUSTRY_TAXONOMY = {
     },
   },
 
+  FORESTRY: {
+    name: '산림/임업',
+    keywords: ['산림', '임업', '목재', '산불', '산사태', 'FORESTRY'],
+    subSectors: {
+      FOREST_MANAGEMENT: {
+        name: '산림관리',
+        keywords: ['산림관리', '숲가꾸기', '산림보호', '산림복원'],
+      },
+      WOOD: {
+        name: '목재/임산물',
+        keywords: ['목재', '임산물', '목재가공', '바이오매스'],
+      },
+    },
+  },
+
+  VETERINARY: {
+    name: '수의/동물의약',
+    keywords: ['수의', '동물의약품', '동물약품', '반려동물', 'VETERINARY'],
+    subSectors: {
+      ANIMAL_HEALTH: {
+        name: '동물헬스',
+        keywords: ['동물건강', '동물진단', '동물치료', '펫헬스'],
+      },
+      ANIMAL_VACCINE: {
+        name: '동물백신',
+        keywords: ['동물백신', '가축백신', '구제역백신', '조류인플루엔자'],
+      },
+    },
+  },
+
   MARINE: {
     name: '해양수산',
     keywords: ['해양', '수산', '해양수산', 'MARINE'],
@@ -209,6 +239,36 @@ export const INDUSTRY_TAXONOMY = {
       MARINE_RESOURCE: {
         name: '해양자원',
         keywords: ['해양자원', '해양광물', '해양에너지', '해수담수화'],
+      },
+    },
+  },
+
+  MARINE_FISHERIES: {
+    name: '해양수산(어업/양식)',
+    keywords: ['해양', '수산', '어업', '양식', '항만', '조선', '해운', 'MARINE_FISHERIES'],
+    subSectors: {
+      FISHERIES: {
+        name: '어업/수산',
+        keywords: ['어업', '수산', '양식', '스마트양식', '해양바이오'],
+      },
+      SHIPPING: {
+        name: '조선/해운',
+        keywords: ['조선', '선박', '해운', '항만', '선박장비'],
+      },
+    },
+  },
+
+  MARINE_SECURITY: {
+    name: '해양안전/경비',
+    keywords: ['해양안전', '해양경비', '해양경찰', 'VTS', '해양재난', 'MARINE_SECURITY'],
+    subSectors: {
+      SAFETY: {
+        name: '해양안전',
+        keywords: ['해양안전', '해양재난', '수색구조', '해상교통'],
+      },
+      SECURITY: {
+        name: '해양경비',
+        keywords: ['해양경비', '해양경찰', '해상치안'],
       },
     },
   },
@@ -243,6 +303,21 @@ export const INDUSTRY_TAXONOMY = {
       AVIATION: {
         name: '항공우주',
         keywords: ['항공', '우주', '드론', 'UAM', '위성'],
+      },
+    },
+  },
+
+  AEROSPACE: {
+    name: '우주/항공',
+    keywords: ['우주', '항공', '위성', '발사체', '우주항공', 'AEROSPACE'],
+    subSectors: {
+      SPACE: {
+        name: '우주',
+        keywords: ['우주', '위성', '발사체', '우주탐사'],
+      },
+      AVIATION: {
+        name: '항공',
+        keywords: ['항공', '드론', 'UAM', '항공기', '항공엔진'],
       },
     },
   },
@@ -340,13 +415,18 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
   ICT: {
     ICT: 1.0,
     MANUFACTURING: 0.8, // Smart factory, automation
-    BIO_HEALTH: 0.7, // Digital health
+    BIO_HEALTH: 0.5, // Digital health (reduced to require keyword overlap)
     ENERGY: 0.7, // Smart grid
     ENVIRONMENT: 0.6,
     AGRICULTURE: 0.7, // Smart farm
+    FORESTRY: 0.3,
+    VETERINARY: 0.2,
     MARINE: 0.25,
+    MARINE_FISHERIES: 0.25,
+    MARINE_SECURITY: 0.2,
     CONSTRUCTION: 0.6, // Smart construction
     TRANSPORTATION: 0.8, // Autonomous vehicles
+    AEROSPACE: 0.5,
     DEFENSE: 0.2, // Military ICT (low relevance for most ICT companies)
     CULTURAL: 0.8, // Digital content, OTT, gaming, streaming
     OTHER: 0.5, // Medium relevance
@@ -358,23 +438,33 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     ENERGY: 0.6, // Battery manufacturing
     ENVIRONMENT: 0.5,
     AGRICULTURE: 0.5,
+    FORESTRY: 0.3,
+    VETERINARY: 0.4,
     MARINE: 0.6, // Shipbuilding
+    MARINE_FISHERIES: 0.6,
+    MARINE_SECURITY: 0.3,
     CONSTRUCTION: 0.6,
     TRANSPORTATION: 0.7, // Automotive
+    AEROSPACE: 0.7,
     DEFENSE: 0.4, // Defense manufacturing (specialized, low general relevance)
     CULTURAL: 0.3, // Media production hardware
     OTHER: 0.5, // Medium relevance
   },
   BIO_HEALTH: {
-    ICT: 0.7,
+    ICT: 0.5,
     MANUFACTURING: 0.5,
     BIO_HEALTH: 1.0,
     ENERGY: 0.3,
     ENVIRONMENT: 0.5,
     AGRICULTURE: 0.6, // Food tech
+    FORESTRY: 0.4,
+    VETERINARY: 0.6,
     MARINE: 0.5, // Marine bio
+    MARINE_FISHERIES: 0.5,
+    MARINE_SECURITY: 0.2,
     CONSTRUCTION: 0.3,
     TRANSPORTATION: 0.4,
+    AEROSPACE: 0.2,
     DEFENSE: 0.1, // Military medicine only (very low general relevance)
     CULTURAL: 0.2, // Sports health, wellness
     OTHER: 0.5, // Medium relevance
@@ -386,9 +476,14 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     ENERGY: 1.0,
     ENVIRONMENT: 0.8, // Carbon neutral
     AGRICULTURE: 0.4,
+    FORESTRY: 0.3,
+    VETERINARY: 0.2,
     MARINE: 0.5, // Marine energy
+    MARINE_FISHERIES: 0.5,
+    MARINE_SECURITY: 0.3,
     CONSTRUCTION: 0.5,
     TRANSPORTATION: 0.7, // EV
+    AEROSPACE: 0.4,
     DEFENSE: 0.1, // Military energy systems (very low general relevance)
     CULTURAL: 0.2, // Minimal overlap
     OTHER: 0.5, // Medium relevance
@@ -400,9 +495,14 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     ENERGY: 0.8,
     ENVIRONMENT: 1.0,
     AGRICULTURE: 0.6,
+    FORESTRY: 0.7,
+    VETERINARY: 0.3,
     MARINE: 0.6,
+    MARINE_FISHERIES: 0.6,
+    MARINE_SECURITY: 0.4,
     CONSTRUCTION: 0.6,
     TRANSPORTATION: 0.6,
+    AEROSPACE: 0.3,
     DEFENSE: 0.0, // No relevance
     CULTURAL: 0.3, // Cultural heritage preservation
     OTHER: 0.5, // Medium relevance
@@ -414,12 +514,55 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     ENERGY: 0.4,
     ENVIRONMENT: 0.6,
     AGRICULTURE: 1.0,
+    FORESTRY: 0.6,
+    VETERINARY: 0.7,
     MARINE: 0.5,
+    MARINE_FISHERIES: 0.5,
+    MARINE_SECURITY: 0.2,
     CONSTRUCTION: 0.3,
     TRANSPORTATION: 0.3,
+    AEROSPACE: 0.2,
     DEFENSE: 0.0, // No relevance
     CULTURAL: 0.2, // Culinary tourism
     OTHER: 0.5, // Medium relevance
+  },
+  FORESTRY: {
+    ICT: 0.3,
+    MANUFACTURING: 0.3,
+    BIO_HEALTH: 0.4,
+    ENERGY: 0.3,
+    ENVIRONMENT: 0.7,
+    AGRICULTURE: 0.6,
+    FORESTRY: 1.0,
+    VETERINARY: 0.4,
+    MARINE: 0.3,
+    MARINE_FISHERIES: 0.3,
+    MARINE_SECURITY: 0.2,
+    CONSTRUCTION: 0.4,
+    TRANSPORTATION: 0.2,
+    AEROSPACE: 0.2,
+    DEFENSE: 0.0,
+    CULTURAL: 0.3,
+    OTHER: 0.5,
+  },
+  VETERINARY: {
+    ICT: 0.2,
+    MANUFACTURING: 0.4,
+    BIO_HEALTH: 0.6,
+    ENERGY: 0.2,
+    ENVIRONMENT: 0.3,
+    AGRICULTURE: 0.7,
+    FORESTRY: 0.4,
+    VETERINARY: 1.0,
+    MARINE: 0.3,
+    MARINE_FISHERIES: 0.3,
+    MARINE_SECURITY: 0.1,
+    CONSTRUCTION: 0.2,
+    TRANSPORTATION: 0.2,
+    AEROSPACE: 0.2,
+    DEFENSE: 0.0,
+    CULTURAL: 0.1,
+    OTHER: 0.5,
   },
   MARINE: {
     ICT: 0.25,
@@ -428,12 +571,55 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     ENERGY: 0.5,
     ENVIRONMENT: 0.6,
     AGRICULTURE: 0.5,
+    FORESTRY: 0.3,
+    VETERINARY: 0.3,
     MARINE: 1.0,
+    MARINE_FISHERIES: 0.9,
+    MARINE_SECURITY: 0.6,
     CONSTRUCTION: 0.4,
     TRANSPORTATION: 0.5,
+    AEROSPACE: 0.4,
     DEFENSE: 0.3, // Naval systems (specialized, low general relevance)
     CULTURAL: 0.2, // Maritime museums
     OTHER: 0.5, // Medium relevance
+  },
+  MARINE_FISHERIES: {
+    ICT: 0.25,
+    MANUFACTURING: 0.6,
+    BIO_HEALTH: 0.5,
+    ENERGY: 0.5,
+    ENVIRONMENT: 0.6,
+    AGRICULTURE: 0.5,
+    FORESTRY: 0.3,
+    VETERINARY: 0.3,
+    MARINE: 0.9,
+    MARINE_FISHERIES: 1.0,
+    MARINE_SECURITY: 0.5,
+    CONSTRUCTION: 0.4,
+    TRANSPORTATION: 0.5,
+    AEROSPACE: 0.3,
+    DEFENSE: 0.2,
+    CULTURAL: 0.2,
+    OTHER: 0.5,
+  },
+  MARINE_SECURITY: {
+    ICT: 0.2,
+    MANUFACTURING: 0.3,
+    BIO_HEALTH: 0.2,
+    ENERGY: 0.3,
+    ENVIRONMENT: 0.4,
+    AGRICULTURE: 0.2,
+    FORESTRY: 0.2,
+    VETERINARY: 0.1,
+    MARINE: 0.6,
+    MARINE_FISHERIES: 0.5,
+    MARINE_SECURITY: 1.0,
+    CONSTRUCTION: 0.3,
+    TRANSPORTATION: 0.4,
+    AEROSPACE: 0.4,
+    DEFENSE: 0.6,
+    CULTURAL: 0.1,
+    OTHER: 0.5,
   },
   CONSTRUCTION: {
     ICT: 0.6,
@@ -443,8 +629,13 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     ENVIRONMENT: 0.6,
     AGRICULTURE: 0.3,
     MARINE: 0.4,
+    FORESTRY: 0.4,
+    VETERINARY: 0.2,
+    MARINE_FISHERIES: 0.4,
+    MARINE_SECURITY: 0.3,
     CONSTRUCTION: 1.0,
     TRANSPORTATION: 0.5,
+    AEROSPACE: 0.3,
     DEFENSE: 0.2, // Military facilities (specialized, low general relevance)
     CULTURAL: 0.4, // Cultural facilities, museums
     OTHER: 0.5, // Medium relevance
@@ -457,11 +648,35 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     ENVIRONMENT: 0.6,
     AGRICULTURE: 0.3,
     MARINE: 0.5,
+    FORESTRY: 0.2,
+    VETERINARY: 0.2,
+    MARINE_FISHERIES: 0.5,
+    MARINE_SECURITY: 0.4,
     CONSTRUCTION: 0.5,
     TRANSPORTATION: 1.0,
+    AEROSPACE: 0.7,
     DEFENSE: 0.3, // Military vehicles (specialized, low general relevance)
     CULTURAL: 0.5, // Tourism transportation
     OTHER: 0.5, // Medium relevance
+  },
+  AEROSPACE: {
+    ICT: 0.5,
+    MANUFACTURING: 0.7,
+    BIO_HEALTH: 0.2,
+    ENERGY: 0.4,
+    ENVIRONMENT: 0.3,
+    AGRICULTURE: 0.2,
+    FORESTRY: 0.2,
+    VETERINARY: 0.2,
+    MARINE: 0.4,
+    MARINE_FISHERIES: 0.3,
+    MARINE_SECURITY: 0.4,
+    CONSTRUCTION: 0.3,
+    TRANSPORTATION: 0.7,
+    AEROSPACE: 1.0,
+    DEFENSE: 0.7,
+    CULTURAL: 0.2,
+    OTHER: 0.5,
   },
 
   DEFENSE: {
@@ -471,9 +686,14 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     ENERGY: 0.1,
     ENVIRONMENT: 0.0,
     AGRICULTURE: 0.0,
+    FORESTRY: 0.0,
+    VETERINARY: 0.0,
     MARINE: 0.3,
+    MARINE_FISHERIES: 0.2,
+    MARINE_SECURITY: 0.6,
     CONSTRUCTION: 0.2,
     TRANSPORTATION: 0.3,
+    AEROSPACE: 0.7,
     DEFENSE: 1.0,
     CULTURAL: 0.1, // Military museums only
     OTHER: 0.5, // Medium relevance
@@ -486,9 +706,14 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     ENERGY: 0.2, // Minimal overlap
     ENVIRONMENT: 0.3, // Cultural heritage preservation
     AGRICULTURE: 0.2, // Culinary tourism
+    FORESTRY: 0.3,
+    VETERINARY: 0.1,
     MARINE: 0.2, // Maritime museums
+    MARINE_FISHERIES: 0.2,
+    MARINE_SECURITY: 0.1,
     CONSTRUCTION: 0.4, // Cultural facilities, museums
     TRANSPORTATION: 0.5, // Tourism transportation
+    AEROSPACE: 0.2,
     DEFENSE: 0.1, // Military museums only
     CULTURAL: 1.0,
     OTHER: 0.5, // Medium relevance
@@ -501,9 +726,14 @@ export const INDUSTRY_RELEVANCE: Record<string, Record<string, number>> = {
     ENERGY: 0.5,
     ENVIRONMENT: 0.5,
     AGRICULTURE: 0.5,
+    FORESTRY: 0.5,
+    VETERINARY: 0.5,
     MARINE: 0.5,
+    MARINE_FISHERIES: 0.5,
+    MARINE_SECURITY: 0.5,
     CONSTRUCTION: 0.5,
     TRANSPORTATION: 0.5,
+    AEROSPACE: 0.5,
     DEFENSE: 0.5,
     CULTURAL: 0.5,
     OTHER: 1.0,

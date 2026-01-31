@@ -371,6 +371,21 @@ export function generateMatches(
       continue; // Skip HR/training programs for technology companies
     }
 
+    // ============================================================================
+    // Designated Project Filter (지정과제/위탁과제) - v4.3 hotfix
+    // ============================================================================
+    // Designated projects are pre-assigned to specific institutions and are not open competition.
+    // These should never appear in company matching results.
+    const designatedProjectPatterns = [
+      /지정과제/,   // Designated project
+      /지정공모/,   // Designated call
+      /위탁과제/,   // Commissioned project
+    ];
+
+    if (designatedProjectPatterns.some(pattern => pattern.test(program.title))) {
+      continue; // Block designated/commissioned projects from matching
+    }
+
     // Skip if program doesn't target this organization type
     // EXCEPTION: For historical matches (EXPIRED programs), allow all types for reference learning
     if (program.targetType && !program.targetType.includes(organization.type)) {
@@ -624,7 +639,7 @@ export function generateMatches(
           //
           // Example blocked: Innowave (ICT/SaaS) → "선박평형수처리장치" (no keyword overlap)
           // Example allowed: ICT company → "디지털 조선" (has "디지털" keyword overlap)
-          if (orgSector !== programSector && relevanceScore >= 0.45 && relevanceScore < 0.7) {
+          if (orgSector !== programSector && relevanceScore >= 0.45 && relevanceScore < 1.0) {
             const orgKeywords = [
               ...(organization.keyTechnologies || []),
               ...(organization.technologyDomainsSpecific || []),
