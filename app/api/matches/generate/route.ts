@@ -40,6 +40,8 @@ if (!globalForPrisma.prisma) {
 import { generateMatches, MATCH_ALGORITHM_VERSION } from '@/lib/matching/algorithm';
 import { generateExplanation } from '@/lib/matching/explainer';
 import { checkMatchLimit, trackApiUsage } from '@/lib/rateLimit';
+import { isShadowModeEnabled, type IdealApplicantProfile } from '@/lib/matching/ideal-profile';
+import { calculateProximityScore, PROXIMITY_ALGORITHM_VERSION } from '@/lib/matching/proximity-scorer';
 import {
   getCache,
   setCache,
@@ -430,6 +432,68 @@ export async function POST(request: NextRequest) {
       // Graceful degradation: continue with base scores
       console.error('[PERSONALIZATION] Error (fallback to base scores):', personalizationError);
       personalizedScoreMap = new Map(); // Clear any partial results
+    }
+
+    // 10.6. Shadow Mode: Run proximity algorithm in parallel for A/B comparison
+    // This is non-blocking — failure does not affect user-facing results
+    if (isShadowModeEnabled()) {
+      try {
+        console.log('[SHADOW MODE] Running v5.0 proximity algorithm in parallel');
+
+        const shadowResults: Array<{
+          programId: string;
+          programTitle: string;
+          currentScore: number;
+          proximityScore: number;
+          scoreDelta: number;
+        }> = [];
+
+        for (const matchResult of validMatchResults) {
+          const idealProfile = matchResult.program.idealApplicantProfile as unknown as IdealApplicantProfile | null;
+
+          if (idealProfile) {
+            const proxScore = calculateProximityScore(
+              organization,
+              idealProfile,
+              matchResult.program.deadline
+            );
+
+            shadowResults.push({
+              programId: matchResult.program.id,
+              programTitle: matchResult.program.title,
+              currentScore: matchResult.score,
+              proximityScore: proxScore.totalScore,
+              scoreDelta: proxScore.totalScore - matchResult.score,
+            });
+          }
+        }
+
+        if (shadowResults.length > 0) {
+          console.log(`[SHADOW MODE] Compared ${shadowResults.length} programs:`);
+          console.log(`[SHADOW MODE] Avg score delta: ${(shadowResults.reduce((s, r) => s + r.scoreDelta, 0) / shadowResults.length).toFixed(1)}`);
+          console.log(`[SHADOW MODE] Score deltas:`, shadowResults.map(r => ({
+            title: r.programTitle.slice(0, 40),
+            v44: r.currentScore,
+            v50: r.proximityScore,
+            delta: r.scoreDelta,
+          })));
+
+          // Log rank correlation
+          const currentRanked = [...shadowResults].sort((a, b) => b.currentScore - a.currentScore);
+          const proximityRanked = [...shadowResults].sort((a, b) => b.proximityScore - a.proximityScore);
+
+          // Check top-3 overlap
+          const currentTop3 = new Set(currentRanked.slice(0, 3).map(r => r.programId));
+          const proximityTop3 = new Set(proximityRanked.slice(0, 3).map(r => r.programId));
+          const top3Overlap = Array.from(currentTop3).filter(id => proximityTop3.has(id)).length;
+
+          console.log(`[SHADOW MODE] Top-3 overlap: ${top3Overlap}/3`);
+        } else {
+          console.log('[SHADOW MODE] No programs with ideal profiles — generate profiles first');
+        }
+      } catch (shadowError) {
+        console.error('[SHADOW MODE] Error (non-blocking):', shadowError);
+      }
     }
 
     // 11. Store matches in database (UPSERT to handle existing matches)
