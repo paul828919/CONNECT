@@ -38,7 +38,9 @@ if (!globalForPrisma.prisma) {
   globalForPrisma.prisma = db;
 }
 import { generateMatches, MATCH_ALGORITHM_VERSION } from '@/lib/matching/algorithm';
+import { generateMatchesV6 } from '@/lib/matching/v6/funnel';
 import { generateExplanation } from '@/lib/matching/explainer';
+import { generateV6Explanation } from '@/lib/matching/v6/explainer';
 import { checkMatchLimit, trackApiUsage } from '@/lib/rateLimit';
 import { isShadowModeEnabled, type IdealApplicantProfile } from '@/lib/matching/ideal-profile';
 import { calculateProximityScore, PROXIMITY_ALGORITHM_VERSION } from '@/lib/matching/proximity-scorer';
@@ -55,6 +57,8 @@ import { logMatchQualityBulk } from '@/lib/analytics/match-performance';
 import { logFunnelEvent, hasFunnelEvent, AuditAction } from '@/lib/audit';
 import { generatePersonalizedMatches, type MatchWithScore } from '@/lib/personalization';
 import { loadActivePersonalizationConfig } from '@/lib/personalization/config-loader';
+import type { MatchScore } from '@/lib/matching/algorithm';
+import type { V6MatchScore } from '@/lib/matching/v6/types';
 
 // Plan-based match limits per API call
 const MAX_MATCHES_BY_PLAN: Record<string, number> = {
@@ -326,9 +330,10 @@ export async function POST(request: NextRequest) {
       maxMatches,
       minimumMatchScore,
     });
-    const matchResults = generateMatches(organization, programs, maxMatches, {
-      minimumScore: minimumMatchScore,
-    });
+    const matchingAlgorithm = process.env.MATCHING_ALGORITHM || 'v4.3';
+    const matchResults: Array<MatchScore | V6MatchScore> = matchingAlgorithm === 'v6.0-funnel'
+      ? generateMatchesV6(organization, programs, maxMatches, { minimumScore: minimumMatchScore })
+      : generateMatches(organization, programs, maxMatches, { minimumScore: minimumMatchScore });
     console.log('[MATCH GENERATION] Generated', matchResults.length, 'matches');
 
     if (matchResults.length === 0) {
@@ -500,11 +505,9 @@ export async function POST(request: NextRequest) {
     const createdMatches = await Promise.all(
       validMatchResults.map(async (matchResult) => {
         // Generate Korean explanations
-        const explanation = generateExplanation(
-          matchResult,
-          organization,
-          matchResult.program
-        );
+        const explanation = matchingAlgorithm === 'v6.0-funnel'
+          ? generateV6Explanation(matchResult as V6MatchScore, organization, matchResult.program)
+          : generateExplanation(matchResult as MatchScore, organization, matchResult.program);
 
         // Merge algorithm's numeric breakdown into explanation JSON
         // This allows the AI explanation API to read actual scores instead of zeros
