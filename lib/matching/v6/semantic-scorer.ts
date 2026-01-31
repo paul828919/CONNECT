@@ -1,3 +1,21 @@
+/**
+ * Semantic Relevance Scorer (v6.0 Stage 2)
+ *
+ * Measures how semantically relevant a program is to an organization.
+ * Total: 0-65 points (65% of final score)
+ *
+ * Scoring breakdown:
+ *   Domain Relevance:    0-25 pts — industry domain match
+ *   Capability Fit:      0-15 pts — keyword/technology overlap
+ *   Intent Alignment:    0-10 pts — program intent vs org goals
+ *   Negative Signals:  -10 to 0  — active mismatch penalties
+ *   Confidence Bonus:    0-10 pts — reward well-profiled matches
+ *
+ * Key difference from v4: Negative signals can subtract points, making it
+ * mathematically possible for irrelevant matches to score below the
+ * display threshold even with high practical scores.
+ */
+
 import { organizations, funding_programs, ProgramIntent } from '@prisma/client';
 import { calculateProximityScore } from '../proximity-scorer';
 import { classifyProgram, getIndustryRelevance } from '../keyword-classifier';
@@ -6,6 +24,13 @@ import { calculateConfidenceBonus } from './confidence';
 import { detectNegativeSignals, sumNegativeSignalPenalty } from './negative-signals';
 import { SemanticScore } from './types';
 
+/**
+ * Score intent alignment between program's research intent and organization's TRL.
+ *
+ * Programs have different intents (basic research, applied, commercialization)
+ * which correlate with the TRL range they target. An org at TRL 8 is a poor
+ * fit for basic research (TRL 1-3) regardless of domain match.
+ */
 function scoreIntentAlignment(
   programIntent: ProgramIntent | null,
   organization: organizations
@@ -37,6 +62,12 @@ function scoreIntentAlignment(
   }
 }
 
+/**
+ * Score keyword/technology overlap between org and program.
+ *
+ * Checks how many of the organization's technologies and keywords
+ * appear in the program's keywords or title.
+ */
 function scoreKeywordOverlap(organization: organizations, program: funding_programs): number {
   const orgKeywords = [
     ...(organization.keyTechnologies || []),
@@ -44,9 +75,11 @@ function scoreKeywordOverlap(organization: organizations, program: funding_progr
     ...(organization.researchFocusAreas || []),
   ].map(k => k.toLowerCase());
 
+  if (orgKeywords.length === 0) return 3; // No org data — partial credit
+
   const programKeywords = [
     ...(program.keywords || []),
-    ...program.title.toLowerCase().split(/\s+/),
+    ...program.title.toLowerCase().split(/\s+/).filter(w => w.length >= 2),
   ].map(k => k.toLowerCase());
 
   let overlapCount = 0;
@@ -56,12 +89,20 @@ function scoreKeywordOverlap(organization: organizations, program: funding_progr
     }
   }
 
-  if (overlapCount >= 3) return 15;
-  if (overlapCount === 2) return 12;
-  if (overlapCount === 1) return 7;
+  if (overlapCount >= 4) return 15;
+  if (overlapCount === 3) return 13;
+  if (overlapCount === 2) return 10;
+  if (overlapCount === 1) return 6;
   return 0;
 }
 
+/**
+ * Calculate semantic relevance score for a program-organization pair.
+ *
+ * When an ideal applicant profile exists, uses the proximity scorer for
+ * domain and capability dimensions (higher accuracy). Falls back to
+ * keyword classification when no profile exists.
+ */
 export function scoreSemanticRelevance(
   organization: organizations,
   program: funding_programs,
@@ -73,33 +114,41 @@ export function scoreSemanticRelevance(
   let capabilityFit = 0;
 
   if (idealProfile) {
+    // Use proximity scorer for high-accuracy domain + capability scoring
     const proximity = calculateProximityScore(organization, idealProfile, program.deadline ?? null);
+    // Rescale: domainFit is 0-30 in proximity → 0-25 here
     domainRelevance = Math.round((proximity.dimensions.domainFit / 30) * 25);
+    // capabilityFit is 0-15 in proximity → 0-15 here (same scale)
     capabilityFit = Math.round((proximity.dimensions.capabilityFit / 15) * 15);
     reasons.push('SEMANTIC_PROXIMITY_USED');
   } else {
+    // Fallback: keyword classification for domain relevance
     const classification = classifyProgram(program.title, null, program.ministry || null);
     if (organization.industrySector) {
       const relevance = getIndustryRelevance(organization.industrySector, classification.industry);
       domainRelevance = Math.round(relevance * 25);
     } else {
-      domainRelevance = 8;
+      domainRelevance = 8; // No org sector data — partial credit
       reasons.push('SEMANTIC_NO_ORG_INDUSTRY');
     }
 
+    // Keyword overlap for capability fit
     capabilityFit = scoreKeywordOverlap(organization, program);
     if (capabilityFit > 0) reasons.push('SEMANTIC_KEYWORD_OVERLAP');
   }
 
+  // Intent alignment
   const intentResult = scoreIntentAlignment(program.programIntent || null, organization);
   const intentAlignment = intentResult.score;
   reasons.push(intentResult.reason);
 
+  // Negative signals (the key v6 innovation)
   const negativeSignals = detectNegativeSignals(organization, program);
   const rawPenalty = sumNegativeSignalPenalty(negativeSignals);
   const negativePenalty = Math.max(-10, Math.min(0, rawPenalty));
   if (negativePenalty < 0) reasons.push('NEGATIVE_SIGNAL');
 
+  // Confidence bonus
   const confidenceBonus = calculateConfidenceBonus(idealProfile);
 
   const score = domainRelevance + capabilityFit + intentAlignment + negativePenalty + confidenceBonus;

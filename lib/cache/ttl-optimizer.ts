@@ -18,7 +18,7 @@ export const BASE_TTL = {
   PROGRAMS: 4 * 60 * 60,                  // 4 hours (was 6 hours - optimized for fresher data)
   
   // Match results (updated after scraping or profile changes)
-  MATCH_RESULTS: 24 * 60 * 60,            // 24 hours
+  MATCH_RESULTS: 12 * 60 * 60,            // 12 hours (scraper runs 2x/day)
   
   // AI-generated content (very expensive, rarely needs regeneration)
   AI_EXPLANATION: 7 * 24 * 60 * 60,       // 7 days (was 24 hours - AI explanations are expensive)
