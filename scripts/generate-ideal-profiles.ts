@@ -92,20 +92,18 @@ async function processRDPrograms(options: CliOptions, stats: BatchStats): Promis
   console.log(`  Will process: ${processLimit}`);
 
   let processed = 0;
-  let cursor: string | undefined;
 
   while (processed < processLimit) {
     const batchSize = Math.min(options.batchSize, processLimit - processed);
 
+    // Re-query from start each time — processed records no longer match DbNull filter
     const programs = await prisma.funding_programs.findMany({
       where,
       take: batchSize,
-      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       orderBy: { scrapedAt: 'desc' },
     });
 
     if (programs.length === 0) break;
-    cursor = programs[programs.length - 1].id;
 
     for (const program of programs) {
       try {
@@ -181,20 +179,18 @@ async function processSMEPrograms(options: CliOptions, stats: BatchStats): Promi
   console.log(`  Will process: ${processLimit}`);
 
   let processed = 0;
-  let cursor: string | undefined;
 
   while (processed < processLimit) {
     const batchSize = Math.min(options.batchSize, processLimit - processed);
 
+    // Re-query from start each time — processed records no longer match DbNull filter
     const programs = await prisma.sme_programs.findMany({
       where,
       take: batchSize,
-      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       orderBy: { updatedAt: 'desc' },
     });
 
     if (programs.length === 0) break;
-    cursor = programs[programs.length - 1].id;
 
     for (const program of programs) {
       try {
