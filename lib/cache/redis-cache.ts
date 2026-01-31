@@ -4,10 +4,10 @@
  * Provides intelligent caching for frequently accessed, slowly-changing data.
  *
  * Cache Layers:
- * 1. Match Generation Results (24h TTL) - Highest impact
- * 2. Organization Profiles (1h TTL) - Moderate impact
- * 3. Active Programs List (6h TTL) - Moderate impact
- * 4. AI Explanations (24h TTL) - Already implemented
+ * 1. Match Generation Results (12h TTL) - Highest impact
+ * 2. Organization Profiles (2h TTL) - Moderate impact
+ * 3. Active Programs List (4h TTL) - Moderate impact
+ * 4. AI Explanations (7d TTL) - Already implemented
  *
  * Design Principles:
  * - Fail open: Redis failures shouldn't break the app
@@ -25,7 +25,7 @@ import { MATCH_ALGORITHM_VERSION } from '../matching/algorithm';
 
 // TTL constants (in seconds) - now using optimized values
 export const CACHE_TTL = {
-  MATCH_RESULTS: BASE_TTL.MATCH_RESULTS,      // 24 hours - matches change on scraping
+  MATCH_RESULTS: BASE_TTL.MATCH_RESULTS,      // 12 hours - matches change on scraping (scraper runs 2x/day)
   ORG_PROFILE: BASE_TTL.ORGANIZATION_PROFILE, // 2 hours - profiles updated infrequently (optimized)
   PROGRAMS: BASE_TTL.PROGRAMS,                // 4 hours - updated 2-4x daily by scraper (optimized)
   AI_EXPLANATION: BASE_TTL.AI_EXPLANATION,    // 7 days - AI explanations are expensive (optimized)
