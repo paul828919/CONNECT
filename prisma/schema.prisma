@@ -362,6 +362,11 @@ model funding_programs {
   semanticEnrichedAt        DateTime?
   semanticEnrichmentModel   String?
 
+  // Ideal Applicant Profile (v5.0 Proximity Matching)
+  idealApplicantProfile     Json?                            // IdealApplicantProfile JSON
+  idealProfileGeneratedAt   DateTime?
+  idealProfileVersion       String?                          // Schema version (e.g. "1.0")
+
   consortium_projects       consortium_projects[]
   funding_matches           funding_matches[]
   scraping_job              scraping_jobs?
@@ -1643,6 +1648,11 @@ model sme_programs {
   detailPageScrapedAt       DateTime?                   // When last scraped
   detailPageDocumentText    String?          @db.Text   // Extracted text from downloaded 공고문 file
   detailPageTags            String[]         @default([]) // 해시태그 from detail page
+
+  // ===== Ideal Applicant Profile (v5.0 Proximity Matching) =====
+  idealApplicantProfile     Json?                            // IdealApplicantProfile JSON
+  idealProfileGeneratedAt   DateTime?
+  idealProfileVersion       String?                          // Schema version (e.g. "1.0")
 
   // ===== Relations =====
   matches               sme_program_matches[]
