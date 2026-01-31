@@ -120,8 +120,8 @@ function scoreDomainFit(
       reasons.push(`관련 산업분야 (${ideal.primaryDomain} ↔ ${org.industrySector})`);
     }
   } else if (!ideal.primaryDomain) {
-    // No domain requirement → partial credit
-    score += 7;
+    // No domain requirement → reduced partial credit (unknown ≠ matched)
+    score += 4;
   }
 
   // 2. Sub-domain overlap (0-10)
@@ -148,7 +148,7 @@ function scoreDomainFit(
       reasons.push(`세부분야 ${subDomainMatches}/${ideal.subDomains.length} 일치`);
     }
   } else {
-    score += 5; // No sub-domain requirement → partial credit
+    score += 2; // No sub-domain requirement → reduced partial credit
   }
 
   // 3. Technology keyword overlap (0-5)
@@ -169,7 +169,7 @@ function scoreDomainFit(
     const techScore = Math.min(5, (techMatches / ideal.technologyKeywords.length) * 5);
     score += techScore;
   } else {
-    score += 2.5;
+    score += 1;
   }
 
   const explanation = reasons.length > 0
@@ -220,9 +220,9 @@ function scoreTechnologyFit(
       }
     }
   } else if (!ideal.trlRange) {
-    score += 8; // No TRL requirement → partial credit
+    score += 4; // No TRL requirement → reduced partial credit
   } else {
-    score += 3; // Org missing TRL info
+    score += 1; // Org missing TRL info
   }
 
   // 2. R&D experience alignment (0-4)
@@ -235,7 +235,7 @@ function scoreTechnologyFit(
       score += 2; // Non-research stages don't need R&D experience
     }
   } else {
-    score += 2;
+    score += 1;
   }
 
   // 3. Tech keyword match bonus (0-4)
@@ -283,7 +283,7 @@ function scoreOrganizationFit(
       score += bestProximity * 3;
     }
   } else {
-    score += 3; // No scale requirement
+    score += 1.5; // No scale requirement → reduced partial credit
   }
 
   // 2. Business age match (0-5)
@@ -306,7 +306,7 @@ function scoreOrganizationFit(
       score += Math.max(0, 5 - gap);
     }
   } else if (!ideal.businessAge) {
-    score += 3;
+    score += 1;
   }
 
   // 3. Organization type match (0-4)
@@ -319,7 +319,7 @@ function scoreOrganizationFit(
       score += 1;
     }
   } else {
-    score += 2;
+    score += 1;
   }
 
   return {
@@ -339,7 +339,7 @@ function scoreCapabilityFit(
   const reasons: string[] = [];
 
   if (!ideal.expectedCapabilities || ideal.expectedCapabilities.length === 0) {
-    return { score: 8, explanation: '특별한 역량 요건 없음' }; // Partial credit when no requirement
+    return { score: 4, explanation: '특별한 역량 요건 없음' }; // Reduced partial credit when no requirement
   }
 
   // Build org capability text for matching
@@ -466,7 +466,7 @@ function scoreFinancialFit(
   ideal: IdealApplicantProfile
 ): { score: number; explanation: string } {
   if (!ideal.financialProfile) {
-    return { score: 3, explanation: '재무 요건 없음' };
+    return { score: 1.5, explanation: '재무 요건 없음' };
   }
 
   let score = 0;
@@ -485,7 +485,7 @@ function scoreFinancialFit(
       reasons.push('매출 요건 미달');
     }
   } else {
-    score += 2;
+    score += 1;
   }
 
   // Matching fund capability

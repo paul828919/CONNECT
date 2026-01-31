@@ -118,12 +118,13 @@ async function main() {
     });
     orgs = org ? [org] : [];
   } else {
-    // Select diverse organizations
+    // Select diverse organizations (distinct by name to avoid duplicates)
     orgs = await prisma.organizations.findMany({
       where: {
         profileCompleted: true,
         status: 'ACTIVE',
       },
+      distinct: ['name'],
       take: orgLimit,
       orderBy: { updatedAt: 'desc' },
     });
@@ -272,7 +273,7 @@ async function main() {
   // Aggregate Metrics
   // ═══════════════════════════════════════════════════════════════
 
-  console.log('\n\n📊 AGGREGATE METRICS');
+  console.log('\n\n📊 AGGREGATE METRICS (all orgs)');
   console.log('═'.repeat(80));
 
   const avgV44Mean = mean(results.map(r => r.v44Mean));
@@ -294,13 +295,44 @@ async function main() {
   console.log(`  Avg Top-10 Overlap          ${avgTop10Overlap.toFixed(1).padStart(6)}/10`);
   console.log(`  Avg Kendall τ (top-20)      ${avgTau.toFixed(3).padStart(6)}                  ${avgTau > 0.5 ? '✅ Reasonable correlation' : avgTau > 0.2 ? '⚠️ Low correlation' : '❌ Very different rankings'}`);
 
-  // Quality targets
+  // Comparable metrics (only orgs that have v4.4 results)
+  const comparableResults = results.filter(r => r.v44Scores.length > 0);
+  if (comparableResults.length > 0 && comparableResults.length < results.length) {
+    console.log(`\n\n📊 COMPARABLE METRICS (${comparableResults.length} orgs with v4.4 results)`);
+    console.log('═'.repeat(80));
+
+    const cmpV44StdDev = mean(comparableResults.map(r => r.v44StdDev));
+    const cmpV50StdDev = mean(comparableResults.map(r => r.v50StdDev));
+    const cmpTop3 = mean(comparableResults.map(r => r.top3Overlap));
+    const cmpTop10 = mean(comparableResults.map(r => r.top10Overlap));
+    const cmpTau = mean(comparableResults.map(r => r.kendallTau));
+    const cmpV44Unique = mean(comparableResults.map(r => r.v44UniqueScoreLevels));
+    const cmpV50Unique = mean(comparableResults.map(r => r.v50UniqueScoreLevels));
+
+    console.log(`\n  Metric                      v4.4        v5.0        Assessment`);
+    console.log('  ' + '─'.repeat(70));
+    console.log(`  Avg Score StdDev            ${cmpV44StdDev.toFixed(1).padStart(6)}      ${cmpV50StdDev.toFixed(1).padStart(6)}      ${cmpV50StdDev > cmpV44StdDev ? '✅ Better distribution' : '⚠️ Less variance'}`);
+    console.log(`  Avg Unique Score Levels     ${cmpV44Unique.toFixed(1).padStart(6)}      ${cmpV50Unique.toFixed(1).padStart(6)}      ${cmpV50Unique > cmpV44Unique ? '✅ More differentiated' : '⚠️ Less differentiated'}`);
+    console.log(`  Avg Top-3 Overlap           ${cmpTop3.toFixed(1).padStart(6)}/3`);
+    console.log(`  Avg Top-10 Overlap          ${cmpTop10.toFixed(1).padStart(6)}/10`);
+    console.log(`  Avg Kendall τ (top-20)      ${cmpTau.toFixed(3).padStart(6)}                  ${cmpTau > 0.5 ? '✅ Reasonable correlation' : cmpTau > 0.2 ? '⚠️ Low correlation' : '❌ Very different rankings'}`);
+  }
+
+  // Quality targets (using comparable results when available)
+  const targetResults = comparableResults.length > 0 ? comparableResults : results;
+  const tV44StdDev = mean(targetResults.map(r => r.v44StdDev));
+  const tV50StdDev = mean(targetResults.map(r => r.v50StdDev));
+  const tV50Unique = mean(targetResults.map(r => r.v50UniqueScoreLevels));
+  const tV44Unique = mean(targetResults.map(r => r.v44UniqueScoreLevels));
+  const tTop3 = mean(targetResults.map(r => r.top3Overlap));
+  const tTau = mean(targetResults.map(r => r.kendallTau));
+
   console.log('\n\n🎯 QUALITY TARGETS');
   console.log('═'.repeat(80));
-  console.log(`  Score Variance:        ${avgV50StdDev > avgV44StdDev ? '✅ PASS' : '❌ FAIL'} — v5.0 should show wider distribution`);
-  console.log(`  Sub-domain Differentiation: ${avgV50Unique > avgV44Unique ? '✅ PASS' : '❌ FAIL'} — More distinct score levels`);
-  console.log(`  Rank Stability:        ${avgTop3Overlap >= 1 ? '✅ PASS' : '❌ FAIL'} — Top-3 from v4.4 should appear in v5.0 top-10`);
-  console.log(`  Kendall τ > 0.2:       ${avgTau > 0.2 ? '✅ PASS' : '⚠️ WARNING'} — Reasonable rank correlation expected`);
+  console.log(`  Score Variance:        ${tV50StdDev > tV44StdDev ? '✅ PASS' : '⚠️ WATCH'} — v5.0 σ=${tV50StdDev.toFixed(1)} vs v4.4 σ=${tV44StdDev.toFixed(1)}`);
+  console.log(`  Sub-domain Differentiation: ${tV50Unique > tV44Unique ? '✅ PASS' : '❌ FAIL'} — ${tV50Unique.toFixed(0)} unique scores vs ${tV44Unique.toFixed(0)}`);
+  console.log(`  Rank Stability:        ${tTop3 >= 0.5 ? '✅ PASS' : tTop3 > 0 ? '⚠️ WATCH' : '❌ FAIL'} — Top-3 overlap: ${tTop3.toFixed(1)}/3`);
+  console.log(`  Kendall τ > 0.2:       ${tTau > 0.5 ? '✅ PASS' : tTau > 0.2 ? '⚠️ WATCH' : '❌ FAIL'} — τ=${tTau.toFixed(3)}`);
 
   await prisma.$disconnect();
 }

@@ -12,6 +12,7 @@
  * - Rule-only mode (--no-llm) for zero-cost generation
  * - Dry-run mode (--dry-run) for testing
  * - Program type filter (--type=rd|sme|all)
+ * - Regenerate mode (--regenerate) to re-process existing profiles
  *
  * Usage:
  *   npx tsx scripts/generate-ideal-profiles.ts                    # All programs, with LLM
@@ -21,6 +22,7 @@
  *   npx tsx scripts/generate-ideal-profiles.ts --dry-run          # Preview, no DB writes
  *   npx tsx scripts/generate-ideal-profiles.ts --batch-size=10    # Custom batch size
  *   npx tsx scripts/generate-ideal-profiles.ts --limit=50         # Process only 50 programs
+ *   npx tsx scripts/generate-ideal-profiles.ts --regenerate       # Re-generate ALL profiles
  */
 
 import { PrismaClient, Prisma, ProgramStatus, SMEProgramStatus } from '@prisma/client';
@@ -42,6 +44,7 @@ interface CliOptions {
   dryRun: boolean;
   batchSize: number;
   limit: number | null;
+  regenerate: boolean;
 }
 
 function parseArgs(): CliOptions {
@@ -50,6 +53,7 @@ function parseArgs(): CliOptions {
     useLLM: !args.includes('--no-llm'),
     type: (args.find(a => a.startsWith('--type='))?.split('=')[1] as 'rd' | 'sme' | 'all') || 'all',
     dryRun: args.includes('--dry-run'),
+    regenerate: args.includes('--regenerate'),
     batchSize: parseInt(args.find(a => a.startsWith('--batch-size='))?.split('=')[1] || '20', 10),
     limit: (() => {
       const limitArg = args.find(a => a.startsWith('--limit='))?.split('=')[1];
@@ -77,18 +81,18 @@ async function processRDPrograms(options: CliOptions, stats: BatchStats): Promis
   console.log('\n📡 Processing R&D Programs (funding_programs)');
   console.log('─'.repeat(60));
 
-  // Find programs that need profiles
+  // In regenerate mode: process ALL active programs (overwrite existing profiles)
+  // In normal mode: only process programs without profiles (resume capability)
   const where = {
     status: ProgramStatus.ACTIVE,
-    ...(options.limit ? {} : {}), // prisma doesn't support conditional where
-    idealApplicantProfile: { equals: Prisma.DbNull }, // Only process programs without profiles (resume)
+    ...(options.regenerate ? {} : { idealApplicantProfile: { equals: Prisma.DbNull } }),
   };
 
   const totalCount = await prisma.funding_programs.count({ where });
   const processLimit = options.limit ? Math.min(options.limit, totalCount) : totalCount;
 
-  console.log(`  Total active R&D programs: ${totalCount}`);
-  console.log(`  Programs needing profiles: ${totalCount}`);
+  console.log(`  Mode: ${options.regenerate ? 'REGENERATE (overwrite existing)' : 'Resume (skip existing)'}`);
+  console.log(`  Active R&D programs matching: ${totalCount}`);
   console.log(`  Will process: ${processLimit}`);
 
   let processed = 0;
@@ -96,10 +100,12 @@ async function processRDPrograms(options: CliOptions, stats: BatchStats): Promis
   while (processed < processLimit) {
     const batchSize = Math.min(options.batchSize, processLimit - processed);
 
-    // Re-query from start each time — processed records no longer match DbNull filter
+    // In regenerate mode, use skip-based pagination (records stay in result set)
+    // In normal mode, re-query from start (processed records disappear from DbNull filter)
     const programs = await prisma.funding_programs.findMany({
       where,
       take: batchSize,
+      ...(options.regenerate ? { skip: processed } : {}),
       orderBy: { scrapedAt: 'desc' },
     });
 
@@ -161,7 +167,7 @@ async function processSMEPrograms(options: CliOptions, stats: BatchStats): Promi
 
   const where = {
     status: SMEProgramStatus.ACTIVE,
-    idealApplicantProfile: { equals: Prisma.DbNull }, // Resume: skip already-generated
+    ...(options.regenerate ? {} : { idealApplicantProfile: { equals: Prisma.DbNull } }),
   };
 
   const totalCount = await prisma.sme_programs.count({ where });
@@ -174,8 +180,8 @@ async function processSMEPrograms(options: CliOptions, stats: BatchStats): Promi
     return;
   }
 
-  console.log(`  Total active SME programs: ${totalCount}`);
-  console.log(`  Programs needing profiles: ${totalCount}`);
+  console.log(`  Mode: ${options.regenerate ? 'REGENERATE (overwrite existing)' : 'Resume (skip existing)'}`);
+  console.log(`  Active SME programs matching: ${totalCount}`);
   console.log(`  Will process: ${processLimit}`);
 
   let processed = 0;
@@ -183,10 +189,12 @@ async function processSMEPrograms(options: CliOptions, stats: BatchStats): Promi
   while (processed < processLimit) {
     const batchSize = Math.min(options.batchSize, processLimit - processed);
 
-    // Re-query from start each time — processed records no longer match DbNull filter
+    // In regenerate mode, use skip-based pagination (records stay in result set)
+    // In normal mode, re-query from start (processed records disappear from DbNull filter)
     const programs = await prisma.sme_programs.findMany({
       where,
       take: batchSize,
+      ...(options.regenerate ? { skip: processed } : {}),
       orderBy: { updatedAt: 'desc' },
     });
 
@@ -255,6 +263,7 @@ async function main() {
   console.log(`  Type:       ${options.type}`);
   console.log(`  Batch size: ${options.batchSize}`);
   console.log(`  Limit:      ${options.limit || 'none'}`);
+  console.log(`  Regenerate: ${options.regenerate}`);
   console.log(`  Dry run:    ${options.dryRun}`);
 
   if (options.dryRun) {
