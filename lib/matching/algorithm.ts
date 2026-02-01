@@ -655,9 +655,7 @@ export function generateMatches(
             const allProgramKeywords = [...programKeywords, ...programTitleWords];
 
             const hasKeywordOverlap = orgKeywords.some(orgK =>
-              allProgramKeywords.some(progK =>
-                orgK.includes(progK) || progK.includes(orgK)
-              )
+              allProgramKeywords.some(progK => orgK === progK)
             );
 
             if (!hasKeywordOverlap && orgKeywords.length > 0) {
