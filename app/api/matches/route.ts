@@ -84,8 +84,11 @@ export async function GET(request: NextRequest) {
           not: null, // Exclude test seed data
           notIn: ['NTIS_API'], // Exclude NTIS_API (old project data)
         },
-        // Allow NULL budgets and deadlines per user guidance
-        // (Jan-March NTIS announcements may have budget/deadline TBD)
+        // Deadline filter: Exclude programs with past deadlines but keep NULL (TBD) deadlines
+        OR: [
+          { deadline: null },              // TBD deadlines are valid
+          { deadline: { gte: new Date() } }, // Future deadlines are valid
+        ],
       },
     };
 
