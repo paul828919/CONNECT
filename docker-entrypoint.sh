@@ -22,17 +22,19 @@ else
   exit 1
 fi
 
-# Invalidate match caches so stale algorithm results are not served
-echo "🔄 Invalidating match caches..."
+# Invalidate match + program caches so stale algorithm results are not served
+echo "🔄 Invalidating match and program caches..."
 node -e "
 const { createClient } = require('redis');
 (async () => {
   try {
     const c = createClient({ url: process.env.REDIS_CACHE_URL || 'redis://redis-cache:6379/0' });
     await c.connect();
-    const keys = [...await c.keys('match:org:*'), ...await c.keys('sme-match:org:*')];
-    if (keys.length > 0) await c.del(keys);
-    console.log('Invalidated ' + keys.length + ' match cache keys');
+    const matchKeys = [...await c.keys('match:org:*'), ...await c.keys('sme-match:org:*')];
+    const programKeys = [...await c.keys('programs:active:*'), ...await c.keys('sme-programs:active:*')];
+    const allKeys = [...matchKeys, ...programKeys];
+    if (allKeys.length > 0) await c.del(allKeys);
+    console.log('Invalidated ' + matchKeys.length + ' match + ' + programKeys.length + ' program cache keys');
     await c.quit();
   } catch (e) { console.warn('Cache invalidation skipped:', e.message); }
 })();
