@@ -245,10 +245,13 @@ export async function POST(request: NextRequest) {
         where: {
           status: ProgramStatus.ACTIVE,
           announcementType: AnnouncementType.R_D_PROJECT, // Only R&D funding opportunities (exclude surveys, events, notices)
-          // Allow NULL deadlines and budgets per user guidance:
-          // - Many Jan-March NTIS announcements have "0억원" (budget TBD) → stored as NULL
-          // - Some announcements don't have deadlines yet → stored as NULL
-          // - These are REAL opportunities, not preliminary surveys
+          // Deadline filter: Exclude programs with past deadlines but keep NULL (TBD) deadlines
+          // - Many Jan-March NTIS announcements don't have deadlines yet → stored as NULL → valid
+          // - Programs with explicit past deadlines are expired → exclude
+          OR: [
+            { deadline: null },              // TBD deadlines are valid
+            { deadline: { gte: new Date() } }, // Future deadlines are valid
+          ],
 
           // Development mode: Allow seed data (scrapingSource = null) for local testing
           // Production mode: Exclude seed data to prevent showing test programs to users
